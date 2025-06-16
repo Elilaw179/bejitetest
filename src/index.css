@@ -1,0 +1,29 @@
+
+@import "tailwindcss";
+
+
+
+
+
+.custom-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scroll {
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+
+
+
+@theme{
+  --font-norican: "Norican", cursive;
+}
+
+body{
+  font-family: 'Montserrat';
+}
+
+
+
+
