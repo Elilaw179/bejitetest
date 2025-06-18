@@ -102,7 +102,7 @@ function Education() {
         Your academic background shows your foundation.
       </p>
 
-      <div className="max-w-full md:max-w-4xl mx-auto bg-[#F5F5F5] p-4 rounded-lg">
+      <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4 ">
         <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-1">
           <div className="bg-[#82828280] rounded-2xl p-4">
             <p className="font-semibold text-xs mb-1">EDUCATIONAL LEVEL</p>
@@ -154,19 +154,20 @@ function Education() {
         </div>
       </div>
 
-      {allFilled && (
-        <div className="max-w-full px-4 mt-6">
-          <div className="max-w-md mx-auto bg-[#E63357] text-white rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 space-y-2 sm:space-y-0">
-            <div>
+    {allFilled && (
+        <div className="max-w-4xl px-4 mt-6  m-auto">
+          <div className="max-w-2xs  bg-[#E63357] text-white rounded-lg flex flex-col sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
+              <div>
               <p className="font-semibold">{fieldOfStudy}</p>
               <p className="text-sm">{degree} @ {institutionName}</p>
             </div>
-            <button onClick={clearForm} className="text-white text-xl">
+            <button onClick={clearForm} className="text-white text-xl  ">
               <FaDeleteLeft />
             </button>
           </div>
         </div>
       )}
+
 
       <NavigationButtons
         isFormComplete={allFilled}
