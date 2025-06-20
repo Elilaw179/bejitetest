@@ -17,6 +17,7 @@ import Skills from "./pages/Skills";
 import WorkHistory from "./pages/WorkHistory";
 import Certificate from "./pages/Certificate";
 import Link from "./pages/Link";
+import JobType from "./pages/JobType";
 
 function App() {
   return (
@@ -31,6 +32,8 @@ function App() {
         <Route path="/jobseeker-option" element={< JobSeekerOpt/>}  />
         <Route path="/jobconnection" element={<JobConnection/>}/>
         <Route path="/resume"  element={<Resume/>}/>
+      
+
 
 
           <Route element={<ResumeLayout />}>
@@ -39,10 +42,10 @@ function App() {
           <Route path="/skills" element={<Skills />} />
           <Route path="/work-history" element={<WorkHistory />} />
           <Route path="/certificate" element={<Certificate/>} />
-          <Route path="/links" element={<Link/>} />
-         
-         
+          <Route path="/links" element={<Link/>} />                 
         </Route>
+       <Route path="/job-type"  element={<JobType/>}/>
+         
       </Routes>
     </Router>
   );
