@@ -146,7 +146,8 @@ function Certificate() {
             <div>
               <p className="font-semibold">{certName}</p>
               <p className="text-sm">@ {issuer}</p>
-            </div>
+              <img src={file} alt="" />
+            </div> 
             <button onClick={clearForm} className="text-white text-xl">
               <FaDeleteLeft />
             </button>
