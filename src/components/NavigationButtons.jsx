@@ -2,7 +2,7 @@ import React from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 
 const NavigationButtons = ({ isFormComplete, onBack, onNext }) => (
-  <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center mt-[5%] px-4 gap-4 mb-[7%]">
+  <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center mt-[5%] px-4 gap-4 mb-[5%]">
     <div className="flex justify-center w-full sm:w-auto bg-white items-center px-2 py-1 rounded cursor-pointer" onClick={onBack}>
       <FaArrowLeft />
       <button
