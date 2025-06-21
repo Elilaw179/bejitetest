@@ -5,17 +5,73 @@ import StepTabs from "../components/StepTabs";
 import ProgressBar from "../components/ProgressBar";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import NavigationButtons from "../components/NavigationButtons";
-import { FaPlus, FaCheckCircle, FaChevronDown } from "react-icons/fa";
+import { FaPlus, FaCheckCircle, FaChevronDown, FaTrash } from "react-icons/fa";
 import { FaDeleteLeft } from "react-icons/fa6";
 
-const optionsJob = ["School A", "School B", "School C"];
+const optionsJob = [
+  // Tech & IT
+  "Software Developer",
+  "Frontend Developer",
+  "Backend Developer",
+  "Full Stack Developer",
+  "UI/UX Designer",
+  "Data Analyst",
+  "Data Scientist",
+  "DevOps Engineer",
+  "Product Manager",
+  "QA Tester",
+  "Cybersecurity Analyst",
+
+  // Business & Admin
+  "Administrative Assistant",
+  "Project Manager",
+  "Operations Manager",
+  "Business Analyst",
+  "Customer Support Representative",
+  "Sales Executive",
+  "Human Resources Manager",
+
+  // Marketing & Content
+  "Digital Marketer",
+  "SEO Specialist",
+  "Content Writer",
+  "Social Media Manager",
+  "Copywriter",
+  "Brand Manager",
+
+  // Finance
+  "Accountant",
+  "Financial Analyst",
+  "Auditor",
+  "Bank Teller",
+
+  // Education
+  "Teacher",
+  "Lecturer",
+  "Academic Advisor",
+  "School Administrator",
+
+  // Health & Medicine
+  "Nurse",
+  "Medical Doctor",
+  "Pharmacist",
+  "Laboratory Technician",
+
+  // Skilled Trades & Others
+  "Electrician",
+  "Plumber",
+  "Driver",
+  "Chef",
+  "Security Guard"
+];
+
 
 const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
   <div className="relative w-full">
     <select
       value={value}
       onChange={onChange}
-      className={`w-full h-12 border-2 rounded-[10px] pr-10 appearance-none ${
+      className={`w-full h-12 border-2 rounded-[10px] px-4 pr-10 appearance-none ${
         value ? "border-[#828282]" : "border-[#F5F5F5]"
       }`}
     >
@@ -158,13 +214,13 @@ function WorkHistory() {
 
          {allFilled && (
               <div className="max-w-4xl px-4 mt-6  m-auto">
-                <div className="max-w-2xs  bg-[#E63357] text-white rounded-lg flex flex-col sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
+                <div className="max-w-2xs m-auto  bg-[#E63357] text-white rounded-lg flex flex-col sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
                   <div>
               <p className="font-semibold">{jobTitle}</p>
               <p className="text-sm">@ {companyName}</p>
             </div>
                   <button onClick={clearForm} className="text-white text-xl  ">
-                    <FaDeleteLeft />
+                    <FaTrash />
                   </button>
                 </div>
               </div>

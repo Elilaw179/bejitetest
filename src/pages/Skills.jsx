@@ -8,20 +8,107 @@ import StepTabs from "../components/StepTabs";
 import ProgressBar from "../components/ProgressBar";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import NavigationButtons from "../components/NavigationButtons";
-import { FaPlus, FaCheckCircle, FaChevronDown } from "react-icons/fa";
+import { FaPlus, FaCheckCircle, FaChevronDown, FaTrash } from "react-icons/fa";
 import { FaDeleteLeft } from "react-icons/fa6";
 
 // Updated for better clarity
-const skillOptions = ["Frontend Development", "Backend Development", "UI/UX Design"];
-const categoryOptions = ["Junior", "Mid-level", "Senior"];
-const experienceOptions = ["1 year", "2-3 years", "4+ years"];
+const skillOptions = [
+  // Web & Software Development
+  "Frontend Development",
+  "Backend Development",
+  "Full Stack Development",
+  "UI/UX Design",
+  "Mobile App Development",
+  "DevOps",
+  "Database Management",
+  "Cloud Computing",
+  "Cybersecurity",
+  "Software Testing/QA",
+
+  // Programming Languages
+  "JavaScript",
+  "Python",
+  "Java",
+  "C++",
+  "C#",
+  "PHP",
+  "Ruby",
+  "SQL",
+  "TypeScript",
+  "Go",
+
+  // Data & AI
+  "Data Analysis",
+  "Data Science",
+  "Machine Learning",
+  "Artificial Intelligence",
+  "Big Data",
+  "Data Engineering",
+  "Business Intelligence",
+
+  // Design & Multimedia
+  "Graphic Design",
+  "Motion Graphics",
+  "3D Modelling",
+  "Video Editing",
+  "Animation",
+
+  // Marketing & Business
+  "Digital Marketing",
+  "SEO",
+  "Content Creation",
+  "Social Media Management",
+  "Product Management",
+  "Project Management",
+  "Sales",
+  "Customer Support",
+
+  // Writing & Communication
+  "Copywriting",
+  "Technical Writing",
+  "Translation",
+  "Public Speaking",
+
+  // Technical Tools
+  "Git",
+  "Docker",
+  "Kubernetes",
+  "Jira",
+  "Figma",
+  "Adobe Photoshop",
+  "Microsoft Office Suite"
+];
+
+
+const categoryOptions = [
+  "Internship",
+  "Entry-Level",
+  "Junior",
+  "Mid-Level",
+  "Senior",
+  "Lead",
+  "Manager",
+  "Director",
+  "Executive (C-Level)"
+];
+
+const experienceOptions = [
+  "No experience",
+  "Less than 1 year",
+  "1 year",
+  "2-3 years",
+  "4-5 years",
+  "6-9 years",
+  "10+ years"
+];
+
 
 const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
   <div className="relative w-full">
     <select
       value={value}
       onChange={onChange}
-      className={`w-full h-12 border-2 rounded-[10px] pr-10 appearance-none ${
+      className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 appearance-none ${
         value ? "border-[#828282]" : "border-[#F5F5F5]"
       }`}
     >
@@ -92,7 +179,7 @@ function Education() {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 options={categoryOptions}
-                placeholder="Select c"
+                placeholder="Select"
               />
             </div>
             <div className="flex-1">
@@ -126,13 +213,13 @@ function Education() {
 
       {allFilled && (
         <div className="max-w-4xl px-4 mt-6  m-auto">
-          <div className="max-w-2xs  bg-[#E63357] text-white rounded-lg flex flex-col sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
+          <div className="max-w-2xs m-auto  bg-[#E63357] text-white rounded-lg flex flex-col sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
             <div>
               <p className="font-semibold">{category}</p>
               <p className="text-sm">{experience} Experience</p>
             </div>
             <button onClick={clearForm} className="text-white text-xl  ">
-              <FaDeleteLeft />
+              <FaTrash />
             </button>
           </div>
         </div>

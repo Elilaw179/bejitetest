@@ -6,8 +6,8 @@ const fieldGroups = [
     { name: "phone", label: "PHONE NUMBER", placeholder: "e.g +234706004000", width: "sm:w-[226px]" },
   ],
   [
-    { name: "gender", label: "GENDER", type: "select", options: ["male", "female", "other"], width: "sm:w-44" },
-    { name: "maritalStatus", label: "MARITAL STATUS", type: "select", options: ["single", "married", "divorced", "widowed"], width: "sm:w-44" },
+    { name: "gender", label: "GENDER", type: "select", options: ["Male", "Female", "Other"], width: "sm:w-44" },
+    { name: "maritalStatus", label: "MARITAL STATUS", type: "select", options: ["Single", "Married", "Divorced", "Widowed"], width: "sm:w-44" },
     { name: "age", label: "AGE", type: "date", width: "sm:w-32" },
   ],
   [
@@ -27,13 +27,13 @@ const FieldGroup = ({ formData, handleChange, countries }) => (
       <div key={i} className="flex flex-wrap gap-4 p-2 rounded-2xl mb-2 bg-[#82828280] items-center justify-center ">
         {group.map((f) => (
           <div key={f.name} className={`text-[12px] w-full ${f.width}`}>
-            <p className="mb-1">{f.label}</p>
+            <p className="mb-1 text-xs font-semibold">{f.label}</p>
             {f.type === "select" ? (
               <select
-                name={f.name}
+                name={f.name} 
                 value={formData[f.name]}
                 onChange={handleChange}
-                className="w-full h-10 border-2 border-[#F5F5F5] rounded-[10px] text-center text-sm"
+                className="w-full h-10 border-2 border-[#F5F5F5] rounded-[10px] p-2 text-[#828282]   text-sm"
               >
                 <option value="">{f.placeholder || "Select"}</option>
                 {(f.options || countries).map((opt) => (

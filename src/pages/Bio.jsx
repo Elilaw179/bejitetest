@@ -14,11 +14,17 @@ const Bio = () => {
   const { currentStep } = useOutletContext();
   const steps = ["Bio", "Education", "Skills", "Work history", "Certificate", "Links"];
 
-  const countries = [
-    "Nigeria", "United States", "Canada", "United Kingdom", "Germany", "France",
-    "India", "China", "South Africa", "Brazil", "Australia", "Italy", "Japan",
-    "Kenya", "Mexico", "Netherlands", "Russia", "Spain", "Sweden",
-  ];
+const countries = [
+  "Nigeria", "United States", "Canada", "United Kingdom", "Germany", "France",
+  "India", "China", "South Africa", "Brazil", "Australia", "Italy", "Japan",
+  "Kenya", "Mexico", "Netherlands", "Russia", "Spain", "Sweden",
+  "Argentina", "Egypt", "Turkey", "South Korea", "Norway", "Poland",
+  "Indonesia", "Saudi Arabia", "Thailand", "Vietnam", "Philippines", "Malaysia",
+  "Greece", "Ukraine", "Pakistan", "Bangladesh", "New Zealand", "Colombia",
+  "Chile", "Peru", "Finland", "Portugal", "Denmark", "Switzerland", "Belgium",
+  "Austria", "Ireland", "Czech Republic", "Hungary"
+];
+
   const [imagePreview, setImagePreview] = useState(null);
   const [formData, setFormData] = useState({
     nickname: "", phone: "", gender: "", maritalStatus: "",

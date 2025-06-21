@@ -4,7 +4,7 @@ const ProgressBar = ({ currentStep, totalSteps }) => {
   const width = ((currentStep - 1) / (totalSteps - 1)) * 100;
 
   return (
-    <div className="max-w-3xl mx-auto mt-[2%] py-6 px-4">
+    <div className="max-w-3xl mx-auto mt-[2%] py-6 px-1">
       <div className="relative w-full h-1 bg-[#E0E0E0] rounded-full">
         <div
           className="absolute top-0 left-0 h-1 bg-[#E63357] rounded-full transition-all duration-300"

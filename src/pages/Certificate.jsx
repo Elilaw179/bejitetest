@@ -10,6 +10,7 @@ import {
   FaCheckCircle,
   FaChevronDown,
   FaCamera,
+  FaTrash,
 } from "react-icons/fa";
 import { FaDeleteLeft } from "react-icons/fa6";
 
@@ -142,14 +143,14 @@ function Certificate() {
 
       {allFilled && (
         <div className="max-w-4xl px-4 mt-6 m-auto">
-          <div className="max-w-xs bg-[#E63357] text-white rounded-lg flex flex-col sm:flex-row justify-between sm:items-center p-4 space-y-2 sm:space-y-0">
+          <div className="max-w-xs m-auto bg-[#E63357] text-white rounded-lg flex flex-col sm:flex-row justify-between sm:items-center p-4 space-y-2 sm:space-y-0">
             <div>
               <p className="font-semibold">{certName}</p>
               <p className="text-sm">@ {issuer}</p>
               <img src={file} alt="" />
             </div> 
             <button onClick={clearForm} className="text-white text-xl">
-              <FaDeleteLeft />
+              <FaTrash />
             </button>
           </div>
         </div>
