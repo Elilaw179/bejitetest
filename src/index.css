@@ -1,29 +1,22 @@
-
 @import "tailwindcss";
-
-
-
-
 
 .custom-scroll::-webkit-scrollbar {
   display: none;
 }
 
 .custom-scroll {
-  -ms-overflow-style: none; 
-  scrollbar-width: none; 
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-
-
-@theme{
+@theme {
   --font-norican: "Norican", cursive;
 }
 
-body{
-  font-family: 'Montserrat';
+body {
+  font-family: "Montserrat";
 }
 
-
-
-
+input[type="date"].hide-calendar-icon::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}

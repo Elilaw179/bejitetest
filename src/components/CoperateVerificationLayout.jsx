@@ -1,10 +1,13 @@
 import { Outlet, useLocation } from "react-router-dom";
 
 const stepMap = {
-  "/bio": 1, "/education": 2, "/skills": 3,"/work-history": 4,"/certificate": 5,"/links": 6,
+  "/coperate/basic-details": 1,
+  "/coperate/profile-setup": 2,
+  "/coperate/company-details": 3,
+  "/coperate/location": 4,
 };
 
-const FormLayout = () => {
+const CoperateVerificationLayout = () => {
   const location = useLocation();
   const currentStep = stepMap[location.pathname] || 1;
 
@@ -15,4 +18,4 @@ const FormLayout = () => {
   );
 };
 
-export default FormLayout;
+export default CoperateVerificationLayout;

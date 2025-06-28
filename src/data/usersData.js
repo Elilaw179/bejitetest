@@ -11,7 +11,6 @@ const usersData = [
   { id: 10, name: "Elisha Sunday", role: "EMPLOYER", img: "/assets/images/eli.jpg" },
   { id: 12, name: "Ogbodo Chuksogbo", role: "JOBSEEKER", img: "/assets/images/prisca.jpg" },
   { id: 13, name: "Elisha Sunday", role: "EMPLOYER", img: "/assets/images/eli.jpg" },
-  // ...rest of the users
 ];
 
 export default usersData;

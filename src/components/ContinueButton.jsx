@@ -17,9 +17,9 @@ const ContinueButton = ({ isEnabled }) => {
       <button
         className={`w-52 h-12 rounded-2xl font-bold text-white transition-all duration-300 ${
           isEnabled
-            ? "bg-[#E85A50]"
-            : "bg-[#E85A50] opacity-25 cursor-not-allowed"
-        }`}
+            ? "bg-[#16730F]"
+            : "bg-[#1A3E32] opacity-25 cursor-not-allowed"
+        }`}    
         disabled={!isEnabled}
         onClick={handleClick}
       >

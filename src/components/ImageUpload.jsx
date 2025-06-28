@@ -22,24 +22,15 @@ const ImageUpload = ({ imagePreview, handleImageChange, bio, onBioChange }) => (
       Accepted Format png, jpeg max file; 100kb
     </p>
 
-    <textarea
-      name="bio"
-      value={bio}
-      onChange={onBioChange}
-      type="text"
-      placeholder="Write short Bio about yourself"
-      className="w-full lg:w-44 bg-[#F5F5F5] text-center h-28 font-medium text-[10px] mt-2"
-    >
-    </textarea>
-
-    {/* <input
-      name="bio"
-      value={bio}
-      onChange={onBioChange}
-      type="text"
-      placeholder="Write short Bio about yourself"
-      className="w-full lg:w-44 bg-[#F5F5F5] text-center h-28 font-medium text-[10px] mt-2"
-    /> */}
+    {bio !== undefined && onBioChange && (
+      <textarea
+        name="bio"
+        value={bio}
+        onChange={onBioChange}
+        placeholder="Write short Bio about yourself"
+        className="w-full lg:w-44 bg-[#F5F5F5] text-center h-28 font-medium text-[10px] mt-2 focus:outline-1 focus:outline-[#1A3E32] "
+      />
+    )}
   </div>
 );
 
