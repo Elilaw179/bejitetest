@@ -20,12 +20,12 @@ function SignUp() {
     <div className="bg-white min-h-screen flex flex-col">
       <div className="w-full lg:w-[70%] px-4 py-6 flex justify-between items-center mx-auto lg:absolute lg:right-4 lg:left-4 lg:top-1/12 lg:transform lg:-translate-y-1/2 lg:z-10 ">
         <img src="/assets/images/logo.png" alt="Logo" className="h-10" />
-        <div className="flex items-center gap-3">
-          <h1 className="text-[#828282] text-base sm:text-xl font-medium">
+        <div className="flex items-center gap-10 ">
+          <h1  className="text-[#828282] text-base sm:text-xl font-medium">
             Already have an account?
           </h1>
           <button
-            className="bg-[#16730F] py-2 px-5 sm:py-3 sm:px-7 rounded-2xl shadow text-white"
+            className="bg-[#16730F] py-2 px-5 sm:py-3 sm:px-7  rounded-2xl shadow text-white "
             onClick={() => navigate("/")}
           >
             Sign in
