@@ -48,7 +48,7 @@ function SignUp() {
         </div>
 
         <div className="w-full lg:w-[40%] flex items-center justify-center lg:justify-start px-6 py-10">
-          <div className="w-full max-w-md space-y-2 ">
+          <div className="w-full max-w-md space-y-1 ">
             <h2 className="text-3xl font-norican font-semibold text-[#16730F] text-center">
               Sign Up
             </h2>
