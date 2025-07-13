@@ -18,7 +18,7 @@ function EmailCheck() {
       <div className="flex flex-col items-center justify-center w-full px-4 flex-1">
         <div className="w-full max-w-md flex flex-col items-center space-y-6 mt-4">
           <img
-            src="/assets/images/emailcheck.png"
+            src="/assets/images/Verifyillus.svg"
             alt="email-check"
             className="w-28 sm:w-32 md:w-36"
           />

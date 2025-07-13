@@ -29,7 +29,7 @@ const EmployerOpt = () => {
       </div>
 
       <div className="flex flex-col items-center justify-center w-full px-4 py-10 sm:py-20 mt-[5%]">
-        <h1 className="lg:text-5xl text-2xl text-[#16730F] font-[500] leading-relaxed">
+        <h1 className="lg:text-5xl text-2xl text-[#16730F] font-[500] leading-relaxed font-norican">
           As an Employer
         </h1>
         <p className="lg:text-xl text-center text-[#333] font-[400] leading-relaxed">
@@ -50,7 +50,7 @@ const EmployerOpt = () => {
 
           <MemberCard
             label="COPERATE"
-            iconSrc="/assets/images/freel ic.svg"
+            iconSrc="/assets/images/freelic2.svg"
             infoText="As a FREELANCER, employers can search you out using the advanced search engine (ASE)."
             position="below-card"
             showInfo={showCoperateInfo}

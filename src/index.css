@@ -20,7 +20,3 @@ body {
 input[type="date"].hide-calendar-icon::-webkit-calendar-picker-indicator {
   opacity: 0;
 }
-
-
-
-

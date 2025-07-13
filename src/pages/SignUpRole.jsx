@@ -20,7 +20,7 @@ const SignUpRole = () => {
 
         <div className="mt-20 flex flex-col sm:flex-row gap-10 flex-wrap justify-center items-center w-full max-w-5xl">
           <RoleCard
-            imageSrc="/assets/images/user.png"
+            imageSrc="/assets/images/user-octagon.svg"
             title="JOBSEEKER"
             description={
               <>

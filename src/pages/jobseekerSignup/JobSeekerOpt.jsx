@@ -42,7 +42,7 @@ const JobSeekerOpt = () => {
       <div className="w-full max-w-6xl px-4 mt-12 flex flex-wrap justify-center gap-6 py-6 bg-[#E0E0E01A] rounded-2xl border border-[#82828226]">
         <MemberCard
           label="ACTIVE MEMBER"
-          iconSrc="/assets/images/profiletick.svg"
+          iconSrc="/assets/images/profile-tick.svg" 
           infoText="As an ACTIVE jobseeker, employers can search you out using the advanced search engine (ASE)."
           position="above-icon"
           showInfo={showActiveInfo}
@@ -52,7 +52,7 @@ const JobSeekerOpt = () => {
 
         <MemberCard
           label="FREELANCER"
-          iconSrc="/assets/images/freelic.svg"
+          iconSrc="/assets/images/freelic2.svg"
           infoText="As a FREELANCER, employers can search you out using the advanced search engine (ASE)."
           position="above-icon"
           showInfo={showFreelancerInfo}

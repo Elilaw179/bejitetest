@@ -11,7 +11,7 @@ const CoperateVerificationLayout = () => {
   const location = useLocation();
   const currentStep = stepMap[location.pathname] || 1;
 
-  return (
+  return (   
     <>
       <Outlet context={{ currentStep }} />
     </>

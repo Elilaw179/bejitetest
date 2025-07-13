@@ -33,12 +33,12 @@ function SignIn() {
       <div className="flex flex-col lg:flex-row flex-1 justify-between relative ">
         <div className="w-full lg:w-[60%] relative hidden lg:block ">
           <img
-            src="/assets/images/auth.svg"
+            src="/assets/images/Illustra.svg"
             alt="Auth"
             className="w-full h-screen"
           />
           <img
-            src="/assets/images/auth_text.png"
+            src="/assets/images/asubtext.svg"
             alt="Auth Text"
             className="absolute top-3/7 left-[46%]  transform -translate-x-1/2 -translate-y-1/2"
           />
@@ -95,6 +95,7 @@ function SignIn() {
                   ? "bg-[#16730F40] cursor-not-allowed"
                   : "bg-[#16730F]"
               }`}
+              onClick={()=> navigate('/employer-dashboard')}
             >
               Login
             </button>
