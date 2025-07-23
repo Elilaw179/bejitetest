@@ -1,6 +1,4 @@
 
-
-
 import React from 'react';
 
 const CandidateSearchResults = ({ onViewProfile }) => {
@@ -19,7 +17,7 @@ const CandidateSearchResults = ({ onViewProfile }) => {
 
   return (
     
-      <div className="bg-[#1A3E32] w-full max-w-[400px] p-5 rounded-2xl shadow-lg">
+      <div className="bg-[#1A3E32] w-full max-w-[500px] px-10 py-4 rounded-2xl shadow-lg">
          <SearchResultsHeader count={candidates.length} />
      <div>
        <Divider />
@@ -85,35 +83,35 @@ const ProfileImage = ({ image, name, online }) => (
     <div className="rounded-full w-[100px] h-[100px] overflow-hidden">
       <img src={image} alt={`${name} profile`} className="w-full h-full object-cover" />
     </div>
-    <span className={`absolute w-4 h-4 rounded-full border-2 border-white top-20 left-20 ${
+    <span className={`absolute w-4 h-4 rounded-full border-2 border-white top-18 left-20 ${
       online ? 'bg-[#6B8E23]' : 'bg-[#828282]'
     }`} />
   </div>
 );
 
 const ProfileDetails = ({ name, type, jobTitle, location, onViewProfile }) => (
-  <div className="ml-4 flex-1 space-y-2">
-    <div>
-      <p className="text-[#6B8E23] text-2xl font-medium">{name}</p>
-      <p className="text-[#6B8E23] text-sm">{type}</p>
+  <div className="ml-3 flex-1 space-y-0">
+    <div className='ml-0.5'>
+      <p className="text-[#6B8E23] text-[13px] font-medium">{name}</p>
+      <p className="text-[5px] text-[#6B8E23]">{type}</p>
     </div>
-    <div>
-      <p className="text-[#6B8E23] text-xl font-medium">{jobTitle}</p>
-      <p className="text-[#6B8E23] text-sm">{location}</p>
+    <div className='ml-0.5'>
+      <p className="text-[#6B8E23] text-[8px] font-medium">{jobTitle}</p>
+      <p className="text-[#6B8E23] text-[5px]">{location}</p>
     </div>
     <ProfileActions onViewProfile={onViewProfile} />
   </div>
 );
 
 const ProfileActions = ({ onViewProfile }) => (
-  <div className="space-y-2 mt-3">
+  <div className="space-y-0 mt-0">
     <button
       onClick={onViewProfile}
-      className="p-2 w-full rounded-3xl bg-[#556B1F] hover:bg-[#6B8E23] text-white font-medium"
+      className="p-1 w-[100px] text-[5px] rounded-3xl bg-[#556B1F] hover:bg-[#6B8E23] text-white font-medium"
     >
       View Profile
     </button>
-    <button className="p-2 w-full rounded-3xl border-2 border-[#6B8E23] hover:bg-[#6B8E23]/10 text-[#6B8E23] font-medium">
+    <button className="p-1 w-[100px] text-[5px]  rounded-3xl border-2 border-[#6B8E23] hover:bg-[#6B8E23]/10 text-[#6B8E23] font-medium">
       Invite for interview
     </button>
   </div>

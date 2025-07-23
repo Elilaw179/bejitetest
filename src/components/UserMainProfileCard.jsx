@@ -56,7 +56,7 @@ const ProfileHeader = () => (
 );
 
 const ProfileStats = ({ onConnect }) => (
-  <div className="p-8">
+  <div className="p-8  mt-[-80px]">
     <div className="flex gap-2">
       <p className="text-[#6B8E23] font-semibold text-2xl">Osakwe Prisca</p>
       <p className="text-[#E09A36] font-semibold">. Jobseeker</p>

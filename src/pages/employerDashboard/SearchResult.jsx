@@ -5,7 +5,6 @@ import NewsFeedHeader from '../../components/NewsFeedHeader';
 const CandidateCard = ({ candidate }) => {
   return (
     <div>
-   
       <div className="flex justify-between mt-12 p-2">
         <div className="relative">
           <div className="rounded-full w-[120px] h-[120px] overflow-hidden">
