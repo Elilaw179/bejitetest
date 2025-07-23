@@ -12,7 +12,7 @@ const PeopleConnect = () => {
   });
 
   return (
-    <div className="w-3xl m-auto px-6 py-6 bg-[#F5F5F5] mt-2">
+    <div className="max-w-3xl m-auto px-6 py-6 bg-[#F5F5F5] mt-2">
       {/* Search Section */}
       <div className="max-w-3xl mx-auto rounded-2xl p-4 sm:p-6 bg-white shadow-sm">
         <SearchBar />

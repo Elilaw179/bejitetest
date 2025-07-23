@@ -30,7 +30,7 @@ const JobSearchFormGreen = () => {
   };
 
   return (
-    <div className="w-[400px] m-auto px-6 py-6 bg-[#1A3E32] rounded-2xl mt-2">
+    <div className="max-w-[400px] m-auto px-6 py-6 bg-[#1A3E32] rounded-2xl mt-2">
       <FormHeader />
       <Divider />
 

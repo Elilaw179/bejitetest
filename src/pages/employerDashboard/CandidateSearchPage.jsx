@@ -119,8 +119,10 @@ const CandidateSearchPage = () => {
   const isFormComplete = Object.values(formData).every(val => val.trim() !== "");
 
   return (
-    <div className="bg-[#FFFFFF]">
-      <NewsFeedHeader />
+  <div>
+     <NewsFeedHeader />
+  <div className="bg-[#FFFFFF] max-w-[1440px] mx-auto">
+     
       <div className="flex flex-col lg:flex-row w-full min-h-screen mt-2">
 
         {/* Left Column */}
@@ -155,6 +157,8 @@ const CandidateSearchPage = () => {
 
       </div>
     </div>
+  </div>
+  
   );
 };
 

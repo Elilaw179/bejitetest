@@ -52,7 +52,7 @@ const NewsFeedHeader = ({
         <FaList className="text-2xl text-[#333] block sm:hidden" />
       </div>
 
-      <div className="relative w-full sm:w-[250px] md:w-[350px] lg:w-[400px]">
+      <div className="relative w-full sm:w-[250px] md:max-w-[350px] lg:max-w-[400px]">
         <input
           type="text"
           placeholder="Search"
