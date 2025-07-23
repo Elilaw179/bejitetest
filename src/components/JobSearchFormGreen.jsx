@@ -248,7 +248,7 @@ const FormHeader = () => {
 const Divider = ({ small = false }) => {
   return (
     <div
-      className={`max-w-[250px] mx-auto border-t-2 ${
+      className={`max-w-[150px] mx-auto border-t-2 ${
         small ? "border-[#E0E0E0]" : "border-[#16730F]"
       }`}
     />

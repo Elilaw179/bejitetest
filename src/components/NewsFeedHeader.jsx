@@ -42,7 +42,12 @@ const NewsFeedHeader = ({
   };
 
   return (
-    <header className="bg-[#F5F5F5] w-full flex flex-col sm:flex-row items-center justify-between px-4 py-3 gap-3 sm:gap-4">
+    <header className="bg-[#F5F5F5] w-full">
+     {/* w-full flex flex-col sm:flex-row items-center justify-between px-4 py-3 gap-3 sm:gap-4">
+      */}
+       <div className="max-w-[1440px] w-full mx-auto flex flex-col sm:flex-row items-center justify-between px-4 py-3 gap-3 sm:gap-4">
+ 
+
       <div className="w-full sm:w-auto flex items-center justify-between">
         <img
           src="assets/images/logo.png"
@@ -103,6 +108,8 @@ const NewsFeedHeader = ({
           </div>
         </div>
       </div>
+ </div>
+
     </header>
   );
 };

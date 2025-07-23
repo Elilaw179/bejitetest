@@ -64,7 +64,7 @@ function App() {
            <Route path="/recruitment" element={<Recruitment />} />
            <Route path="/search-criteria" element={<CandidateSearchPage />} />
            <Route path="/search-criteria-block" element={<SearchCriteriarBlock />} />
-           <Route path="/search-result" element={<SearchResult />} />
+           {/* <Route path="/search-result" element={<SearchResult />} /> */}
            
 
         <Route element={<ResumeLayout />}>

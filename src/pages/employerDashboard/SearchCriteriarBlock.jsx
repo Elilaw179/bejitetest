@@ -21,8 +21,6 @@ const SearchCriteriarBlock = () => {
       <NewsFeedHeader/>
       <UserProfilePanel/>
       <PeopleConnect/>
-      
-
     </div>
   )
 }
