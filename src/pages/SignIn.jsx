@@ -95,7 +95,7 @@ function SignIn() {
                   ? "bg-[#16730F40] cursor-not-allowed"
                   : "bg-[#16730F]"
               }`}
-              onClick={()=> navigate('/employer-dashboard')}
+              onClick={()=> navigate('/post-page')}
             >
               Login
             </button>

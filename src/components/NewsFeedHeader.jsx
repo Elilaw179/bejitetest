@@ -22,19 +22,19 @@ const NewsFeedHeader = ({
   const handleIconClick = (name) => {
     switch (name) {
       case "home-icon":
-        navigate("/employer-dashboard");
+        navigate("/post-page");
         break;
       case "CHAT":
-        navigate("/search-criteria-block");
+        navigate("/chats");
         break;
       case "notice":
-        navigate("/search-criteria");
+        navigate("/candidate-search-page");
         break;
       case "recruitment":
         navigate("/recruitment");
         break;
       case "connection":
-        navigate("/search-result");
+        navigate("/connection");
         break;
       default:
         console.log("Icon not defined");
@@ -85,7 +85,7 @@ const NewsFeedHeader = ({
       <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto justify-between sm:justify-normal">
         <div className="relative">
           <img
-            className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full object-cover"
+            className="w-20 h-20 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full object-cover"
             src={user.image}
             alt={user.name}
           />
