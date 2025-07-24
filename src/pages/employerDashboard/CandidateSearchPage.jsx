@@ -1,14 +1,11 @@
-
-
-
 import React, { useState } from 'react';
-import SearchCriteria from '../../components/SearchCriteria';
-import CandidateSearchResults from '../../components/CandidateSearchResults';
+import SearchCriteria from '../../components/candidate-search-page/SearchCriteria';
+import CandidateSearchResults from '../../components/candidate-search-page/CandidateSearchResults';
 import NewsFeedHeader from '../../components/NewsFeedHeader';
-import UserProfilePanel from '../../components/UserProfilePanel';
-import JobSearchFormGreen from '../../components/JobSearchFormGreen';
-import UserMainProfileCard from '../../components/UserMainProfileCard';
-import PeopleConnect from '../../components/PeopleConnect';
+import UserProfilePanel from '../../components/candidate-search-page/UserProfilePanel';
+import JobSearchFormGreen from '../../components/candidate-search-page/JobSearchFormGreen';
+import UserMainProfileCard from '../../components/candidate-search-page/UserMainProfileCard';
+import PeopleConnect from '../../components/candidate-search-page/PeopleConnect';
 
 const CandidateSearchPage = () => {
   const [formData, setFormData] = useState({
