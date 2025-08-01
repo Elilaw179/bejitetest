@@ -8,13 +8,13 @@ export default function RecruitmentMiddle() {
       <div className="max-w-3xl mx-auto rounded-2xl p-6 bg-white shadow">
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
           <img src="assets/images/eli.jpg" alt="profile" className="rounded-full w-[60px] h-[60px]" />
-          <textarea
+          <input
             placeholder="Share something"
             className="flex-1 w-full p-3 pl-4 border-2 border-[#16730F] rounded-xl focus:outline-none"
           />
-          <div className="absolute top-6 right-6 flex items-center space-x-1">
+          <div className="flex relative right-20  items-center space-x-1">
             <img src="assets/images/box-2.svg" alt="drafts" className="w-3 h-3" />
-            <p className="text-[10px]">Drafts</p>
+            <p className="text-[10px]">Draft</p>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row justify-between items-center mt-5 gap-4 px-2">

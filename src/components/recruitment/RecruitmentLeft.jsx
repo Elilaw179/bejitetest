@@ -16,7 +16,7 @@ export default function RecruitmentLeft() {
   <aside className="hidden md:block bg-[#16730F] rounded-2xl">
       <div className="p-7 space-y-2">
         <FaArrowLeft className="text-[#1A3E32]" />
-        <h2 className="text-[20px] text-[#1A3E32]">Dashboard</h2>
+        <h2 className="text-[20px] text-[#ffffff]">Dashboard</h2>
       </div>
       <nav className="max-w-48 m-auto space-y-4">
         {navItems.map(({ icon: Icon, label }, idx) => (
@@ -31,7 +31,7 @@ export default function RecruitmentLeft() {
         ))}
       </nav>
       <div className="bg-[#1A3E32] h-[560px] rounded-b-2xl mt-10 flex flex-col items-center pt-10 space-y-5">
-        <h3 className="text-white">ADD PRO</h3>
+        <h3 className="text-white">AdPro</h3>
         <div className="w-[200px] h-[200px] bg-[#FFFFFF]" />
       </div>
     </aside>

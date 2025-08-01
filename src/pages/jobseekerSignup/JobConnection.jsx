@@ -21,7 +21,7 @@ const JobConnection = () => {
 
       <div className="flex flex-col items-center justify-start px-4 mx-auto w-full max-w-4xl pb-12">
         <div className="w-full max-w-3xl text-center mb-10 mt-12">
-          <p className="text-3xl sm:text-4xl md:text-5xl font-norican font-semibold text-[#16730F]">
+          <p className="text-3xl sm:text-4xl md:text-5xl font-sarina font-semibold text-[#16730F]">
             Connect With Users
           </p>
           <p className="text-[#333] font-normal text-sm sm:text-base md:text-lg mt-2">

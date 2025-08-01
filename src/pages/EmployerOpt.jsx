@@ -40,7 +40,9 @@ const EmployerOpt = () => {
           <MemberCard
             label="INDIVIDUAL"
             iconSrc="/assets/images/user.svg"
-            infoText="As an ACTIVE jobseeker, employers can search you out using the advanced search engine (ASE)."
+            infoText="Individual employers are people whose businesses are not registered with the federal, state, or local governments. 
+                      They are micro, small, and medium scale enterprises (SMEs). They also include people who are HR consultants (they recruit for other companies); 
+                      individuals who require the services of other people on the platform."
             position="above-icon"
             showInfo={showIndividualInfo}
             setShowInfo={setShowIndividualInfo}
@@ -49,10 +51,14 @@ const EmployerOpt = () => {
           />
 
           <MemberCard
-            label="COPERATE"
+            label="Corporate "
             iconSrc="/assets/images/freelic2.svg"
-            infoText="As a FREELANCER, employers can search you out using the advanced search engine (ASE)."
-            position="below-card"
+            infoText="These are businesses, NGOs, religious bodies, or government organizations that are registered 
+            with the federal, state, or local government of their country. They may be SMEs or larger corporate
+             organizations, NGOs, and government bodies (Federal, state, or local governments). The representative
+              on Bejite must be verified to ensure they are genuine."
+            
+              position="below-card"
             showInfo={showCoperateInfo}
             setShowInfo={setShowCoperateInfo}
             containerRef={coperateRef}

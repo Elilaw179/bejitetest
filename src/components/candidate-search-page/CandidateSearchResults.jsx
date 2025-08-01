@@ -60,7 +60,7 @@ const CandidateSearchResults = ({ onViewProfile }) => {
 
 const SearchResultsHeader = ({ count }) => (
   <div className="text-center p-5">
-    <p className="text-[#6B8E23] text-[20px] font-semibold">Search Results</p>
+    <p className="text-[#ffffff] text-[20px] font-semibold">Search Results</p>
     <p className="text-[#828282]">{count} Candidates found</p>
   </div>
 );
@@ -93,11 +93,11 @@ const ProfileDetails = ({ name, type, jobTitle, location, onViewProfile }) => (
   <div className="ml-3 flex-1 space-y-0">
     <div className='ml-0.5'>
       <p className="text-[#6B8E23] text-[13px] font-medium">{name}</p>
-      <p className="text-[5px] text-[#6B8E23]">{type}</p>
+      <p className="text-[5px] text-[#ffffff]">{type}</p>
     </div>
     <div className='ml-0.5'>
-      <p className="text-[#6B8E23] text-[8px] font-medium">{jobTitle}</p>
-      <p className="text-[#6B8E23] text-[5px]">{location}</p>
+      <p className="text-[#ffffff] text-[8px] font-medium">{jobTitle}</p>
+      <p className="text-[#ffffff] text-[5px]">{location}</p>
     </div>
     <ProfileActions onViewProfile={onViewProfile} />
   </div>
@@ -111,7 +111,7 @@ const ProfileActions = ({ onViewProfile }) => (
     >
       View Profile
     </button>
-    <button className="p-1 w-[100px] text-[5px]  rounded-3xl border-2 border-[#6B8E23] hover:bg-[#6B8E23]/10 text-[#6B8E23] font-medium">
+    <button className="p-1 w-[100px] text-[5px]  rounded-3xl border-2 border-[#6B8E23] hover:bg-[#6B8E23]/10 text-[#ffffff] font-medium">
       Invite for interview
     </button>
   </div>

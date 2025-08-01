@@ -44,8 +44,7 @@ const CoperateUploadDoc = () => {
           <p className="font-semibold mb-2">Instructions:</p>
           <ul className="space-y-1 list-disc list-inside">
             <li>
-              Upload an authorization letter (PDF/PNG) (e.g., company
-              letterhead, HR approval, or director’s signature.)
+              Upload an ID card (PDF/PNG) 
             </li>
             <li>Supported formats: PNG, JPG, PDF (max 2MB)</li>
           </ul>

@@ -22,7 +22,7 @@ const optionsJob = [
 
   "Nurse", "Medical Doctor","Pharmacist","Laboratory Technician",
 
-  "Electrician","Plumber","Driver","Chef","Security Guard"
+  "Electrician","Plumber","Driver","Chef","Security Guard", "Not Available"
 ];
 
 

@@ -27,10 +27,10 @@ const CoperateVerify = () => {
         {!showConsent ? (
           // ✅ Initial verification instructions
           <div className="lg:w-[45%] w-full mx-auto rounded-2xl p-5 flex flex-col gap-y-6 items-center">
-            <h1 className="text-xl font-[500] text-[#16730F] italic">Almost there</h1>
+            <h1 className="text-xl font-[500] text-[#16730F] italic">Almost there!</h1>
 
             <h1 className="text-[#16730F] font-[600] text-3xl text-center">
-              Confirm Your Legal Role
+             Confirm your Identity as an Individual Employer
             </h1>
 
             <div className="mb-5 gap-y-1 flex flex-col">
@@ -70,7 +70,7 @@ const CoperateVerify = () => {
                 htmlFor="agree"
                 className="ml-5 text-sm lg:text-center text-green-700 "
               >
-                I confirm that I am legally authorized to hire for this company
+                I confirm that I am legally authorized to hire for this business
                 and consent to ID verification.
               </label>
             </div>

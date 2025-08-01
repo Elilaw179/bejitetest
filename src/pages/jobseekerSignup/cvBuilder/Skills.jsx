@@ -22,17 +22,15 @@ const skillOptions = [
 
   "Copywriting","Technical Writing","Translation","Public Speaking",
 
-  "Git","Docker","Kubernetes","Jira","Figma","Adobe Photoshop","Microsoft Office Suite"
+  "Git","Docker","Kubernetes","Jira","Figma","Adobe Photoshop","Microsoft Office Suite", "Not Available"
 ];
 
 
 const categoryOptions = [
-  "Internship","Entry-Level","Junior","Mid-Level","Senior","Lead","Manager","Director","Executive (C-Level)"
+  "Internship","Entry-Level","Junior","Mid-Level","Senior","Lead","Manager","Director","Executive (C-Level)", "Not Available"
 ];
 
-const experienceOptions = [
-  "No experience", "Less than 1 year", "1 year", "2-3 years", "4-5 years", "6-9 years", "10+ years"
-];
+const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);
 
 
 const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
@@ -89,7 +87,7 @@ function Education() {
         Skill
       </div>
       <p className="max-w-3xl mx-auto px-4 text-[#333] text-sm mb-6">
-        Highlight what you’re great at. This helps employers match you to the
+        Highlight what you're great at. This helps employers match you to the
         right role
       </p>
 

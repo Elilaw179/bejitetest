@@ -41,6 +41,7 @@ import CandidateSearchPage from "./pages/employerDashboard/CandidateSearchPage.j
 import Chat from "./pages/employerDashboard/Chat.jsx";
 import Connection from "./pages/employerDashboard/Connection.jsx";
 import PostPage from "./pages/employerDashboard/PostPage.jsx";
+import Notifications from "./pages/employerDashboard/Notifications.jsx";
 
 
 function App() {
@@ -83,14 +84,9 @@ function App() {
       
         <Route element={<CoperateVerificationLayout />}>
           <Route
-            path="/coperate/basic-details"
-            element={<CoperateBasicDetails />}/>
-          <Route
-            path="/coperate/profile-setup"
-            element={<CoperateProfileSetup />}/>
-          <Route
-            path="/coperate/company-details"
-            element={<CompanyDetails />}/>
+            path="/coperate/basic-details" element={<CoperateBasicDetails />}/> <Route
+            path="/coperate/profile-setup" element={<CoperateProfileSetup />}/> <Route
+            path="/coperate/company-details"element={<CompanyDetails />}/>
           <Route path="/coperate/location" element={<CoperateLocation />} />
           <Route path="/coperate/verify" element={<CoperateVerify />} />
           <Route path="/coperate/upload" element={<CoperateUploadDoc />} />
@@ -104,6 +100,7 @@ function App() {
         <Route path="/candidate-search-page" element={<CandidateSearchPage />} />
         <Route path="/chats" element={<Chat/>} />
         <Route path="/connection" element={<Connection/>} />
+        <Route path="/notification" element={<Notifications/>} />
       </Routes>
     </Router>
   );

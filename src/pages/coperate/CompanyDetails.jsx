@@ -12,7 +12,7 @@ const CompanyDetails = () => {
   const steps = [
     "Basic Details",
     "Profile Setup",
-    "Company Details",
+    "Business Details",
     "Location",
   ];
 
@@ -36,7 +36,7 @@ const CompanyDetails = () => {
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
-        Company Details
+        Business Details
       </section>
       <p className="max-w-3xl mx-auto px-4 text-[#333] text-[15px]">
         Let’s get to know you
@@ -47,7 +47,7 @@ const CompanyDetails = () => {
           {/* FULL NAME */}
           <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
             <label className="font-semibold text-[12px] mb-2 block">
-              COMPANY NAME (required) (Must match legal documents)
+              	Business NAME (required) (Must match legal documents)
             </label>
             <input
               type="text"
@@ -59,8 +59,8 @@ const CompanyDetails = () => {
             />
           </div>
 
-          {/* EMAIL */}
-          <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
+         
+          {/* <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
             <label className="font-semibold text-[12px] mb-2 block">
               Company Registration Number (required) (For verification purposes)
             </label>
@@ -72,12 +72,12 @@ const CompanyDetails = () => {
               onChange={handleChange}
               className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
             />
-          </div>
+          </div> */}
 
           {/* PHONE NUMBER */}
           <div className="p-5 bg-[#82828280] lg:rounded-3xl  rounded-md">
             <label className="font-semibold text-[12px] mb-2 block">
-              Company Website (Optional) (Share your official site for
+            	Business Website (Optional)(Share your official site for
               credibility)
             </label>
             <input

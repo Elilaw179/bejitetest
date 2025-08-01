@@ -9,6 +9,7 @@ import { FaDeleteLeft } from "react-icons/fa6";
 const optionsEdu = [
   "No Formal Education","Primary","Secondary","Vocational/Technical Training",
   "Tertiary Institution","Postgraduate (Masters/PhD)","Professional Certification",
+  "Not Available"
 ];
 
 const optionsInst = [
@@ -20,6 +21,7 @@ const optionsInst = [
   "University of Oxford","University of Cambridge","Imperial College London",
 
   "University of Toronto","University of Melbourne","National University of Singapore",
+  "Not Available"
 ];
 
 const optionsLoc = [
@@ -35,7 +37,7 @@ const optionsLoc = [
   "Beijing","Shanghai","Tokyo","Seoul","Mumbai","Delhi","Bangkok","Singapore","Kuala Lumpur",
   "Jakarta","Manila","Dubai","Hong Kong", "Taipei", "Hanoi", "Karachi",
 
-  "Sydney", "Melbourne", "Auckland", "Brisbane", "Perth",
+  "Sydney", "Melbourne", "Auckland", "Brisbane", "Perth","Not Available"
 ];
 
 const optionsField = [
@@ -44,8 +46,18 @@ const optionsField = [
   "Economics","Educaton","Electrical Engineering","Environmental Science","Finance","Geography","Geology","History","Hospitality Management", "Human Resource Management",
   "Industrial Engineering", "Information Technology","International Relations","Journalism","Law","Linguistics","Marketing","Mathematics","Mechanical Engineering",
   "Medicine", "Music", "Nursing", "Pharmacy", "Philosophy", "Physics", "Political Science", "Psychology", "Public Administration", "Public Health",
-  "Religious Studies","Social Work","Sociology","Software Engineering","Statistics","Theatre Arts","Theology","Tourism and Travel","Veterinary Medicine","Zoology"
+  "Religious Studies","Social Work","Sociology","Software Engineering","Statistics","Theatre Arts","Theology","Tourism and Travel","Veterinary Medicine","Zoology","Not Available"
 ];
+
+
+
+
+
+const optionsDegree = [
+  "WAEC", "NECO", "NABTEB", "B.Sc", "B.A", "B.Eng", "LLB", "MBBS", "HND", "OND", "PGD", "M.Sc", "M.A", "MBA", "M.Eng", "PhD",
+  "MD", "JD", "Ed.D", "DVM", "Not Available"
+];
+
 
 
 const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
@@ -196,14 +208,34 @@ function Education() {
                 placeholder="Select field..."
               />
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-xs mb-1">DEGREE</p>
-              <InputWithIcon
-                value={degree}
-                onChange={(e) => setDegree(e.target.value)}
-                placeholder="e.g. B.Sc"
-              />
-            </div>
+
+<div className="flex-1">
+  <p className="font-semibold text-xs mb-1">DEGREE</p>
+  <div className="relative w-full">
+    <input
+      list="degree-list"
+      value={degree}
+      onChange={(e) => setDegree(e.target.value)}
+      placeholder="e.g. B.Sc or select"
+      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
+        degree ? "border-[#828282]" : "border-[#F5F5F5]"
+      }`}
+    />
+    <datalist id="degree-list">
+      {optionsDegree.map((opt) => (
+        <option key={opt} value={opt} />
+      ))}
+    </datalist>
+    {degree && (
+      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
+    )}
+  </div>
+</div>
+
+
+
+
+
           </div>
 
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">

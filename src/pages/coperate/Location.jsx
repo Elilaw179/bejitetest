@@ -12,7 +12,7 @@ const CoperateLocation = () => {
   const steps = [
     "Basic Details",
     "Profile Setup",
-    "Company Details",
+    "	Business Details",
     "Location",
   ];
 
@@ -98,12 +98,12 @@ const CoperateLocation = () => {
           {/* ADDRESS */}
           <div className="p-5 bg-[#82828280] lg:rounded-3xl rounded-md  mb-4">
             <label className="font-semibold text-[12px] mb-2 block">
-              Company HQ Address (Required) (Jobseekers see only city/region)
+              	Business HQ Address (Required) (Jobseekers see only city/region)
             </label>
             <input
               type="text"
               name="address"
-              placeholder="Enter your company name"
+              placeholder="Enter your business address"
               value={formData.address}
               onChange={handleChange}
               className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"

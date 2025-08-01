@@ -34,10 +34,13 @@
 
 
 import React from 'react'
+import NewsFeedHeader from '../../components/NewsFeedHeader'
 
 const Chat = () => {
   return (
-    <div>Chat</div>
+    <div>
+      <NewsFeedHeader/>
+    </div>
   )
 }
 

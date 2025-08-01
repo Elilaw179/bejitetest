@@ -92,7 +92,7 @@ function SignUp() {
               Continue
             </button>
 
-            <p className="text-[#1A3E32] text-center text-xl">or signup with</p>
+            <p className="text-[#1A3E32] text-center text-xl">...or signup with</p>
             <div className="flex justify-center gap-6 mt-4">
               <FaLinkedin className="text-blue-600 text-3xl cursor-pointer" />
               <img

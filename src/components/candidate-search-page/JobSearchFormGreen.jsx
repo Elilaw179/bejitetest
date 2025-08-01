@@ -1,4 +1,4 @@
-// JobSearchForm.jsx
+
 import React, { useState } from "react";
 import { FaCheck } from "react-icons/fa";
 
@@ -238,7 +238,7 @@ const JobSearchFormGreen = () => {
 const FormHeader = () => {
   return (
     <div className="max-w-3xl mx-auto rounded-2xl p-4 sm:p-6 bg-[#1A3E32] shadow-sm">
-      <p className="text-xl sm:text-2xl font-medium text-[#16730F] text-center">
+      <p className="text-xl sm:text-2xl font-medium text-[#ffffff] text-center">
         Search Criteria  
       </p>
     </div>
@@ -268,7 +268,7 @@ const SearchInput = ({
     <div className="w-full p-3 sm:p-4 rounded-lg">
       <label
         htmlFor={id}
-        className="text-[#16730F] text-sm sm:text-[12px] font-medium block mb-1"
+        className="text-[#ffffff] text-sm sm:text-[12px] font-medium block mb-1"
       >
         {label}
       </label>
@@ -279,7 +279,7 @@ const SearchInput = ({
           name={id}
           value={value}
           onChange={onChange}
-          className="w-full rounded-xl px-4 py-2 sm:py-3 pr-10 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#16730F] text-[#6B8E23] text-sm sm:text-base"
+          className="w-full rounded-xl px-4 py-2 sm:py-3 pr-10 border border-[#556B1F] focus:outline-none focus:ring-2 focus:ring-[#16730F] text-[#ffffff] text-sm sm:text-base"
           placeholder={placeholder}
         />
         {value && (

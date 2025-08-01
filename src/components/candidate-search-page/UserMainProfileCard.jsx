@@ -24,7 +24,7 @@ const UserMainProfileCard = ({ onConnect }) => {
       <ProfileSection title="Contact Info">
         <ContactInfoList />
       </ProfileSection>
-      <ProfileSection title="More profiles for you">
+      <ProfileSection title="Suggested Connections ">
         {[...Array(6)].map((_, i) => (
           <RecommendedProfile key={i} onConnect={onConnect} />
         ))}
@@ -194,10 +194,11 @@ const ContactInfoList = () => {
 
   return (
     <div className="px-8 pb-8 rounded-2xl text-[#FFFFFF] space-y-4 items-center">
+      
       {contacts.map((contact, index) => (
         <div key={index} className="flex gap-3">
           <div className="w-7 h-7 rounded-full bg-[#D9D9D9]"></div>
-          <div className=''>
+          <div>
             <p className="text-[15px] font-semibold">{contact.value}</p>
             <p className=" text-[13px] font-medium">{contact.type}</p>
           </div>
@@ -208,7 +209,7 @@ const ContactInfoList = () => {
 };
 
 const RecommendedProfile = ({ onConnect }) => (
-  <>
+  <div>
     <div className="px-8 pb-8 rounded-2xl text-[#FFFFFF] space-y-4 items-center">
       <div className="flex gap-3">
         <img className="w-20 h-20 rounded-full" src="assets/images/eli.jpg" alt="Recommended profile" />
@@ -221,15 +222,15 @@ const RecommendedProfile = ({ onConnect }) => (
           </div>
           <button
             onClick={onConnect}
-            className="bg-[#1A3E32] w-40 flex items-center justify-center space-x-1 p-2 rounded-3xl text-[10px]">
-            <img src="/assets/images/repeate-one.svg" alt="Connect" />
+            className="bg-[#1A3E32] w-40 flex items-center justify-center mt-2 space-x-1 p-1 rounded-3xl text-[10px]">
+            <img className='w-3 h-3'  src=" /assets/images/repeate-one.svg" alt="Connect" />
             <span>Connect</span>
           </button>
         </div>
       </div>
     </div>
     <div className="w-full border-t-2 border-[#E0E0E0] mb-4"></div>
-  </>
+  </div>
 );
 
 export default UserMainProfileCard;

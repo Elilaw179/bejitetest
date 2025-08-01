@@ -47,7 +47,7 @@ function JobType() {
     "Customer Service Representative", "Product Manager", "Human Resources Specialist", "Administrative Assistant", "Accountant",
     "Financial Analyst", "Business Analyst", "UX/UI Designer", "Operations Manager", "IT Support Specialist", "Mechanical Engineer",
     "Civil Engineer", "Electrician", "Plumber", "Teacher", "Nurse", "Physician", "Pharmacist", "Legal Assistant", "Attorney",
-    "Real Estate Agent", "Construction Worker", "Truck Driver", "Chef"
+    "Real Estate Agent", "Construction Worker", "Truck Driver", "Chef", "Not Available"
   ];
 
   const industries = [
@@ -55,7 +55,7 @@ function JobType() {
     "Transportation and Logistics", "Hospitality", "Energy", "Telecommunications", "Real Estate", "Legal",
     "Marketing and Advertising", "Media and Entertainment", "Agriculture", "Aerospace", "Biotechnology",
     "Automotive", "Nonprofit", "Government", "Insurance", "Pharmaceuticals", "Environmental Services",
-    "Engineering", "Consulting", "Human Resources", "Public Relations", "Utilities", "Mining"
+    "Engineering", "Consulting", "Human Resources", "Public Relations", "Utilities", "Mining", "Not Available"
   ];
 
   const countries = [
@@ -63,7 +63,7 @@ function JobType() {
     "Brazil", "Australia", "Italy", "Japan", "Kenya", "Mexico", "Netherlands", "Russia", "Spain", "Sweden", "Argentina",
     "Egypt", "Turkey", "South Korea", "Norway", "Poland", "Indonesia", "Saudi Arabia", "Thailand", "Vietnam",
     "Philippines", "Malaysia", "Greece", "Ukraine", "Pakistan", "Bangladesh", "New Zealand", "Colombia", "Chile",
-    "Peru", "Finland", "Portugal", "Denmark", "Switzerland", "Belgium", "Austria", "Ireland", "Czech Republic", "Hungary"
+    "Peru", "Finland", "Portugal", "Denmark", "Switzerland", "Belgium", "Austria", "Ireland", "Czech Republic", "Hungary", "Not Available"
   ];
 
   const states = [
@@ -72,9 +72,10 @@ function JobType() {
     "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara", "Federal Capital Territory"
   ];
 
+
   const workTypes = [
-    "Full-time", "Part-time", "Contract", "Temporary", "Internship", "Freelance", "Remote", "On-site", "Hybrid",
-    "Commission-based", "Volunteer", "Seasonal", "Per diem", "Apprenticeship", "Consultant"
+    "Full-time", "NYSC Posting", "Part-time", "Contract", "Temporary", "Paid Internship", "Freelance", "Remote", "On-site", "Hybrid",
+    "Commission-based", "Volunteer", "Unpaid volunteer internship" ,"Seasonal", "Per diem", "Apprenticeship", "Consultant", "	I.T (Industrial Training)"
   ];
 
   const currencies = [
