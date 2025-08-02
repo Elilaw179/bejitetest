@@ -26,7 +26,7 @@ function Link() {
 
   const linkFields = [
     { name: "linkedin", label: "LinkedIn", textColor: "text-[#D9D9D9]" },
-    { name: "twitter", label: "X", textColor: "text-black" },
+    { name: "twitter", label: "X", textColor: "text-white"  },
     { name: "instagram", label: "Instagram", textColor: "text-[#D9D9D9]" },
     { name: "portfolio", label: "Portfolio website", textColor: "text-[#D9D9D9]" }
   ];

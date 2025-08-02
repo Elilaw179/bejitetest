@@ -104,8 +104,8 @@ function JobType() {
     <div className="min-h-screen py-4 px-2 sm:px-4">
       <Header />
       <div className="max-w-3xl mx-auto text-center space-y-2">
-        <p className="font-medium text-[#16730F] text-2xl">Almost there</p>
-        <p className="text-[#16730F] text-3xl font-semibold">What type of job do you want</p>
+        <p className="font-medium text-[#16730F] text-2xl">Almost there!</p>
+        <p className="text-[#16730F] text-3xl font-semibold">What type of job do you want?</p>
         <p className="text-[#000] text-sm font-light mt-5">
           Tell us exactly what you're looking for, so the right employers can find you faster. Our Advanced Search Engine (ASE) uses your preferences to match you with your ideal job by industry, salary, location, and more.
         </p>

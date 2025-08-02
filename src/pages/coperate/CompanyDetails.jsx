@@ -1,3 +1,5 @@
+
+
 import React, { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import NavigationButtons from "../../components/NavigationButtons";
@@ -16,9 +18,10 @@ const CompanyDetails = () => {
     "Location",
   ];
 
+
+  
   const [formData, setFormData] = useState({
     full_name: "",
-    registration_number: "",
     website: "",
   });
 
@@ -26,7 +29,9 @@ const CompanyDetails = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const isFormComplete = Object.values(formData).every((v) => v.trim() !== "");
+  const isFormComplete = Object.values(formData).every(
+    (v) => v.trim() !== ""
+  );
 
   return (
     <div className="bg-white min-h-screen">
@@ -47,7 +52,7 @@ const CompanyDetails = () => {
           {/* FULL NAME */}
           <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
             <label className="font-semibold text-[12px] mb-2 block">
-              	Business NAME (required) (Must match legal documents)
+              Business NAME (required) (Must match legal documents)
             </label>
             <input
               type="text"
@@ -59,32 +64,16 @@ const CompanyDetails = () => {
             />
           </div>
 
-         
-          {/* <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
+          {/* WEBSITE */}
+          <div className="p-5 bg-[#82828280] lg:rounded-3xl rounded-md">
             <label className="font-semibold text-[12px] mb-2 block">
-              Company Registration Number (required) (For verification purposes)
-            </label>
-            <input
-              type="text"
-              name="registration_number"
-              placeholder="Enter registration number"
-              value={formData.email}
-              onChange={handleChange}
-              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
-            />
-          </div> */}
-
-          {/* PHONE NUMBER */}
-          <div className="p-5 bg-[#82828280] lg:rounded-3xl  rounded-md">
-            <label className="font-semibold text-[12px] mb-2 block">
-            	Business Website (Optional)(Share your official site for
-              credibility)
+              Business Website (Optional) (Share your official site for credibility)
             </label>
             <input
               type="url"
               name="website"
               placeholder="Enter your company url"
-              value={formData.phone_number}
+              value={formData.website}
               onChange={handleChange}
               className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
             />

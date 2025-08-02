@@ -81,7 +81,6 @@ function App() {
           <Route path="/individual/inreview" element={<InReview />} />
         </Route>
 
-      
         <Route element={<CoperateVerificationLayout />}>
           <Route
             path="/coperate/basic-details" element={<CoperateBasicDetails />}/> <Route
@@ -90,7 +89,7 @@ function App() {
           <Route path="/coperate/location" element={<CoperateLocation />} />
           <Route path="/coperate/verify" element={<CoperateVerify />} />
           <Route path="/coperate/upload" element={<CoperateUploadDoc />} />
-          <Route path="/coperate/inreview" element={<CoperateInReview />} />
+          <Route path="/coperate/inreview" element={<CoperateInReview />} /> 
         </Route>
         <Route path="/job-type" element={<JobType />} />
 
