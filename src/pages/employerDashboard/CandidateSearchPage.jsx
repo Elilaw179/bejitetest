@@ -153,7 +153,13 @@ const CandidateSearchPage = () => {
     <div className="h-screen flex flex-col">
       <NewsFeedHeader />
 
-      <div className="bg-[#FFFFFF] max-w-[1440px] mx-auto flex-1 overflow-hidden">
+      <div className="bg-[#FFFFFF] w-full lg:max-w-[1440px] mx-auto flex-1 overflow-hidden">
+
+
+      {/* <div className="bg-[#FFFFFF] max-w-[1440px] mx-auto flex-1 overflow-hidden">
+
+      
+        */}
         {isMobile ? (
           // Mobile view: one component at a time
           <div className="overflow-y-auto h-full p-4 bg-[#F5F5F5]">
