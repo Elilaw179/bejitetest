@@ -92,9 +92,6 @@
 
 
 
-
-
-
 import React, { useState, useEffect } from 'react';
 import SearchCriteria from '../../components/candidate-search-page/SearchCriteria';
 import CandidateSearchResults from '../../components/candidate-search-page/CandidateSearchResults';
