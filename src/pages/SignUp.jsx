@@ -18,20 +18,23 @@ function SignUp() {
 
   return (
     <div className="bg-white min-h-screen flex flex-col">
-      <div className="w-full lg:w-[70%] px-4 py-6 flex justify-between items-center mx-auto lg:absolute lg:right-4 lg:left-4 lg:top-1/12 lg:transform lg:-translate-y-1/2 lg:z-10 ">
-        <img src="/assets/images/logo.png" alt="Logo" className="h-10" />
-        <div className="flex items-center gap-3">
-          <h1 className="text-[#828282] text-base sm:text-xl font-medium">
-            Already have an account?
-          </h1>
-          <button
-            className="bg-[#16730F] py-2 px-5 sm:py-3 sm:px-7 rounded-2xl shadow text-white"
-            onClick={() => navigate("/")}
-          >
-            Sign in
-          </button>
-        </div>
-      </div>
+
+      <div className="w-full lg:w-[70%] px-4 py-6 mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 lg:absolute lg:right-4 lg:left-4 lg:top-1/12 lg:transform lg:-translate-y-1/2 lg:z-10">
+  <img src="/assets/images/logo.png" alt="Logo" className="h-10" />
+
+  <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+    <h1 className="text-[#828282] text-base sm:text-xl font-medium text-center sm:text-left">
+      Already have an account?
+    </h1>
+    <button
+      className="bg-[#16730F] py-2 px-5 sm:py-3 sm:px-7 rounded-2xl shadow text-white"
+      onClick={() => navigate("/")}
+    >
+      Sign in
+    </button>
+  </div>
+</div>
+
 
       <div className="flex flex-col lg:flex-row flex-1 justify-between relative ">
         <div className="w-full lg:w-[60%] relative hidden lg:block ">
@@ -59,7 +62,7 @@ function SignUp() {
             <div className="space-y-4">
               <input
                 type="text"
-                placeholder="First name"
+                placeholder="First Name"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 className="w-full px-4 py-3 border border-[#1A3E32] rounded-xl outline-none"

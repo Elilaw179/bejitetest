@@ -1,7 +1,5 @@
 
 
-
-
 // import React, { useState } from 'react';
 // import SearchCriteria from '../../components/candidate-search-page/SearchCriteria';
 // import CandidateSearchResults from '../../components/candidate-search-page/CandidateSearchResults';
@@ -92,6 +90,9 @@
 
 
 
+
+
+
 import React, { useState, useEffect } from 'react';
 import SearchCriteria from '../../components/candidate-search-page/SearchCriteria';
 import CandidateSearchResults from '../../components/candidate-search-page/CandidateSearchResults';
@@ -151,12 +152,6 @@ const CandidateSearchPage = () => {
       <NewsFeedHeader />
 
       <div className="bg-[#FFFFFF] w-full lg:max-w-[1440px] mx-auto flex-1 overflow-hidden">
-
-
-      {/* <div className="bg-[#FFFFFF] max-w-[1440px] mx-auto flex-1 overflow-hidden">
-
-      
-        */}
         {isMobile ? (
           // Mobile view: one component at a time
           <div className="overflow-y-auto h-full p-4 bg-[#F5F5F5]">

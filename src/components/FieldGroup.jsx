@@ -12,7 +12,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
   const fieldGroups = [
     [
       { name: "nickname", label: "NICKNAME", placeholder: "e.g ndcreations", width: "sm:w-[279px]" },
-      { name: "phone", label: "PHONE NUMBER", type: "Number", placeholder: "e.g +234706004000", width: "sm:w-[226px]" },
+      { name: "phone", label: "PHONE NUMBER", type: "Number", placeholder: "e.g +234 706 004 0000", width: "sm:w-[226px]" },
     ],
     [
       { name: "gender", label: "GENDER", type: "select", options: ["Male", "Female", "Other"], width: "sm:w-44" },
