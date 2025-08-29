@@ -1,8 +1,9 @@
 import { useState } from "react";
 import Header from "../../components/Header";
 import NavigationButtons from "../../components/NavigationButtons";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FaCheck } from "react-icons/fa";
+import axiosInstance from "../../../services/axios";
 
 const SelectField = ({ label, value, onChange, options, placeholder = "Select" }) => (
   <div className="w-full md:w-[48%] lg:w-[30%]">
@@ -100,6 +101,44 @@ function JobType() {
     "Seasonal Availability", "Temporary Availability", "Contractual Availability", "Not Currently Available", "Available Upon Request"
   ];
 
+          const location = useLocation();
+
+          const { email, firstName, lastName, role, mode, followings } =
+            location.state || {};
+
+
+const handleSubmit = async () => {
+  if (allFilled) {
+    const payload = {
+      email,
+      firstName,
+      lastName,
+      role,
+      mode,
+      followings,
+      cvUrl: "https://example.com/cv/alice-johnson-cv.pdf",
+    };
+
+    try {
+      const response = await axiosInstance.post("/auth/signup", payload);
+
+      if (response.data.success) {
+        navigate("/save-progress", {
+          state: payload,
+        });
+      } else {
+        console.error(
+          "Server responded but with error:",
+          response.data.message
+        );
+      }
+    } catch (error) {
+      console.error("Submission failed:", error);
+    }
+  }
+};
+      
+
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">
       <Header />
@@ -107,20 +146,50 @@ function JobType() {
         <p className="font-medium text-[#16730F] text-2xl">Almost there!</p>
         <p className="text-[#16730F] text-3xl font-semibold">What type of job do you want?</p>
         <p className="text-[#000] text-sm font-light mt-5">
-          Tell us exactly what you're looking for, so the right employers can find you faster. Our Advanced Search Engine (ASE) uses your preferences to match you with your ideal job by industry, salary, location, and more.
+          Tell us exactly what you're looking for, so the right employers can
+          find you faster. Our Advanced Search Engine (ASE) uses your
+          preferences to match you with your ideal job by industry, salary,
+          location, and more.
         </p>
       </div>
 
       <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4 space-y-2 mt-10">
         <div className="bg-[#82828280] p-5 rounded-2xl flex flex-wrap gap-4 justify-between">
-          <SelectField label="JOB TITLE" value={form.jobTitle} onChange={updateField("jobTitle")} options={jobTypes} placeholder="Enter your job" />
-          <SelectField label="INDUSTRY / SECTOR" value={form.industry} onChange={updateField("industry")} options={industries} placeholder="Enter sector" />
+          <SelectField
+            label="JOB TITLE"
+            value={form.jobTitle}
+            onChange={updateField("jobTitle")}
+            options={jobTypes}
+            placeholder="Enter your job"
+          />
+          <SelectField
+            label="INDUSTRY / SECTOR"
+            value={form.industry}
+            onChange={updateField("industry")}
+            options={industries}
+            placeholder="Enter sector"
+          />
         </div>
 
         <div className="bg-[#82828280] p-5 rounded-2xl flex flex-wrap gap-4 justify-between">
-          <SelectField label="PREFERRED COUNTRY" value={form.country} onChange={updateField("country")} options={countries} />
-          <SelectField label="PREFERRED STATE" value={form.statePref} onChange={updateField("statePref")} options={states} />
-          <SelectField label="WORK TYPE" value={form.workType} onChange={updateField("workType")} options={workTypes} />
+          <SelectField
+            label="PREFERRED COUNTRY"
+            value={form.country}
+            onChange={updateField("country")}
+            options={countries}
+          />
+          <SelectField
+            label="PREFERRED STATE"
+            value={form.statePref}
+            onChange={updateField("statePref")}
+            options={states}
+          />
+          <SelectField
+            label="WORK TYPE"
+            value={form.workType}
+            onChange={updateField("workType")}
+            options={workTypes}
+          />
         </div>
 
         <div className="bg-[#82828280] p-5 rounded-2xl flex flex-wrap gap-4 justify-between">
@@ -129,27 +198,48 @@ function JobType() {
               <p className="text-[12px] font-semibold mb-1">EXPECTED SALARY</p>
               <div className="relative w-full">
                 <input
-                  type="text"
+                  type="number"
                   value={form.salary}
                   onChange={updateField("salary")}
                   className="w-full text-[#33333380] text-sm p-3 pr-10 rounded-[10px]
                    border-[#F5F5F5] border-2 focus:outline-1 focus:outline-[#1A3E32]"
                   placeholder="Enter salary"
                 />
-                {form.salary && <FaCheck className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />}
+                {form.salary && (
+                  <FaCheck className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />
+                )}
               </div>
             </div>
-            <SelectField label="CURRENCY" value={form.currency} onChange={updateField("currency")} options={currencies} />
+            <SelectField
+              label="CURRENCY"
+              value={form.currency}
+              onChange={updateField("currency")}
+              options={currencies}
+            />
           </div>
-          <SelectField label="REMOTE PREFERENCE" value={form.remotePref} onChange={updateField("remotePref")} options={remotePrefs} />
-          <SelectField label="AVAILABILITY" value={form.availability} onChange={updateField("availability")} options={availabilities} />
+          <SelectField
+            label="REMOTE PREFERENCE"
+            value={form.remotePref}
+            onChange={updateField("remotePref")}
+            options={remotePrefs}
+          />
+          <SelectField
+            label="AVAILABILITY"
+            value={form.availability}
+            onChange={updateField("availability")}
+            options={availabilities}
+          />
         </div>
       </div>
 
       <NavigationButtons
         isFormComplete={allFilled}
         onBack={() => navigate(-1)}
-        onNext={() => allFilled && navigate("/save-progress")}
+        onNext={() =>
+          allFilled &&
+          navigate("/save-progress")
+          // handleSubmit()
+        }
       />
     </div>
   );

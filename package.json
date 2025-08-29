@@ -4,20 +4,26 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host --port 8888",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.12.2",
     "@tailwindcss/vite": "^4.1.8",
+    "axios": "^1.11.0",
+    "immer": "^10.1.1",
     "lucide-react": "^0.511.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.6.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.6.1",
+    "react-toastify": "^11.0.5",
     "tailwind-scrollbar-hide": "^4.0.0",
-    "tailwindcss": "^4.1.8"
+    "tailwindcss": "^4.1.8",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

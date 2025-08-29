@@ -7,6 +7,7 @@ const Notifications = () => {
         <NewsFeedHeader/>
 
         <p className='text-center mt-50' >Oops!!! no notification available</p>
+
     </div>
   )
 }

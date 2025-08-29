@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../../../components/Header";
 import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
-import { useOutletContext, useNavigate } from "react-router-dom";
+import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
 
 function Link() {
@@ -31,15 +31,24 @@ function Link() {
     { name: "portfolio", label: "Portfolio website", textColor: "text-[#D9D9D9]" }
   ];
 
+
+        const location = useLocation();
+  
+        const { email, firstName, lastName, role, mode, followings } =
+          location.state || {};
+
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">
       <Header />
       <StepTabs steps={steps} currentStep={currentStep} />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
-      <div className="max-w-3xl mx-auto mt-6 text-[#1A3E32] text-2xl font-semibold">Links</div>
+      <div className="max-w-3xl mx-auto mt-6 text-[#1A3E32] text-2xl font-semibold">
+        Links
+      </div>
       <p className="max-w-3xl mx-auto text-[#333] text-sm mb-6">
-        Add at least one link to your online presence. Employers love to see your work, projects, or portfolio.
+        Add at least one link to your online presence. Employers love to see
+        your work, projects, or portfolio.
       </p>
 
       <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4">
@@ -47,7 +56,9 @@ function Link() {
           <div className="bg-[#1A3E32] p-4 rounded-2xl space-y-6">
             {linkFields.map(({ name, label, textColor }) => (
               <div key={name} className="w-full">
-                <p className={`${textColor} text-[15px] font-bold mb-1`}>{label}</p>
+                <p className={`${textColor} text-[15px] font-bold mb-1`}>
+                  {label}
+                </p>
                 <input
                   type="text"
                   value={formLinks[name]}
@@ -64,7 +75,12 @@ function Link() {
       <NavigationButtons
         isFormComplete={allFilled}
         onBack={() => navigate(-1)}
-        onNext={() => allFilled && navigate("/job-type")}
+        onNext={() =>
+          allFilled &&
+          navigate("/job-type", {
+            state: { email, firstName, lastName, role, mode, followings },
+          })
+        }
       />
     </div>
   );

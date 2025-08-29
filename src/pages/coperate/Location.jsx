@@ -98,7 +98,7 @@ const CoperateLocation = () => {
           {/* ADDRESS */}
           <div className="p-5 bg-[#82828280] lg:rounded-3xl rounded-md  mb-4">
             <label className="font-semibold text-[12px] mb-2 block">
-              	Business HQ Address (Required) (Jobseekers see only city/region)
+              	Business HQ Address(Required)(Jobseekers see only city/region)
             </label>
             <input
               type="text"

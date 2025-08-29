@@ -52,6 +52,7 @@ function SaveProgress() {
               ? "bg-[#1A3E32] cursor-not-allowed"
               : "bg-[#16730F] hover:opacity-90"
           }`}
+          onClick={()=>navigate('/post-page')}
         >
           Login
         </button>

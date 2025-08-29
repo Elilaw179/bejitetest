@@ -11,7 +11,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
 
   const fieldGroups = [
     [
-      { name: "nickname", label: "NICKNAME", placeholder: "e.g ndcreations", width: "sm:w-[279px]" },
+      { name: "nickname", label: "NICKNAME", placeholder: "e.g code healer", width: "sm:w-[279px]" },
       { name: "phone", label: "PHONE NUMBER", type: "Number", placeholder: "e.g +234 706 004 0000", width: "sm:w-[226px]" },
     ],
     [
@@ -21,7 +21,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
     ],
     [
       { name: "country", label: "COUNTRY OF ORIGIN", type: "select", options: countries, width: "sm:w-[179px]" },
-      { name: "street", label: "STREET ADDRESS", placeholder: "e.g 11, Bawo street.", width: "sm:w-[322px]" },
+      { name: "street", label: "STREET ADDRESS", placeholder: "e.g 11, Bawo Street.", width: "sm:w-[322px]" },
     ],
     [
       { name: "city", label: "CITY/TOWN", placeholder: "e.g Calabar", width: "sm:w-[179px]" },

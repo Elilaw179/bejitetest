@@ -1,9 +1,15 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Resume = () => {
 
   const navigate = useNavigate()
+    const location = useLocation();
+
+    const { email, firstName, lastName, role, mode, followings } =
+      location.state || {};
+
+      console.log("followings:", followings);
   return (
     <div className="bg-white min-h-screen flex flex-col items-center">
      
@@ -33,7 +39,7 @@ const Resume = () => {
 
         <div className="mt-4 w-full flex justify-center">
           <button className="w-full max-w-[321px] h-12 bg-[#16730F] border border-none rounded-[30px] text-white shadow-md text-base font-medium transition-all hover:bg-[#1A3E32]"
-           onClick={()=>navigate("/bio")}>
+           onClick={()=>navigate("/bio", { state: { email, firstName, lastName, role, mode, followings } })}>
             
             Get Started
           </button>

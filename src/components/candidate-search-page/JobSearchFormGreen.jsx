@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { FaCheck } from "react-icons/fa";
 
@@ -239,7 +238,7 @@ const FormHeader = () => {
   return (
     <div className="max-w-3xl mx-auto rounded-2xl p-4 sm:p-6 bg-[#1A3E32] shadow-sm">
       <p className="text-xl sm:text-2xl font-medium text-[#ffffff] text-center">
-        Search Criteria  
+        Search Criteria
       </p>
     </div>
   );

@@ -1,6 +1,7 @@
 
 import React from "react";
 import { FaArrowLeft, FaHome } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const navItems = [
   { icon: FaHome, label: "News Feed" },
@@ -10,7 +11,9 @@ const navItems = [
   { icon: "/assets/images/notification.svg", label: "Notifications" },
 ];
 
+
 export default function RecruitmentLeft() {
+  const navigate = useNavigate()
   return (
     <div className="bg-[#F5F5F5] p-2 min-h-screen">
   <aside className="hidden md:block bg-[#16730F] rounded-2xl">
@@ -31,7 +34,10 @@ export default function RecruitmentLeft() {
         ))}
       </nav>
       <div className="bg-[#1A3E32] h-[560px] rounded-b-2xl mt-10 flex flex-col items-center pt-10 space-y-5">
-        <h3 className="text-white">AdPro</h3>
+        <button 
+        className="text-white"
+        onClick={()=>navigate('/payment')}
+        >AdPro</button>
         <div className="w-[200px] h-[200px] bg-[#FFFFFF]" />
       </div>
     </aside>

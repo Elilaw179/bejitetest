@@ -1,43 +1,107 @@
-
-
-import React, { useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
-import StepTabs from '../../../components/StepTabs';
-import ProgressBar from '../../../components/ProgressBar';
-import ImageUpload from '../../../components/ImageUpload';
-import FieldGroup from '../../../components/FieldGroup';
-import NavigationButtons from '../../../components/NavigationButtons';
-import Header from '../../../components/Header';
+import React, { useState } from "react";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import StepTabs from "../../../components/StepTabs";
+import ProgressBar from "../../../components/ProgressBar";
+import ImageUpload from "../../../components/ImageUpload";
+import FieldGroup from "../../../components/FieldGroup";
+import NavigationButtons from "../../../components/NavigationButtons";
+import Header from "../../../components/Header";
 
 const Bio = () => {
   const navigate = useNavigate();
   const { currentStep } = useOutletContext();
-  const steps = ["Bio", "Education", "Skills", "Work history", "Certificate", "Links"];
+  const steps = [
+    "Bio",
+    "Education",
+    "Skills",
+    "Work history",
+    "Certificate",
+    "Links",
+  ];
 
-const countries = [
-  "Nigeria", "United States", "Canada", "United Kingdom", "Germany", "France",
-  "India", "China", "South Africa", "Brazil", "Australia", "Italy", "Japan",
-  "Kenya", "Mexico", "Netherlands", "Russia", "Spain", "Sweden",
-  "Argentina", "Egypt", "Turkey", "South Korea", "Norway", "Poland",
-  "Indonesia", "Saudi Arabia", "Thailand", "Vietnam", "Philippines", "Malaysia",
-  "Greece", "Ukraine", "Pakistan", "Bangladesh", "New Zealand", "Colombia",
-  "Chile", "Peru", "Finland", "Portugal", "Denmark", "Switzerland", "Belgium",
-  "Austria", "Ireland", "Czech Republic", "Hungary"
-];
+  const countries = [
+    "Nigeria",
+    "United States",
+    "Canada",
+    "United Kingdom",
+    "Germany",
+    "France",
+    "India",
+    "China",
+    "South Africa",
+    "Brazil",
+    "Australia",
+    "Italy",
+    "Japan",
+    "Kenya",
+    "Mexico",
+    "Netherlands",
+    "Russia",
+    "Spain",
+    "Sweden",
+    "Argentina",
+    "Egypt",
+    "Turkey",
+    "South Korea",
+    "Norway",
+    "Poland",
+    "Indonesia",
+    "Saudi Arabia",
+    "Thailand",
+    "Vietnam",
+    "Philippines",
+    "Malaysia",
+    "Greece",
+    "Ukraine",
+    "Pakistan",
+    "Bangladesh",
+    "New Zealand",
+    "Colombia",
+    "Chile",
+    "Peru",
+    "Finland",
+    "Portugal",
+    "Denmark",
+    "Switzerland",
+    "Belgium",
+    "Austria",
+    "Ireland",
+    "Czech Republic",
+    "Hungary",
+  ];
 
   const [imagePreview, setImagePreview] = useState(null);
   const [formData, setFormData] = useState({
-    nickname: "", phone: "", gender: "", maritalStatus: "",
-    age: "", country: "", street: "", city: "", tribe: "", zip: "", bio: "",
+    nickname: "",
+    phone: "",
+    gender: "",
+    maritalStatus: "",
+    age: "",
+    country: "",
+    street: "",
+    city: "",
+    tribe: "",
+    zip: "",
+    bio: "",
   });
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) setImagePreview(URL.createObjectURL(file));
   };
 
-  const isFormComplete = Object.values(formData).every((v) => v.trim() !== "") && imagePreview;
+  const isFormComplete =
+    Object.values(formData).every((v) => v.trim() !== "") && imagePreview;
+
+
+    const location = useLocation();
+
+    const { email, firstName, lastName, role, mode, followings } =
+      location.state || {};
+
+
 
   return (
     <div className="bg-white">
@@ -71,7 +135,12 @@ const countries = [
       <NavigationButtons
         isFormComplete={isFormComplete}
         onBack={() => navigate(-1)}
-        onNext={() => isFormComplete && navigate("/education")}
+        onNext={() =>
+          isFormComplete &&
+          navigate("/education", {
+            state: { email, firstName, lastName, role, mode, followings },
+          })
+        }
       />
     </div>
   );
