@@ -1,10 +1,18 @@
 import React from "react";
 import PaymentPageHeader from "../../components/PaymentPageHeader";
+import { useNavigate } from "react-router-dom";
 
 const spanStyle = 'bg-white rounded-2xl px-2'
 const imgStyle = 'w-10'
 
 export default function PaymentType() {
+
+  const navigate = useNavigate();
+  
+    function handleButtonClick() {
+      navigate('/add-card');
+    }
+    
   return (
     <div className="bg-white">
       <PaymentPageHeader />
@@ -13,7 +21,7 @@ export default function PaymentType() {
         <p className="mt-12 text-2xl font-normal text-center">Choose Payment Type</p>
         <p className="text-base font-normal text-center">How would you like to pay?</p>
 
-        <div className="bg-[#16730F] border-[#1A3E32] border-2 rounded-2xl flex justify-between items-center max-w-[565px] h-[80px] px-3.5 cursor-pointer m-auto mt-20 flex-col py-2.5 md:flex-row">
+        <div className="bg-[#16730F] border-[#1A3E32] border-2 rounded-2xl flex justify-between items-center max-w-[565px] h-[80px] px-3.5 cursor-pointer m-auto mt-20 flex-col py-2.5 md:flex-row" onClick={handleButtonClick}>
           <div className="text-[#FFFFFF] font-semibold">Debit/Credit Card</div>
           <div className="flex gap-1.5">
             <span className={spanStyle}>
