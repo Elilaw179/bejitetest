@@ -108,14 +108,13 @@ function VerifyEmail() {
         );
 
         // If backend returns success:true
-        if (res.data?.success) {
-          setMessage(res.data.message || "✅ Email verified successfully!");
-          // redirect to sign-in after short delay
-          setTimeout(() => navigate("/"), 3000);
-        } else {
-          // backend responded but without success
-          setMessage(res.data?.message || "❌ Verification failed.");
-        }
+       if (res.data?.success) {
+  setMessage(res.data.message || "✅ Email verified successfully!");
+} else {
+  console.error("Backend verify response:", res.data);
+  setMessage(res.data?.message || "❌ Verification failed.");
+}
+
       } catch (err) {
         // network or backend error
         console.error("Verification error:", err?.response?.data || err.message || err);
