@@ -69,7 +69,7 @@ function App() {
           <Route path="/email-check" element={<EmailCheck />} />
           <Route path="/signup-role" element={<SignUpRole />} />
           <Route path="/confirmpassword" element={<ConfirmPassword />} />
-            <Route path="/auth/verify-email" element={<VerifyEmail />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/jobseeker-option" element={<JobSeekerOpt />} />
           <Route path="/employer-option" element={<EmployerOpt />} />
           <Route path="/jobconnection" element={<JobConnection />} />
