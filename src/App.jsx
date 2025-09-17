@@ -76,7 +76,7 @@ function App() {
           <Route path="/resume" element={<Resume />} />
           <Route path="/save-progress" element={<SaveProgress />} />
           <Route element={<ResumeLayout />}>
-            <Route path="/bio" element={<Bio />} />
+          <Route path="/bio" element={<Bio />} />
             <Route path="/education" element={<Education />} />
             <Route path="/skills" element={<Skills />} />
             <Route path="/work-history" element={<WorkHistory />} />
