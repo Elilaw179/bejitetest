@@ -71,6 +71,12 @@
 
 
 
+
+
+
+
+
+
 // import { ChevronLeft } from "lucide-react";
 // import React, { useEffect, useState } from "react";
 // import { useNavigate, useLocation } from "react-router-dom";
@@ -175,6 +181,10 @@
 
 
 
+
+
+
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -187,12 +197,13 @@ function VerifyEmail() {
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
+    // read token & email from query string
     const qs = new URLSearchParams(location.search);
     const token = qs.get("token");
     const email = qs.get("email");
 
     if (!token || !email) {
-      setMessage("❌ Invalid verification link. Missing token or email.");
+      setMessage("❌ Invalid verification link.");
       setBusy(false);
       return;
     }
@@ -200,65 +211,53 @@ function VerifyEmail() {
     const verify = async () => {
       try {
         setBusy(true);
-        console.log("Verifying with:", { token, email });
-        
-        // Try different endpoint formats since the documented one returns HTML
-        const endpointsToTry = [
-          `https://bejite-backend.onrender.com/api/auth/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`,
-          `https://bejite-backend.onrender.com/auth/verify-email/${token}/${email}`,
-          `https://bejite-backend.onrender.com/api/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`
-        ];
-
-        let verificationSuccess = false;
-
-        for (const endpoint of endpointsToTry) {
-          try {
-            console.log("Trying endpoint:", endpoint);
-            const res = await axios.get(endpoint, {
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-              timeout: 10000
-            });
-
-            console.log("Response from", endpoint, ":", res.data);
-
-            // Check if response is HTML (indicating wrong endpoint)
-            if (typeof res.data === 'string' && res.data.includes('<!DOCTYPE html>')) {
-              console.log("Endpoint returned HTML, trying next...");
-              continue;
-            }
-
-            if (res.data?.success || res.status === 200) {
-              setMessage(res.data?.message || "✅ Email verified successfully!");
-              setIsVerified(true);
-              verificationSuccess = true;
-              setTimeout(() => navigate('/'), 3000);
-              break;
-            }
-          } catch (err) {
-            console.log("Endpoint failed:", endpoint, err.message);
-            // Continue to next endpoint
+        // Try POST request instead of GET (more common for verification)
+        const res = await axios.post(
+          `https://bejite-backend.onrender.com/auth/verify-email`,
+          {
+            token: token,
+            email: email
           }
-        }
+        );
 
-        if (!verificationSuccess) {
-          // If all endpoints failed, check if this might be a mock/test scenario
-          // For development/testing, you might want to simulate success
-          if (process.env.NODE_ENV === 'development') {
-            console.log("Simulating verification success for development");
-            setMessage("✅ Email verified successfully! (Simulated for development)");
-            setIsVerified(true);
-            setTimeout(() => navigate('/'), 3000);
-          } else {
-            setMessage("❌ Verification failed. The endpoint may be incorrect or the server may be misconfigured.");
-          }
+        // Check different possible success responses
+        if (res.data?.success || res.data?.verified || res.status === 200) {
+          setMessage(res.data.message || "✅ Email verified successfully!");
+          setIsVerified(true);
+          // Redirect to login after 3 seconds
+          setTimeout(() => {
+            navigate('/');
+          }, 3000);
+        } else {
+          console.error("Backend verify response:", res.data);
+          setMessage(res.data?.message || "❌ Verification failed.");
         }
 
       } catch (err) {
-        console.error("All verification attempts failed:", err);
-        setMessage("❌ Unable to verify email. Please contact support or try again later.");
+        // Log the first error before trying alternative endpoint
+        console.error("First verification attempt failed:", err?.response?.data || err.message);
+        
+        // Try alternative endpoint format if first fails
+        try {
+          const altRes = await axios.get(
+            `https://bejite-backend.onrender.com/auth/verify-email/${token}/${email}`
+          );
+          
+          if (altRes.data?.success || altRes.data?.verified) {
+            setMessage(altRes.data.message || "✅ Email verified successfully!");
+            setIsVerified(true);
+            setTimeout(() => {
+              navigate('/');
+            }, 3000);
+          } else {
+            throw new Error("Alternative endpoint also failed");
+          }
+        } catch (altErr) {
+          // network or backend error
+          console.error("Verification error:", altErr?.response?.data || altErr.message || altErr);
+          const backendMsg = altErr?.response?.data?.message || altErr?.response?.data?.error;
+          setMessage(backendMsg || "❌ Verification link invalid or expired.");
+        }
       } finally {
         setBusy(false);
       }
@@ -267,19 +266,40 @@ function VerifyEmail() {
     verify();
   }, [location.search, navigate]);
 
-  const handleContactSupport = () => {
-    window.location.href = "mailto:support@bejite.com?subject=Email Verification Issue";
-  };
+  const handleResendVerification = async () => {
+    const qs = new URLSearchParams(location.search);
+    const email = qs.get("email");
+    
+    if (!email) {
+      setMessage("❌ No email found to resend verification.");
+      return;
+    }
 
-  const handleRetry = () => {
-    window.location.reload();
+    try {
+      setBusy(true);
+      const res = await axios.post(
+        `https://bejite-backend.onrender.com/auth/resend-verification`,
+        { email: email }
+      );
+
+      if (res.data?.success) {
+        setMessage("✅ Verification email resent! Check your inbox.");
+      } else {
+        setMessage(res.data?.message || "❌ Failed to resend verification email.");
+      }
+    } catch (err) {
+      console.error("Resend error:", err);
+      setMessage("❌ Error resending verification email.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <div className="bg-white">
       <div className="flex w-[80%] mx-auto justify-between absolute right-4 left-4 top-1/12 transform -translate-y-1/2 z-10">
         <div>
-          <img src="/assets/images/logo.png" alt="Logo" />
+          <img src="/assets/images/logo.png" alt="" />
         </div>
       </div>
 
@@ -287,53 +307,32 @@ function VerifyEmail() {
         <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4 w-[50%] mx-auto">
           <div className="w-full space-y-7">
             <div className="space-y-6 w-[70%] mx-auto flex flex-col items-center">
-              <img src="/assets/images/emailcheck.png" alt="Email Verification" />
+              <img src="/assets/images/emailcheck.png" alt="" />
 
               <h1 className="text-3xl font-bold text-pink-600">
                 {isVerified ? "Verified!" : "Verify your email"}
               </h1>
 
-              <div className="text-center">
-                <p className="text-center text-lg mb-4">{message}</p>
+              <div>
+                <p className="text-center">{message}</p>
                 {busy && <p className="text-center text-sm text-gray-500 mt-2">Please wait...</p>}
-                
-                {/* Debug info */}
-                <div className="mt-4 p-3 bg-gray-100 rounded text-xs text-left">
-                  <p><strong>Debug Information:</strong></p>
-                  <p>Token: {new URLSearchParams(location.search).get('token') ? 'Present' : 'Missing'}</p>
-                  <p>Email: {new URLSearchParams(location.search).get('email') || 'Missing'}</p>
-                  <p>Environment: {process.env.NODE_ENV}</p>
-                </div>
               </div>
 
-              {!isVerified && !busy && (
-                <div className="flex flex-col gap-3 w-full">
-                  <button
-                    className="w-full py-4 rounded-[20px] text-white bg-[#FF3C61] font-semibold transition shadow-md cursor-pointer hover:bg-[#e03555]"
-                    onClick={handleRetry}
-                  >
-                    Retry Verification
-                  </button>
-                  
-                  <button
-                    className="w-full py-4 rounded-[20px] text-white bg-[#3C7BFF] font-semibold transition shadow-md cursor-pointer hover:bg-[#3569e0]"
-                    onClick={handleContactSupport}
-                  >
-                    Contact Support
-                  </button>
-                  
-                  <button
-                    className="w-full py-4 rounded-[20px] text-white bg-[#16730F] font-semibold transition shadow-md cursor-pointer hover:bg-[#13620c]"
-                    onClick={() => navigate('/')}
-                  >
-                    Back to Login
-                  </button>
-                </div>
+              {!isVerified && (
+                <button
+                  className={`w-[70%] py-4 rounded-[20px] text-white bg-[#FF3C61] font-semibold transition shadow-md cursor-pointer ${
+                    busy ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  onClick={handleResendVerification}
+                  disabled={busy}
+                >
+                  {busy ? "Processing..." : "Resend Verification Email"}
+                </button>
               )}
 
               {isVerified && (
                 <button
-                  className="w-[70%] py-4 rounded-[20px] text-white bg-[#16730F] font-semibold transition shadow-md cursor-pointer hover:bg-[#13620c]"
+                  className="w-[70%] py-4 rounded-[20px] text-white bg-[#16730F] font-semibold transition shadow-md cursor-pointer"
                   onClick={() => navigate('/')}
                 >
                   Go to Login
