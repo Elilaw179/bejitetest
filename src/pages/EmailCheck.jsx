@@ -31,7 +31,7 @@ function EmailCheck() {
           </h1>
 
           <p className="text-center text-sm sm:text-base text-[#333">
-            We've sent a password reset link to your inbox.
+            We’ve sent a password reset link to your inbox.
             <br className="hidden sm:block" />
             Follow the instructions to reset your password.
           </p>

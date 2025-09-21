@@ -1,149 +1,167 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
-import StepTabs from "../../../components/StepTabs";
-import ProgressBar from "../../../components/ProgressBar";
-import ImageUpload from "../../../components/ImageUpload";
-import FieldGroup from "../../../components/FieldGroup";
-import NavigationButtons from "../../../components/NavigationButtons";
-import Header from "../../../components/Header";
+import { useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import StepTabs from '../../../components/StepTabs';
+import ProgressBar from '../../../components/ProgressBar';
+import ImageUpload from '../../../components/ImageUpload';
+import FieldGroup from '../../../components/FieldGroup';
+import NavigationButtons from '../../../components/NavigationButtons';
+import Header from '../../../components/Header';
+import useApi from '../../../hooks/useApi';
+import { toast } from 'react-toastify';
+import useLocalStorage from '../../../hooks/useLocalStorage';
 
 const Bio = () => {
-  const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
-  const steps = [
-    "Bio",
-    "Education",
-    "Skills",
-    "Work history",
-    "Certificate",
-    "Links",
-  ];
+    const navigate = useNavigate();
+    const { currentStep } = useOutletContext();
+    const steps = [
+        'Bio',
+        'Education',
+        'Skills',
+        'Work history',
+        'Certificate',
+        'Links',
+    ];
 
-  const countries = [
-    "Nigeria",
-    "United States",
-    "Canada",
-    "United Kingdom",
-    "Germany",
-    "France",
-    "India",
-    "China",
-    "South Africa",
-    "Brazil",
-    "Australia",
-    "Italy",
-    "Japan",
-    "Kenya",
-    "Mexico",
-    "Netherlands",
-    "Russia",
-    "Spain",
-    "Sweden",
-    "Argentina",
-    "Egypt",
-    "Turkey",
-    "South Korea",
-    "Norway",
-    "Poland",
-    "Indonesia",
-    "Saudi Arabia",
-    "Thailand",
-    "Vietnam",
-    "Philippines",
-    "Malaysia",
-    "Greece",
-    "Ukraine",
-    "Pakistan",
-    "Bangladesh",
-    "New Zealand",
-    "Colombia",
-    "Chile",
-    "Peru",
-    "Finland",
-    "Portugal",
-    "Denmark",
-    "Switzerland",
-    "Belgium",
-    "Austria",
-    "Ireland",
-    "Czech Republic",
-    "Hungary",
-  ];
+    const countries = [
+        'Nigeria',
+        'United States',
+        'Canada',
+        'United Kingdom',
+        'Germany',
+        'France',
+        'India',
+        'China',
+        'South Africa',
+        'Brazil',
+        'Australia',
+        'Italy',
+        'Japan',
+        'Kenya',
+        'Mexico',
+        'Netherlands',
+        'Russia',
+        'Spain',
+        'Sweden',
+        'Argentina',
+        'Egypt',
+        'Turkey',
+        'South Korea',
+        'Norway',
+        'Poland',
+        'Indonesia',
+        'Saudi Arabia',
+        'Thailand',
+        'Vietnam',
+        'Philippines',
+        'Malaysia',
+        'Greece',
+        'Ukraine',
+        'Pakistan',
+        'Bangladesh',
+        'New Zealand',
+        'Colombia',
+        'Chile',
+        'Peru',
+        'Finland',
+        'Portugal',
+        'Denmark',
+        'Switzerland',
+        'Belgium',
+        'Austria',
+        'Ireland',
+        'Czech Republic',
+        'Hungary',
+    ];
 
-  const [imagePreview, setImagePreview] = useState(null);
-  const [formData, setFormData] = useState({
-    nickname: "",
-    phone: "",
-    gender: "",
-    maritalStatus: "",
-    age: "",
-    country: "",
-    street: "",
-    city: "",
-    tribe: "",
-    zip: "",
-    bio: "",
-  });
+    const [imagePreview, setImagePreview] = useState(null);
+    const [formData, setFormData] = useState({
+        nickname: '',
+        phone: '',
+        gender: '',
+        maritalStatus: '',
+        age: '',
+        country: '',
+        street: '',
+        city: '',
+        tribe: '',
+        zip: '',
+        bio: '',
+    });
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) setImagePreview(URL.createObjectURL(file));
-  };
+    const handleChange = (e) =>
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) setImagePreview(URL.createObjectURL(file));
+    };
 
-  const isFormComplete =
-    Object.values(formData).every((v) => v.trim() !== "") && imagePreview;
+    const isFormComplete =
+        Object.values(formData).every((v) => v.trim() !== '') && imagePreview;
 
+    // useApi
+    const { postDataPromise } = useApi();
+    const { id: userId } = useLocalStorage('user');
 
-    const location = useLocation();
+    const addEducation = async () => {
+        try {
+            toast.promise(
+                postDataPromise('/api/cv-builder/bio', {
+                    userId,
+                    ...formData,
+                }),
+                {
+                    pending: 'Saving...',
+                    success: 'Saved successfully',
+                    error: {
+                        render({ data }) {
+                            return `${data}`;
+                        },
+                    },
+                }
+            );
 
-    const { email, firstName, lastName, role, mode, followings } =
-      location.state || {};
-
-
-
-  return (
-    <div className="bg-white">
-      <Header />
-
-      <StepTabs steps={steps} currentStep={currentStep} />
-      <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
-
-      <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
-        Bio/Personal Information
-      </section>
-      <p className="max-w-3xl mx-auto px-4 text-[#333] text-[15px]">
-        Tell us who you are. This is the first impression employers get.
-      </p>
-
-      <div className="max-w-4xl mx-auto mt-6 border-2 border-[#E0E0E0] flex flex-col lg:flex-row gap-8 p-4">
-        <ImageUpload
-          imagePreview={imagePreview}
-          handleImageChange={handleImageChange}
-          bio={formData.bio}
-          onBioChange={handleChange}
-        />
-
-        <FieldGroup
-          formData={formData}
-          handleChange={handleChange}
-          countries={countries}
-        />
-      </div>
-
-      <NavigationButtons
-        isFormComplete={isFormComplete}
-        onBack={() => navigate(-1)}
-        onNext={() =>
-          isFormComplete &&
-          navigate("/education", {
-            state: { email, firstName, lastName, role, mode, followings },
-          })
+            navigate('/education');
+        } catch (error) {
+            console.log(error);
         }
-      />
-    </div>
-  );
+    };
+
+    return (
+        <div className="bg-white">
+            <Header />
+
+            <StepTabs steps={steps} currentStep={currentStep} />
+            <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
+
+            <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
+                Bio/Personal Information
+            </section>
+            <p className="max-w-3xl mx-auto px-4 text-[#333] text-[15px]">
+                Tell us who you are. This is the first impression employers get.
+            </p>
+
+            <div className="max-w-4xl mx-auto mt-6 border-2 border-[#E0E0E0] flex flex-col lg:flex-row gap-8 p-4">
+                <ImageUpload
+                    imagePreview={imagePreview}
+                    handleImageChange={handleImageChange}
+                    bio={formData.bio}
+                    onBioChange={handleChange}
+                />
+
+                <FieldGroup
+                    formData={formData}
+                    handleChange={handleChange}
+                    countries={countries}
+                />
+            </div>
+
+            <NavigationButtons
+                isFormComplete={isFormComplete}
+                onBack={() => navigate(-1)}
+                onNext={addEducation}
+            />
+        </div>
+    );
 };
 
 export default Bio;

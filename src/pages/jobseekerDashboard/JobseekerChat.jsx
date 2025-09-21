@@ -1,11 +1,11 @@
 import React from 'react'
 import { useState } from 'react'
 import NewsFeedHeader from '../../components/NewsFeedHeader'
-import ChatsRight from '../../components/recruterchats/chats-right'
-import ChatsLeft from '../../components/recruterchats/chats-left'
-import ChatsMiddle from '../../components/recruterchats/chats-middle'
+import ChatsRight from '../../components/jobseekerchats/chats-right'
+import ChatsLeft from '../../components/jobseekerchats/chats-left'
+import ChatsMiddle from '../../components/jobseekerchats/chats-middle'
 
-function Chat() {
+function JobseekerChat() {
   const [selectedChat, setSelectedChat] = useState(null);
   const [currentView, setCurrentView] = useState('chatList'); // 'chatList', 'chatView', 'chatInfo'
 
@@ -37,7 +37,7 @@ function Chat() {
           {/* Desktop Layout */}
           <div className="hidden lg:grid lg:grid-cols-subgrid lg:col-span-3 lg:gap-4 h-full">
             {/* Left Sidebar */}
-            <div className="bg-[#1A3E32]  overflow-y-auto">
+            <div className="bg-[#1A3E32] rounded-lg overflow-y-auto">
               <ChatsLeft 
                 onSelectChat={handleSelectChat} 
                 selectedChat={selectedChat}
@@ -45,7 +45,7 @@ function Chat() {
             </div>
 
             {/* Middle Chat Section */}
-            <div className="bg-white  overflow-y-auto">
+            <div className="bg-white rounded-lg overflow-y-auto">
               <ChatsMiddle 
                 selectedChat={selectedChat} 
                 onShowChatList={showChatList}
@@ -65,7 +65,7 @@ function Chat() {
           {/* Mobile Layout */}
           <div className="lg:hidden col-span-1 h-full">
             {currentView === 'chatList' && (
-              <div className="bg-[#1A3E32]  overflow-y-auto h-full">
+              <div className="bg-[#1A3E32] rounded-lg overflow-y-auto h-full">
                 <ChatsLeft 
                   onSelectChat={handleSelectChat} 
                   selectedChat={selectedChat}
@@ -98,4 +98,4 @@ function Chat() {
   );
 }
 
-export default Chat;
+export default JobseekerChat;

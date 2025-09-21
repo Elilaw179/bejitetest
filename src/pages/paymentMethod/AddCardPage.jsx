@@ -23,7 +23,7 @@ export default function AddCard() {
       <PaymentPageHeader />
 
       <section className="bg-[#F5F5F5] border border-[#1A3E32] mt-1 max-w-[1000px] max-h-full m-auto px-4.5 py-3.5 text-[#333333]">
-        <p className="mt-6 text-2xl font-normal text-center capitalize">Add your card to complete payment</p>
+        <p className="capitalize  font-normal text-2xl text-center mt-6">Add your card to complete payment</p>
         <p className="font-normal text-[12px] text-center mt-2.5">Securely enter your card details to activate your selected plan and gain access to Bejite's advanced recruitment tools</p>
         <div className="max-w-[640px] max-h-[461px] rounded-[10px] bg-neutral-300 border-[#16730F] border-1 m-auto mt-8 px-9 py-4 place-items-center">
           <form className="mt-6">
