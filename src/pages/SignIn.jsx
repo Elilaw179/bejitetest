@@ -56,24 +56,27 @@ function SignIn() {
           </h1>
           <button
             className="bg-[#16730F] py-2 px-5 sm:py-3 sm:px-7 rounded-2xl shadow text-white cursor-pointer"
-            onClick={() => navigate("/signup")}
+            onClick={() => {
+              console.log("Navigating to signup page");
+              navigate("/signup");
+            }}
           >
             Register
           </button>
         </div>
       </div>
 
+      {/* Form + Illustration */}
       <div className="flex flex-col lg:flex-row flex-1 justify-between relative">
-        {/* Left illustration */}
         <div className="w-full lg:w-[60%] relative hidden lg:block">
+          <img src="/assets/images/Illustra.svg" alt="Auth" className="w-full h-screen" />
           <img
-            src="/assets/images/Illustra.svg"
-            alt="Auth"
-            className="w-full h-screen"
+            src="/assets/images/asubtext.svg"
+            alt="Auth Text"
+            className="absolute top-3/7 left-[46%] transform -translate-x-1/2 -translate-y-1/2"
           />
         </div>
 
-        {/* Right form */}
         <div className="w-full lg:w-[40%] flex lg:justify-start items-center justify-center px-6 py-10">
           <div className="w-full max-w-md space-y-5">
             <h2 className="text-3xl font-norican font-semibold text-[#16730F] text-center">
@@ -81,7 +84,6 @@ function SignIn() {
             </h2>
             <p className="text-center text-[#1A3E32] text-md">Sign in to continue</p>
 
-            {/* Email/Password Form */}
             <form onSubmit={handleLogin} className="space-y-4">
               <input
                 type="email"
@@ -100,21 +102,25 @@ function SignIn() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => {
+                    setShowPassword(!showPassword);
+                    console.log("Toggled password visibility:", !showPassword);
+                  }}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
 
-              {errors?.error && (
-                <p className="text-red-500 text-sm">{errors.error}</p>
-              )}
+              {errors?.error && <p className="text-red-500 text-sm">{errors.error}</p>}
 
               <div className="text-right">
                 <p
                   className="text-sm text-gray-500 italic hover:underline cursor-pointer"
-                  onClick={() => navigate("/forgot-password")}
+                  onClick={() => {
+                    console.log("Navigating to forgot password page");
+                    navigate("/forgot-password");
+                  }}
                 >
                   Forgot Password?
                 </p>
@@ -132,8 +138,6 @@ function SignIn() {
             </form>
 
             <p className="text-[#1A3E32] text-center text-xl">...or sign in with</p>
-
-            {/* Google OAuth Button */}
             <div className="flex justify-center gap-6 mt-4">
               <button
                 onClick={handleGoogleLogin}
