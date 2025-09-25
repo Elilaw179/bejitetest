@@ -51,7 +51,10 @@ import AuthSuccess from './pages/auth/AuthSuccess.jsx';
 //import VerifyEmail from './pages/auth/VerifyEmail.jsx';
 import EmailSent from './pages/auth/EmailSent.jsx';
 import CompleteSignup from "./pages/CompleteSignup";
+<<<<<<< HEAD
 //import LoginSuccess from "./pages/auth/LoginSuccess";
+=======
+>>>>>>> bd81adc0c17b7e4b733a0b4e8909a6c41c05447c
 
 const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 
@@ -173,7 +176,10 @@ function App() {
                    {/* <Route path="auth/verify-email" element={<VerifyEmail />} />*/}
                     <Route path="auth/email-sent" element={<EmailSent />} />
                     <Route path="/complete-signup" element={<CompleteSignup />} />
+<<<<<<< HEAD
                     
+=======
+>>>>>>> bd81adc0c17b7e4b733a0b4e8909a6c41c05447c
                 </Routes>
             </Router>
         </GoogleOAuthProvider>

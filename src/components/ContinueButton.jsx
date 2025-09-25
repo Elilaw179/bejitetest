@@ -8,7 +8,11 @@ const ContinueButton = ({ isEnabled }) => {
 
   const handleClick = () => {
     if (isEnabled) {
+<<<<<<< HEAD
       navigate("/");
+=======
+      navigate("/resume");
+>>>>>>> bd81adc0c17b7e4b733a0b4e8909a6c41c05447c
     }
   };
 
