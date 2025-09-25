@@ -130,7 +130,6 @@ function SignUp() {
 
             <p className="text-[#1A3E32] text-center text-xl">...or signup with</p>
             <div className="flex justify-center gap-6 mt-1">
-<<<<<<< HEAD
   {/* LinkedIn placeholder */}
   <FaLinkedin className="text-blue-600 text-3xl cursor-pointer" />
 
@@ -147,14 +146,6 @@ function SignUp() {
   <img src="/assets/images/x.svg" alt="Twitter" className="w-8 h-8 cursor-pointer" />
 </div>
 
-=======
-              <FaLinkedin className="text-blue-600 text-3xl cursor-pointer" />
-              <a href="https://bejite-backend.onrender.com/auth/google" target="_self" rel="noopener noreferrer">
-                <img src="/assets/images/google.png" alt="google logo" className="w-8 h-8 cursor-pointer" />
-              </a>
-              <img src="/assets/images/x.svg" alt="Twitter" className="w-8 h-8 cursor-pointer" />
-            </div>
->>>>>>> bd81adc0c17b7e4b733a0b4e8909a6c41c05447c
           </div>
         </div>
       </div>

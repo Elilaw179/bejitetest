@@ -14,10 +14,6 @@
     "@reduxjs/toolkit": "^2.9.0",
     "@tailwindcss/vite": "^4.1.8",
     "axios": "^1.11.0",
-<<<<<<< HEAD
-=======
-    "jwt-decode": "^4.0.0",
->>>>>>> bd81adc0c17b7e4b733a0b4e8909a6c41c05447c
     "lucide-react": "^0.511.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
