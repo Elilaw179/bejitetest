@@ -1,5 +1,5 @@
 import React from "react";
-import AboutPageHeader from "../components/AboutPageHeader";
+import AboutPageHeader from "../../components/AboutPageHeader";
 
 export default function About() {
   const marginStyle = 'mt-5 mb-5'
@@ -30,7 +30,7 @@ export default function About() {
           <p className={marginStyle}>Create an account and enter your job description. Review applications, manage offers and interviews from your bejite account.</p>
           <p className={marginStyle}>Elevate your Employer and Jobseeker brand</p>
           <p className={marginStyle}>With more than 10 million employer/jobseeker reviews, company/jobseeker pages give people insights into potential employers and jobseekers and help you create a memorable candidate experience. Build your talent brand for free with your Bejite Personal/Company Page.</p>
-            <a href="#" className="text-[#E09A36] mt-5 mb-5 underline">
+            <a href="https://www.bejite.com" target="_blank" className="text-[#E09A36] mt-5 mb-5 underline">
               Get started with Bejite.com
             </a>
           <p className={marginStyle}>Socialize. Hire. Share in 2 minutes!</p>

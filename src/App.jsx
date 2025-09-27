@@ -54,8 +54,11 @@ import PaymentSuccess from "./pages/paymentMethod/PaymentSuccessPage.jsx";
 import SentInvite from "./pages/individual/SentInvite.jsx";
 import EmployeeSentInvite from "./pages/employerDashboard/EmployeeSentInvite.jsx";
 import InterviewInvite from "./components/InterviewInvite.jsx";
-import About from "./pages/About.jsx";
-import Teams from "./pages/Teams.jsx";
+import About from "./pages/misc/About.jsx"
+import Teams from "./pages/misc/Teams.jsx";
+import SecurityAdvice from "./pages/misc/SecurityAdvice.jsx";
+import PrivacyPolicy from "./pages/misc/PrivacyPolicy.jsx";
+import Contact from "./pages/misc/Contact.jsx";
 
 
 const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
@@ -137,6 +140,9 @@ function App() {
           <Route path="/interview-invite" element={<InterviewInvite />} />
           <Route path="/about" element={<About />} />
           <Route path="/teams" element={<Teams />} />
+          <Route path="/security-advice" element={<SecurityAdvice />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/contact" element={<Contact />} />
         </Routes>
       </Router>
     </GoogleOAuthProvider>

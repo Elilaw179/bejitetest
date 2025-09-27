@@ -3,7 +3,7 @@ export const teamData = [
     id: 1,
     name: "Ogbodo Chukwuma",
     image:"/assets/images/teamimages/ceo.jpg",
-    role: "CEO, director",
+    role: "CEO, Director",
     description: "A seasoned data analyst with 10+ years of experience helping corporates solve data challenges. As Bejite's transformational leader, he drives the company's growth and vision.",
     connect: "CONNECT with him on Bejite to learn more."
   },
@@ -11,7 +11,7 @@ export const teamData = [
     id: 2,
     name: "Elisha Sunday",
     image:"/assets/images/teamimages/web.jpg",
-    role: "Frontend developer",
+    role: "Frontend Developer",
     description: "Frontend developer with strong experience building responsive, scalable, and user-focused web apps using React.js, TypeScript, and Tailwind CSS. Skilled in modern JavaScript (ES6+) etc",
     connect: "CONNECT with him on Bejite to learn more."
   },

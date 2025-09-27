@@ -1,6 +1,6 @@
 import React from "react";
-import AboutPageHeader from "../components/AboutPageHeader";
-import { teamData } from "../data/teamData";
+import AboutPageHeader from "../../components/AboutPageHeader";
+import { teamData } from "../../data/teamData";
 
 export default function Teams() {
 
