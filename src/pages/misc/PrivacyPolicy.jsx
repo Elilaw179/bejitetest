@@ -10,7 +10,7 @@ export default function PrivacyPolicy() {
       <AboutPageHeader headerText="PRIVACY POLICY" />
       <main className="bg-white p-6">
         <p className="text-[#16730F] font-bold mt-5 mb-5 text-xl">Bejite Privacy Policy</p>
-        <div className="text-xs sm:text-sm font-medium">
+        <div className="text-xs sm:text-sm font-medium text-[#1A3E32]">
           <p className="mt-5 mb-5">
             Effective Date: 1st May, 2025. Owned and operated by SolPro Innovative Technologies Limited
           </p>

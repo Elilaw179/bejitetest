@@ -10,7 +10,7 @@ export default function SecurityAdvice() {
       <AboutPageHeader headerText="SECURITY ADVICE" />
       <main className="bg-white font-semibold p-6">
         <p className={`${greenStyle} ${marginStyle} text-xl`}>Bejite Security Advice</p>
-        <div className="text-xs sm:text-sm">
+        <div className="text-xs sm:text-sm text-[#1A3E32]">
           <p><a href="https://www.bejite.com" target="_blank" className={hyperlinkStyle}>Bejite.com</a> is a platform that connects jobseekers and employers. We are not a recruitment agency, labor consultant, or employment partner of any organization. Rather, Bejite serves as a public platform utilized by a wide range of recruiters, placement agencies, and corporate employers.<br />To maintain a safe and trustworthy environment for all users, every employer must accept and abide by our Terms and Conditions, which include strict measures to detect and prevent fraud and misuse.</p>
           <p className={marginStyle}><span className={greenStyle}>Stay Alert: Avoid Recruitment Scams</span> <br />Unfortunately, some individuals may attempt to misuse platforms like Bejite by sending fake job offers or conducting fraudulent interviews in order to collect personal information or money from unsuspecting users. <br />If we receive reports or complaints of suspicious messages, impersonations, or employers requesting payments, we immediately investigate and may suspend or permanently block the offender's access.</p>
           <p className="text-[#EB5757] font-bold">Red Flags to Watch For</p>
