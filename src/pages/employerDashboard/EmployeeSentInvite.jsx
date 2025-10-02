@@ -27,11 +27,21 @@ export default function EmployeeSentInvite() {
   const activeChat = employers.find(employer => employer.id === activeChatState);
 
   const [isDisabled, setIsDisabled] = useState(true);
+  const [_acceptedInvite, _setAcceptedInvite] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
 
-  const handleInvite = () => {
-    setAcceptedInvite(true)
+  const _handleInvite = () => {
+    _setAcceptedInvite(true)
     setIsDisabled(false);
   }
+
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      // Add your message sending logic here
+      console.log('Sending message:', newMessage);
+      setNewMessage('');
+    }
+  };
 
   // const headerIcons = {
   //   hasInvites: true,
@@ -65,7 +75,7 @@ export default function EmployeeSentInvite() {
                   employers
                     .filter(employer => employer.status === 'Online')
                     .map(employer => (
-                      <div className="relative">
+                      <div key={employer.id} className="relative">
                         <img src={employer.avatar}
                           alt={employer.name}
                           className="object-cover w-12 h-12 rounded-full" />
@@ -174,6 +184,7 @@ export default function EmployeeSentInvite() {
                     <input
                       type="text"
                       placeholder="Type a message"
+                      value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                       className="flex-1 ml-3 text-green-700 bg-transparent placeholder-[#16730F] focus:outline-none"
@@ -190,6 +201,7 @@ export default function EmployeeSentInvite() {
                       </button>
                       <button
                         className="p-2 text-yellow-400 bg-green-900 rounded-full hover:bg-green-800"
+                        onClick={handleSendMessage}
                       >
                         <Send size={18} />
                       </button>
@@ -202,7 +214,7 @@ export default function EmployeeSentInvite() {
               (
                 <div className="flex flex-col items-center justify-center flex-1 text-center text-[#2d5a2d]">
                   {/*Inactive Chat*/}
-                  <img src={image} />
+                  <img src={image} alt="No conversation" />
                   <p className="mb-2 text-2xl font-bold">No Conversation Selected</p>
                   <p className="text-gray-600">Choose a conversation on the left to view or respond to messages.</p>
                 </div>
@@ -237,4 +249,3 @@ export default function EmployeeSentInvite() {
     </>
   )
 }
-

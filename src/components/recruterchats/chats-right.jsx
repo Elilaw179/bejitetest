@@ -2,10 +2,7 @@ import React from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 import image from '../../assets/Ellipse.png'; 
 
-
-function ChatsRight({ selectedChat, onBack }) {
-  
-
+function ChatsRight({ onBack }) {
   return (
     <div className="bg-[#F5F5F5] h-full p-2">
       <aside className="bg-[#1A3E32] rounded-2xl h-full overflow-hidden">
@@ -28,7 +25,7 @@ function ChatsRight({ selectedChat, onBack }) {
               <img
                 className="w-20 h-20 rounded-full object-cover"
                 src={image}
-               
+                alt="Profile"
                 loading="lazy"
               />
             </div>

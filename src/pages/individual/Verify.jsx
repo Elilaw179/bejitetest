@@ -5,7 +5,7 @@ import { FaArrowLeft } from "react-icons/fa";
 
 const Verify = () => {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+  const { currentStep: _currentStep } = useOutletContext();
 
   const [showConsent, setShowConsent] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -72,7 +72,7 @@ const Verify = () => {
                 onChange={() => setAgreed(!agreed)}
               />
               <label htmlFor="agree" className="ml-2 text-sm text-center">
-                I agree to Bejite’s{" "}
+                I agree to Bejite&apos;s{" "}
                 <span className="text-green-700 underline">Privacy Policy</span>{" "}
                 and consent to ID verification.
               </label>

@@ -107,7 +107,7 @@ function JobType() {
             location.state || {};
 
 
-const handleSubmit = async () => {
+const _handleSubmit = async () => {
   if (allFilled) {
     const payload = {
       email,

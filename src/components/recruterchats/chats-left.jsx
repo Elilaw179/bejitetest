@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaArrowLeft, FaSearch } from 'react-icons/fa';
 import image from '../../assets/Ellipse.png';
 
 
-function ChatsLeft({ onSelectChat, onBack, selectedChat }) {
+function ChatsLeft({ onSelectChat, onBack }) {
+  const [_selectedChat, _setSelectedChat] = useState(null);
 
   const conversations = [
     { 

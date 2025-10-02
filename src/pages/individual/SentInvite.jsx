@@ -30,10 +30,19 @@ export default function SentInvite() {
 
   const [isDisabled, setIsDisabled] = useState(true);
 
+  const [newMessage, setNewMessage] = useState('');
+
   const handleInvite = () => {
     setAcceptedInvite(true)
     setIsDisabled(false);
   }
+
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      console.log('Sending message:', newMessage);
+      setNewMessage('');
+    }
+  };
 
   const headerIcons = {
     hasInvitations: true,

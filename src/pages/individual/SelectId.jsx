@@ -5,7 +5,9 @@ import Header from "../../components/Header";
 
 const SelectId = () => {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+  const { _currentStep } = useOutletContext();
+
+  const [__currentStep, _setCurrentStep] = useState(0);
 
   const [formData, setFormData] = useState({
     id_type: "",
