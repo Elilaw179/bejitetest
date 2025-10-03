@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import { FaArrowLeft } from "react-icons/fa";
 
 const Verify = () => {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+// const { currentStep } = useOutletContext();
 
   const [showConsent, setShowConsent] = useState(false);
   const [agreed, setAgreed] = useState(false);

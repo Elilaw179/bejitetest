@@ -6,7 +6,7 @@ import image3 from '../../assets/Ellipse 32 (2).png';
 import image4 from '../../assets/Ellipse 32.png';
 
 
-function ChatsLeft({ onSelectChat, onBack, selectedChat }) {
+function ChatsLeft({ onSelectChat, onBack }) {
   
     const conversations = [
       { 

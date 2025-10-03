@@ -26,9 +26,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      #- name: Run ESLint
-      #  run: npm run lint --if-present
-      # 👆 Temporarily disabled until frontend team fixes lint errors
+      - name: Run ESLint
+        run: npm run lint --if-present
+      
 
       - name: Build project
         run: npm run build

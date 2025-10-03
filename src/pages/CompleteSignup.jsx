@@ -11,8 +11,8 @@ export default function CompleteSignup() {
   const email = params.get("email");
   const status = params.get("status");
 
-  const [role, setRole] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [_, setRole] = useState("");
+  // const [loading, setLoading] = useState(false);
 
   const handleRoleSelect = (selectedRole) => {
     if (!email || status !== "verified") {

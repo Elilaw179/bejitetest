@@ -26,12 +26,12 @@ export default function EmployeeSentInvite() {
   const [activeChatState, setActiveChatState] = useState(null);
   const activeChat = employers.find(employer => employer.id === activeChatState);
 
-  const [isDisabled, setIsDisabled] = useState(true);
+  const [isDisabled, _] = useState(true);
 
-  const handleInvite = () => {
-    setAcceptedInvite(true)
-    setIsDisabled(false);
-  }
+  // const handleInvite = () => {
+  //   setAcceptedInvite(true)
+  //   setIsDisabled(false);
+  // }
 
   // const headerIcons = {
   //   hasInvites: true,
@@ -174,8 +174,8 @@ export default function EmployeeSentInvite() {
                     <input
                       type="text"
                       placeholder="Type a message"
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                      // onChange={(e) => setNewMessage(e.target.value)}
+                      // onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                       className="flex-1 ml-3 text-green-700 bg-transparent placeholder-[#16730F] focus:outline-none"
                       disabled={isDisabled}
                     />

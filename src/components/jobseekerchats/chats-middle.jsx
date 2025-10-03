@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { FaArrowLeft, FaPhone, FaVideo, FaBars } from 'react-icons/fa';
 import image from '../../assets/Ellipse.png'; 
 
-function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
-  const [agreed, setAgreed] = useState(false);
+function ChatsMiddle({ onShowChatList, onShowChatInfo }) {
+  const [_, setAgreed] = useState(false);
   const [message, setMessage] = useState('');
 
   const handleAccept = () => {

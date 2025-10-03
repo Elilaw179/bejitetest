@@ -184,8 +184,9 @@ export default function SentInvite() {
                     <input
                       type="text"
                       placeholder="Type a message"
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                      // 'setNewMessage' is not defined && 'handleSendMessage' is not defined
+                      // onChange={(e) => setNewMessage(e.target.value)}
+                      // onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                       className="flex-1 ml-3 text-green-700 bg-transparent placeholder-[#16730F] focus:outline-none"
                       disabled={isDisabled}
                     />
