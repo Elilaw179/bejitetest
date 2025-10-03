@@ -5,7 +5,7 @@ import Input from '../components/ui/Input';
 import { toast } from 'react-toastify';
 import Loader from '../components/ui/Loader';
 import { useDispatch, useSelector } from 'react-redux';
-import { signupUser, clearErrors } from '../features/auth/authSlice';
+import { signupUser } from '../features/auth/authSlice';
 
 function SignUp() {
   const [firstName, setFirstName] = useState('');

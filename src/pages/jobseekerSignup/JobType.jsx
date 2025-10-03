@@ -1,9 +1,8 @@
 import { useState } from "react";
 import Header from "../../components/Header";
 import NavigationButtons from "../../components/NavigationButtons";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FaCheck } from "react-icons/fa";
-import axiosInstance from "../../../services/axios";
 
 const SelectField = ({ label, value, onChange, options, placeholder = "Select" }) => (
   <div className="w-full md:w-[48%] lg:w-[30%]">
@@ -101,43 +100,43 @@ function JobType() {
     "Seasonal Availability", "Temporary Availability", "Contractual Availability", "Not Currently Available", "Available Upon Request"
   ];
 
-          const location = useLocation();
+//           const location = useLocation();
 
-          const { email, firstName, lastName, role, mode, followings } =
-            location.state || {};
+//           const { email, firstName, lastName, role, mode, followings } =
+//             location.state || {};
 
 
-const handleSubmit = async () => {
-  if (allFilled) {
-    const payload = {
-      email,
-      firstName,
-      lastName,
-      role,
-      mode,
-      followings,
-      cvUrl: "https://example.com/cv/alice-johnson-cv.pdf",
-    };
+// const handleSubmit = async () => {
+//   if (allFilled) {
+//     const payload = {
+//       email,
+//       firstName,
+//       lastName,
+//       role,
+//       mode,
+//       followings,
+//       cvUrl: "https://example.com/cv/alice-johnson-cv.pdf",
+//     };
 
-    try {
-      const response = await axiosInstance.post("/auth/signup", payload);
+//     try {
+//       const response = await axiosInstance.post("/auth/signup", payload);
 
-      if (response.data.success) {
-        navigate("/save-progress", {
-          state: payload,
-        });
-      } else {
-        console.error(
-          "Server responded but with error:",
-          response.data.message
-        );
-      }
-    } catch (error) {
-      console.error("Submission failed:", error);
-    }
-  }
-};
-      
+//       if (response.data.success) {
+//         navigate("/save-progress", {
+//           state: payload,
+//         });
+//       } else {
+//         console.error(
+//           "Server responded but with error:",
+//           response.data.message
+//         );
+//       }
+//     } catch (error) {
+//       console.error("Submission failed:", error);
+//     }
+//   }
+// };
+
 
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">

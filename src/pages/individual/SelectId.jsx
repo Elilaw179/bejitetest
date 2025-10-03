@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import NavigationButtons from "../../components/NavigationButtons";
 import Header from "../../components/Header";
 
 const SelectId = () => {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+    // const { currentStep } = useOutletContext();
 
   const [formData, setFormData] = useState({
     id_type: "",

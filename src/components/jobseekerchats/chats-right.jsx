@@ -3,7 +3,7 @@ import { FaArrowLeft } from 'react-icons/fa';
 import image from '../../assets/Ellipse.png'; 
 
 
-function ChatsRight({ selectedChat, onBack }) {
+function ChatsRight({ onBack }) {
  
 
   return (

@@ -3,7 +3,7 @@ import image from '../../assets/Ellipse.png';
 import check from '../../assets/Group.png';
 import { FaArrowLeft, FaPhone, FaVideo, FaBars } from 'react-icons/fa';
 
-function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
+function ChatsMiddle({ onShowChatList, onShowChatInfo }) {
   const [agreed, setAgreed] = useState(false);
   const [message, setMessage] = useState('');
 
