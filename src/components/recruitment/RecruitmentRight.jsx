@@ -3,13 +3,13 @@ import { FaArrowLeft } from "react-icons/fa";
 
 function RecruitmentRight() {
   return (
-    <div className="bg-[#F5F5F5]  p-2">
- <aside className="hidden md:block bg-[#1A3E32] rounded-2xl">
-      <div className="bg-[#16730F] rounded-2xl">
+    <div className="bg-[#F5F5F5] p-2 hidden md:block">
+ <aside className="bg-[#1A3E32] rounded-2xl">
+      <div className="bg-[#16730F] rounded-2xl p-3">
         <div className="p-5 space-y-2 bg-">
           <FaArrowLeft className="text-[#1A3E32]" />
         </div>
-        <div className="flex flex-col items-center  ">
+        <div className="flex flex-col items-center ">
           <img className="w-[90%]" src="/assets/images/post-ads.png" alt="" />
           <div className="border-[#16730F] border-5 rounded-full relative bottom-10">
             <img
@@ -24,7 +24,7 @@ function RecruitmentRight() {
           </div>
         </div>
         <div className="text-[#ffffff] mt-5">
-          <div className="flex justify-around  m-auto items-center">
+          <div className="flex items-center justify-around m-auto">
         <div>
                 <p>100</p>
                 <p>Post</p>
@@ -45,27 +45,27 @@ function RecruitmentRight() {
         </div>
       </div>
 
-      <div className="bg-[#1A3E32] h-[500px] mt-3">
-        <div className="max-w-60 m-auto space-y-5 ml-6 mt-10 cursor-pointer">
-          <div className="flex space-x-3 items-center">
+      <div className="bg-[#1A3E32] h-[600px] mt-3 p-2">
+        <div className="m-auto mt-10 ml-6 space-y-5 cursor-pointer max-w-60">
+          <div className="flex items-center space-x-3">
             <img src="assets/images/setting.png" alt="df" />
             <p className="text-[#F5F5F5]">Saved Posts</p>
           </div>
-          <div className="flex space-x-3 items-center">
+          <div className="flex items-center space-x-3">
             <img src="/assets/images/task-square.svg" alt="" />
             <p className="text-[#F5F5F5]">Activity Log</p>
           </div>
-          <div className="flex space-x-3 items-center">
+          <div className="flex items-center space-x-3">
             <img src="/assets/images/award.svg" alt="" />
             <p className="text-[#F5F5F5]">Badge Status</p>
           </div>
-          <div className="flex space-x-3 items-center">
+          <div className="flex items-center space-x-3">
             <img src="/assets/images/setting-2.svg" alt="" />
             <p className="text-[#F5F5F5]">Account Settings</p>
           </div>
         </div>
 
-        <div className="w-32 ml-10 mt-20">
+        <div className="w-32 mt-20 ml-10">
           <div className="flex space-x-2">
             <p className="text-white" >Help</p>
             <img src="/assets/images/questiontag.svg" className="w-4" alt="" />

@@ -22,7 +22,7 @@ export default function About() {
           <p className={marginStyle}>Over 80% of job searches are desktop. Our mobile app will be announced in due course.</p>
           <p className={coloredText}>More quality hires</p>
           <p className={marginStyle}>Bejite is the best job site external source of hire and provides twice more hires than any other job site existing on the internet. In fact, bejite is the fastest means of bridging the gap between an employer and an employee in any field, anywhere.</p>
-          <p className={coloredText}>How bejite.com helps you hire</p>
+          <p className={coloredText} id="how-to-use-bejite">How bejite.com helps you hire</p>
           <p className={marginStyle}>Reach the most job seekers today</p>
           <p className={marginStyle}>Create and log in into your account as an employer. Visit the advanced search page and fill in the required fields and qualifications you want your new hire to have. Click search and all the people who met the criteria will appear. Conduct your interview online through our dedicated chat system or simply call them and conduct the physical interview. <br />Most of our users prefer the online chat as the first step of interview. It is easy and FREE! <br />Create an account and enter your job description. Review applications, manage candidates and schedule interviews from your bejite account. It is that simple!</p>
           <p className={marginStyle}>Reach the most Employers today</p>
