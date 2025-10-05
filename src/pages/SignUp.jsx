@@ -14,7 +14,7 @@ function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [formErrors, setFormErrors] = useState({}); // ✅ LOCAL ERRORS
+  const [formErrors, setFormErrors] = useState({}); 
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
