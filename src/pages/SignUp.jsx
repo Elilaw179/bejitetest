@@ -5,7 +5,8 @@ import Input from '../components/ui/Input';
 import { toast } from 'react-toastify';
 import Loader from '../components/ui/Loader';
 import { useDispatch, useSelector } from 'react-redux';
-import { signupUser, clearErrors } from '../features/auth/authSlice';
+import { signupUser } from '../features/auth/authSlice';
+import Hyperlinks from '../components/Hyperlinks';
 
 function SignUp() {
   const [firstName, setFirstName] = useState('');
@@ -144,7 +145,7 @@ function SignUp() {
               {/* Twitter placeholder */}
               <img src="/assets/images/x.svg" alt="Twitter" className="w-8 h-8 cursor-pointer" />
             </div>
-            <Hyperlinks />
+            <Hyperlinks/>
           </div>
         </div>
       </div>
