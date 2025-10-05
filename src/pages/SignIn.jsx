@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../features/auth/authSlice";
 import BejiteLogo from "../../public/assets/images/logo.png";
 import GoogleImg from "../../public/assets/images/google.png";
+import Hyperlinks from "../components/Hyperlinks";
 
 function SignIn() {
   const [email, setEmail] = useState("");
@@ -46,11 +47,11 @@ function SignIn() {
   };
 
   return (
-    <div className="bg-white min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
       <div className="w-full lg:w-[70%] px-4 py-6 mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 lg:absolute lg:right-4 lg:left-4 lg:top-1/12 lg:transform lg:-translate-y-1/2 lg:z-10">
         <img src={BejiteLogo} alt="Logo" className="h-10" />
-        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-3">
           <h1 className="text-[#828282] text-base sm:text-xl font-medium text-center sm:text-left">
             Don't have an account?
           </h1>
@@ -67,7 +68,7 @@ function SignIn() {
       </div>
 
       {/* Form + Illustration */}
-      <div className="flex flex-col lg:flex-row flex-1 justify-between relative">
+      <div className="relative flex flex-col justify-between flex-1 lg:flex-row">
         <div className="w-full lg:w-[60%] relative hidden lg:block">
           <img src="/assets/images/Illustra.svg" alt="Auth" className="w-full h-screen" />
           <img
@@ -78,7 +79,7 @@ function SignIn() {
         </div>
 
         <div className="w-full lg:w-[40%] flex lg:justify-start items-center justify-center px-6 py-10">
-          <div className="w-full max-w-md space-y-5">
+          <div className="w-full max-w-md space-y-5 mt-9">
             <h2 className="text-3xl font-norican font-semibold text-[#16730F] text-center">
               Welcome Back!
             </h2>
@@ -106,17 +107,17 @@ function SignIn() {
                     setShowPassword(!showPassword);
                     console.log("Toggled password visibility:", !showPassword);
                   }}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  className="absolute text-gray-500 transform -translate-y-1/2 right-4 top-1/2"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
 
-              {errors?.error && <p className="text-red-500 text-sm">{errors.error}</p>}
+              {errors?.error && <p className="text-sm text-red-500">{errors.error}</p>}
 
               <div className="text-right">
                 <p
-                  className="text-sm text-gray-500 italic hover:underline cursor-pointer"
+                  className="text-sm italic text-gray-500 cursor-pointer hover:underline"
                   onClick={() => {
                     console.log("Navigating to forgot password page");
                     navigate("/forgot-password");
@@ -146,12 +147,13 @@ function SignIn() {
                 }`}
               >
                 {googleLoading ? (
-                  <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-6 h-6 border-2 border-gray-400 rounded-full border-t-transparent animate-spin"></div>
                 ) : (
                   <img src={GoogleImg} alt="google logo" className="w-8 h-8" />
                 )}
               </button>
             </div>
+            <Hyperlinks />
           </div>
         </div>
       </div>

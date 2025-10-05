@@ -15,13 +15,13 @@ const navItems = [
 export default function RecruitmentLeft() {
   const navigate = useNavigate()
   return (
-    <div className="bg-[#F5F5F5] p-2 min-h-screen">
-  <aside className="hidden md:block bg-[#16730F] rounded-2xl">
-      <div className="p-7 space-y-2">
+    <div className="hidden md:block bg-[#F5F5F5] p-2 min-h-screen">
+  <aside className="bg-[#16730F] rounded-2xl">
+      <div className="space-y-2 p-7">
         <FaArrowLeft className="text-[#1A3E32]" />
         <h2 className="text-[20px] text-[#ffffff]">Dashboard</h2>
       </div>
-      <nav className="max-w-48 m-auto space-y-4">
+      <nav className="m-auto space-y-4 max-w-48">
         {navItems.map(({ icon: Icon, label }, idx) => (
           <div key={idx} className="flex items-center space-x-3 cursor-pointer px-4 py-2 hover:bg-[#15600b] rounded-lg">
             {typeof Icon === "string" ? (

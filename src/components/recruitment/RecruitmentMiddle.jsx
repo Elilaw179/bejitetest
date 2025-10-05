@@ -5,20 +5,20 @@ export default function RecruitmentMiddle() {
   return (
     <main className="w-full px-4 py-6 space-y-8 bg-[#F5F5F5]">
       
-      <div className="max-w-3xl mx-auto rounded-2xl p-6 bg-white shadow">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+      <div className="max-w-3xl p-6 mx-auto bg-white shadow rounded-2xl">
+        <div className="flex flex-col items-start space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
           <img src="assets/images/eli.jpg" alt="profile" className="rounded-full w-[60px] h-[60px]" />
           <input
             placeholder="Share something"
-            className="flex-1 w-full p-3 pl-4 border-2 border-[#16730F] rounded-xl focus:outline-none"
+            className="flex-1 max-w-full p-3 pl-4 border-2 border-[#16730F] rounded-xl focus:outline-none"
           />
-          <div className="flex relative right-20  items-center space-x-1">
+          <div className="relative items-center hidden space-x-1 sm:flex right-20">
             <img src="assets/images/box-2.svg" alt="drafts" className="w-3 h-3" />
             <p className="text-[10px]">Draft</p>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-5 gap-4 px-2">
-          <div className="flex gap-4 flex-wrap justify-center sm:justify-start">
+        <div className="flex flex-col items-center justify-between gap-4 px-2 mt-5 sm:flex-row">
+          <div className="flex flex-wrap justify-center gap-4 sm:justify-start">
             {[
               { img: "gallery.svg", label: "Image" },
               { img: "video-square.png", label: "Video" },
@@ -40,8 +40,8 @@ export default function RecruitmentMiddle() {
       </div>
 
       <hr className="border-t-2 border-[#16730F]" />
-      <div className="bg-white p-6 max-w-3xl mx-auto rounded-2xl shadow space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="max-w-3xl p-6 mx-auto space-y-6 bg-white shadow rounded-2xl">
+        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-4">
             <img src="assets/images/eli.jpg" alt="profile" className="rounded-full w-[60px] h-[60px]" />
             <div>
@@ -57,7 +57,7 @@ export default function RecruitmentMiddle() {
 
         <img src="assets/images/bejiteAdvert.png" alt="Advert" className="w-full rounded-xl" />
 
-        <div className="flex flex-wrap justify-between items-center gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           {["Like", "Comment", "Saved"].map((label) => (
             <div key={label} className="flex flex-col items-center gap-1">
               <img src={`/assets/images/${label === "Like" ? "gallery.svg" : label === "Comment" ? "video-square.png" : "Amount_Icon_UIA.svg"}`} alt={label} />

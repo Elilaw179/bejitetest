@@ -5,7 +5,7 @@ import Input from '../components/ui/Input';
 import { toast } from 'react-toastify';
 import Loader from '../components/ui/Loader';
 import { useDispatch, useSelector } from 'react-redux';
-import { signupUser } from '../features/auth/authSlice';
+import { signupUser, clearErrors } from '../features/auth/authSlice';
 
 function SignUp() {
   const [firstName, setFirstName] = useState('');
@@ -13,7 +13,7 @@ function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [formErrors, setFormErrors] = useState({}); // ✅ LOCAL ERRORS
+  const [formErrors, setFormErrors] = useState({}); 
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -68,13 +68,13 @@ function SignUp() {
     !email || !firstName || !lastName || !password || !confirmPassword;
 
   return (
-    <div className="bg-white min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen bg-white">
       <Loader show={loading} />
 
       <div className="w-full lg:w-[70%] px-4 py-6 mx-auto flex flex-col sm:flex-row justify-between items-center">
         <img src="/assets/images/logo.png" alt="Logo" className="h-10" />
 
-        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-3">
           <h1 className="text-[#828282] text-base sm:text-xl font-medium text-center sm:text-left">
             Already have an account?
           </h1>
@@ -87,7 +87,7 @@ function SignUp() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row flex-1 justify-between relative">
+      <div className="relative flex flex-col justify-between flex-1 lg:flex-row">
         <div className="w-full lg:w-[60%] relative hidden lg:block">
           <img
             src="/assets/images/Illustra.svg"
@@ -119,9 +119,8 @@ function SignUp() {
             </div>
 
             <button
-              className={`w-full py-4 rounded-full text-white font-semibold shadow-md transition mb-5 mt-2 ${
-                isDisabled || loading ? 'bg-[#16730F40] cursor-not-allowed' : 'bg-[#16730F]'
-              }`}
+              className={`w-full py-4 rounded-full text-white font-semibold shadow-md transition mb-5 mt-2 ${isDisabled || loading ? 'bg-[#16730F40] cursor-not-allowed' : 'bg-[#16730F]'
+                }`}
               onClick={handleContinue}
               disabled={isDisabled || loading}
             >
@@ -130,22 +129,22 @@ function SignUp() {
 
             <p className="text-[#1A3E32] text-center text-xl">...or signup with</p>
             <div className="flex justify-center gap-6 mt-1">
-  {/* LinkedIn placeholder */}
-  <FaLinkedin className="text-blue-600 text-3xl cursor-pointer" />
+              {/* LinkedIn placeholder */}
+              <FaLinkedin className="text-3xl text-blue-600 cursor-pointer" />
 
-  {/* Google OAuth Button */}
-  <button
-    onClick={() => (window.location.href = "https://bejite-backend.onrender.com/auth/google")}
-    className="w-8 h-8 flex items-center justify-center"
-    aria-label="Sign up with Google"
-  >
-    <img src="/assets/images/google.png" alt="Google logo" className="w-8 h-8" />
-  </button>
+              {/* Google OAuth Button */}
+              <button
+                onClick={() => (window.location.href = "https://bejite-backend.onrender.com/auth/google")}
+                className="flex items-center justify-center w-8 h-8"
+                aria-label="Sign up with Google"
+              >
+                <img src="/assets/images/google.png" alt="Google logo" className="w-8 h-8" />
+              </button>
 
-  {/* Twitter placeholder */}
-  <img src="/assets/images/x.svg" alt="Twitter" className="w-8 h-8 cursor-pointer" />
-</div>
-
+              {/* Twitter placeholder */}
+              <img src="/assets/images/x.svg" alt="Twitter" className="w-8 h-8 cursor-pointer" />
+            </div>
+            <Hyperlinks />
           </div>
         </div>
       </div>
