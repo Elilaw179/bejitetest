@@ -13,7 +13,7 @@ const AuthFailure = () => {
 
     // Map error codes to user-friendly messages
     const errorMessages = {
-      'normal_signup_user': 'This email is already registered with a regular account. Please sign in using your email and password instead.',
+      'normal_signup_user': 'This email is already signed up with a regular account. Please sign in using your email and password instead.',
       'google_auth_failed': 'Google authentication failed. Please try again.',
       'user_cancelled': 'Authentication was cancelled.',
       'email_already_exists': 'An account with this email already exists. Please sign in instead.',

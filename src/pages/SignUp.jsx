@@ -62,7 +62,7 @@ function SignUp() {
   useEffect(() => {
     if (user) {
       console.log('User signup successful:', user);
-      toast.success('Registration successful! Please check your email to verify your account.');
+      toast.success('Sign up successful! Please check your email to verify your account.');
       setTimeout(() => {
         navigate(`/auth/email-sent?email=${encodeURIComponent(email)}`);
       }, 1000);
