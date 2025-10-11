@@ -67,6 +67,9 @@ const authSlice = createSlice({
       state.token = null;
       state.errors = {};
       localStorage.removeItem('authToken');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
     },
     // ✅ New reducer for Google login
     setGoogleAuth: (state, action) => {
@@ -102,9 +105,20 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         console.log('loginUser fulfilled with:', action.payload);
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.user = action.payload.confirmedUser || action.payload.user;
+        state.token = action.payload.accessToken;
         state.errors = {};
+        
+        // Store tokens in localStorage
+        if (action.payload.accessToken) {
+          localStorage.setItem('accessToken', action.payload.accessToken);
+        }
+        if (action.payload.refreshToken) {
+          localStorage.setItem('refreshToken', action.payload.refreshToken);
+        }
+        if (action.payload.confirmedUser || action.payload.user) {
+          localStorage.setItem('user', JSON.stringify(action.payload.confirmedUser || action.payload.user));
+        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         console.log('loginUser rejected with:', action.payload);

@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import BejiteLogo from "../../public/assets/images/logo.png";
 import GoogleImg from "../../public/assets/images/google.png";
 import Hyperlinks from "../components/Hyperlinks";
+import { decodeToken } from "../utils/tokenManager";
 
 function SignIn() {
   const [email, setEmail] = useState("");
@@ -38,17 +39,49 @@ function SignIn() {
         console.log("Login API response:", data);
 
         const token = data.accessToken;
+        let user = data.confirmedUser || data.user;
+        
         if (!token) {
           toast.error("Authentication failed. Please try again.");
           return;
         }
 
+        // If user data is incomplete, decode the JWT token to get full user info
+        if (!user?.verified && !user?.role) {
+          const decodedToken = decodeToken(token);
+          console.log("Decoded token data:", decodedToken);
+          user = {
+            ...user,
+            verified: decodedToken?.verified,
+            isEmailVerified: decodedToken?.isEmailVerified || decodedToken?.verified,
+            role: decodedToken?.role
+          };
+          console.log("Enhanced user data:", user);
+        }
+
+        // Tokens are already stored in localStorage by authSlice
+        console.log("Tokens stored successfully");
+
         // Show success toast
         toast.success("Login successful! Redirecting...");
         
-        // Redirect to AuthSuccess for JWT decoding
+        // Check user verification and role status
+        const isVerified = user?.verified || user?.isEmailVerified;
+        const hasCompletedSignup = user?.role !== null && user?.role !== undefined;
+        
+        console.log("User verification status:", { isVerified, hasCompletedSignup, user });
+        
         setTimeout(() => {
-          window.location.href = `/auth/success?token=${encodeURIComponent(token)}`;
+          if (!isVerified) {
+            // User not verified, redirect to email verification
+            navigate(`/auth/email-sent?email=${encodeURIComponent(user.email)}`);
+          } else if (!hasCompletedSignup) {
+            // User is verified but hasn't completed signup
+            navigate(`/complete-signup?email=${encodeURIComponent(user.email)}&status=verified`);
+          } else {
+            // User is verified and has completed signup
+            navigate('/resume');
+          }
         }, 500);
       })
       .catch((err) => {
