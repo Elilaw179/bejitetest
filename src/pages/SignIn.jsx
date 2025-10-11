@@ -1,8 +1,9 @@
 import { Eye, EyeOff } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from "../features/auth/authSlice";
+import { loginUser, clearErrors } from "../features/auth/authSlice";
+import { toast } from "react-toastify";
 import BejiteLogo from "../../public/assets/images/logo.png";
 import GoogleImg from "../../public/assets/images/google.png";
 import Hyperlinks from "../components/Hyperlinks";
@@ -18,6 +19,14 @@ function SignIn() {
   const { loading, errors } = useSelector((state) => state.auth);
   const isDisabled = !email || !password || loading;
 
+  // Clear errors and any cached auth data when component mounts
+  useEffect(() => {
+    dispatch(clearErrors());
+    // Clear any existing auth data to ensure fresh login
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+  }, [dispatch]);
+
   // -----------------------------
   // Normal email/password login
   // -----------------------------
@@ -29,12 +38,38 @@ function SignIn() {
         console.log("Login API response:", data);
 
         const token = data.accessToken;
-        if (!token) return console.error("No accessToken returned!");
+        if (!token) {
+          toast.error("Authentication failed. Please try again.");
+          return;
+        }
 
+        // Show success toast
+        toast.success("Login successful! Redirecting...");
+        
         // Redirect to AuthSuccess for JWT decoding
-        window.location.href = `/auth/success?token=${encodeURIComponent(token)}`;
+        setTimeout(() => {
+          window.location.href = `/auth/success?token=${encodeURIComponent(token)}`;
+        }, 500);
       })
-      .catch((err) => console.error("[Login] Failed:", err));
+      .catch((err) => {
+        console.error("[Login] Failed:", err);
+        
+        // Handle specific error cases
+        const errorMessage = err.error || err.message;
+        
+        if (errorMessage === "User not found." || errorMessage?.toLowerCase().includes("user not found")) {
+          toast.error("No account found with this email. Please sign up first.");
+          setTimeout(() => {
+            navigate("/signup");
+          }, 2000);
+        } else if (errorMessage?.toLowerCase().includes("verify your email")) {
+          toast.error("Please verify your email before logging in.");
+        } else if (errorMessage?.toLowerCase().includes("invalid email or password")) {
+          toast.error("Invalid email or password. Please try again.");
+        } else {
+          toast.error(errorMessage || "Login failed. Please try again.");
+        }
+      });
   };
 
   // -----------------------------

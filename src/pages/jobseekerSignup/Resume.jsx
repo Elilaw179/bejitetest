@@ -1,15 +1,33 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Resume = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get followings from Redux store
+  const { followings } = useSelector((state) => state.followings);
+  
+  // Get user data from localStorage (set by AuthSuccess)
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  
+  // Get other data from location.state or use defaults
+  const { email, firstName, lastName, role, mode } = location.state || {};
 
-  const navigate = useNavigate()
-    const location = useLocation();
-
-    const { email, firstName, lastName, role, mode, followings } =
-      location.state || {};
-
-      console.log("followings:", followings);
+  console.log("Resume component - Redux followings:", followings);
+  console.log("Resume component - localStorage userData:", userData);
+  console.log("Resume component - location.state:", location.state);
+  
+  // Create state object with Redux followings and other data
+  const stateData = {
+    email: email || userData.email || '',
+    firstName: firstName || userData.firstName || '',
+    lastName: lastName || userData.lastName || '',
+    role: role || '',
+    mode: mode || '',
+    followings: followings || []
+  };
   return (
     <div className="bg-white min-h-screen flex flex-col items-center">
      
@@ -39,7 +57,7 @@ const Resume = () => {
 
         <div className="mt-4 w-full flex justify-center">
           <button className="w-full max-w-[321px] h-12 bg-[#16730F] border border-none rounded-[30px] text-white shadow-md text-base font-medium transition-all hover:bg-[#1A3E32]"
-           onClick={()=>navigate("/bio", { state: { email, firstName, lastName, role, mode, followings } })}>
+           onClick={()=>navigate("/bio", { state: stateData })}>
             
             Get Started
           </button>
