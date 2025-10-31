@@ -11,7 +11,7 @@ Currently, two official plugins are available:
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
 
-## 🧹 Code Quality (ESLint)
+##  Code Quality (ESLint)
 
 We use **ESLint** in this project to enforce code quality and consistency.  
 This ensures that unused variables, undefined functions, and other potential issues are caught early.
