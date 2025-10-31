@@ -1,34 +1,48 @@
-name: Frontend CI
+name: Bejite Frontend CI
 
 on:
   push:
-    branches: ["*"]
+    branches: [ "*"]
   pull_request:
-    branches: ["*"]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18, 22]
+
+    # Environment variables for the Vite build (from repo secrets)
+    env:
+      VITE_API_URL: ${{ secrets.VITE_API_URL }}
+      VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
 
     steps:
-      - name: Checkout code
+      # 1️ Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      # 2️ Setup Node.js (using version 18)
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18.x
           cache: npm
 
+      # 3️ Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Run ESLint
+      # 4️ Lint code (optional)
+      - name: Run ESLint (if configured)
         run: npm run lint --if-present
-      
 
-      - name: Build project
+      # 5️ Build the frontend project
+      - name: Build frontend project
         run: npm run build
+
+      # 6️ (Optional) Upload production build as artifact
+      # Useful for verifying that the build output exists
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: dist
