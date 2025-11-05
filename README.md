@@ -20,6 +20,5 @@ This ensures that unused variables, undefined functions, and other potential iss
 To check your code for linting errors:
 ```bash
 npm run lint
-# Triggering CI build
-# Triggering CI build
-# retrigger CI
+# triggering CI build
+
