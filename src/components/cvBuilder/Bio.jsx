@@ -16,7 +16,7 @@ const Bio = () => {
       const res = await submitBio({ bio });
       setResponseMsg("Bio saved successfully!");
       console.log("Backend response:", res);
-    } catch (error) {
+    } catch {
       setResponseMsg("Failed to save bio.");
     } finally {
       setLoading(false);
