@@ -8,6 +8,7 @@ import ForgetPassword from "./pages/ForgetPassword";
 import EmailCheck from "./pages/EmailCheck";
 import SignUp from "./pages/SignUp";
 import VerifyEmail from "./pages/VerifyEmail";
+import EmailSent from "./pages/auth/EmailSent";
 import ConfirmPassword from "./pages/ConfirmPassword";
 import SignUpRole from "./pages/SignUpRole";
 import JobConnection from "./pages/jobseekerSignup/JobConnection.jsx";
@@ -59,6 +60,11 @@ import Teams from "./pages/misc/Teams.jsx";
 import SecurityAdvice from "./pages/misc/SecurityAdvice.jsx";
 import PrivacyPolicy from "./pages/misc/PrivacyPolicy.jsx";
 import Contact from "./pages/misc/Contact.jsx";
+import AuthSuccess from "./pages/auth/AuthSuccess.jsx";
+import AuthFailure from "./pages/auth/AuthFailure.jsx";
+import CompleteSignup from "./pages/CompleteSignup.jsx";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
@@ -68,6 +74,10 @@ function App() {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Router>
         <Routes>
+          <Route path="/auth/email-sent" element={<EmailSent />} />
+          <Route path="/auth/success" element={<AuthSuccess />} />
+          <Route path="/auth/failure" element={<AuthFailure />} />
+          <Route path="/complete-signup" element={<CompleteSignup />} />
           <Route path="/" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgetPassword />} />
@@ -144,6 +154,18 @@ function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/contact" element={<Contact />} />
         </Routes>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
       </Router>
     </GoogleOAuthProvider>
   );
