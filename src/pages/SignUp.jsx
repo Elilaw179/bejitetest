@@ -5,7 +5,7 @@ import Input from '../components/ui/Input';
 import { toast } from 'react-toastify';
 import Loader from '../components/ui/Loader';
 import { useDispatch, useSelector } from 'react-redux';
-import { signupUser } from '../features/auth/authSlice';
+import { signupUser, clearErrors, logout } from '../features/auth/authSlice';
 import Hyperlinks from '../components/Hyperlinks';
 
 function SignUp() {
@@ -19,6 +19,15 @@ function SignUp() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, loading, errors: apiErrors } = useSelector((state) => state.auth);
+
+  // Clear errors and any cached auth data when component mounts
+  useEffect(() => {
+    dispatch(clearErrors());
+    // Clear any existing user data to ensure fresh signup
+    dispatch(logout());
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+  }, [dispatch]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -53,15 +62,31 @@ function SignUp() {
   useEffect(() => {
     if (user) {
       console.log('User signup successful:', user);
-      toast.success('Registration successful!');
-      navigate(`/auth/email-sent?email=${user.email}`);
+      toast.success('Sign up successful! Please check your email to verify your account.');
+      setTimeout(() => {
+        navigate(`/auth/email-sent?email=${encodeURIComponent(email)}`);
+      }, 1000);
     }
-  }, [user, navigate]);
+  }, [user, navigate, email]);
 
   useEffect(() => {
     if (apiErrors && Object.keys(apiErrors).length > 0) {
       console.log('API validation errors:', apiErrors);
-      Object.values(apiErrors).forEach((msg) => toast.error(msg));
+      
+      // Handle both single error string and multiple errors
+      if (typeof apiErrors === 'string') {
+        toast.error(apiErrors);
+      } else if (apiErrors.error) {
+        // Single error object with 'error' key
+        toast.error(apiErrors.error);
+      } else {
+        // Multiple errors - show each one
+        Object.values(apiErrors).forEach((msg) => {
+          if (msg && typeof msg === 'string') {
+            toast.error(msg);
+          }
+        });
+      }
     }
   }, [apiErrors]);
 
