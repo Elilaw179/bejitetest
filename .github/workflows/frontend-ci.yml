@@ -49,4 +49,4 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer $GH_PAT" \
             https://api.github.com/repos/bejite/bejite-devops/actions/workflows/devops-ci.yml/dispatches \
-            -d '{"ref": "main", "inputs": {"source_repo": "frontend"}}'
+            -d '{"event_type": "trigger-devops-ci", "client_payload": {"source_repo": "frontend"}}'
