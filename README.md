@@ -21,4 +21,4 @@ To check your code for linting errors:
 ```bash
 npm run lint
 
-### Trigger has been added
+
