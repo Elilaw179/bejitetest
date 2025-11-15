@@ -124,7 +124,9 @@ const CandidateProfile = ({ candidate, onViewProfile }) => (
 const ProfileImage = ({ initials, name, online }) => (
   <div className="relative">
     <div className="rounded-full w-[100px] h-[100px] overflow-hidden bg-[#6B8E23] flex items-center justify-center">
+      
       <span className="text-white text-2xl font-bold">{initials}</span>
+       <img src={image} alt={`${name} profile`} className="w-full h-full object-cover" />
     </div>
     <span
       className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-9 right-2 ${
