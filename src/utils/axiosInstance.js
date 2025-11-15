@@ -44,7 +44,7 @@ axiosInstance.interceptors.response.use(
 
         // Call refresh token endpoint
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || "https://bejite-backend.onrender.com"}/auth/refresh`,
+          `${import.meta.env.VITE_API_URL}/auth/refresh`,
           { refreshToken },
           { withCredentials: true }
         );
