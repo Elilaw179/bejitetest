@@ -1,6 +1,7 @@
 // src/redux/authSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+//import axios from 'axios';
+import axiosInstance from '../../utils/axiosInstance';
 
 // ✅ Async thunk for signup
 export const signupUser = createAsyncThunk(
@@ -8,8 +9,8 @@ export const signupUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     console.log('signupUser thunk called with:', userData);
     try {
-      const response = await axios.post(
-        'https://bejite-backend.onrender.com/auth/signup',
+      const response = await axiosInstance.post(
+        '/auth/signup',
         userData
       );
       console.log('API response:', response.data);
@@ -31,8 +32,8 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     console.log('loginUser thunk called with:', credentials);
     try {
-      const response = await axios.post(
-        'https://bejite-backend.onrender.com/auth/login',
+      const response = await axiosInstance.post(
+        '/auth/login',
         credentials
       );
       console.log('Login API response:', response.data);
