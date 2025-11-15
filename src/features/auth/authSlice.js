@@ -1,6 +1,6 @@
 // src/redux/authSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+//import axios from 'axios';
 import axiosInstance from '../../utils/axiosInstance';
 
 // ✅ Async thunk for signup
