@@ -1,36 +1,99 @@
-
-
-import React from 'react';
+import React, { useEffect, useState } from "react";
 
 const CandidateSearchResults = ({ onViewProfile }) => {
-  const candidates = [
-    {
-      id: 1,
-      name: "Osakwe Prisca",
-      type: "Jobseeker",
-      jobTitle: "Graphics Designer",
-      location: "Lagos, Nigeria",
-      image: "assets/images/eli.jpg",
-      online: true
-    },
-  ];
+  const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        setLoading(true);
+
+        // ✅ Correct backend route
+        const API_URL = `${import.meta.env.VITE_API_URL}/api/candidates`;
+
+        const response = await fetch(API_URL, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Validate & format
+        if (data.success && Array.isArray(data.data)) {
+          const formatted = data.data.map((candidate) => ({
+            id: candidate.id,
+            name: `${candidate.first_name} ${candidate.last_name}`,
+            type: "Jobseeker",
+            jobTitle: candidate.title || "N/A",
+            location: candidate.location || "Unknown",
+            skills: candidate.skills || [],
+            availability: candidate.availability || "Unknown",
+            experienceYears: candidate.experience_years || 0,
+            initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
+            online: candidate.availability === "Available",
+          }));
+
+          setCandidates(formatted);
+        } else {
+          throw new Error("Invalid data format received from API");
+        }
+      } catch (error) {
+        console.error("Error fetching candidates:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCandidates();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-[#1A3E32] w-full max-w-[500px] px-10 py-8 rounded-2xl shadow-lg">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B8E23]"></div>
+          <p className="text-[#6B8E23] mt-4">Loading candidates...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-[#1A3E32] w-full max-w-[500px] px-10 py-8 rounded-2xl shadow-lg">
+        <div className="text-center">
+          <p className="text-red-400 text-lg font-semibold">Error Loading Candidates</p>
+          <p className="text-[#828282] mt-2 text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-[#1A3E32] w-full max-w-[500px] px-4 sm:px-6 md:px-10 py-4 rounded-2xl shadow-lg mx-auto">
-     
+    <div className="bg-[#1A3E32] w-full max-w-[500px] px-10 py-4 rounded-2xl shadow-lg">
       <SearchResultsHeader count={candidates.length} />
-      
-      <div className="space-y-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i}>
-            {candidates.map(candidate => (
-              <React.Fragment key={`${candidate.id}-${i}`}>
-                <CandidateProfile candidate={candidate} onViewProfile={onViewProfile} />
-                <Divider />
-              </React.Fragment>
-            ))}
+      <div>
+        {candidates.length > 0 ? (
+          candidates.map((candidate) => (
+            <React.Fragment key={candidate.id}>
+              <CandidateProfile candidate={candidate} onViewProfile={onViewProfile} />
+              <Divider />
+            </React.Fragment>
+          ))
+        ) : (
+          <div className="text-center p-5">
+            <p className="text-[#6B8E23] text-[20px] font-semibold">No candidates found</p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
@@ -38,58 +101,81 @@ const CandidateSearchResults = ({ onViewProfile }) => {
 
 const SearchResultsHeader = ({ count }) => (
   <div className="text-center p-5">
-    <p className="text-[#ffffff] text-[20px] font-semibold">Search Results</p>
-    <p className="text-[#828282]">{count} Candidate{count !== 1 && "s"} found</p>
+    <p className="text-[#6B8E23] text-[20px] font-semibold">Search Results</p>
+    <p className="text-[#828282]">{count} Candidates found</p>
   </div>
 );
 
 const CandidateProfile = ({ candidate, onViewProfile }) => (
-  <div className="flex flex-col md:flex-row justify-between gap-4 mt-6 p-2">
-    <ProfileImage image={candidate.image} name={candidate.name} online={candidate.online} />
+  <div className="flex justify-between mt-6 p-2">
+    <ProfileImage initials={candidate.initials} name={candidate.name} online={candidate.online} />
     <ProfileDetails
       name={candidate.name}
       type={candidate.type}
       jobTitle={candidate.jobTitle}
       location={candidate.location}
-      onViewProfile={onViewProfile}
+      skills={candidate.skills}
+      experienceYears={candidate.experienceYears}
+      onViewProfile={() => onViewProfile(candidate.id)}
     />
   </div>
 );
 
-const ProfileImage = ({ image, name, online }) => (
-  <div className="relative self-center md:self-start">
-    <div className="rounded-full w-[100px] h-[100px] overflow-hidden">
-      <img src={image} alt={`${name} profile`} className="w-full h-full object-cover" />
+const ProfileImage = ({ initials, name, online }) => (
+  <div className="relative">
+    <div className="rounded-full w-[100px] h-[100px] overflow-hidden bg-[#6B8E23] flex items-center justify-center">
+      
+      <span className="text-white text-2xl font-bold">{initials}</span>
+       <img src={image} alt={`${name} profile`} className="w-full h-full object-cover" />
     </div>
-    <span className={`absolute w-4 h-4 rounded-full border-2 border-white top-18 left-20 ${
-      online ? 'bg-[#6B8E23]' : 'bg-[#828282]'
-    }`} />
+    <span
+      className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-9 right-2 ${
+        online ? "bg-[#6B8E23]" : "bg-[#828282]"
+      }`}
+    />
   </div>
 );
 
-const ProfileDetails = ({ name, type, jobTitle, location, onViewProfile }) => (
-  <div className="ml-0 md:ml-3 flex-1 space-y-1">
-    <div>
+const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYears, onViewProfile }) => (
+  <div className="ml-3 flex-1 space-y-1">
+    <div className="ml-0.5">
       <p className="text-[#6B8E23] text-[13px] font-medium">{name}</p>
-      <p className="text-[5px] text-[#ffffff]">{type}</p>
+      <p className="text-[5px] text-[#6B8E23]">{type}</p>
     </div>
-    <div>
-      <p className="text-[#ffffff] text-[8px] font-medium">{jobTitle}</p>
-      <p className="text-[#ffffff] text-[5px]">{location}</p>
+    <div className="ml-0.5">
+      <p className="text-[#6B8E23] text-[8px] font-medium">{jobTitle}</p>
+      <p className="text-[#6B8E23] text-[5px]">{location}</p>
+
+      {experienceYears > 0 && (
+        <p className="text-[#6B8E23] text-[5px]">{experienceYears} years experience</p>
+      )}
+
+      {skills.length > 0 && (
+        <div className="flex flex-wrap gap-0.5 mt-1">
+          {skills.slice(0, 3).map((skill, index) => (
+            <span key={index} className="text-[4px] bg-[#556B1F] text-white px-1 py-0.5 rounded">
+              {skill}
+            </span>
+          ))}
+          {skills.length > 3 && (
+            <span className="text-[4px] text-[#6B8E23]">+{skills.length - 3} more</span>
+          )}
+        </div>
+      )}
     </div>
     <ProfileActions onViewProfile={onViewProfile} />
   </div>
 );
 
 const ProfileActions = ({ onViewProfile }) => (
-  <div className="space-y-1 mt-1 space-x-6">
+  <div className="space-y-1 mt-2">
     <button
       onClick={onViewProfile}
-      className="p-1 w-[100px] text-[5px] rounded-3xl bg-[#556B1F] hover:bg-[#6B8E23] text-white font-medium"
+      className="p-1 w-[100px] text-[5px] rounded-3xl bg-[#556B1F] hover:bg-[#6B8E23] text-white font-medium transition-colors"
     >
       View Profile
-    </button> 
-    <button className="p-1 w-[100px] text-[5px] rounded-3xl border-2 border-[#6B8E23] hover:bg-[#6B8E23]/10 text-[#ffffff] font-medium">
+    </button>
+    <button className="p-1 w-[100px] text-[5px] rounded-3xl border-2 border-[#6B8E23] hover:bg-[#6B8E23]/10 text-[#6B8E23] font-medium transition-colors">
       Invite for interview
     </button>
   </div>
@@ -98,37 +184,3 @@ const ProfileActions = ({ onViewProfile }) => (
 const Divider = () => <div className="bg-[#556B1F] h-1 mt-4" />;
 
 export default CandidateSearchResults;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

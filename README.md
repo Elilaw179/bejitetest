@@ -20,3 +20,5 @@ This ensures that unused variables, undefined functions, and other potential iss
 To check your code for linting errors:
 ```bash
 npm run lint
+
+

@@ -1,19 +1,29 @@
-
-
-import React, { useState, useEffect } from 'react';
-import SearchCriteria from '../../components/candidate-search-page/SearchCriteria';
-import CandidateSearchResults from '../../components/candidate-search-page/CandidateSearchResults';
-import NewsFeedHeader from '../../components/NewsFeedHeader';
-import UserProfilePanel from '../../components/candidate-search-page/UserProfilePanel';
-import JobSearchFormGreen from '../../components/candidate-search-page/JobSearchFormGreen';
-import UserMainProfileCard from '../../components/candidate-search-page/UserMainProfileCard';
-import PeopleConnect from '../../components/candidate-search-page/PeopleConnect';
+import React, { useState, useEffect } from "react";
+import SearchCriteria from "../../components/candidate-search-page/SearchCriteria";
+import CandidateSearchResults from "../../components/candidate-search-page/CandidateSearchResults";
+import NewsFeedHeader from "../../components/NewsFeedHeader";
+import UserProfilePanel from "../../components/candidate-search-page/UserProfilePanel";
+import JobSearchFormGreen from "../../components/candidate-search-page/JobSearchFormGreen";
+import UserMainProfileCard from "../../components/candidate-search-page/UserMainProfileCard";
+import PeopleConnect from "../../components/candidate-search-page/PeopleConnect";
 
 const CandidateSearchPage = () => {
   const [formData, setFormData] = useState({
-    jobInput: "", industryInput: "", countryInput: "", stateInput: "", workTypeInput: "",
-    salaryInput: "", currencyInput: "", remoteInput: "", availabilityInput: "",
-    educationInput: "", skillInput: "", tribeInput: "", ageInput: "", genderInput: "", maritalInput: ""
+    jobInput: "",
+    industryInput: "",
+    countryInput: "",
+    stateInput: "",
+    workTypeInput: "",
+    salaryInput: "",
+    currencyInput: "",
+    remoteInput: "",
+    availabilityInput: "",
+    educationInput: "",
+    skillInput: "",
+    tribeInput: "",
+    ageInput: "",
+    genderInput: "",
+    maritalInput: "",
   });
 
   const [showResults, setShowResults] = useState(false);
@@ -21,16 +31,27 @@ const CandidateSearchPage = () => {
   const [showMainProfile, setShowMainProfile] = useState(false);
   const [showPeopleConnect, setShowPeopleConnect] = useState(false);
 
+  // Add state for selected candidate ID
+  const [selectedCandidateId, setSelectedCandidateId] = useState(null);
+
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 1024);
     checkScreen();
-    window.addEventListener('resize', checkScreen);
-    return () => window.removeEventListener('resize', checkScreen);
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
-  const isFormComplete = Object.values(formData).every(val => val.trim() !== "");
+  const isFormComplete = Object.values(formData).every(
+    (val) => val.trim() !== ""
+  );
+
+  // Handler for viewing a profile
+  const handleViewProfile = (candidateId) => {
+    setSelectedCandidateId(candidateId);
+    setViewProfile(true);
+  };
 
   // Handle mobile rendering: only one component at a time
   const renderMobileComponent = () => {
@@ -44,11 +65,18 @@ const CandidateSearchPage = () => {
         />
       );
     } else if (!viewProfile) {
-      return <CandidateSearchResults onViewProfile={() => setViewProfile(true)} />;
+      return <CandidateSearchResults onViewProfile={handleViewProfile} />;
     } else if (!showMainProfile) {
-      return <UserProfilePanel onViewMainProfile={() => setShowMainProfile(true)} />;
+      return (
+        <UserProfilePanel
+          candidateId={selectedCandidateId}
+          onViewMainProfile={() => setShowMainProfile(true)}
+        />
+      );
     } else if (!showPeopleConnect) {
-      return <UserMainProfileCard onConnect={() => setShowPeopleConnect(true)} />;
+      return (
+        <UserMainProfileCard onConnect={() => setShowPeopleConnect(true)} />
+      );
     } else {
       return <PeopleConnect />;
     }
@@ -70,7 +98,7 @@ const CandidateSearchPage = () => {
             {/* Left Column */}
             <div className="overflow-y-auto h-full p-4 border-gray-300">
               {showResults && (
-                <CandidateSearchResults onViewProfile={() => setViewProfile(true)} />
+                <CandidateSearchResults onViewProfile={handleViewProfile} />
               )}
             </div>
 
@@ -84,9 +112,14 @@ const CandidateSearchPage = () => {
                   onSearch={() => setShowResults(true)}
                 />
               ) : !showMainProfile ? (
-                <UserProfilePanel onViewMainProfile={() => setShowMainProfile(true)} />
+                <UserProfilePanel
+                  candidateId={selectedCandidateId}
+                  onViewMainProfile={() => setShowMainProfile(true)}
+                />
               ) : !showPeopleConnect ? (
-                <UserMainProfileCard onConnect={() => setShowPeopleConnect(true) }  />
+                <UserMainProfileCard
+                  onConnect={() => setShowPeopleConnect(true)}
+                />
               ) : (
                 <PeopleConnect />
               )}
