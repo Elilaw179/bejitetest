@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://bejite-backend.onrender.com",
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -34,7 +34,7 @@ axiosInstance.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem("refreshToken");
-        
+
         if (!refreshToken) {
           // No refresh token, redirect to login
           localStorage.clear();
@@ -44,7 +44,7 @@ axiosInstance.interceptors.response.use(
 
         // Call refresh token endpoint
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || "https://bejite-backend.onrender.com"}/auth/refresh`,
+          `${import.meta.env.VITE_API_URL}/auth/refresh`,
           { refreshToken },
           { withCredentials: true }
         );

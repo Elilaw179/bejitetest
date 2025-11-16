@@ -1,30 +1,66 @@
-
 import React, { useState, useEffect } from "react";
 import Header from "../../../components/Header";
 import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
-import { FaPlus, FaCheckCircle, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
+import useAuth from "../../../hooks/useAuth";
+import { toast } from "react-toastify";
+import axiosInstance from "../../../utils/axiosInstance";
+import {
+  FaPlus,
+  FaCheckCircle,
+  FaChevronDown,
+  FaTrash,
+  FaCheck,
+} from "react-icons/fa";
 import { FaDeleteLeft } from "react-icons/fa6";
+import Loader from "../../../components/ui/Loader";
 
 const optionsJob = [
-  "Software Developer","Frontend Developer","Backend Developer","Full Stack Developer","UI/UX Designer","Data Analyst",
-  "Data Scientist","DevOps Engineer","Product Manager","QA Tester","Cybersecurity Analyst",
-
-  "Administrative Assistant","Project Manager","Operations Manager","Business Analyst","Customer Support Representative","Sales Executive","Human Resources Manager",
-
-  "Digital Marketer","SEO Specialist","Content Writer","Social Media Manager","Copywriter","Brand Manager",
-
-  "Accountant","Financial Analyst","Auditor","Bank Teller",
-
-  "Teacher","Lecturer","Academic Advisor","School Administrator",
-
-  "Nurse", "Medical Doctor","Pharmacist","Laboratory Technician",
-
-  "Electrician","Plumber","Driver","Chef","Security Guard", "Not Available"
+  "Software Developer",
+  "Frontend Developer",
+  "Backend Developer",
+  "Full Stack Developer",
+  "UI/UX Designer",
+  "Data Analyst",
+  "Data Scientist",
+  "DevOps Engineer",
+  "Product Manager",
+  "QA Tester",
+  "Cybersecurity Analyst",
+  "Administrative Assistant",
+  "Project Manager",
+  "Operations Manager",
+  "Business Analyst",
+  "Customer Support Representative",
+  "Sales Executive",
+  "Human Resources Manager",
+  "Digital Marketer",
+  "SEO Specialist",
+  "Content Writer",
+  "Social Media Manager",
+  "Copywriter",
+  "Brand Manager",
+  "Accountant",
+  "Financial Analyst",
+  "Auditor",
+  "Bank Teller",
+  "Teacher",
+  "Lecturer",
+  "Academic Advisor",
+  "School Administrator",
+  "Nurse",
+  "Medical Doctor",
+  "Pharmacist",
+  "Laboratory Technician",
+  "Electrician",
+  "Plumber",
+  "Driver",
+  "Chef",
+  "Security Guard",
+  "Not Available",
 ];
-
 
 const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
   <div className="relative w-full">
@@ -37,7 +73,9 @@ const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
     >
       <option value="">{placeholder}</option>
       {options.map((opt) => (
-        <option key={opt} value={opt}>{opt}</option>
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
       ))}
     </select>
     {value ? (
@@ -68,17 +106,35 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 function WorkHistory() {
   const navigate = useNavigate();
   const { currentStep } = useOutletContext();
-  const steps = ["Bio", "Education", "Skills", "Work history", "Certificate", "Links"];
+  const steps = [
+    "Bio",
+    "Education",
+    "Skills",
+    "Work history",
+    "Certificate",
+    "Links",
+  ];
 
+  const [isLoading, setIsLoading] = useState(false);
   const [jobTitle, setJobTitle] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [responsibilities, setResponsibilities] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [allFilled, setAllFilled] = useState(false);
+  const { user } = useAuth();
+  const [allWorkHistory, setAllWorkHistory] = useState([]);
 
+  // Update allFilled whenever form fields change
   useEffect(() => {
-    setAllFilled(jobTitle && companyName && responsibilities && startDate && endDate);
+    const filled =
+      jobTitle.trim() !== "" &&
+      companyName.trim() !== "" &&
+      responsibilities.trim() !== "" &&
+      startDate.trim() !== "" &&
+      endDate.trim() !== "";
+
+    setAllFilled(filled);
   }, [jobTitle, companyName, responsibilities, startDate, endDate]);
 
   const clearForm = () => {
@@ -89,11 +145,43 @@ function WorkHistory() {
     setEndDate("");
   };
 
+  const addMore = () => {
+    if (!allFilled) {
+      toast.error("Please complete all fields");
+      return;
+    }
 
-        const location = useLocation();
-  
-        const { email, firstName, lastName, role, mode, followings } =
-          location.state || {};
+    const newEntry = {
+      userId: user?.id,
+      jobTitle,
+      companyName,
+      responsibilities,
+      startDate,
+      endDate,
+    };
+
+    // Check for duplicates
+    const isDuplicate = allWorkHistory.some(
+      (item) =>
+        item.jobTitle === newEntry.jobTitle &&
+        item.companyName === newEntry.companyName &&
+        item.startDate === newEntry.startDate &&
+        item.endDate === newEntry.endDate
+    );
+
+    if (isDuplicate) {
+      toast.warning("This work history entry already exists");
+      return;
+    }
+
+    setAllWorkHistory((prev) => [...prev, newEntry]);
+    clearForm();
+    toast.success("Work history added!");
+  };
+
+  const location = useLocation();
+  const { email, firstName, lastName, role, mode, followings } =
+    location.state || {};
 
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">
@@ -138,9 +226,7 @@ function WorkHistory() {
                 onChange={(e) => setResponsibilities(e.target.value)}
                 placeholder="Tip: Use bullet points to highlight what you did and how it helped the company."
                 className="w-full bg-[#F5F5F5] rounded-[6px] p-3 h-40 text-[10px] focus:outline-1 focus:outline-[#1A3E32]"
-              >
-                {" "}
-              </textarea>
+              />
             </div>
 
             <div className="w-full sm:w-56 p-2 rounded-lg">
@@ -149,7 +235,7 @@ function WorkHistory() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-              />{" "}
+              />
               <br />
               <p className="font-semibold text-xs mb-1 mt-2">END DATE</p>
               <InputWithIcon
@@ -162,11 +248,12 @@ function WorkHistory() {
 
           <div className="max-w-2xs mx-auto bg-[#00000040] mt-3 rounded-2xl flex">
             <button
-              onClick={clearForm}
+              onClick={addMore}
+              disabled={!allFilled}
               className={`flex-1 h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
                 allFilled
-                  ? "bg-black border-black"
-                  : "bg-transparent border-[#F5F5F5]"
+                  ? "bg-black border-black cursor-pointer hover:bg-gray-800"
+                  : "bg-transparent border-[#F5F5F5] cursor-not-allowed"
               }`}
             >
               ADD MORE <FaPlus />
@@ -175,30 +262,95 @@ function WorkHistory() {
         </div>
       </div>
 
-      {allFilled && (
-        <div className="max-w-4xl px-4 mt-6  m-auto">
-          <div className="max-w-2xs m-auto  bg-[#1A3E32] text-white rounded-lg flex flex-col sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
-            <div>
-              <p className="font-semibold">{jobTitle}</p>
-              <p className="text-sm">@ {companyName}</p>
-            </div>
-            <button onClick={clearForm} className="text-white text-xl  ">
-              <FaTrash />
-            </button>
-          </div>
+      <div className="flex items-start justify-center">
+        <div className="mt-6 space-y-4 max-w-4xl mx-auto">
+          {allWorkHistory.length > 0 &&
+            allWorkHistory.map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-[#1A3E32] text-white rounded-lg flex justify-between items-center p-4"
+              >
+                <div>
+                  <p className="font-semibold">{item.jobTitle}</p>
+                  <p className="text-sm">@ {item.companyName}</p>
+                </div>
+
+                <button
+                  className="text-white text-xl hover:text-red-400 transition-colors"
+                  onClick={() =>
+                    setAllWorkHistory((prev) =>
+                      prev.filter((_, i) => i !== idx)
+                    )
+                  }
+                >
+                  <FaTrash />
+                </button>
+              </div>
+            ))}
         </div>
-      )}
+      </div>
 
       <NavigationButtons
-        isFormComplete={allFilled}
-        onBack={() => navigate(-1)}
-        onNext={() =>
-          allFilled &&
-          navigate("/certificate", {
-            state: { email, firstName, lastName, role, mode, followings },
-          })
-        }
+        isFormComplete={allWorkHistory.length > 0}
+        onNext={async () => {
+          // Collect all work history to save
+          let historyToSave = [...allWorkHistory];
+
+          // If current form is filled but not added to list, include it
+          if (allFilled) {
+            const currentEntry = {
+              userId: user?.id,
+              jobTitle,
+              companyName,
+              responsibilities,
+              startDate,
+              endDate,
+            };
+
+            // Check if it's already in the list
+            const exists = historyToSave.some(
+              (item) =>
+                item.jobTitle === currentEntry.jobTitle &&
+                item.companyName === currentEntry.companyName &&
+                item.startDate === currentEntry.startDate &&
+                item.endDate === currentEntry.endDate
+            );
+
+            if (!exists) {
+              historyToSave.push(currentEntry);
+            }
+          }
+
+          if (historyToSave.length === 0) {
+            toast.error(
+              "Please add at least one work history before continuing."
+            );
+            return;
+          }
+
+          setIsLoading(true);
+
+          try {
+            // Save all work history entries
+            for (const item of historyToSave) {
+              await axiosInstance.post(`/api/cv-builder/work-history/`, item);
+            }
+
+            setIsLoading(false);
+            toast.success("Work history saved successfully!");
+
+            navigate("/certificate", {
+              state: { email, firstName, lastName, role, mode, followings },
+            });
+          } catch (err) {
+            setIsLoading(false);
+            console.error("Error:", err);
+            toast.error("Failed to save work history. Try again.");
+          }
+        }}
       />
+
+      <Loader show={isLoading} />
     </div>
   );
 }

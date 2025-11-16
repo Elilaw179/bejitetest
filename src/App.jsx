@@ -1,8 +1,4 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignIn from "./pages/SignIn";
 import ForgetPassword from "./pages/ForgetPassword";
 import EmailCheck from "./pages/EmailCheck";
@@ -55,7 +51,7 @@ import PaymentSuccess from "./pages/paymentMethod/PaymentSuccessPage.jsx";
 import SentInvite from "./pages/individual/SentInvite.jsx";
 import EmployeeSentInvite from "./pages/employerDashboard/EmployeeSentInvite.jsx";
 import InterviewInvite from "./components/InterviewInvite.jsx";
-import About from "./pages/misc/About.jsx"
+import About from "./pages/misc/About.jsx";
 import Teams from "./pages/misc/Teams.jsx";
 import SecurityAdvice from "./pages/misc/SecurityAdvice.jsx";
 import PrivacyPolicy from "./pages/misc/PrivacyPolicy.jsx";
@@ -63,11 +59,10 @@ import Contact from "./pages/misc/Contact.jsx";
 import AuthSuccess from "./pages/auth/AuthSuccess.jsx";
 import AuthFailure from "./pages/auth/AuthFailure.jsx";
 import CompleteSignup from "./pages/CompleteSignup.jsx";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
 function App() {
   return (
@@ -146,7 +141,10 @@ function App() {
           <Route path="/payment-processing" element={<PaymentProcessing />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/sent-invite" element={<SentInvite />} />
-          <Route path="/employee-sent-invite" element={<EmployeeSentInvite />} />
+          <Route
+            path="/employee-sent-invite"
+            element={<EmployeeSentInvite />}
+          />
           <Route path="/interview-invite" element={<InterviewInvite />} />
           <Route path="/about" element={<About />} />
           <Route path="/teams" element={<Teams />} />
