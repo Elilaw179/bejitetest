@@ -121,20 +121,26 @@ const CandidateProfile = ({ candidate, onViewProfile }) => (
   </div>
 );
 
-const ProfileImage = ({ initials, online, image }) => (
+const ProfileImage = ({ initials, name, online, image }) => (
   <div className="relative">
     <div className="rounded-full w-[100px] h-[100px] overflow-hidden bg-[#6B8E23] flex items-center justify-center">
       
-      <span className="text-white text-2xl font-bold">{initials}</span>
-       <img src={image} alt={`${name} profile`} className="w-full h-full object-cover" />
+      {image ? (
+        <img src={image} alt={`${name} profile`} className="w-full h-full object-cover" />
+      ) : (
+        <span className="text-white text-2xl font-bold">{initials}</span>
+      )}
+
     </div>
+
     <span
-      className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-9 right-2 ${
+      className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-2 right-2 ${
         online ? "bg-[#6B8E23]" : "bg-[#828282]"
       }`}
     />
   </div>
 );
+
 
 const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYears, onViewProfile }) => (
   <div className="ml-3 flex-1 space-y-1">
