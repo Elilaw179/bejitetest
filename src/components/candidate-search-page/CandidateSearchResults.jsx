@@ -121,7 +121,7 @@ const CandidateProfile = ({ candidate, onViewProfile }) => (
   </div>
 );
 
-const ProfileImage = ({ initials, online }) => (
+const ProfileImage = ({ initials, online, image }) => (
   <div className="relative">
     <div className="rounded-full w-[100px] h-[100px] overflow-hidden bg-[#6B8E23] flex items-center justify-center">
       
