@@ -1,49 +1,75 @@
 name: Bejite Frontend CI
 
+# -------------------------------------------------------------
+# CI TRIGGERS
+# Run this workflow only when:
+#  - Code is pushed to main or dev
+#  - A pull request is opened to main or dev
+# -------------------------------------------------------------
 on:
   push:
-    branches: ["*"]
+    branches:
+      - main
+      - dev
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
+      - dev
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    
     env:
       VITE_API_URL: ${{ secrets.VITE_API_URL }}
       VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
 
     steps:
+
+      # -------------------------------------------------------------
       # 1. Checkout repository
+      # -------------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js (version 18)
+      # -------------------------------------------------------------
+      # 2. Setup Node.js (using version 18)
+      # -------------------------------------------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: npm
 
-      # 3. Install dependencies
+      # -------------------------------------------------------------
+      # 3. Install dependencies using npm ci
+      # -------------------------------------------------------------
       - name: Install dependencies
         run: npm ci
 
-      # 4. Run ESLint (if configured)
-      - name: Run ESLint (if configured)
+      # -------------------------------------------------------------
+      # 4. Run ESLint if the script exists in package.json
+      # -------------------------------------------------------------
+      - name: Run ESLint
         run: npm run lint --if-present
 
-      # 5. Build the frontend project
-      - name: Build frontend project
+      # -------------------------------------------------------------
+      # 5. Build the production-ready frontend
+      # -------------------------------------------------------------
+      - name: Build frontend
         run: npm run build
 
-      # 6. Confirm dist folder exists (optional but useful)
+      # -------------------------------------------------------------
+      # 6. Confirm the build output exists (optional debugging step)
+      # -------------------------------------------------------------
       - name: Confirm build output
         run: ls -R dist
 
-      # 7. Upload frontend build artifact
-      - name: Upload Frontend Build Artifact
+      # -------------------------------------------------------------
+      # 7. Upload build artifact to GitHub Actions storage
+      # -------------------------------------------------------------
+      - name: Upload Build Artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
@@ -51,13 +77,15 @@ jobs:
           path: dist/
           retention-days: 7
 
-      # 8. Trigger DevOps CI workflow
+      # -------------------------------------------------------------
+      # 8. Trigger DevOps CI ONLY when main is updated
+      # -------------------------------------------------------------
       - name: Trigger DevOps CI
-        if: success()
+        if: github.ref == 'refs/heads/main'
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          echo "Triggering DevOps CI from FRONTEND pipeline..."
+          echo "Triggering DevOps CI for MAIN branch..."
           curl -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer $GH_PAT" \
