@@ -108,7 +108,7 @@ const SearchResultsHeader = ({ count }) => (
 
 const CandidateProfile = ({ candidate, onViewProfile }) => (
   <div className="flex justify-between mt-6 p-2">
-    <ProfileImage initials={candidate.initials} name={candidate.name} online={candidate.online} />
+    <ProfileImage initials={candidate.initials} name={candidate.name} online={candidate.online} image={candidate.image} />
     <ProfileDetails
       name={candidate.name}
       type={candidate.type}
