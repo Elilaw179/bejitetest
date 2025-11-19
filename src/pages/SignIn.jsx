@@ -130,7 +130,7 @@ function SignIn() {
   const handleGoogleLogin = () => {
     setGoogleLoading(true);
     // Backend should redirect to /auth/success?token=...
-    window.open("https://bejite-backend.onrender.com/auth/google", "_self");
+    window.open(`${import.meta.env.VITE_API_URL}/auth/google`, "_self");
   };
 
   return (

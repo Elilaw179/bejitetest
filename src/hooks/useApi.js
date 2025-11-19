@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
+import axiosInstance from '../services/axios';
 
 const API_BASE =
     import.meta.env.VITE_API_BASE_URL || 'https://bejite-backend.onrender.com';
 
 const useApi = () => {
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
 
@@ -64,32 +65,28 @@ const useApi = () => {
         }
     }, []);
 
-    const postDataPromise = useCallback(async (url, payload) => {
-        const fullUrl = `${API_BASE}${url}`;
-        console.log('[useApi] POST (Promise) request to:', fullUrl, 'Payload:', payload);
 
+    const postDataPromise = useCallback(async ( data ) => {
+        const fullUrl = 'https://bejite-backend.onrender.com/api/cv-builder/bio';
+        
         try {
-            setLoading(true);
-
-            const response = await fetch(fullUrl, {
-                method: 'POST',
+            const response = await axiosInstance.post(`${fullUrl}`,
+                
+                {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(data),
             });
 
             const result = await response.json();
-            console.log('[useApi] POST (Promise) response:', result);
-
+            console.log(result)
             if (!response.ok) {
                 throw new Error(result.error || result.message || 'Unknown error');
             }
-
-            setData(result);
             return result;
         } catch (err) {
-            console.error('[useApi] POST (Promise) error:', err);
+            console.error('[useApi] POST (Promise) error:', err.message);
             setError(err.message);
             throw err;
         } finally {
