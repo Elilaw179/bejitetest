@@ -329,9 +329,9 @@ function WorkHistory() {
           }
 
           setIsLoading(true);
-          console.log("historyTosave:", historyToSave);
+          // console.log("historyTosave:", historyToSave);
 
-          console.log("allworkhistory:", allWorkHistory);
+          // console.log("allworkhistory:", allWorkHistory);
 
           try {
             // Save all work history entries
