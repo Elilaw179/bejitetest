@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import StepTabs from "../components/StepTabs";
 import ProgressBar from "../components/ProgressBar";
@@ -9,7 +8,14 @@ import NavigationButtons from "../components/NavigationButtons";
 function Link() {
   const navigate = useNavigate();
   const { currentStep } = useOutletContext();
-  const steps = ["Bio", "Education", "Skills", "Work history", "Certificate", "Links"];
+  const steps = [
+    "Bio",
+    "Education",
+    "Skills",
+    "Work history",
+    "Certificate",
+    "Links",
+  ];
 
   const [linkedin, setLinkedin] = useState("");
   const [twitter, setTwitter] = useState("");
@@ -18,8 +24,8 @@ function Link() {
   const [allFilled, setAllFilled] = useState(false);
 
   useEffect(() => {
-  setAllFilled(linkedin && twitter && instagram && portfolio);
-}, [linkedin, twitter, instagram, portfolio]);
+    setAllFilled(linkedin && twitter && instagram && portfolio);
+  }, [linkedin, twitter, instagram, portfolio]);
 
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">
@@ -31,7 +37,8 @@ function Link() {
         Links
       </div>
       <p className="max-w-3xl mx-auto text-[#333] text-sm mb-6">
-        Add at least one link to your online presence. Employers love to see your work, projects, or portfolio.
+        Add at least one link to your online presence. Employers love to see
+        your work, projects, or portfolio.
       </p>
 
       <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4">
@@ -39,7 +46,9 @@ function Link() {
           <div className="bg-[#E63357] p-4 rounded-2xl">
             <div className="space-y-6">
               <div className="w-full">
-                <p className="text-[#D9D9D9] text-[15px] font-semibold mb-1">LinkedIn</p>
+                <p className="text-[#D9D9D9] text-[15px] font-semibold mb-1">
+                  LinkedIn
+                </p>
                 <input
                   type="text"
                   value={linkedin}
@@ -61,7 +70,9 @@ function Link() {
               </div>
 
               <div className="w-full">
-                <p className="text-[#D9D9D9] text-[15px] font-bold mb-1">Instagram</p>
+                <p className="text-[#D9D9D9] text-[15px] font-bold mb-1">
+                  Instagram
+                </p>
                 <input
                   type="text"
                   value={instagram}
@@ -72,7 +83,9 @@ function Link() {
               </div>
 
               <div className="w-full">
-                <p className="text-[#D9D9D9] text-[15px] font-bold mb-1">Portfolio website</p>
+                <p className="text-[#D9D9D9] text-[15px] font-bold mb-1">
+                  Portfolio website
+                </p>
                 <input
                   type="text"
                   value={portfolio}
@@ -89,7 +102,11 @@ function Link() {
       <NavigationButtons
         isFormComplete={allFilled}
         onBack={() => navigate(-1)}
-        onNext={() => allFilled && navigate("/job-type")}
+        onNext={() => {
+          if (allFilled) {
+            navigate("/job-type");
+          }
+        }}
       />
     </div>
   );
