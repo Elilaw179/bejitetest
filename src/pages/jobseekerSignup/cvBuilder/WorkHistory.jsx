@@ -291,7 +291,7 @@ function WorkHistory() {
       </div>
 
       <NavigationButtons
-        isFormComplete={allWorkHistory.length > 0}
+        isFormComplete={allWorkHistory.length > 0 || allFilled}
         onNext={async () => {
           // Collect all work history to save
           let historyToSave = [...allWorkHistory];
@@ -329,6 +329,9 @@ function WorkHistory() {
           }
 
           setIsLoading(true);
+          // console.log("historyTosave:", historyToSave);
+
+          // console.log("allworkhistory:", allWorkHistory);
 
           try {
             // Save all work history entries
