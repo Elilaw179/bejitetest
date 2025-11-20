@@ -1,7 +1,7 @@
 // src/services/cvBuilderService.js
 import axios from "axios";
 
-const BASE_URL = "https://bejite-backend.onrender.com/api/cv-builder";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const submitBio = async (bioData) => {
   try {
