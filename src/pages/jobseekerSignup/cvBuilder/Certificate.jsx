@@ -1,12 +1,22 @@
-
 import React, { useState, useEffect } from "react";
 import Header from "../../../components/Header";
 import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
-import {FaPlus, FaCheckCircle, FaChevronDown, FaCamera, FaTrash, FaCheck,} from "react-icons/fa";
+import {
+  FaPlus,
+  FaCheckCircle,
+  FaChevronDown,
+  FaCamera,
+  FaTrash,
+  FaCheck,
+} from "react-icons/fa";
 import { FaDeleteLeft } from "react-icons/fa6";
+import { toast } from "react-toastify";
+
+import useLocalStorage from "../../../hooks/useLocalStorage";
+import { createCertificate } from "../../../services/certificateService";
 
 const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
   <div className="relative w-full">
@@ -27,18 +37,28 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 
 function Certificate() {
   const navigate = useNavigate();
+
   const { currentStep } = useOutletContext();
-  const steps = [ "Bio", "Education", "Skills", "Work history", "Certificate", "Links"];
+  const steps = [
+    "Bio",
+    "Education",
+    "Skills",
+    "Work history",
+    "Certificate",
+    "Links",
+  ];
 
   const [certName, setCertName] = useState("");
   const [issuer, setIssuer] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [file, setFile] = useState(null);
   const [allFilled, setAllFilled] = useState(false);
+  const {postCertficateData} = createCertificate();
 
   useEffect(() => {
     setAllFilled(certName && issuer && issueDate && file);
   }, [certName, issuer, issueDate, file]);
+  
 
   const clearForm = () => {
     setCertName("");
@@ -46,12 +66,43 @@ function Certificate() {
     setIssueDate("");
     setFile(null);
   };
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
+  const { id: userId, token } = useLocalStorage("user");
+  
 
-      const location = useLocation();
+  const handleSubmit = async () => {
+    const payLoad = {
+      userId,
+      certificateName: certName,
+      issuer,
+      issueDate,
+    };
 
-      const { email, firstName, lastName, role, mode, followings } =
-        location.state || {};
+    const submitCertData = async () => {
+      await postCertficateData(payLoad);
+      return "Certificate Added Successfully";
+    };
+
+    try {
+      await toast.promise(submitCertData(), {
+        pending: "Saving Certificate....",
+        success: "Certificate Added Successfully",
+        error: "Failed to save certificate",
+      });
+      clearForm();
+      navigate("/links", {
+        state: { email, firstName, lastName, role, mode, followings },
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const location = useLocation();
+
+  const { email, firstName, lastName, role, mode, followings } =
+    location.state || {};
 
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">
@@ -155,16 +206,10 @@ function Certificate() {
       <NavigationButtons
         isFormComplete={allFilled}
         onBack={() => navigate(-1)}
-        onNext={() =>
-          allFilled &&
-          navigate("/links", {
-            state: { email, firstName, lastName, role, mode, followings },
-          })
-        }
+        onNext={handleSubmit}
       />
     </div>
   );
 }
 
 export default Certificate;
-

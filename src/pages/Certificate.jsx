@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import StepTabs from "../components/StepTabs";
@@ -13,6 +12,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { FaDeleteLeft } from "react-icons/fa6";
+
 
 const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
   <div className="relative w-full">
@@ -53,6 +53,7 @@ function Certificate() {
     setAllFilled(certName && issuer && issueDate && file);
   }, [certName, issuer, issueDate, file]);
 
+  
   const clearForm = () => {
     setCertName("");
     setIssuer("");
@@ -70,7 +71,8 @@ function Certificate() {
         Awards / Achievements (Optional)
       </div>
       <p className="max-w-3xl mx-auto text-[#333] text-sm mb-6">
-        Stand out by showing recognition you’ve received for your work or talent.
+        Stand out by showing recognition you’ve received for your work or
+        talent.
       </p>
 
       <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4 rounded-lg">
@@ -96,7 +98,9 @@ function Certificate() {
 
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <p className="font-semibold text-xs mb-1">UPLOAD CERTIFICATE IMAGE</p>
+              <p className="font-semibold text-xs mb-1">
+                UPLOAD CERTIFICATE IMAGE
+              </p>
               <label className="flex justify-between items-center bg-black text-white h-12 rounded-[10px] px-3 cursor-pointer overflow-hidden">
                 <span className="truncate">
                   {file ? file.name : "Upload your image"}
@@ -128,7 +132,7 @@ function Certificate() {
 
           <div className="max-w-xs mx-auto bg-[#00000040] mt-3 rounded-2xl flex">
             <button
-              onClick={clearForm}
+              onClick={addCertificate}
               className={`flex-1 h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
                 allFilled
                   ? "bg-black border-black"
@@ -148,7 +152,7 @@ function Certificate() {
               <p className="font-semibold">{certName}</p>
               <p className="text-sm">@ {issuer}</p>
               <img src={file} alt="" />
-            </div> 
+            </div>
             <button onClick={clearForm} className="text-white text-xl">
               <FaTrash />
             </button>
@@ -166,4 +170,3 @@ function Certificate() {
 }
 
 export default Certificate;
-
