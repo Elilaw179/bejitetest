@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../../config";
 
 const CandidateSearchResults = ({ onViewProfile }) => {
   const [candidates, setCandidates] = useState([]);
@@ -10,10 +11,10 @@ const CandidateSearchResults = ({ onViewProfile }) => {
       try {
         setLoading(true);
 
-        // ✅ Correct backend route
-        const API_URL = `${import.meta.env.VITE_API_URL}/api/candidates`;
+        //  Correct backend route
+        const url = `${API_URL}/api/candidates`;
 
-        const response = await fetch(API_URL, {
+        const response = await fetch(url, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

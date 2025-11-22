@@ -1,14 +1,14 @@
-import axios from 'axios';
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import axios from "axios";
+import { API_URL, API_KEY } from "../config";
 
 const axiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
-    headers: {
-        apikey: API_KEY,
-        Authorization: `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json',
-    },
+  baseURL: API_URL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+    apikey: API_KEY,
+    Authorization: `Bearer ${API_KEY}`,
+  },
 });
 
 export default axiosInstance;

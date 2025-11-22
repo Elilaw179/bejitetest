@@ -1,8 +1,9 @@
 import { useCallback } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
 import axiosInstance from '../utils/axiosInstance';
+import { API_URL } from "../config";
 
-const BASE_URL = import.meta.env.VITE_API_URL; 
+const BASE_URL = API_URL; 
 
 
 const CreateBio = () => {

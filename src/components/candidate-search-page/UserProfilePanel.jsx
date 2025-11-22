@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from "../../config";
 
 const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
   const [candidate, setCandidate] = useState(null);
@@ -17,13 +18,7 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
         setLoading(true);
         setError(null);
 
-        const API_URL = `${
-          import.meta.env.VITE_API_URL
-        }/api/candidates/${candidateId}`;
-        const USE_PROXY = false;
-        const url = USE_PROXY
-          ? `https://corsproxy.io/?${encodeURIComponent(API_URL)}`
-          : API_URL;
+        const url = `${API_URL}/api/candidates/${candidateId}`;
 
         console.log("Fetching candidate with ID:", candidateId);
         console.log("API URL:", url);
@@ -44,7 +39,7 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
           );
 
           const searchUrl =
-            "https://bejite-backend-9mg2.onrender.com/api/candidates/search";
+            `${API_URL}/api/candidates?search=${candidateId}`;
           const searchResponse = await fetch(searchUrl, {
             method: "GET",
             headers: {
