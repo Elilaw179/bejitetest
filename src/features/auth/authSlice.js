@@ -9,7 +9,7 @@ export const signupUser = createAsyncThunk(
     console.log('signupUser thunk called with:', userData);
     try {
       const response = await axios.post(
-        'https://bejite-backend.onrender.com/auth/signup',
+        'https://bejite-backend-9mg2.onrender.com/auth/signup',
         userData
       );
       console.log('API response:', response.data);
@@ -32,7 +32,7 @@ export const loginUser = createAsyncThunk(
     console.log('loginUser thunk called with:', credentials);
     try {
       const response = await axios.post(
-        'https://bejite-backend.onrender.com/auth/login',
+        'https://bejite-backend-9mg2.onrender.com/auth/login',
         credentials
       );
       console.log('Login API response:', response.data);

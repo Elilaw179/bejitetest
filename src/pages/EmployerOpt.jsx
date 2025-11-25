@@ -51,14 +51,11 @@ const EmployerOpt = () => {
             setShow(false);
         }
 
-        navigate('/resume');
-
         if (mode === 'individual') {
             navigate('/individual/basic-details');
-        } else {
-            navigate('/coperate/Basic-details');
+        } else if (mode === 'coperate') {
+            navigate('/coperate/basic-details');
         }
-        // }
     };
 
     useEffect(() => {
@@ -77,8 +74,8 @@ const EmployerOpt = () => {
     }, []);
 
     return (
-        <div className="bg-white min-h-screen flex flex-col">
-            <div className="w-full px-4 py-6 flex items-center max-w-screen-xl mx-auto">
+        <div className="bg-white min-h-screen flex flex-col items-center">
+            <div className="w-full px-4 py-6 flex items-center max-w-screen-xl">
                 <img
                     src="/assets/images/logo.png"
                     alt="logo"
@@ -94,7 +91,7 @@ const EmployerOpt = () => {
                     Choose the account type that fits your hiring needs
                 </p>
 
-                <div className="lg:w-[50%] w-full px-4 mt-12 flex flex-wrap justify-around gap-6 py-10 bg-[#E0E0E01A] rounded-2xl border border-[#82828226]">
+                <div className="lg:w-[50%] w-full px-4 mt-12 flex flex-wrap justify-center gap-6 py-10 bg-[#E0E0E01A] rounded-2xl border border-[#82828226]">
                     <MemberCard
                         label="INDIVIDUAL"
                         iconSrc="/assets/images/user.svg"
@@ -121,7 +118,7 @@ const EmployerOpt = () => {
                         setShowInfo={setShowCoperateInfo}
                         containerRef={coperateRef}
                         // onClick={() => navigate("/coperate/Basic-details")}
-                        onClick={() => handleClick('corperate')}
+                        onClick={() => handleClick('coperate')}
                     />
                 </div>
             </div>
