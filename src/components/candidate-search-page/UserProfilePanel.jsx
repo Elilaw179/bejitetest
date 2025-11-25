@@ -1,108 +1,397 @@
+import React, { useState, useEffect } from "react";
 
-import React from 'react';
+const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
+  const [candidate, setCandidate] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-const UserProfilePanel = ({ onViewMainProfile }) => {
+  useEffect(() => {
+    const fetchCandidateDetails = async () => {
+      if (!candidateId) {
+        setError("No candidate ID provided");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const API_URL = `${
+          import.meta.env.VITE_API_URL
+        }/api/candidates/${candidateId}`;
+        const USE_PROXY = false;
+        const url = USE_PROXY
+          ? `https://corsproxy.io/?${encodeURIComponent(API_URL)}`
+          : API_URL;
+
+        console.log("Fetching candidate with ID:", candidateId);
+        console.log("API URL:", url);
+
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        console.log("Response status:", response.status);
+
+        if (!response.ok) {
+          // If single candidate fetch fails, try getting from search endpoint
+          console.log(
+            "Single candidate endpoint failed, trying search endpoint..."
+          );
+
+          const searchUrl =
+            "https://bejite-backend-9mg2.onrender.com/api/candidates/search";
+          const searchResponse = await fetch(searchUrl, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!searchResponse.ok) {
+            throw new Error(
+              `Failed to fetch candidates. Status: ${searchResponse.status}`
+            );
+          }
+
+          const searchData = await searchResponse.json();
+
+          if (
+            searchData.success &&
+            searchData.data &&
+            Array.isArray(searchData.data)
+          ) {
+            const foundCandidate = searchData.data.find(
+              (c) => c.id === parseInt(candidateId)
+            );
+
+            if (foundCandidate) {
+              console.log("Found candidate from search:", foundCandidate);
+              setCandidate(foundCandidate);
+            } else {
+              throw new Error(
+                `Candidate with ID ${candidateId} not found in the database`
+              );
+            }
+          } else {
+            throw new Error("Invalid data format from search endpoint");
+          }
+        } else {
+          // Single candidate endpoint succeeded
+          const data = await response.json();
+          console.log("Received data:", data);
+
+          if (data.success && data.data) {
+            setCandidate(data.data);
+          } else if (data.data) {
+            // Handle case where success flag might be missing but data exists
+            setCandidate(data.data);
+          } else {
+            throw new Error("No candidate data received from API");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching candidate details:", error);
+        setError(error.message || "Failed to load candidate profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCandidateDetails();
+  }, [candidateId]);
+
+  if (loading) {
+    return (
+      <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F5F5F5] mt-1">
+        <div className="max-w-4xl mx-auto text-center py-20">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#6B8E23]"></div>
+          <p className="text-[#6B8E23] mt-4">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F5F5F5] mt-1">
+        <div className="max-w-4xl mx-auto text-center py-20">
+          <p className="text-red-500 text-lg font-semibold">
+            Error Loading Profile
+          </p>
+          <p className="text-gray-600 mt-2">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!candidate) {
+    return (
+      <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F5F5F5] mt-1">
+        <div className="max-w-4xl mx-auto text-center py-20">
+          <p className="text-gray-600">No candidate data found</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 bg-[#F5F5F5] mt-3">
-      <ProfileHeader onViewMainProfile={onViewMainProfile} />
-      <ActivitiesSection />
-      <PostCard />
+    <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F5F5F5] mt-1">
+      <div className="max-w-4xl mx-auto">
+        <ProfileHeader candidate={candidate} />
+        <ProfileStats
+          candidate={candidate}
+          onViewMainProfile={onViewMainProfile}
+        />
+        <Divider />
+
+        {candidate.education && candidate.education.length > 0 && (
+          <ProfileSection title="Education">
+            {candidate.education.map((edu, index) => (
+              <EducationItem key={index} education={edu} />
+            ))}
+          </ProfileSection>
+        )}
+
+        {candidate.skills && candidate.skills.length > 0 && (
+          <ProfileSection title="Skills">
+            <SkillsList skills={candidate.skills} />
+          </ProfileSection>
+        )}
+
+        {candidate.work_history && candidate.work_history.length > 0 && (
+          <ProfileSection title="Work History">
+            {candidate.work_history.map((work, index) => (
+              <WorkHistoryItem key={index} work={work} />
+            ))}
+          </ProfileSection>
+        )}
+
+        {candidate.certifications && candidate.certifications.length > 0 && (
+          <ProfileSection title="Certifications">
+            {candidate.certifications.map((cert, index) => (
+              <CertificationItem key={index} certification={cert} />
+            ))}
+          </ProfileSection>
+        )}
+
+        <ProfileSection title="Contact Info">
+          <ContactInfoList candidate={candidate} />
+        </ProfileSection>
+        <PostCard candidate={candidate} />
+      </div>
     </div>
   );
 };
 
-const ProfileHeader = ({ onViewMainProfile }) => (
-  <div className="w-full bg-white rounded-2xl p-4 sm:p-10">
-    <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10">
-      <ProfileImageSection />
-      <ProfileStatsSection onViewMainProfile={onViewMainProfile} />
-    </div>
-    <div className="flex justify-end -mt-6">
-      <img src="/assets/images/more.svg" alt="More options" className="w-4 h-4" />
-    </div>
-  </div>
-);
+const ProfileHeader = ({ candidate }) => {
+  const initials = `${candidate.first_name?.[0] || ""}${
+    candidate.last_name?.[0] || ""
+  }`;
+  const isAvailable = candidate.availability === "Available";
 
-const ProfileImageSection = () => (
-  <div className="text-center">
-    <div className="relative p-4">
-      <div className="rounded-full w-[80px] sm:w-[100px] h-[80px] sm:h-[100px] overflow-hidden mx-auto">
-        <img
-          src="assets/images/eli.jpg"
-          alt="Osakwe Prisca profile"
-          className="w-full h-full object-cover"
-        />
+  return (
+    <div>
+      <div className="p-4 sm:p-8 bg-gradient-to-r from-[#1A3E32] to-[#6B8E23] rounded-lg">
+        <div className="h-32"></div>
       </div>
-      <span className="absolute w-3 h-3 sm:w-4 sm:h-4 bg-[#6B8E23] rounded-full border-2 border-white top-[72px] sm:top-[91px] left-[75%]"></span>
+      <div className="relative left-8 sm:left-20 bottom-15 sm:bottom-16">
+        <div className="relative rounded-full w-[80px] sm:w-[100px] h-[80px] sm:h-[100px]  bg-[#6B8E23] flex items-center justify-center border-4 border-white">
+          <span className="text-white text-3xl font-bold">{initials}</span>
+          <span
+            className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-0 right-0 z-99 ${
+              isAvailable ? "bg-[#6B8E23]" : "bg-[#828282]"
+            }`}
+          ></span>
+        </div>
+        {/* <span
+          className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-0 right-2 ${
+            isAvailable ? "bg-[#6B8E23]" : "bg-[#828282]"
+          }`}
+        ></span> */}
+      </div>
     </div>
-    <p className="text-[#6B8E23] font-semibold text-xs sm:text-sm">Graphics Designer</p>
-    <p className="text-[6px] sm:text-[8px] font-semibold text-[#556B1F]">@Lagos, Nigeria</p>
+  );
+};
+
+const ProfileStats = ({ candidate, onViewMainProfile }) => (
+  <div className="px-4 sm:px-8 mt-[-60px] sm:mt-[-40px]">
+    <div className="flex gap-2 items-center">
+      <p className="text-[#6B8E23] font-semibold text-[16px]">
+        {candidate.first_name} {candidate.last_name}
+      </p>
+      <p className="text-[#E09A36] font-semibold text-[10px]">• Jobseeker</p>
+    </div>
+
+    {candidate.bio && (
+      <div className="text-[12px] mt-2">
+        <p className="text-[#6B8E23]">{candidate.bio}</p>
+      </div>
+    )}
+
+    <div className="mt-4">
+      <p className="text-[#E09A36] text-[14px] font-semibold">
+        {candidate.title}
+      </p>
+      <p className="text-[#6B8E23] text-[10px]">📍 {candidate.location}</p>
+      {candidate.experience_years > 0 && (
+        <p className="text-[#6B8E23] text-[10px]">
+          💼 {candidate.experience_years} years experience
+        </p>
+      )}
+      {candidate.remote_preference && (
+        <p className="text-[#6B8E23] text-[10px]">🏠 Open to remote work</p>
+      )}
+      {candidate.salary_expectation && (
+        <p className="text-[#6B8E23] text-[10px]">
+          💰 Expected: ₦{candidate.salary_expectation.toLocaleString()}
+        </p>
+      )}
+    </div>
+
+    <ActionButtons onViewMainProfile={onViewMainProfile} />
   </div>
 );
 
-const ProfileStatsSection = ({ onViewMainProfile }) => (
-  <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-6">
-    <ProfileInfo onViewMainProfile={onViewMainProfile} />
-    <ConnectionInfo />
-  </div>
-);
-
-const ProfileInfo = ({ onViewMainProfile }) => (
-  <div className="text-center">
-    <p className="text-[#6B8E23] font-semibold text-sm">Osakwe Prisca</p>
-    <p className="text-[6px] font-semibold text-[#556B1F]">Jobseeker</p>
-    <div className="mt-2">
-      <p className="text-[#556B1F] text-base font-medium">100</p>
-      <p className="text-[#556B1F] text-sm font-medium">Post</p>
-    </div>
-    <button
+const ActionButtons = ({ onViewMainProfile }) => (
+  <div className="flex flex-col sm:flex-row sm:justify-start items-center mt-6 gap-3 w-full">
+    <Button
+      icon="/assets/images/repeate-one.svg"
+      text="Connect"
       onClick={onViewMainProfile}
-      className="bg-[#556B1F] text-white text-[10px] py-1 px-4 mt-2 rounded-3xl"
-    >
-      View Profile
+    />
+    <Button icon="/assets/images/Send_Submit.svg" text="Message" />
+    <button className="text-[#6B8E23] text-[12px] hover:underline">
+      View Full Profile
     </button>
   </div>
 );
 
-const ConnectionInfo = () => (
-  <div className="text-center sm:mt-9 ">
-    <p className="text-[#556B1F] text-base font-medium">202</p>
-    <p className="text-[#556B1F] text-sm font-medium">Connections</p>
-    <button className="bg-[#556B1F] flex items-center justify-center gap-2 text-white text-[10px] py-1 px-4 mt-2 rounded-3xl w-20sm:w-36">
-      <img src="/assets/images/Send_Submit.svg" alt="Send icon" className="w-3 h-3" />
-      Message
-    </button>
-  </div>
-);
-
-const ActivitiesSection = () => (
-  <>
-    <p className="text-sm text-[#6B8E23] font-bold my-4">Activities</p>
-    <div className="bg-white p-4 rounded-2xl shadow-md flex flex-wrap justify-center gap-4">
-      <ActivityButton text="Posts" />
-      <ActivityButton text="Photos" />
-      <ActivityButton text="Videos" />
-    </div>
-    <div className="w-full my-6 border-t border-[#16730F]" />
-  </>
-);
-
-const ActivityButton = ({ text }) => (
-  <button className="bg-[#556B1F] text-white text-xs px-4 py-1 rounded-2xl w-24 sm:w-28">
+const Button = ({ icon, text, onClick }) => (
+  <button
+    onClick={onClick}
+    className="bg-[#556B1F] hover:bg-[#6B8E23] w-full sm:w-[180px] text-center text-[12px] text-[#FFFFFF] flex p-2 rounded-3xl gap-2 justify-center items-center transition-colors"
+  >
+    <img className="w-4 h-4" src={icon} alt={text} />
     {text}
   </button>
 );
 
-const PostCard = () => (
+const Divider = () => (
+  <div className="w-full mx-auto my-6 border-t-2 border-[#6B8E23]"></div>
+);
+
+const ProfileSection = ({ title, children }) => (
+  <div className="bg-[#556B1F] rounded-2xl mt-4 mb-4">
+    <div className="pt-6 px-4 sm:px-8">
+      <p className="text-[#E09A36] text-[18px] font-semibold mb-2">{title}</p>
+    </div>
+    <div className="w-full border-t-2 border-[#E0E0E0] mb-4"></div>
+    {children}
+  </div>
+);
+
+const EducationItem = ({ education }) => (
+  <div className="px-4 sm:px-8 pb-6 text-[#F5F5F5] flex flex-col sm:flex-row justify-between gap-3 items-start">
+    <div className="bg-gradient-to-br from-[#6B8E23] to-[#556B1F] w-16 h-16 rounded-lg flex items-center justify-center">
+      <span className="text-white text-xl font-bold">🎓</span>
+    </div>
+    <div className="flex-1">
+      <p className="text-[14px] font-semibold">{education.degree}</p>
+      <p className="text-[12px]">{education.institution}</p>
+      <p className="text-[11px] text-[#E0E0E0]">{education.field}</p>
+      <span className="text-[#FFB54780] text-[11px]">{education.year}</span>
+    </div>
+  </div>
+);
+
+const SkillsList = ({ skills }) => (
+  <div className="px-4 sm:px-8 pb-6">
+    <div className="flex flex-wrap gap-2">
+      {skills.map((skill, index) => (
+        <span
+          key={index}
+          className="bg-[#1A3E32] text-[#FFFFFF] px-3 py-1.5 rounded-full text-[12px] font-medium"
+        >
+          {skill}
+        </span>
+      ))}
+    </div>
+  </div>
+);
+
+const WorkHistoryItem = ({ work }) => (
+  <>
+    <div className="px-4 sm:px-8 pb-6 text-[#F5F5F5] flex flex-col sm:flex-row gap-4 items-start">
+      <div className="bg-gradient-to-br from-[#6B8E23] to-[#556B1F] w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0">
+        <span className="text-white text-xl font-bold">💼</span>
+      </div>
+      <div className="flex-1">
+        <p className="text-[14px] font-semibold">{work.title}</p>
+        <p className="text-[13px]">{work.company}</p>
+        <p className="text-[11px] text-[#E0E0E0] mt-1">{work.description}</p>
+        <span className="text-[#FFB54780] text-[11px]">{work.duration}</span>
+      </div>
+    </div>
+    <div className="w-full border-t-2 border-[#E0E0E0] mb-4"></div>
+  </>
+);
+
+const CertificationItem = ({ certification }) => (
+  <div className="px-4 sm:px-8 pb-6 text-[#F5F5F5] flex flex-col sm:flex-row gap-4 items-start">
+    <div className="bg-gradient-to-br from-[#E09A36] to-[#6B8E23] w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0">
+      <span className="text-white text-xl font-bold">🏆</span>
+    </div>
+    <div className="flex-1">
+      <p className="text-[14px] font-semibold">{certification}</p>
+    </div>
+  </div>
+);
+
+const ContactInfoList = ({ candidate }) => {
+  const contacts = [
+    { type: "Mobile", value: candidate.phone, icon: "📱" },
+    { type: "Email", value: candidate.email, icon: "📧" },
+    { type: "LinkedIn", value: candidate.linkedin_url, icon: "💼" },
+    { type: "GitHub", value: candidate.github_url, icon: "💻" },
+    { type: "Portfolio", value: candidate.portfolio_url, icon: "🌐" },
+  ].filter((contact) => contact.value);
+
+  return (
+    <div className="px-4 sm:px-8 pb-6 text-[#FFFFFF] space-y-4">
+      {contacts.map((contact, index) => (
+        <div key={index} className="flex gap-3 items-center">
+          <div className="w-10 h-10 rounded-full bg-[#1A3E32] flex items-center justify-center">
+            <span className="text-xl">{contact.icon}</span>
+          </div>
+          <div>
+            <p className="text-[13px] font-semibold break-all">
+              {contact.value}
+            </p>
+            <p className="text-[11px] font-medium text-[#E0E0E0]">
+              {contact.type}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const PostCard = ({ candidate }) => (
   <div className="bg-white p-4 sm:p-6 rounded-2xl space-y-4">
-    <PostHeader />
+    <PostHeader candidate={candidate} />
     <PostContent />
     <PostImage />
     <PostActions />
   </div>
 );
 
-const PostHeader = () => (
+const PostHeader = ({ candidate }) => (
   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div className="flex items-center gap-4">
       <img
@@ -111,8 +400,12 @@ const PostHeader = () => (
         className="rounded-full w-12 h-12 sm:w-[60px] sm:h-[60px]"
       />
       <div>
-        <p className="text-[#16730F] font-semibold text-sm">Osakwe Prisca</p>
-        <p className="text-[#1A3E32] text-[10px] sm:text-xs">Posted 12 minutes ago</p>
+        <p className="text-[#16730F] font-semibold text-sm">
+          {candidate.first_name} {candidate.last_name}
+        </p>
+        <p className="text-[#1A3E32] text-[10px] sm:text-xs">
+          Posted 12 minutes ago
+        </p>
       </div>
     </div>
     <img src="assets/images/more.svg" alt="more" className="w-4 h-4" />
@@ -121,8 +414,12 @@ const PostHeader = () => (
 
 const PostContent = () => (
   <div>
-    <p className="text-black text-sm">🚀 HIRING JUST GOT SMARTER | WELCOME TO BEJITE.COM....</p>
-    <p className="text-[#16730F80] text-xs sm:text-sm mt-1 cursor-pointer">See more</p>
+    <p className="text-black text-sm">
+      🚀 HIRING JUST GOT SMARTER | WELCOME TO BEJITE.COM....
+    </p>
+    <p className="text-[#16730F80] text-xs sm:text-sm mt-1 cursor-pointer">
+      See more
+    </p>
   </div>
 );
 

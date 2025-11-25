@@ -6,73 +6,17 @@ import ImageUpload from '../../../components/ImageUpload';
 import FieldGroup from '../../../components/FieldGroup';
 import NavigationButtons from '../../../components/NavigationButtons';
 import Header from '../../../components/Header';
-import useApi from '../../../hooks/useApi';
 import { toast } from 'react-toastify';
 import useLocalStorage from '../../../hooks/useLocalStorage';
+import CreateBio from '../../../services/createBio';
+import { countries } from '../../../data/countries';
+import { steps } from '../../../data/bioSteps';
 
 const Bio = () => {
     const navigate = useNavigate();
     const { currentStep } = useOutletContext();
-    const steps = [
-        'Bio',
-        'Education',
-        'Skills',
-        'Work history',
-        'Certificate',
-        'Links',
-    ];
 
-    const countries = [
-        'Nigeria',
-        'United States',
-        'Canada',
-        'United Kingdom',
-        'Germany',
-        'France',
-        'India',
-        'China',
-        'South Africa',
-        'Brazil',
-        'Australia',
-        'Italy',
-        'Japan',
-        'Kenya',
-        'Mexico',
-        'Netherlands',
-        'Russia',
-        'Spain',
-        'Sweden',
-        'Argentina',
-        'Egypt',
-        'Turkey',
-        'South Korea',
-        'Norway',
-        'Poland',
-        'Indonesia',
-        'Saudi Arabia',
-        'Thailand',
-        'Vietnam',
-        'Philippines',
-        'Malaysia',
-        'Greece',
-        'Ukraine',
-        'Pakistan',
-        'Bangladesh',
-        'New Zealand',
-        'Colombia',
-        'Chile',
-        'Peru',
-        'Finland',
-        'Portugal',
-        'Denmark',
-        'Switzerland',
-        'Belgium',
-        'Austria',
-        'Ireland',
-        'Czech Republic',
-        'Hungary',
-    ];
-
+    const [imageFile, setImageFile] = useState(null); 
     const [imagePreview, setImagePreview] = useState(null);
     const [formData, setFormData] = useState({
         nickname: '',
@@ -91,38 +35,66 @@ const Bio = () => {
     const handleChange = (e) =>
         setFormData({ ...formData, [e.target.name]: e.target.value });
     const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) setImagePreview(URL.createObjectURL(file));
+        const file = e.target.files?.[0]; 
+        if (file) {
+            setImageFile(file);
+            setImagePreview(URL.createObjectURL(file));
+        } else {
+            setImageFile(null); 
+            setImagePreview(null);
+        }
     };
 
     const isFormComplete =
-        Object.values(formData).every((v) => v.trim() !== '') && imagePreview;
+        Object.values(formData).every((v) => v.trim() !== '') && imageFile;
 
-    // useApi
-    const { postDataPromise } = useApi();
+    //pass data and image to createBio Api
+    const { postBioData, uploadProfileImage } = CreateBio(); 
     const { id: userId } = useLocalStorage('user');
 
-    const addEducation = async () => {
+    // function that chains both API calls
+    const handleNextStep = async () => {
+        if (!isFormComplete) {
+            toast.error('Please complete all fields and upload an image.');
+            return;
+        }
+        
+        const bioPayload = {
+            userId,
+            ...formData,
+        };
+
+        //  sequential logic
+        const submitProfileSequence = async () => {
+            await postBioData(bioPayload); 
+            if (imageFile) {
+                await uploadProfileImage(imageFile);
+            } else {
+                throw new Error('Image file is missing for upload.'); 
+            }
+            
+            return 'Profile updated successfully!'; 
+        };
+
         try {
-            toast.promise(
-                postDataPromise('/api/cv-builder/bio', {
-                    userId,
-                    ...formData,
-                }),
+            await toast.promise(
+                submitProfileSequence(), 
                 {
-                    pending: 'Saving...',
-                    success: 'Saved successfully',
+                    pending: 'Saving personal information...',
+                    success: 'Profile updated successfully!',
                     error: {
                         render({ data }) {
-                            return `${data}`;
+                            return `Save failed: ${data}`;
                         },
                     },
                 }
             );
+            
+            // Navigate only after the entire sequence completes successfully
+            navigate('/education'); 
 
-            navigate('/education');
         } catch (error) {
-            console.log(error);
+            console.error(error); 
         }
     };
 
@@ -158,7 +130,7 @@ const Bio = () => {
             <NavigationButtons
                 isFormComplete={isFormComplete}
                 onBack={() => navigate(-1)}
-                onNext={addEducation}
+                onNext={handleNextStep}
             />
         </div>
     );

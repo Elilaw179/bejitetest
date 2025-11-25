@@ -1,0 +1,53 @@
+import { useCallback } from 'react';
+import useLocalStorage from '../hooks/useLocalStorage';
+import axiosInstance from '../utils/axiosInstance';
+
+const BASE_URL = import.meta.env.VITE_API_URL; 
+
+
+const CreateBio = () => {
+    const { id: userId } = useLocalStorage('user'); 
+
+    // Helper for toast.promise error structure
+    const handleApiError = (error) => {
+        const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
+        throw errorMessage;
+    };
+
+    // posting the main bio data (JSON)
+    const postBioData = useCallback(async (data) => {
+        try {
+            const response = await axiosInstance.post(`${BASE_URL}/api/cv-builder/bio/`, data, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
+    }, []);
+
+    //posting of image
+    const uploadProfileImage = useCallback(async (imageFile) => {
+        const dynamicEndpoint = `${BASE_URL}/api/cv-builder/bio/${userId}/photo/`; 
+
+        const formData = new FormData();
+        formData.append('profilePhoto', imageFile); 
+
+        try {
+            const response = await axiosInstance.post(dynamicEndpoint, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data', 
+                },
+            });
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
+    }, [userId]); 
+
+    return { postBioData, uploadProfileImage };
+};
+
+export default CreateBio;

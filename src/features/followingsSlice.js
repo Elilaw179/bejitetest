@@ -7,7 +7,7 @@ export const completeSignupThunk = createAsyncThunk(
     console.log("🚀 completeSignupThunk called with:", { email, role, mode, followings });
 
     try {
-      const res = await fetch("https://bejite-backend.onrender.com/auth/complete-signup", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/complete-signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, role, mode, followings }),

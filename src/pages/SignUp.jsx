@@ -160,7 +160,7 @@ function SignUp() {
 
               {/* Google OAuth Button */}
               <button
-                onClick={() => (window.location.href = "https://bejite-backend.onrender.com/auth/google")}
+                onClick={() => (window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`)}
                 className="flex items-center justify-center w-8 h-8"
                 aria-label="Sign up with Google"
               >
