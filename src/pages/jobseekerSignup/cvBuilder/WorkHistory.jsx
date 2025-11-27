@@ -329,19 +329,13 @@ function WorkHistory() {
           }
 
           setIsLoading(true);
-          // console.log("historyTosave:", historyToSave);
-
-          // console.log("allworkhistory:", allWorkHistory);
-
           try {
             // Save all work history entries
             for (const item of historyToSave) {
               await axiosInstance.post(`/api/cv-builder/work-history/`, item);
             }
-
             setIsLoading(false);
             toast.success("Work history saved successfully!");
-
             navigate("/certificate", {
               state: { email, firstName, lastName, role, mode, followings },
             });
