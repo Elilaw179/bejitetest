@@ -4,104 +4,13 @@ import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
-import { FaPlus, FaCheckCircle, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
-const optionsEdu = [
-  "No Formal Education","Primary","Secondary","Vocational/Technical Training",
-  "Tertiary Institution","Postgraduate (Masters/PhD)","Professional Certification",
-  "Not Available"
-];
-
-const optionsInst = [
-  
-  "University of Ibadan","Covenant University","University of Lagos",
- 
-  "Massachusetts Institute of Technology (MIT)","Harvard University","Stanford University",
-  
-  "University of Oxford","University of Cambridge","Imperial College London",
-
-  "University of Toronto","University of Melbourne","National University of Singapore",
-  "Not Available"
-];
-
-const optionsLoc = [
-  "Lagos","Abuja","Johannesburg","Nairobi","Cairo","Accra","Kampala","Dar es Salaam","Casablanca","Addis Ababa",
-  
-  "New York","Los Angeles","Toronto","Vancouver","Chicago","Mexico City","Houston","Miami","Montreal","Boston",
-
-  "São Paulo", "Buenos Aires", "Rio de Janeiro", "Bogotá", "Santiago", "Lima", "Caracas", "Quito", "Montevideo", "Curitiba",
-
-  "London","Paris","Berlin","Madrid","Rome","Moscow","Amsterdam","Stockholm","Vienna",
-  "Zurich","Brussels","Lisbon","Dublin","Warsaw", "Prague", "Budapest",
-
-  "Beijing","Shanghai","Tokyo","Seoul","Mumbai","Delhi","Bangkok","Singapore","Kuala Lumpur",
-  "Jakarta","Manila","Dubai","Hong Kong", "Taipei", "Hanoi", "Karachi",
-
-  "Sydney", "Melbourne", "Auckland", "Brisbane", "Perth","Not Available"
-];
-
-const optionsField = [
-  "Accounting", "Agriculture", "Anthropology", "Architecture", "Art and Design", "Astronomy", "Biology", "Business Administration",
- "Chemical Engineering","Civil Engineering", "Communication Studies", "Computer Science", "Criminology", "Data Science","Dentistry",
-  "Economics","Educaton","Electrical Engineering","Environmental Science","Finance","Geography","Geology","History","Hospitality Management", "Human Resource Management",
-  "Industrial Engineering", "Information Technology","International Relations","Journalism","Law","Linguistics","Marketing","Mathematics","Mechanical Engineering",
-  "Medicine", "Music", "Nursing", "Pharmacy", "Philosophy", "Physics", "Political Science", "Psychology", "Public Administration", "Public Health",
-  "Religious Studies","Social Work","Sociology","Software Engineering","Statistics","Theatre Arts","Theology","Tourism and Travel","Veterinary Medicine","Zoology","Not Available"
-];
+import { FaPlus, FaTrash, FaCheck } from "react-icons/fa";
+import { optionsDegree, optionsEdu, optionsField, optionsInst, optionsLoc } from "../../../data/educationData";
+import SelectWithIcon from "../../../components/education/SelectWithIcon";
+import InputWithIcon from "../../../components/education/InputWithIcon";
 
 
-
-
-
-const optionsDegree = [
-  "WAEC", "NECO", "NABTEB", "B.Sc", "B.A", "B.Eng", "LLB", "MBBS", "HND", "OND", "PGD", "M.Sc", "M.A", "MBA", "M.Eng", "PhD",
-  "MD", "JD", "Ed.D", "DVM", "Not Available"
-];
-
-
-
-const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
-  <div className="relative w-full">
-    <select
-      value={value}
-      onChange={onChange}
-      className={`w-full h-12 border-2  pl-4 rounded-[10px] pr-10 appearance-none focus:outline-1 focus:outline-[#1A3E32] ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      }`}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-    {value ? (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    ) : (
-      <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
-    )}
-  </div>
-);
-
-const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
-  <div className="relative w-full">
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      } ${type === "date" && value ? "hide-calendar-icon" : ""}`}
-    />
-    {value && (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    )}
-  </div>
-);
-
-function Education() {
+export default function Education() {
   const navigate = useNavigate();
   const { currentStep } = useOutletContext();
   const steps = [
@@ -303,4 +212,3 @@ function Education() {
   );
 }
 
-export default Education;
