@@ -1,12 +1,13 @@
 import { FaChevronDown, FaCheck } from "react-icons/fa";
 
 
-export default function SelectWithIcon({ value, onChange, options, placeholder }) {
+export default function SelectWithIcon({ name, value, onChange, options, placeholder }) {
     return (
         <div className="relative w-full">
             <select
                 value={value}
                 onChange={onChange}
+                name={name}
                 className={`w-full h-12 border-2  pl-4 rounded-[10px] pr-10 appearance-none focus:outline-1 focus:outline-[#1A3E32] ${
                 value ? "border-[#828282]" : "border-[#F5F5F5]"
             }`}
