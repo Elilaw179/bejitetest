@@ -5,13 +5,17 @@ import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
-import { FaPlus, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
+import { FaPlus, FaTrash } from "react-icons/fa";
 import { categoryOptions, skillOptions } from "../../../data/skillsData";
 import SelectWithIcon from "../../../components/education/SelectWithIcon";
+import useLocalStorage from "../../../hooks/useLocalStorage";
+import axiosInstance from "../../../utils/axiosInstance";
+import { toast } from "react-toastify";
 
 
 const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);
 
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 
 export default function Education() {
@@ -19,25 +23,56 @@ export default function Education() {
   const { currentStep } = useOutletContext();
   const steps = ["Bio", "Education", "Skills", "Work history", "Certificate", "Links"];
 
-  const [skillSector, setSkillSector] = useState("");
-  const [category, setCategory] = useState("");
-  const [experience, setExperience] = useState("");
+  const { id: userId } = useLocalStorage('user'); 
+  
+  const [skillsData, setSkillsData] = useState({
+    userId: userId,
+    skillSector: "",
+    category: "",
+    experience: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setSkillsData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
+  const handlesubmit = async () => {
+     
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/api/cv-builder/skills`, skillsData);
+
+      toast.success(response.data.message || "Skills Added Successfully")
+
+       navigate("/work-history", {
+            state: { email, firstName, lastName, role, mode, followings },
+      })
+
+    } catch (error) {
+      console.log(error.message)
+      toast.error("Error Adding Skills", error.message)
+    }
+   }
+
   const [allFilled, setAllFilled] = useState(false);
 
   useEffect(() => {
-    setAllFilled(skillSector && category && experience);
-  }, [skillSector, category, experience]);
+    setAllFilled(skillsData.skillSector && skillsData.category && skillsData.experience);
+  }, [skillsData.skillSector, skillsData.category, skillsData.experience]);
 
   const clearForm = () => {
-    setSkillSector("");
-    setCategory("");
-    setExperience("");
+    setSkillsData({
+        skillSector: "",
+        category: "",
+        experience: "",
+      })
   };
 
-        const location = useLocation();
+  const location = useLocation();
   
-        const { email, firstName, lastName, role, mode, followings } =
-          location.state || {};
+  const { email, firstName, lastName, role, mode, followings } = location.state || {};
 
   return (
     <div className="min-h-screen py-4">
@@ -58,8 +93,9 @@ export default function Education() {
           <div className="bg-[#82828280] rounded-2xl p-4">
             <p className="font-semibold text-xs mb-1">SKILL SELECTOR</p>
             <SelectWithIcon
-              value={skillSector}
-              onChange={(e) => setSkillSector(e.target.value)}
+              value={skillsData.skillSector}
+              name="skillSector"
+              onChange={handleChange}
               options={skillOptions}
               placeholder="Select "
             />
@@ -69,8 +105,9 @@ export default function Education() {
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">CATEGORY</p>
               <SelectWithIcon
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={skillsData.category}
+                name="category"
+                onChange={handleChange}
                 options={categoryOptions}
                 placeholder="Select"
               />
@@ -78,8 +115,9 @@ export default function Education() {
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">YEARS OF EXPERIENCE</p>
               <SelectWithIcon
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
+                value={skillsData.experience}
+                name="experience"
+                onChange={handleChange}
                 options={experienceOptions}
                 placeholder="Select."
               />
@@ -107,8 +145,8 @@ export default function Education() {
         <div className="max-w-4xl px-4 mt-6  m-auto">
           <div className="max-w-2xs m-auto  bg-[#1A3E32] text-white rounded-lg flex flex-col sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
             <div>
-              <p className="font-semibold">{category}</p>
-              <p className="text-sm">{experience} Experience</p>
+              <p className="font-semibold">{skillsData.category}</p>
+              <p className="text-sm">{skillsData.experience} Experience</p>
             </div>
             <button onClick={clearForm} className="text-white text-xl  ">
               <FaTrash />
@@ -120,12 +158,7 @@ export default function Education() {
       <NavigationButtons
         isFormComplete={allFilled}
         onBack={() => navigate(-1)}
-        onNext={() =>
-          allFilled &&
-          navigate("/work-history", {
-            state: { email, firstName, lastName, role, mode, followings },
-          })
-        }
+        onNext={() =>  handlesubmit()}
       />
     </div>
   );
