@@ -1,5 +1,5 @@
-import React from 'react';
-import { FaArrowLeft } from 'react-icons/fa';
+import React from "react";
+import { FaArrowLeft } from "react-icons/fa";
 
 const NavigationButtons = ({ isFormComplete, onBack, onNext }) => (
   <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center mt-[5%] px-4 gap-4 mb-[7%]">
@@ -13,7 +13,9 @@ const NavigationButtons = ({ isFormComplete, onBack, onNext }) => (
 
     <button
       className={`w-full shadow-md sm:w-[107px] ${
-        isFormComplete ? "bg-[#16730F] cursor-pointer" : "bg-[#16730F40] cursor-not-allowed"
+        isFormComplete
+          ? "bg-[#16730F] cursor-pointer"
+          : "bg-[#16730F40] cursor-not-allowed"
       } rounded-2xl h-9 text-center text-white text-[14px]`}
       disabled={!isFormComplete}
       onClick={onNext}
@@ -24,9 +26,3 @@ const NavigationButtons = ({ isFormComplete, onBack, onNext }) => (
 );
 
 export default NavigationButtons;
-
-
-
-
-
-

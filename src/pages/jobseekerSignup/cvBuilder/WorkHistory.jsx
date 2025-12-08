@@ -291,7 +291,7 @@ function WorkHistory() {
       </div>
 
       <NavigationButtons
-        isFormComplete={allWorkHistory.length > 0}
+        isFormComplete={allWorkHistory.length > 0 || allFilled}
         onNext={async () => {
           // Collect all work history to save
           let historyToSave = [...allWorkHistory];
@@ -329,16 +329,13 @@ function WorkHistory() {
           }
 
           setIsLoading(true);
-
           try {
             // Save all work history entries
             for (const item of historyToSave) {
               await axiosInstance.post(`/api/cv-builder/work-history/`, item);
             }
-
             setIsLoading(false);
             toast.success("Work history saved successfully!");
-
             navigate("/certificate", {
               state: { email, firstName, lastName, role, mode, followings },
             });

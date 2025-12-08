@@ -1,37 +1,97 @@
-
 import React, { useState, useEffect } from "react";
 import Header from "../../../components/Header";
 import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
-import { FaPlus, FaCheckCircle, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
+import {
+  FaPlus,
+  FaCheckCircle,
+  FaChevronDown,
+  FaTrash,
+  FaCheck,
+} from "react-icons/fa";
 import { FaDeleteLeft } from "react-icons/fa6";
+import useAuth from "../../../hooks/useAuth";
+import Loader from "../../../components/ui/Loader";
+import { toast } from "react-toastify";
+import axiosInstance from "../../../utils/axiosInstance";
 
 const skillOptions = [
- "Frontend Development", "Backend Development", "Full Stack Development", "UI/UX Design", 
- "Mobile App Development", "DevOps","Database Management","Cloud Computing","Cybersecurity","Software Testing/QA",
+  "Frontend Development",
+  "Backend Development",
+  "Full Stack Development",
+  "UI/UX Design",
+  "Mobile App Development",
+  "DevOps",
+  "Database Management",
+  "Cloud Computing",
+  "Cybersecurity",
+  "Software Testing/QA",
 
-  "JavaScript", "Python", "Java", "C++", "C#", "PHP", "Ruby","SQL", "TypeScript", "Go",
+  "JavaScript",
+  "Python",
+  "Java",
+  "C++",
+  "C#",
+  "PHP",
+  "Ruby",
+  "SQL",
+  "TypeScript",
+  "Go",
 
-  "Data Analysis","Data Science","Machine Learning","Artificial Intelligence","Big Data","Data Engineering","Business Intelligence",
+  "Data Analysis",
+  "Data Science",
+  "Machine Learning",
+  "Artificial Intelligence",
+  "Big Data",
+  "Data Engineering",
+  "Business Intelligence",
 
-  "Graphic Design","Motion Graphics","3D Modelling","Video Editing","Animation",
+  "Graphic Design",
+  "Motion Graphics",
+  "3D Modelling",
+  "Video Editing",
+  "Animation",
 
-  "Digital Marketing", "SEO", "Content Creation", "Social Media Management", "Product Management", "Project Management", "Sales","Customer Support",
+  "Digital Marketing",
+  "SEO",
+  "Content Creation",
+  "Social Media Management",
+  "Product Management",
+  "Project Management",
+  "Sales",
+  "Customer Support",
 
-  "Copywriting","Technical Writing","Translation","Public Speaking",
+  "Copywriting",
+  "Technical Writing",
+  "Translation",
+  "Public Speaking",
 
-  "Git","Docker","Kubernetes","Jira","Figma","Adobe Photoshop","Microsoft Office Suite", "Not Available"
+  "Git",
+  "Docker",
+  "Kubernetes",
+  "Jira",
+  "Figma",
+  "Adobe Photoshop",
+  "Microsoft Office Suite",
+  "Not Available",
 ];
 
-
 const categoryOptions = [
-  "Internship","Entry-Level","Junior","Mid-Level","Senior","Lead","Manager","Director","Executive (C-Level)", "Not Available"
+  "Internship",
+  "Entry-Level",
+  "Junior",
+  "Mid-Level",
+  "Senior",
+  "Lead",
+  "Manager",
+  "Director",
+  "Executive (C-Level)",
+  "Not Available",
 ];
 
 const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);
-
 
 const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
   <div className="relative w-full">
@@ -57,15 +117,25 @@ const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
   </div>
 );
 
-function Education() {
+function Skills() {
   const navigate = useNavigate();
   const { currentStep } = useOutletContext();
-  const steps = ["Bio", "Education", "Skills", "Work history", "Certificate", "Links"];
+  const steps = [
+    "Bio",
+    "Education",
+    "Skills",
+    "Work history",
+    "Certificate",
+    "Links",
+  ];
 
   const [skillSector, setSkillSector] = useState("");
   const [category, setCategory] = useState("");
   const [experience, setExperience] = useState("");
   const [allFilled, setAllFilled] = useState(false);
+  const { user } = useAuth();
+  const [allSkill, setAllSkill] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setAllFilled(skillSector && category && experience);
@@ -77,10 +147,41 @@ function Education() {
     setExperience("");
   };
 
-        const location = useLocation();
-  
-        const { email, firstName, lastName, role, mode, followings } =
-          location.state || {};
+  const location = useLocation();
+
+  const { email, firstName, lastName, role, mode, followings } =
+    location.state || {};
+
+  const addMore = () => {
+    if (!allFilled) {
+      toast.error("Please complete all fields");
+      return;
+    }
+
+    const newEntry = {
+      userId: user?.id,
+      skillSector,
+      category,
+      experience,
+    };
+
+    // Check for duplicates
+    const isDuplicate = allSkill.some(
+      (item) =>
+        item.skillSector === newEntry.skillSector &&
+        item.category === newEntry.category &&
+        item.experience === newEntry.experience
+    );
+
+    if (isDuplicate) {
+      toast.warning("This skill entry already exists");
+      return;
+    }
+
+    setAllSkill((prev) => [...prev, newEntry]);
+    clearForm();
+    toast.success("Skill added!");
+  };
 
   return (
     <div className="min-h-screen py-4">
@@ -132,10 +233,11 @@ function Education() {
           <div className=" max-w-2xs  bg-[#00000040] mt-3 rounded-2xl   flex flex-col sm:flex-row gap-4   ">
             <div className="flex-1 flex items-end">
               <button
-                onClick={clearForm}
+                onClick={addMore}
+                disabled={!allFilled}
                 className={`flex-1 h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
                   allFilled
-                    ? "bg-black border-black"
+                    ? "bg-black cursor-pointer border-black"
                     : "bg-transparent border-[#F5F5F5]"
                 }`}
               >
@@ -146,32 +248,88 @@ function Education() {
         </div>
       </div>
 
-      {allFilled && (
-        <div className="max-w-4xl px-4 mt-6  m-auto">
-          <div className="max-w-2xs m-auto  bg-[#1A3E32] text-white rounded-lg flex flex-col sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
-            <div>
-              <p className="font-semibold">{category}</p>
-              <p className="text-sm">{experience} Experience</p>
+      {allSkill.length > 0 &&
+        allSkill.map((item, idx) => (
+          <div key={idx} className="max-w-4xl px-4 mt-6  m-auto">
+            <div className="max-w-2xs m-auto  bg-[#1A3E32] text-white rounded-lg flex flex-col sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
+              <div>
+                <p className="font-semibold">{item.category}</p>
+                <p className="text-sm">{item.experience} Experience</p>
+              </div>
+              <button
+                onClick={() =>
+                  setAllSkill((prev) => prev.filter((_, i) => i !== idx))
+                }
+                className="text-white text-xl  "
+              >
+                <FaTrash />
+              </button>
             </div>
-            <button onClick={clearForm} className="text-white text-xl  ">
-              <FaTrash />
-            </button>
           </div>
-        </div>
-      )}
+        ))}
 
       <NavigationButtons
-        isFormComplete={allFilled}
+        isFormComplete={allFilled || allSkill.length > 0}
         onBack={() => navigate(-1)}
-        onNext={() =>
-          allFilled &&
-          navigate("/work-history", {
-            state: { email, firstName, lastName, role, mode, followings },
-          })
-        }
+        onNext={async () => {
+          let skillsToSave = [...allSkill];
+
+          if (allFilled) {
+            const currentEntry = {
+              userId: user?.id,
+              skillSector,
+              category,
+              experience,
+            };
+
+            const exists = skillsToSave.some(
+              (item) =>
+                item.skillSector === currentEntry.skillSector &&
+                item.category === currentEntry.category &&
+                item.experience === currentEntry.experience
+            );
+
+            if (!exists) {
+              skillsToSave.push(currentEntry);
+            }
+          }
+
+          if (skillsToSave.length === 0) {
+            toast.error("Please add at least one skill before continuing.");
+            return;
+          }
+
+          setIsLoading(true);
+
+          try {
+            // Save all work history entries
+            for (const item of skillsToSave) {
+              await axiosInstance.post(`/api/cv-builder/skills/`, item);
+            }
+            setIsLoading(false);
+            toast.success("Skills saved successfully!");
+
+            navigate("/work-history", {
+              state: {
+                email,
+                firstName,
+                lastName,
+                role,
+                mode,
+                followings,
+              },
+            });
+          } catch (err) {
+            setIsLoading(false);
+            console.error("Error:", err);
+            toast.error("Failed to save Skills. Try again.");
+          }
+        }}
       />
+
+      <Loader show={isLoading} />
     </div>
   );
 }
 
-export default Education;
+export default Skills;
