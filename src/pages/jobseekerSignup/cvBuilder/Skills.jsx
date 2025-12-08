@@ -5,59 +5,16 @@ import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
-import { FaPlus, FaCheckCircle, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
+import { FaPlus, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
+import { categoryOptions, skillOptions } from "../../../data/skillsData";
+import SelectWithIcon from "../../../components/education/SelectWithIcon";
 
-const skillOptions = [
- "Frontend Development", "Backend Development", "Full Stack Development", "UI/UX Design", 
- "Mobile App Development", "DevOps","Database Management","Cloud Computing","Cybersecurity","Software Testing/QA",
-
-  "JavaScript", "Python", "Java", "C++", "C#", "PHP", "Ruby","SQL", "TypeScript", "Go",
-
-  "Data Analysis","Data Science","Machine Learning","Artificial Intelligence","Big Data","Data Engineering","Business Intelligence",
-
-  "Graphic Design","Motion Graphics","3D Modelling","Video Editing","Animation",
-
-  "Digital Marketing", "SEO", "Content Creation", "Social Media Management", "Product Management", "Project Management", "Sales","Customer Support",
-
-  "Copywriting","Technical Writing","Translation","Public Speaking",
-
-  "Git","Docker","Kubernetes","Jira","Figma","Adobe Photoshop","Microsoft Office Suite", "Not Available"
-];
-
-
-const categoryOptions = [
-  "Internship","Entry-Level","Junior","Mid-Level","Senior","Lead","Manager","Director","Executive (C-Level)", "Not Available"
-];
 
 const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);
 
 
-const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
-  <div className="relative w-full">
-    <select
-      value={value}
-      onChange={onChange}
-      className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 appearance-none focus:outline-1 focus:outline-[#1A3E32] ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      }`}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-    {value ? (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    ) : (
-      <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
-    )}
-  </div>
-);
 
-function Education() {
+export default function Education() {
   const navigate = useNavigate();
   const { currentStep } = useOutletContext();
   const steps = ["Bio", "Education", "Skills", "Work history", "Certificate", "Links"];
@@ -174,4 +131,3 @@ function Education() {
   );
 }
 
-export default Education;
