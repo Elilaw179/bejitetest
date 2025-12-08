@@ -4,104 +4,16 @@ import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
-import { FaPlus, FaCheckCircle, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
-const optionsEdu = [
-  "No Formal Education","Primary","Secondary","Vocational/Technical Training",
-  "Tertiary Institution","Postgraduate (Masters/PhD)","Professional Certification",
-  "Not Available"
-];
+import { FaPlus, FaTrash, FaCheck } from "react-icons/fa";
+import { optionsDegree, optionsEdu, optionsField, optionsInst, optionsLoc } from "../../../data/educationData";
+import SelectWithIcon from "../../../components/education/SelectWithIcon";
+import InputWithIcon from "../../../components/education/InputWithIcon";
+import axiosInstance from "../../../utils/axiosInstance";
+import { toast } from "react-toastify";
+import useLocalStorage from "../../../hooks/useLocalStorage";
 
-const optionsInst = [
-  
-  "University of Ibadan","Covenant University","University of Lagos",
- 
-  "Massachusetts Institute of Technology (MIT)","Harvard University","Stanford University",
-  
-  "University of Oxford","University of Cambridge","Imperial College London",
-
-  "University of Toronto","University of Melbourne","National University of Singapore",
-  "Not Available"
-];
-
-const optionsLoc = [
-  "Lagos","Abuja","Johannesburg","Nairobi","Cairo","Accra","Kampala","Dar es Salaam","Casablanca","Addis Ababa",
-  
-  "New York","Los Angeles","Toronto","Vancouver","Chicago","Mexico City","Houston","Miami","Montreal","Boston",
-
-  "São Paulo", "Buenos Aires", "Rio de Janeiro", "Bogotá", "Santiago", "Lima", "Caracas", "Quito", "Montevideo", "Curitiba",
-
-  "London","Paris","Berlin","Madrid","Rome","Moscow","Amsterdam","Stockholm","Vienna",
-  "Zurich","Brussels","Lisbon","Dublin","Warsaw", "Prague", "Budapest",
-
-  "Beijing","Shanghai","Tokyo","Seoul","Mumbai","Delhi","Bangkok","Singapore","Kuala Lumpur",
-  "Jakarta","Manila","Dubai","Hong Kong", "Taipei", "Hanoi", "Karachi",
-
-  "Sydney", "Melbourne", "Auckland", "Brisbane", "Perth","Not Available"
-];
-
-const optionsField = [
-  "Accounting", "Agriculture", "Anthropology", "Architecture", "Art and Design", "Astronomy", "Biology", "Business Administration",
- "Chemical Engineering","Civil Engineering", "Communication Studies", "Computer Science", "Criminology", "Data Science","Dentistry",
-  "Economics","Educaton","Electrical Engineering","Environmental Science","Finance","Geography","Geology","History","Hospitality Management", "Human Resource Management",
-  "Industrial Engineering", "Information Technology","International Relations","Journalism","Law","Linguistics","Marketing","Mathematics","Mechanical Engineering",
-  "Medicine", "Music", "Nursing", "Pharmacy", "Philosophy", "Physics", "Political Science", "Psychology", "Public Administration", "Public Health",
-  "Religious Studies","Social Work","Sociology","Software Engineering","Statistics","Theatre Arts","Theology","Tourism and Travel","Veterinary Medicine","Zoology","Not Available"
-];
-
-
-
-
-
-const optionsDegree = [
-  "WAEC", "NECO", "NABTEB", "B.Sc", "B.A", "B.Eng", "LLB", "MBBS", "HND", "OND", "PGD", "M.Sc", "M.A", "MBA", "M.Eng", "PhD",
-  "MD", "JD", "Ed.D", "DVM", "Not Available"
-];
-
-
-
-const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
-  <div className="relative w-full">
-    <select
-      value={value}
-      onChange={onChange}
-      className={`w-full h-12 border-2  pl-4 rounded-[10px] pr-10 appearance-none focus:outline-1 focus:outline-[#1A3E32] ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      }`}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-    {value ? (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    ) : (
-      <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
-    )}
-  </div>
-);
-
-const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
-  <div className="relative w-full">
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      } ${type === "date" && value ? "hide-calendar-icon" : ""}`}
-    />
-    {value && (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    )}
-  </div>
-);
-
-function Education() {
+const BASE_URL = import.meta.env.VITE_API_URL;
+export default function Education() {
   const navigate = useNavigate();
   const { currentStep } = useOutletContext();
   const steps = [
@@ -113,50 +25,79 @@ function Education() {
     "Links",
   ];
 
-  const [educationLevel, setEducationLevel] = useState("");
-  const [institutionName, setInstitutionName] = useState("");
-  const [userLocation, setLocation] = useState("");
-  const [fieldOfStudy, setFieldOfStudy] = useState("");
-  const [degree, setDegree] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [allFilled, setAllFilled] = useState(false);
+  const { id: userId } = useLocalStorage('user'); 
 
-  useEffect(() => {
-    setAllFilled(
-      educationLevel &&
-        institutionName &&
-        userLocation &&
-        fieldOfStudy &&
-        degree.trim() &&
-        startDate &&
-        endDate
-    );
-  }, [
-    educationLevel,
-    institutionName,
-    userLocation,
-    fieldOfStudy,
-    degree,
-    startDate,
-    endDate,
-  ]);
-
-  const clearForm = () => {
-    setEducationLevel("");
-    setInstitutionName("");
-    setLocation("");
-    setFieldOfStudy("");
-    setDegree("");
-    setStartDate("");
-    setEndDate("");
+  const [educationData, setEducationData] = useState({
+    userId: userId,
+    educationLevel: "",
+    institutionName: "",
+    userLocation: "",
+    fieldOfStudy: "",
+    degree: "",
+    startDate: "",
+    endDate: "",
+  })
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEducationData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
   };
   
+  const handleSubmit = async () => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/api/cv-builder/education`, educationData);
+      console.log(response)
+      toast.success(response.data.message ?? "Edication Added")
+      
+       navigate("/skills", {
+        state: { email, firstName, lastName, role, mode, followings },
+      });
+      
+    } catch (error) {
+      toast.error("Error Posting Data", error.message)
+    }
+    
+  }
 
-        const location = useLocation();
+  const [allFilled, setAllFilled] = useState(false);
 
-        const { email, firstName, lastName, role, mode, followings } =
-          location.state || {};
+    useEffect(() => {
+    setAllFilled(
+      educationData.educationLevel.trim() !== "" &&
+      educationData.institutionName.trim() !== "" &&
+      educationData.userLocation.trim() !== "" &&
+      educationData.fieldOfStudy.trim() !== "" &&
+      educationData.degree.trim() !== "" &&
+      educationData.startDate.trim() !== "" &&
+      educationData.endDate.trim() !== ""
+    );
+  }, [
+    educationData.educationLevel,
+    educationData.institutionName,
+    educationData.userLocation,
+    educationData.fieldOfStudy,
+    educationData.degree,
+    educationData.startDate,
+    educationData.endDate,
+  ]);
+
+
+  const clearForm = () => {
+    setEducationData({
+      educationLevel: "",
+      institutionName: "",
+      userLocation: "",
+      fieldOfStudy: "",
+      degree: "",
+      startDate: "",
+      endDate: ""
+    })
+  };
+  
+  const location = useLocation();
+  const { email, firstName, lastName, role, mode, followings } = location.state || {};
 
   return (
     <div className=" min-h-screen py-4">
@@ -176,8 +117,9 @@ function Education() {
           <div className="bg-[#82828280] rounded-2xl p-4 ">
             <p className="font-semibold text-xs mb-1">EDUCATIONAL LEVEL</p>
             <SelectWithIcon
-              value={educationLevel}
-              onChange={(e) => setEducationLevel(e.target.value)}
+              value={educationData.educationLevel}
+              name="educationLevel"
+              onChange={handleChange}
               options={optionsEdu}
               placeholder="Select..."
             />
@@ -187,8 +129,9 @@ function Education() {
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">INSTITUTION NAME</p>
               <SelectWithIcon
-                value={institutionName}
-                onChange={(e) => setInstitutionName(e.target.value)}
+                value={educationData.institutionName}
+                name="institutionName"
+                onChange={handleChange}
                 options={optionsInst}
                 placeholder="Select institution..."
               />
@@ -196,8 +139,9 @@ function Education() {
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">LOCATION</p>
               <SelectWithIcon
-                value={userLocation}
-                onChange={(e) => setLocation(e.target.value)}
+                value={educationData.userLocation}
+                name="userLocation"
+                onChange={handleChange}
                 options={optionsLoc}
                 placeholder="Select location..."
               />
@@ -208,53 +152,56 @@ function Education() {
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">FIELD OF STUDY</p>
               <SelectWithIcon
-                value={fieldOfStudy}
-                onChange={(e) => setFieldOfStudy(e.target.value)}
+                value={educationData.fieldOfStudy}
+                name="fieldOfStudy"
+                onChange={handleChange}
                 options={optionsField}
                 placeholder="Select field..."
               />
             </div>
 
-<div className="flex-1">
-  <p className="font-semibold text-xs mb-1">DEGREE</p>
-  <div className="relative w-full">
-    <input
-      list="degree-list"
-      value={degree}
-      onChange={(e) => setDegree(e.target.value)}
-      placeholder="e.g. B.Sc or select"
-      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
-        degree ? "border-[#828282]" : "border-[#F5F5F5]"
-      }`}
-    />
-    <datalist id="degree-list">
-      {optionsDegree.map((opt) => (
-        <option key={opt} value={opt} />
-      ))}
-    </datalist>
-    {degree && (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    )}
-  </div>
-</div>
+            <div className="flex-1">
+              <p className="font-semibold text-xs mb-1">DEGREE</p>
+              <div className="relative w-full">
+                <input
+                  list="degree-list"
+                  name="degree"
+                  value={educationData.degree}
+                  onChange={handleChange}
+                  placeholder="e.g. B.Sc or select"
+                  className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
+                    educationData.degree ? "border-[#828282]" : "border-[#F5F5F5]"
+                  }`}
+                />
+                <datalist id="degree-list">
+                  {optionsDegree.map((opt) => (
+                    <option key={opt} value={opt} />
+                  ))}
+                </datalist>
+                {educationData.degree && (
+                  <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
+                )}
+              </div>
+            </div>
+          </div>
 
-
-   </div>
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">START DATE</p>
               <InputWithIcon
                 type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                name="startDate"
+                value={educationData.startDate}
+                onChange={handleChange}
               />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">END DATE</p>
               <InputWithIcon
                 type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                name="endDate" 
+                value={educationData.endDate}
+                onChange={handleChange}
               />
             </div>
             <div className="flex-1 flex items-end">
@@ -277,9 +224,9 @@ function Education() {
         <div className="max-w-4xl px-4 mt-6   m-auto ">
           <div className="max-w-2xs  bg-[#1A3E32] text-white rounded-lg flex flex-col m-auto sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
             <div>
-              <p className="font-semibold">{fieldOfStudy}</p>
+              <p className="font-semibold">{educationData.fieldOfStudy}</p>
               <p className="text-sm">
-                {degree} @ {institutionName}
+                {educationData.degree} @ {educationData.institutionName}
               </p>
             </div>
             <button onClick={clearForm} className="text-white text-xl  ">
@@ -292,15 +239,9 @@ function Education() {
       <NavigationButtons
         isFormComplete={allFilled}
         onBack={() => navigate(-1)}
-        onNext={() =>
-          allFilled &&
-          navigate("/skills", {
-            state: { email, firstName, lastName, role, mode, followings },
-          })
-        }
+        onNext={() => handleSubmit()}
       />
     </div>
   );
 }
 
-export default Education;

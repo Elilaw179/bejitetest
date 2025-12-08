@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import axiosInstance from "../services/axios";
-import { API_URL } from "../config";
 
 const API_BASE =
     import.meta.env.VITE_API_BASE_URL; 
@@ -68,7 +67,7 @@ const useApi = () => {
 
 
     const postDataPromise = useCallback(async ( data ) => {
-        const fullUrl = 'https://bejite-backend.onrender.com/api/cv-builder/bio';
+        const fullUrl = `${API_BASE}/cv-builder/bio`;
         
         try {
             const response = await axiosInstance.post(`${fullUrl}`,
