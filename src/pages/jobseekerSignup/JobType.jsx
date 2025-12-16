@@ -1,8 +1,11 @@
 import { useState } from "react";
 import Header from "../../components/Header";
 import NavigationButtons from "../../components/NavigationButtons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaCheck } from "react-icons/fa";
+import useAuth from "../../hooks/useAuth";
+import axiosInstance from "../../utils/axiosInstance";
+import { toast } from "react-toastify";
 
 const SelectField = ({ label, value, onChange, options, placeholder = "Select" }) => (
   <div className="w-full md:w-[48%] lg:w-[30%]">
@@ -25,6 +28,7 @@ const SelectField = ({ label, value, onChange, options, placeholder = "Select" }
 
 function JobType() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [form, setForm] = useState({
     jobTitle: "",
@@ -75,7 +79,7 @@ function JobType() {
 
   const workTypes = [
     "Full-time", "NYSC Posting", "Part-time", "Contract", "Temporary", "Paid Internship", "Freelance", "Remote", "On-site", "Hybrid",
-    "Commission-based", "Volunteer", "Unpaid volunteer internship" ,"Seasonal", "Per diem", "Apprenticeship", "Consultant", "	I.T (Industrial Training)"
+    "Commission-based", "Volunteer", "Unpaid volunteer internship", "Seasonal", "Per diem", "Apprenticeship", "Consultant", "	I.T (Industrial Training)"
   ];
 
   const currencies = [
@@ -100,42 +104,58 @@ function JobType() {
     "Seasonal Availability", "Temporary Availability", "Contractual Availability", "Not Currently Available", "Available Upon Request"
   ];
 
-//           const location = useLocation();
+  const location = useLocation();
 
-//           const { email, firstName, lastName, role, mode, followings } =
-//             location.state || {};
+  const { email, firstName, lastName, role, mode, followings } =
+    location.state || {};
 
 
-// const handleSubmit = async () => {
-//   if (allFilled) {
-//     const payload = {
-//       email,
-//       firstName,
-//       lastName,
-//       role,
-//       mode,
-//       followings,
-//       cvUrl: "https://example.com/cv/alice-johnson-cv.pdf",
-//     };
+  const handleSubmit = async () => {
+    if (!allFilled) {
+      toast.error("Form is not completely filled")
+      return;
+    }
+    const location = `${form.country}, ${form.statePref}`;
+    const salary = `${form.salary} ${form.currency}`
+    const isRemotePreference = form.remotePref.toLowerCase().includes('remote');
+    
 
-//     try {
-//       const response = await axiosInstance.post("/auth/signup", payload);
+    const apiPayLoad = {
+      title: form.jobTitle,
+      company: form.industry,
+      location: location,
+      type: form.workType,
+      salary_min: salary,
+      salary_max: salary,
+      description: form.availability,
+      remote:isRemotePreference,
+      requirements: [],
+      skills: [],
+      tags: [],
+      experience_level: form.jobTitle,
+      posted_by: user?.id,
+    }
 
-//       if (response.data.success) {
-//         navigate("/save-progress", {
-//           state: payload,
-//         });
-//       } else {
-//         console.error(
-//           "Server responded but with error:",
-//           response.data.message
-//         );
-//       }
-//     } catch (error) {
-//       console.error("Submission failed:", error);
-//     }
-//   }
-// };
+    try {
+      const response = await axiosInstance.post("/api/job-board/job", apiPayLoad);
+
+      if (response.data.success) {
+        toast.success("Job preference submitted successfully!");
+        navigate("/save-progress"), {
+          state: { email, firstName, lastName, role, mode, followings },
+        };
+      } else {
+        console.error(
+          "Server responded but with error:",
+          response.data.message
+        );
+      }
+    } catch (error) {
+      toast.error("Submission failed")
+      console.error("Submission failed:", error);
+    }
+
+  };
 
 
   return (
@@ -197,7 +217,7 @@ function JobType() {
               <p className="text-[12px] font-semibold mb-1">EXPECTED SALARY</p>
               <div className="relative w-full">
                 <input
-                  type="number"
+                  type="text"
                   value={form.salary}
                   onChange={updateField("salary")}
                   className="w-full text-[#33333380] text-sm p-3 pr-10 rounded-[10px]
@@ -236,8 +256,7 @@ function JobType() {
         onBack={() => navigate(-1)}
         onNext={() =>
           allFilled &&
-          navigate("/save-progress")
-          // handleSubmit()
+           handleSubmit()
         }
       />
     </div>
