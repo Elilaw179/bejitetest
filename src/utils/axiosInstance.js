@@ -60,9 +60,9 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, clear storage and redirect to login
         console.error("Token refresh failed:", refreshError);
-        localStorage.clear();
-        window.location.href = "/";
-        return Promise.reject(refreshError);
+        // localStorage.clear();
+        // window.location.href = "/";
+        // return Promise.reject(refreshError);
       }
     }
 
