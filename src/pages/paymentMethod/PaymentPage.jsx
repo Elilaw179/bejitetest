@@ -7,8 +7,8 @@ import axiosInstance from "../../utils/axiosInstance";
 import Loader from "../../components/ui/Loader";
 
 export default function PaymentPage() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  // const navigate = useNavigate();
+  // const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleUpgradeClick(amount) {
@@ -43,7 +43,7 @@ export default function PaymentPage() {
       //   amount,
       // });
 
-      const res = await axios.post(
+      const res = await axiosInstance.post(
         `${import.meta.env.VITE_API_URL}/api/paystack/init`,
         { amount, email },
         {
