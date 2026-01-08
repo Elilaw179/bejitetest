@@ -1,8 +1,8 @@
 import React from "react";
 import PaymentPageHeader from "../../components/PaymentPageHeader";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import axios from "axios";
+// import axios from "axios";
 import axiosInstance from "../../utils/axiosInstance";
 import Loader from "../../components/ui/Loader";
 
