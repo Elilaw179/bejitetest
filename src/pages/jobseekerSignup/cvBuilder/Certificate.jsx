@@ -74,7 +74,7 @@ function Certificate() {
   const handleSubmit = async () => {
     const payLoad = {
       userId,
-      certificateName: certName,
+      certName,
       issuer,
       issueDate,
     };
