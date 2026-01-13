@@ -132,7 +132,7 @@ function Certificate() {
 
           <div className="max-w-xs mx-auto bg-[#00000040] mt-3 rounded-2xl flex">
             <button
-              onClick={addCertificate}
+              onClick={clearForm}
               className={`flex-1 h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
                 allFilled
                   ? "bg-black border-black"

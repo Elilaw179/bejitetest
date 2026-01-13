@@ -16,7 +16,7 @@ import { FaDeleteLeft } from "react-icons/fa6";
 import { toast } from "react-toastify";
 
 import useLocalStorage from "../../../hooks/useLocalStorage";
-import { createCertificate } from "../../../services/certificateService";
+import { useCreateCertificate } from "../../../services/certificateService";
 
 const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
   <div className="relative w-full">
@@ -53,7 +53,7 @@ function Certificate() {
   const [issueDate, setIssueDate] = useState("");
   const [file, setFile] = useState(null);
   const [allFilled, setAllFilled] = useState(false);
-  const {postCertficateData} = createCertificate();
+  const {postCertficateData} = useCreateCertificate();
 
   useEffect(() => {
     setAllFilled(certName && issuer && issueDate && file);
@@ -68,7 +68,7 @@ function Certificate() {
   };
   const BASE_URL = import.meta.env.VITE_API_URL;
 
-  const { id: userId, token } = useLocalStorage("user");
+  const { id: userId } = useLocalStorage("user");
   
 
   const handleSubmit = async () => {

@@ -1,19 +1,19 @@
 
 
 import { useCallback } from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
+
 
 import axiosInstance from "../utils/axiosInstance";
-import axios from "axios";
+
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-export const createCertificate = () => {
+export const useCreateCertificate = () => {
   //handle backend, axios and default errors
   const handleError = (error) => {
     const errorMessage =
       error.response?.data?.message || error.message || "An error occurred";
-    throw errorMessage;
+    throw new Error(errorMessage);
   };
 
   //post certificate data
