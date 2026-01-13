@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { Eye, EyeOff } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,8 @@ import BejiteLogo from "../../public/assets/images/logo.png";
 import GoogleImg from "../../public/assets/images/google.png";
 import Hyperlinks from "../components/Hyperlinks";
 import { decodeToken } from "../utils/tokenManager";
+
+
 
 function SignIn() {
   const [email, setEmail] = useState("");
@@ -24,8 +27,8 @@ function SignIn() {
   useEffect(() => {
     dispatch(clearErrors());
     // Clear any existing auth data to ensure fresh login
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
   }, [dispatch]);
 
   // -----------------------------
@@ -40,7 +43,7 @@ function SignIn() {
 
         const token = data.accessToken;
         let user = data.confirmedUser || data.user;
-        
+
         if (!token) {
           toast.error("Authentication failed. Please try again.");
           return;
@@ -53,8 +56,9 @@ function SignIn() {
           user = {
             ...user,
             verified: decodedToken?.verified,
-            isEmailVerified: decodedToken?.isEmailVerified || decodedToken?.verified,
-            role: decodedToken?.role
+            isEmailVerified:
+              decodedToken?.isEmailVerified || decodedToken?.verified,
+            role: decodedToken?.role,
           };
           console.log("Enhanced user data:", user);
         }
@@ -64,40 +68,58 @@ function SignIn() {
 
         // Show success toast
         toast.success("Login successful! Redirecting...");
-        
+
         // Check user verification and role status
         const isVerified = user?.verified || user?.isEmailVerified;
-        const hasCompletedSignup = user?.role !== null && user?.role !== undefined;
-        
-        console.log("User verification status:", { isVerified, hasCompletedSignup, user });
-        
+        const hasCompletedSignup =
+          user?.role !== null && user?.role !== undefined;
+
+        console.log("User verification status:", {
+          isVerified,
+          hasCompletedSignup,
+          user,
+        });
+
         setTimeout(() => {
           if (!isVerified) {
             // User not verified, redirect to email verification
-            navigate(`/auth/email-sent?email=${encodeURIComponent(user.email)}`);
+            navigate(
+              `/auth/email-sent?email=${encodeURIComponent(user.email)}`
+            );
           } else if (!hasCompletedSignup) {
             // User is verified but hasn't completed signup
-            navigate(`/complete-signup?email=${encodeURIComponent(user.email)}&status=verified`);
+            navigate(
+              `/complete-signup?email=${encodeURIComponent(
+                user.email
+              )}&status=verified`
+            );
           } else {
             // User is verified and has completed signup
-            navigate('/resume');
+            navigate("/resume");
           }
         }, 500);
       })
       .catch((err) => {
         console.error("[Login] Failed:", err);
-        
+
         // Handle specific error cases
         const errorMessage = err.error || err.message;
-        
-        if (errorMessage === "User not found." || errorMessage?.toLowerCase().includes("user not found")) {
-          toast.error("No account found with this email. Please sign up first.");
+
+        if (
+          errorMessage === "User not found." ||
+          errorMessage?.toLowerCase().includes("user not found")
+        ) {
+          toast.error(
+            "No account found with this email. Please sign up first."
+          );
           setTimeout(() => {
             navigate("/signup");
           }, 2000);
         } else if (errorMessage?.toLowerCase().includes("verify your email")) {
           toast.error("Please verify your email before logging in.");
-        } else if (errorMessage?.toLowerCase().includes("invalid email or password")) {
+        } else if (
+          errorMessage?.toLowerCase().includes("invalid email or password")
+        ) {
           toast.error("Invalid email or password. Please try again.");
         } else {
           toast.error(errorMessage || "Login failed. Please try again.");
@@ -111,7 +133,7 @@ function SignIn() {
   const handleGoogleLogin = () => {
     setGoogleLoading(true);
     // Backend should redirect to /auth/success?token=...
-    window.open(`${import.meta.env.VITE_API_URL}/auth/google`, "_self");
+    window.open(`${API_URL}/auth/google`, "_self");
   };
 
   return (
@@ -138,7 +160,11 @@ function SignIn() {
       {/* Form + Illustration */}
       <div className="relative flex flex-col justify-between flex-1 lg:flex-row">
         <div className="w-full lg:w-[60%] relative hidden lg:block">
-          <img src="/assets/images/Illustra.svg" alt="Auth" className="w-full h-screen" />
+          <img
+            src="/assets/images/Illustra.svg"
+            alt="Auth"
+            className="w-full h-screen"
+          />
           <img
             src="/assets/images/asubtext.svg"
             alt="Auth Text"
@@ -151,7 +177,9 @@ function SignIn() {
             <h2 className="text-3xl font-norican font-semibold text-[#16730F] text-center">
               Welcome Back!
             </h2>
-            <p className="text-center text-[#1A3E32] text-md">Sign in to continue</p>
+            <p className="text-center text-[#1A3E32] text-md">
+              Sign in to continue
+            </p>
 
             <form onSubmit={handleLogin} className="space-y-4">
               <input
@@ -181,7 +209,9 @@ function SignIn() {
                 </button>
               </div>
 
-              {errors?.error && <p className="text-sm text-red-500">{errors.error}</p>}
+              {errors?.error && (
+                <p className="text-sm text-red-500">{errors.error}</p>
+              )}
 
               <div className="text-right">
                 <p
@@ -199,19 +229,25 @@ function SignIn() {
                 type="submit"
                 disabled={isDisabled}
                 className={`w-full py-4 rounded-full text-white font-semibold shadow-md transition ${
-                  isDisabled ? "bg-[#16730F40] cursor-not-allowed" : "bg-[#16730F]"
+                  isDisabled
+                    ? "bg-[#16730F40] cursor-not-allowed"
+                    : "bg-[#16730F]"
                 }`}
               >
                 {loading ? "Logging in..." : "Login"}
               </button>
             </form>
 
-            <p className="text-[#1A3E32] text-center text-xl">...or sign in with</p>
+            <p className="text-[#1A3E32] text-center text-xl">
+              ...or sign in with
+            </p>
             <div className="flex justify-center gap-6 mt-4">
               <button
                 onClick={handleGoogleLogin}
                 className={`flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 hover:border-gray-400 transition-colors ${
-                  googleLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-md"
+                  googleLoading
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer hover:shadow-md"
                 }`}
               >
                 {googleLoading ? (

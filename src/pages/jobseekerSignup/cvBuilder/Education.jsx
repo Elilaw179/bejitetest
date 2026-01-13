@@ -4,61 +4,206 @@ import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
-import { FaPlus, FaCheckCircle, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
+import useAuth from "../../../hooks/useAuth";
+
+import {
+  FaPlus,
+  FaCheckCircle,
+  FaChevronDown,
+  FaTrash,
+  FaCheck,
+} from "react-icons/fa";
 import { FaDeleteLeft } from "react-icons/fa6";
+import { toast } from "react-toastify";
+import Loader from "../../../components/ui/Loader";
+import axiosInstance from "../../../utils/axiosInstance";
 const optionsEdu = [
-  "No Formal Education","Primary","Secondary","Vocational/Technical Training",
-  "Tertiary Institution","Postgraduate (Masters/PhD)","Professional Certification",
-  "Not Available"
+  "No Formal Education",
+  "Primary",
+  "Secondary",
+  "Vocational/Technical Training",
+  "Tertiary Institution",
+  "Postgraduate (Masters/PhD)",
+  "Professional Certification",
+  "Not Available",
 ];
 
 const optionsInst = [
-  
-  "University of Ibadan","Covenant University","University of Lagos",
- 
-  "Massachusetts Institute of Technology (MIT)","Harvard University","Stanford University",
-  
-  "University of Oxford","University of Cambridge","Imperial College London",
+  "University of Ibadan",
+  "Covenant University",
+  "University of Lagos",
 
-  "University of Toronto","University of Melbourne","National University of Singapore",
-  "Not Available"
+  "Massachusetts Institute of Technology (MIT)",
+  "Harvard University",
+  "Stanford University",
+
+  "University of Oxford",
+  "University of Cambridge",
+  "Imperial College London",
+
+  "University of Toronto",
+  "University of Melbourne",
+  "National University of Singapore",
+  "Not Available",
 ];
 
 const optionsLoc = [
-  "Lagos","Abuja","Johannesburg","Nairobi","Cairo","Accra","Kampala","Dar es Salaam","Casablanca","Addis Ababa",
-  
-  "New York","Los Angeles","Toronto","Vancouver","Chicago","Mexico City","Houston","Miami","Montreal","Boston",
+  "Lagos",
+  "Abuja",
+  "Johannesburg",
+  "Nairobi",
+  "Cairo",
+  "Accra",
+  "Kampala",
+  "Dar es Salaam",
+  "Casablanca",
+  "Addis Ababa",
 
-  "São Paulo", "Buenos Aires", "Rio de Janeiro", "Bogotá", "Santiago", "Lima", "Caracas", "Quito", "Montevideo", "Curitiba",
+  "New York",
+  "Los Angeles",
+  "Toronto",
+  "Vancouver",
+  "Chicago",
+  "Mexico City",
+  "Houston",
+  "Miami",
+  "Montreal",
+  "Boston",
 
-  "London","Paris","Berlin","Madrid","Rome","Moscow","Amsterdam","Stockholm","Vienna",
-  "Zurich","Brussels","Lisbon","Dublin","Warsaw", "Prague", "Budapest",
+  "São Paulo",
+  "Buenos Aires",
+  "Rio de Janeiro",
+  "Bogotá",
+  "Santiago",
+  "Lima",
+  "Caracas",
+  "Quito",
+  "Montevideo",
+  "Curitiba",
 
-  "Beijing","Shanghai","Tokyo","Seoul","Mumbai","Delhi","Bangkok","Singapore","Kuala Lumpur",
-  "Jakarta","Manila","Dubai","Hong Kong", "Taipei", "Hanoi", "Karachi",
+  "London",
+  "Paris",
+  "Berlin",
+  "Madrid",
+  "Rome",
+  "Moscow",
+  "Amsterdam",
+  "Stockholm",
+  "Vienna",
+  "Zurich",
+  "Brussels",
+  "Lisbon",
+  "Dublin",
+  "Warsaw",
+  "Prague",
+  "Budapest",
 
-  "Sydney", "Melbourne", "Auckland", "Brisbane", "Perth","Not Available"
+  "Beijing",
+  "Shanghai",
+  "Tokyo",
+  "Seoul",
+  "Mumbai",
+  "Delhi",
+  "Bangkok",
+  "Singapore",
+  "Kuala Lumpur",
+  "Jakarta",
+  "Manila",
+  "Dubai",
+  "Hong Kong",
+  "Taipei",
+  "Hanoi",
+  "Karachi",
+
+  "Sydney",
+  "Melbourne",
+  "Auckland",
+  "Brisbane",
+  "Perth",
+  "Not Available",
 ];
 
 const optionsField = [
-  "Accounting", "Agriculture", "Anthropology", "Architecture", "Art and Design", "Astronomy", "Biology", "Business Administration",
- "Chemical Engineering","Civil Engineering", "Communication Studies", "Computer Science", "Criminology", "Data Science","Dentistry",
-  "Economics","Educaton","Electrical Engineering","Environmental Science","Finance","Geography","Geology","History","Hospitality Management", "Human Resource Management",
-  "Industrial Engineering", "Information Technology","International Relations","Journalism","Law","Linguistics","Marketing","Mathematics","Mechanical Engineering",
-  "Medicine", "Music", "Nursing", "Pharmacy", "Philosophy", "Physics", "Political Science", "Psychology", "Public Administration", "Public Health",
-  "Religious Studies","Social Work","Sociology","Software Engineering","Statistics","Theatre Arts","Theology","Tourism and Travel","Veterinary Medicine","Zoology","Not Available"
+  "Accounting",
+  "Agriculture",
+  "Anthropology",
+  "Architecture",
+  "Art and Design",
+  "Astronomy",
+  "Biology",
+  "Business Administration",
+  "Chemical Engineering",
+  "Civil Engineering",
+  "Communication Studies",
+  "Computer Science",
+  "Criminology",
+  "Data Science",
+  "Dentistry",
+  "Economics",
+  "Educaton",
+  "Electrical Engineering",
+  "Environmental Science",
+  "Finance",
+  "Geography",
+  "Geology",
+  "History",
+  "Hospitality Management",
+  "Human Resource Management",
+  "Industrial Engineering",
+  "Information Technology",
+  "International Relations",
+  "Journalism",
+  "Law",
+  "Linguistics",
+  "Marketing",
+  "Mathematics",
+  "Mechanical Engineering",
+  "Medicine",
+  "Music",
+  "Nursing",
+  "Pharmacy",
+  "Philosophy",
+  "Physics",
+  "Political Science",
+  "Psychology",
+  "Public Administration",
+  "Public Health",
+  "Religious Studies",
+  "Social Work",
+  "Sociology",
+  "Software Engineering",
+  "Statistics",
+  "Theatre Arts",
+  "Theology",
+  "Tourism and Travel",
+  "Veterinary Medicine",
+  "Zoology",
+  "Not Available",
 ];
-
-
-
-
 
 const optionsDegree = [
-  "WAEC", "NECO", "NABTEB", "B.Sc", "B.A", "B.Eng", "LLB", "MBBS", "HND", "OND", "PGD", "M.Sc", "M.A", "MBA", "M.Eng", "PhD",
-  "MD", "JD", "Ed.D", "DVM", "Not Available"
+  "WAEC",
+  "NECO",
+  "NABTEB",
+  "B.Sc",
+  "B.A",
+  "B.Eng",
+  "LLB",
+  "MBBS",
+  "HND",
+  "OND",
+  "PGD",
+  "M.Sc",
+  "M.A",
+  "MBA",
+  "M.Eng",
+  "PhD",
+  "MD",
+  "JD",
+  "Ed.D",
+  "DVM",
+  "Not Available",
 ];
-
-
 
 const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
   <div className="relative w-full">
@@ -103,6 +248,7 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 
 function Education() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { currentStep } = useOutletContext();
   const steps = [
     "Bio",
@@ -121,6 +267,7 @@ function Education() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [allFilled, setAllFilled] = useState(false);
+  const [allEducation, setAllEducation] = useState([]);
 
   useEffect(() => {
     setAllFilled(
@@ -151,12 +298,52 @@ function Education() {
     setStartDate("");
     setEndDate("");
   };
-  
 
-        const location = useLocation();
+  const location = useLocation();
 
-        const { email, firstName, lastName, role, mode, followings } =
-          location.state || {};
+  const { email, firstName, lastName, role, mode, followings } =
+    location.state || {};
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const addMore = () => {
+    if (!allFilled) {
+      toast.error("Please complete all fields");
+      return;
+    }
+
+    const newEntry = {
+      userId: user?.id,
+      educationLevel,
+      institutionName,
+      userLocation,
+      fieldOfStudy,
+      degree,
+      startDate,
+      endDate,
+    };
+
+    // Check for duplicates
+    const isDuplicate = allEducation.some(
+      (item) =>
+        item.educationLevel === newEntry.educationLevel &&
+        item.institutionName === newEntry.institutionName &&
+        item.userLocation === newEntry.userLocation &&
+        item.fieldOfStudy === newEntry.fieldOfStudy &&
+        item.degree === newEntry.degree &&
+        item.startDate === newEntry.startDate &&
+        item.endDate === newEntry.endDate
+    );
+
+    if (isDuplicate) {
+      toast.warning("This education entry already exists");
+      return;
+    }
+
+    setAllEducation((prev) => [...prev, newEntry]);
+    clearForm();
+    toast.success("Education added!");
+  };
 
   return (
     <div className=" min-h-screen py-4">
@@ -215,31 +402,29 @@ function Education() {
               />
             </div>
 
-<div className="flex-1">
-  <p className="font-semibold text-xs mb-1">DEGREE</p>
-  <div className="relative w-full">
-    <input
-      list="degree-list"
-      value={degree}
-      onChange={(e) => setDegree(e.target.value)}
-      placeholder="e.g. B.Sc or select"
-      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
-        degree ? "border-[#828282]" : "border-[#F5F5F5]"
-      }`}
-    />
-    <datalist id="degree-list">
-      {optionsDegree.map((opt) => (
-        <option key={opt} value={opt} />
-      ))}
-    </datalist>
-    {degree && (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    )}
-  </div>
-</div>
-
-
-   </div>
+            <div className="flex-1">
+              <p className="font-semibold text-xs mb-1">DEGREE</p>
+              <div className="relative w-full">
+                <input
+                  list="degree-list"
+                  value={degree}
+                  onChange={(e) => setDegree(e.target.value)}
+                  placeholder="e.g. B.Sc or select"
+                  className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
+                    degree ? "border-[#828282]" : "border-[#F5F5F5]"
+                  }`}
+                />
+                <datalist id="degree-list">
+                  {optionsDegree.map((opt) => (
+                    <option key={opt} value={opt} />
+                  ))}
+                </datalist>
+                {degree && (
+                  <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
+                )}
+              </div>
+            </div>
+          </div>
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">START DATE</p>
@@ -259,8 +444,9 @@ function Education() {
             </div>
             <div className="flex-1 flex items-end">
               <button
-                onClick={clearForm}
-                className={`w-full h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
+                onClick={addMore}
+                disabled={!allFilled}
+                className={`w-full h-16 cursor-pointer flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
                   allFilled
                     ? "bg-black border-black"
                     : "bg-transparent border-[#F5F5F5]"
@@ -273,32 +459,97 @@ function Education() {
         </div>
       </div>
 
-      {allFilled && (
-        <div className="max-w-4xl px-4 mt-6   m-auto ">
-          <div className="max-w-2xs  bg-[#1A3E32] text-white rounded-lg flex flex-col m-auto sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
-            <div>
-              <p className="font-semibold">{fieldOfStudy}</p>
-              <p className="text-sm">
-                {degree} @ {institutionName}
-              </p>
+      {allEducation.length > 0 &&
+        allEducation.map((item, idx) => {
+          return (
+            <div key={idx} className="max-w-4xl px-4 mt-6   m-auto ">
+              <div className="max-w-2xs  bg-[#1A3E32] text-white rounded-lg flex flex-col m-auto sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
+                <div>
+                  <p className="font-semibold">{item.fieldOfStudy}</p>
+                  <p className="text-sm">
+                    {item.degree} @ {item.institutionName}
+                  </p>
+                </div>
+                <button
+                  onClick={() =>
+                    setAllEducation((prev) => prev.filter((_, i) => i !== idx))
+                  }
+                  className="text-white text-xl  "
+                >
+                  <FaTrash />
+                </button>
+              </div>
             </div>
-            <button onClick={clearForm} className="text-white text-xl  ">
-              <FaTrash />
-            </button>
-          </div>
-        </div>
-      )}
+          );
+        })}
 
       <NavigationButtons
-        isFormComplete={allFilled}
+        isFormComplete={allEducation.length > 0 || allFilled}
         onBack={() => navigate(-1)}
-        onNext={() =>
-          allFilled &&
-          navigate("/skills", {
-            state: { email, firstName, lastName, role, mode, followings },
-          })
-        }
+        onNext={async () => {
+          // Collect all education saved in state
+          let educationToSave = [...allEducation];
+
+          // If current form is filled but not added yet, include it
+          if (allFilled) {
+            const currentEducation = {
+              userId: user?.id,
+              educationLevel,
+              institutionName,
+              location: userLocation,
+              fieldOfStudy,
+              degree,
+              startDate,
+              endDate,
+            };
+
+            // Check for duplicates
+            const exists = educationToSave.some(
+              (item) =>
+                item.educationLevel === currentEducation.educationLevel &&
+                item.institutionName === currentEducation.institutionName &&
+                item.fieldOfStudy === currentEducation.fieldOfStudy &&
+                item.degree === currentEducation.degree &&
+                item.startDate === currentEducation.startDate &&
+                item.endDate === currentEducation.endDate
+            );
+
+            if (!exists) {
+              educationToSave.push(currentEducation);
+            }
+          }
+
+          // Validate
+          if (educationToSave.length === 0) {
+            toast.error(
+              "Please add at least one education entry before continuing."
+            );
+            return;
+          }
+
+          setIsLoading(true);
+
+          try {
+            // Save all education entries
+            for (const edu of educationToSave) {
+              await axiosInstance.post(`/api/cv-builder/education`, edu);
+            }
+
+            setIsLoading(false);
+            toast.success("Education saved successfully!");
+
+            navigate("/skills", {
+              state: { email, firstName, lastName, role, mode, followings },
+            });
+          } catch (error) {
+            setIsLoading(false);
+            console.error("Error:", error);
+            toast.error("Failed to save education. Try again.");
+          }
+        }}
       />
+
+      <Loader show={isLoading} />
     </div>
   );
 }
