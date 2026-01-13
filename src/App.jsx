@@ -59,8 +59,9 @@ import Contact from "./pages/misc/Contact.jsx";
 import AuthSuccess from "./pages/auth/AuthSuccess.jsx";
 import AuthFailure from "./pages/auth/AuthFailure.jsx";
 import CompleteSignup from "./pages/CompleteSignup.jsx";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from 'react-toastify';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+import 'react-toastify/dist/ReactToastify.css';
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
@@ -84,7 +85,7 @@ function App() {
           <Route path="/jobconnection" element={<JobConnection />} />
           <Route path="/resume" element={<Resume />} />
           <Route path="/save-progress" element={<SaveProgress />} />
-          <Route element={<ResumeLayout />}>
+          <Route element={<ProtectedRoute><ResumeLayout /></ProtectedRoute>}>
             <Route path="/bio" element={<Bio />} />
             <Route path="/education" element={<Education />} />
             <Route path="/skills" element={<Skills />} />
