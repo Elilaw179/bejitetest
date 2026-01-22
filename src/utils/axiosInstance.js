@@ -19,7 +19,7 @@ axiosInstance.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor - handle token refresh on 401 errors
@@ -46,7 +46,7 @@ axiosInstance.interceptors.response.use(
         const response = await axios.post(
           `${import.meta.env.VITE_API_URL}/auth/refresh`,
           { refreshToken },
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         const { accessToken: newAccessToken } = response.data;
@@ -67,7 +67,7 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;
