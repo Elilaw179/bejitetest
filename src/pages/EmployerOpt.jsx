@@ -38,7 +38,7 @@ const EmployerOpt = () => {
 
         try {
             setShow(true);
-            await axiosInstance.post('/auth/signup', formData, {
+            await axiosInstance.post('/auth/complete-signup', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
 
