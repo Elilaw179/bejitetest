@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MemberCard from '../components/MemberCard';
-import fakePdfFile from '../utils/fake-pdf';
 import { toast } from 'react-hot-toast';
 import Loader from '../components/ui/Loader';
 import axiosPublic from '../services/axiosPublic';
@@ -27,35 +26,33 @@ const EmployerOpt = () => {
             password,
             role,
             mode,
-            followings: JSON.stringify([]),
+            followings: [],
         };
-        const formData = new FormData();
-
-        Object.entries(payload).forEach(([key, value]) =>
-            formData.append(key, value)
-        );
-        formData.append('cv', fakePdfFile);
-
+        
         try {
             setShow(true);
-            await axiosPublic.post('/auth/complete-signup', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            await axiosPublic.post('/auth/complete-signup', payload, {
+                headers: { 'Content-Type': 'application/json' },
             });
 
             toast.success('Registration successful');
+
+            if (mode === 'individual') {
+                navigate('/individual/basic-details');
+            
+            } else if (mode === 'coperate') {
+                navigate('/coperate/basic-details');
+            }
+
         } catch (error) {
-            const { error: errorText } = error.response.data;
+            console.error("Complete signup error:", error);
+            const errorText = error?.response?.data?.error || "Signup failed";
             toast.error(errorText);
-            return;
         } finally {
             setShow(false);
         }
 
-        if (mode === 'individual') {
-            navigate('/individual/basic-details');
-        } else if (mode === 'coperate') {
-            navigate('/coperate/basic-details');
-        }
+       
     };
 
     useEffect(() => {
