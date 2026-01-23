@@ -4,7 +4,7 @@ import MemberCard from '../components/MemberCard';
 import fakePdfFile from '../utils/fake-pdf';
 import { toast } from 'react-hot-toast';
 import Loader from '../components/ui/Loader';
-import axiosInstance from '../services/axios';
+import axiosPublic from '../services/axiosPublic';
 
 const EmployerOpt = () => {
     const navigate = useNavigate();
@@ -38,7 +38,7 @@ const EmployerOpt = () => {
 
         try {
             setShow(true);
-            await axiosInstance.post('/auth/complete-signup', formData, {
+            await axiosPublic.post('/auth/complete-signup', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
 
