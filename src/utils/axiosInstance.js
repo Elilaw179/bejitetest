@@ -20,7 +20,7 @@ axiosInstance.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor - handle token refresh on 401 errors
@@ -47,7 +47,7 @@ axiosInstance.interceptors.response.use(
         const response = await axios.post(
           `${API_URL}/auth/refresh`,
           { refreshToken },
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         const { accessToken: newAccessToken } = response.data;
@@ -61,14 +61,14 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, clear storage and redirect to login
         console.error("Token refresh failed:", refreshError);
-        localStorage.clear();
-        window.location.href = "/";
-        return Promise.reject(refreshError);
+        // localStorage.clear();
+        // window.location.href = "/";
+        // return Promise.reject(refreshError);
       }
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;

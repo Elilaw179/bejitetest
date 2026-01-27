@@ -54,6 +54,7 @@ const EmployerOpt = () => {
 
        
     };
+    const formData = new FormData();
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -95,18 +96,18 @@ const EmployerOpt = () => {
                         infoText="Individual employers are people whose businesses are not registered with the federal, state, or local governments. 
                       They are micro, small, and medium scale enterprises (SMEs). They also include people who are HR consultants (they recruit for other companies); 
                       individuals who require the services of other people on the platform."
-                        position="above-icon"
-                        showInfo={showIndividualInfo}
-                        setShowInfo={setShowIndividualInfo}
-                        containerRef={individualRef}
-                        // onClick={() => navigate("/individual/basic-details")}
-                        onClick={() => handleClick('individual')}
-                    />
+            position="above-icon"
+            showInfo={showIndividualInfo}
+            setShowInfo={setShowIndividualInfo}
+            containerRef={individualRef}
+            // onClick={() => navigate("/individual/basic-details")}
+            onClick={() => handleClick("individual")}
+          />
 
-                    <MemberCard
-                        label="Corporate "
-                        iconSrc="/assets/images/freelic2.svg"
-                        infoText="These are businesses, NGOs, religious bodies, or government organizations that are registered 
+          <MemberCard
+            label="Corporate "
+            iconSrc="/assets/images/freelic2.svg"
+            infoText="These are businesses, NGOs, religious bodies, or government organizations that are registered 
             with the federal, state, or local government of their country. They may be SMEs or larger corporate
              organizations, NGOs, and government bodies (Federal, state, or local governments). The representative
               on Bejite must be verified to ensure they are genuine."
@@ -121,7 +122,10 @@ const EmployerOpt = () => {
             </div>
             <Loader show={show} />
         </div>
-    );
+      </div>
+      <Loader show={show} />
+    </div>
+  );
 };
 
 export default EmployerOpt;
