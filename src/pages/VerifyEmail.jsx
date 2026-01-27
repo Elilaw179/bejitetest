@@ -104,7 +104,7 @@
 //       try {
 //         setBusy(true);
 //         const res = await axios.get(
-//           `https://bejite-backend.onrender.com/auth/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`
+//           `${import.meta.env.VITE_API_URL}/auth/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`
 //         );
 
 //         // If backend returns success:true
@@ -213,7 +213,7 @@ function VerifyEmail() {
         setBusy(true);
         // Try POST request instead of GET (more common for verification)
         const res = await axios.post(
-          `https://bejite-backend.onrender.com/auth/verify-email`,
+          `${import.meta.env.VITE_API_URL}/auth/verify-email`,
           {
             token: token,
             email: email
@@ -240,7 +240,7 @@ function VerifyEmail() {
         // Try alternative endpoint format if first fails
         try {
           const altRes = await axios.get(
-            `https://bejite-backend.onrender.com/auth/verify-email/${token}/${email}`
+            `${import.meta.env.VITE_API_URL}/auth/verify-email/${token}/${email}`
           );
           
           if (altRes.data?.success || altRes.data?.verified) {
@@ -278,18 +278,18 @@ function VerifyEmail() {
     try {
       setBusy(true);
       const res = await axios.post(
-        `https://bejite-backend.onrender.com/auth/resend-verification`,
+        `${import.meta.env.VITE_API_URL}/auth/resend-verification`,
         { email: email }
       );
 
       if (res.data?.success) {
-        setMessage("✅ Verification email resent! Check your inbox.");
+        setMessage(" Verification email resent! Check your inbox.");
       } else {
         setMessage(res.data?.message || "❌ Failed to resend verification email.");
       }
     } catch (err) {
       console.error("Resend error:", err);
-      setMessage("❌ Error resending verification email.");
+      setMessage(" Error resending verification email.");
     } finally {
       setBusy(false);
     }
