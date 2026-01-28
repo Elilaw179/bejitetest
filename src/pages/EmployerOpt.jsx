@@ -52,7 +52,11 @@ const EmployerOpt = () => {
             setShow(false);
         }
 
-       
+        if (mode === 'individual') {
+            navigate('/individual/basic-details');
+        } else if (mode === 'coperate') {
+            navigate('/coperate/basic-details');
+        }
     };
     const formData = new FormData();
 

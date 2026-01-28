@@ -259,44 +259,76 @@ function Education() {
     "Links",
   ];
 
-  const [educationLevel, setEducationLevel] = useState("");
-  const [institutionName, setInstitutionName] = useState("");
-  const [userLocation, setLocation] = useState("");
-  const [fieldOfStudy, setFieldOfStudy] = useState("");
-  const [degree, setDegree] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const { id: userId } = useLocalStorage('user'); 
+
+  const [educationData, setEducationData] = useState({
+    userId: userId,
+    educationLevel: "",
+    institutionName: "",
+    userLocation: "",
+    fieldOfStudy: "",
+    degree: "",
+    startDate: "",
+    endDate: "",
+  })
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEducationData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
+  
+  const handleSubmit = async () => {
+    try {
+      const response = await axiosInstance.post(`${BASE_URL}/api/cv-builder/education`, educationData);
+      console.log(response)
+      toast.success(response.data.message ?? "Edication Added")
+      
+       navigate("/skills", {
+        state: { email, firstName, lastName, role, mode, followings },
+      });
+      
+    } catch (error) {
+      toast.error("Error Posting Data", error.message)
+    }
+    
+  }
+
   const [allFilled, setAllFilled] = useState(false);
   const [allEducation, setAllEducation] = useState([]);
 
-  useEffect(() => {
+    useEffect(() => {
     setAllFilled(
-      educationLevel &&
-        institutionName &&
-        userLocation &&
-        fieldOfStudy &&
-        degree.trim() &&
-        startDate &&
-        endDate
+      educationData.educationLevel.trim() !== "" &&
+      educationData.institutionName.trim() !== "" &&
+      educationData.userLocation.trim() !== "" &&
+      educationData.fieldOfStudy.trim() !== "" &&
+      educationData.degree.trim() !== "" &&
+      educationData.startDate.trim() !== "" &&
+      educationData.endDate.trim() !== ""
     );
   }, [
-    educationLevel,
-    institutionName,
-    userLocation,
-    fieldOfStudy,
-    degree,
-    startDate,
-    endDate,
+    educationData.educationLevel,
+    educationData.institutionName,
+    educationData.userLocation,
+    educationData.fieldOfStudy,
+    educationData.degree,
+    educationData.startDate,
+    educationData.endDate,
   ]);
 
+
   const clearForm = () => {
-    setEducationLevel("");
-    setInstitutionName("");
-    setLocation("");
-    setFieldOfStudy("");
-    setDegree("");
-    setStartDate("");
-    setEndDate("");
+    setEducationData({
+      educationLevel: "",
+      institutionName: "",
+      userLocation: "",
+      fieldOfStudy: "",
+      degree: "",
+      startDate: "",
+      endDate: ""
+    })
   };
 
   const location = useLocation();
@@ -363,8 +395,9 @@ function Education() {
           <div className="bg-[#82828280] rounded-2xl p-4 ">
             <p className="font-semibold text-xs mb-1">EDUCATIONAL LEVEL</p>
             <SelectWithIcon
-              value={educationLevel}
-              onChange={(e) => setEducationLevel(e.target.value)}
+              value={educationData.educationLevel}
+              name="educationLevel"
+              onChange={handleChange}
               options={optionsEdu}
               placeholder="Select..."
             />
@@ -374,8 +407,9 @@ function Education() {
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">INSTITUTION NAME</p>
               <SelectWithIcon
-                value={institutionName}
-                onChange={(e) => setInstitutionName(e.target.value)}
+                value={educationData.institutionName}
+                name="institutionName"
+                onChange={handleChange}
                 options={optionsInst}
                 placeholder="Select institution..."
               />
@@ -383,8 +417,9 @@ function Education() {
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">LOCATION</p>
               <SelectWithIcon
-                value={userLocation}
-                onChange={(e) => setLocation(e.target.value)}
+                value={educationData.userLocation}
+                name="userLocation"
+                onChange={handleChange}
                 options={optionsLoc}
                 placeholder="Select location..."
               />
@@ -395,8 +430,9 @@ function Education() {
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">FIELD OF STUDY</p>
               <SelectWithIcon
-                value={fieldOfStudy}
-                onChange={(e) => setFieldOfStudy(e.target.value)}
+                value={educationData.fieldOfStudy}
+                name="fieldOfStudy"
+                onChange={handleChange}
                 options={optionsField}
                 placeholder="Select field..."
               />
@@ -430,16 +466,18 @@ function Education() {
               <p className="font-semibold text-xs mb-1">START DATE</p>
               <InputWithIcon
                 type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                name="startDate"
+                value={educationData.startDate}
+                onChange={handleChange}
               />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">END DATE</p>
               <InputWithIcon
                 type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                name="endDate" 
+                value={educationData.endDate}
+                onChange={handleChange}
               />
             </div>
             <div className="flex-1 flex items-end">
@@ -554,4 +592,3 @@ function Education() {
   );
 }
 
-export default Education;
