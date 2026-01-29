@@ -1,37 +1,41 @@
-
-
 import React, { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
+import ImageUpload from "../../components/ImageUpload";
 
-const CompanyDetails = () => {
+const CoperateProfileSetup = () => {
   const navigate = useNavigate();
   const { currentStep } = useOutletContext();
 
   const steps = [
     "Basic Details",
     "Profile Setup",
-    "Business Details",
+    "Company Details",
     "Location",
   ];
 
-
-  
   const [formData, setFormData] = useState({
-    full_name: "",
-    website: "",
+    nickname: "",
+    summary: "",
   });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+  const [imagePreview, setImagePreview] = useState(null);
 
-  const isFormComplete = Object.values(formData).every(
-    (v) => v.trim() !== ""
-  );
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) setImagePreview(URL.createObjectURL(file));
+  };
+
+  const isFormComplete =
+    Object.values(formData).every((v) => v.trim() !== "") && imagePreview;
+
 
   return (
     <div className="bg-white min-h-screen">
@@ -41,41 +45,49 @@ const CompanyDetails = () => {
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
-        Business Details
+        Profile Setup
       </section>
       <p className="max-w-3xl mx-auto px-4 text-[#333] text-[15px]">
-        Let’s get to know you
+        Introduce yourself to jobseekers
       </p>
 
-      <div className="max-w-4xl mx-auto mt-6 lg:border-2 border-[#E0E0E0] flex flex-col lg:flex-row gap-8 lg:p-4">
-        <div className="lg:bg-[#F5F5F5] lg:w-[90%] mx-auto lg:rounded-2xl p-5 w-full ">
-          {/* FULL NAME */}
+      <div className="max-w-4xl mx-auto mt-6 lg:border-2 border-[#E0E0E0] flex flex-col lg:flex-row gap-8 lg:p-4 items-center">
+        <ImageUpload
+          imagePreview={imagePreview}
+          handleImageChange={handleImageChange}
+          bio={formData.bio}
+          onBioChange={handleChange}
+        />
+
+        <div className="lg:bg-[#F5F5F5] lg:w-[90%] w-full mx-auto lg:rounded-2xl p-5 ">
+          {/* NICK NAME*/}
           <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
             <label className="font-semibold text-[12px] mb-2 block">
-              Business NAME (required) (Must match legal documents)
+              Unique Identifier (required)
             </label>
             <input
               type="text"
-              name="full_name"
-              placeholder="Enter your company name"
-              value={formData.full_name}
+              name="nickname"
+              placeholder="@Nickname"
+              value={formData.nickname}
               onChange={handleChange}
               className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
             />
           </div>
 
-          {/* WEBSITE */}
-          <div className="p-5 bg-[#82828280] lg:rounded-3xl rounded-md">
+          {/* SUMMARY */}
+          <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
             <label className="font-semibold text-[12px] mb-2 block">
-              Business Website (Optional) (Share your official site for credibility)
+              Bio/Summary (Required, 500 chars max)
             </label>
-            <input
-              type="url"
-              name="website"
-              placeholder="Enter your company url"
-              value={formData.website}
+            <textarea
+              name="summary"
+              placeholder="e.g., I own a food delivery brand and need a social media manager for daily content."
+              value={formData.summary}
               onChange={handleChange}
-              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
+              rows={4}
+              maxLength={500}
+              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none resize-none"
             />
           </div>
         </div>
@@ -84,10 +96,10 @@ const CompanyDetails = () => {
       <NavigationButtons
         isFormComplete={isFormComplete}
         onBack={() => navigate(-1)}
-        onNext={() => isFormComplete && navigate("/coperate/location")}
+        onNext={() => isFormComplete && navigate("/corporate/company-details")}
       />
     </div>
   );
 };
 
-export default CompanyDetails;
+export default CoperateProfileSetup;

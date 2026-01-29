@@ -108,7 +108,7 @@ const CoperateUploadDoc = () => {
       <NavigationButtons
         isFormComplete={isFormComplete}
         onBack={() => navigate(-1)}
-        onNext={() => isFormComplete && navigate("/coperate/inreview")}
+        onNext={() => isFormComplete && navigate("/corporate/inreview")}
       />
     </div>
   );

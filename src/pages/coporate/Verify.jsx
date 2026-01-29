@@ -15,7 +15,7 @@ const CoperateVerify = () => {
 
   const handleContinue = () => {
     if (agreed) {
-      navigate("/coperate/upload");
+      navigate("/corporate/upload");
     }
   };
 

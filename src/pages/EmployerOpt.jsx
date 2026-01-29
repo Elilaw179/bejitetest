@@ -40,8 +40,8 @@ const EmployerOpt = () => {
             if (mode === 'individual') {
                 navigate('/individual/basic-details');
             
-            } else if (mode === 'coperate') {
-                navigate('/coperate/basic-details');
+            } else if (mode === 'corporate') {
+                navigate('/corporate/basic-details');
             }
 
         } catch (error) {
@@ -114,8 +114,8 @@ const EmployerOpt = () => {
                         showInfo={showCoperateInfo}
                         setShowInfo={setShowCoperateInfo}
                         containerRef={coperateRef}
-                        // onClick={() => navigate("/coperate/Basic-details")}
-                        onClick={() => handleClick('coperate')}
+                        // onClick={() => navigate("/corporate/Basic-details")}
+                        onClick={() => handleClick('corporate')}
                     />
                 </div>
             </div>
