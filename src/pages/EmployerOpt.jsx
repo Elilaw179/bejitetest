@@ -40,8 +40,8 @@ const EmployerOpt = () => {
             if (mode === 'individual') {
                 navigate('/individual/basic-details');
             
-            } else if (mode === 'coperate') {
-                navigate('/coperate/basic-details');
+            } else if (mode === 'corporate') {
+                navigate('/corporate/basic-details');
             }
 
         } catch (error) {
@@ -54,7 +54,6 @@ const EmployerOpt = () => {
 
        
     };
-    const formData = new FormData();
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -122,10 +121,7 @@ const EmployerOpt = () => {
             </div>
             <Loader show={show} />
         </div>
-      </div>
-      <Loader show={show} />
-    </div>
-  );
+    );
 };
 
 export default EmployerOpt;

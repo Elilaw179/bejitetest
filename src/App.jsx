@@ -20,7 +20,7 @@ import Link from "./pages/jobseekerSignup/cvBuilder/Link.jsx";
 import JobType from "./pages/jobseekerSignup/JobType.jsx";
 import SaveProgress from "./pages/jobseekerSignup/SaveProgress.jsx";
 import EmployerOpt from "./pages/EmployerOpt";
-import BasicDetails from "./pages/coperate/BasicDetails.jsx";
+import BasicDetails from "./pages/corporate/BasicDetails.jsx";
 import ProfileSetup from "./pages/individual/ProfileSetup";
 import Location from "./pages/individual/Location";
 import Verify from "./pages/individual/Verify";
@@ -29,13 +29,13 @@ import UploadDoc from "./pages/individual/UploadDoc";
 import InReview from "./pages/individual/InReview";
 import IndividualVerificationLayout from "./components/IndividualVerificationLayout";
 import CoperateVerificationLayout from "./components/CoperateVerificationLayout";
-import CoperateBasicDetails from "./pages/coperate/BasicDetails.jsx";
-import CoperateProfileSetup from "./pages/coperate/ProfileSetup";
-import CompanyDetails from "./pages/coperate/CompanyDetails.jsx";
-import CoperateLocation from "./pages/coperate/Location.jsx";
-import CoperateVerify from "./pages/coperate/Verify.jsx";
-import CoperateUploadDoc from "./pages/coperate/UploadDoc.jsx";
-import CoperateInReview from "./pages/coperate/InReview.jsx";
+import CoperateBasicDetails from "./pages/corporate/BasicDetails.jsx";
+import CoperateProfileSetup from "./pages/corporate/ProfileSetup.jsx";
+import CompanyDetails from "./pages/corporate/CompanyDetails.jsx";
+import CoperateLocation from "./pages/corporate/Location.jsx";
+import CoperateVerify from "./pages/corporate/Verify.jsx";
+import CoperateUploadDoc from "./pages/corporate/UploadDoc.jsx";
+import CoperateInReview from "./pages/corporate/InReview.jsx";
 import Recruitment from "./pages/employerDashboard/Recruitment.jsx";
 import CandidateSearchPage from "./pages/employerDashboard/CandidateSearchPage.jsx";
 import Chat from "./pages/employerDashboard/Chat.jsx";
@@ -61,6 +61,7 @@ import AuthFailure from "./pages/auth/AuthFailure.jsx";
 import CompleteSignup from "./pages/CompleteSignup.jsx";
 import { ToastContainer } from 'react-toastify';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import ResetPassword from "./pages/ResetPassword.jsx";
 import 'react-toastify/dist/ReactToastify.css';
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
@@ -110,21 +111,21 @@ function App() {
           </Route>
           <Route element={<CoperateVerificationLayout />}>
             <Route
-              path="/coperate/basic-details"
+              path="/corporate/basic-details"
               element={<CoperateBasicDetails />}
             />{" "}
             <Route
-              path="/coperate/profile-setup"
+              path="/corporate/profile-setup"
               element={<CoperateProfileSetup />}
             />{" "}
             <Route
-              path="/coperate/company-details"
+              path="/corporate/company-details"
               element={<CompanyDetails />}
             />
-            <Route path="/coperate/location" element={<CoperateLocation />} />
-            <Route path="/coperate/verify" element={<CoperateVerify />} />
-            <Route path="/coperate/upload" element={<CoperateUploadDoc />} />
-            <Route path="/coperate/inreview" element={<CoperateInReview />} />
+            <Route path="/corporate/location" element={<CoperateLocation />} />
+            <Route path="/corporate/verify" element={<CoperateVerify />} />
+            <Route path="/corporate/upload" element={<CoperateUploadDoc />} />
+            <Route path="/corporate/inreview" element={<CoperateInReview />} />
           </Route>
           <Route path="/job-type" element={<JobType />} />
           <Route path="/post-page" element={<PostPage />} />
@@ -152,6 +153,7 @@ function App() {
           <Route path="/security-advice" element={<SecurityAdvice />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
         <ToastContainer
           position="top-right"

@@ -227,7 +227,7 @@ function Link() {
             if (response.status === 200 || response.status === 201) {
               console.log("Links saved:", response.data);
               toast.success("Links saved successfully!");
-              navigate("/job-type", {
+              navigate("/save-progress", {
                 state: { email, firstName, lastName, role, mode, followings },
               });
             } else {
