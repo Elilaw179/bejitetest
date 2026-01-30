@@ -71,6 +71,7 @@ const EmployerOpt = () => {
     }, []);
 
     return (
+        <>
         <div className="bg-white min-h-screen flex flex-col items-center">
             <div className="w-full px-4 py-6 flex items-center max-w-screen-xl">
                 <img
@@ -119,8 +120,10 @@ const EmployerOpt = () => {
                     />
                 </div>
             </div>
-            <Loader show={show} />
+            
         </div>
+        <Loader show={show} />
+        </>
     );
 };
 
