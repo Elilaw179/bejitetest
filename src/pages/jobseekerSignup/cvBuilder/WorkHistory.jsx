@@ -7,14 +7,7 @@ import NavigationButtons from "../../../components/NavigationButtons";
 import useAuth from "../../../hooks/useAuth";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../utils/axiosInstance";
-import {
-  FaPlus,
-  FaCheckCircle,
-  FaChevronDown,
-  FaTrash,
-  FaCheck,
-} from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
+import { FaPlus, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
 import Loader from "../../../components/ui/Loader";
 
 const optionsJob = [
