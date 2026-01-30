@@ -115,7 +115,7 @@ const EmployerOpt = () => {
                         setShowInfo={setShowCoperateInfo}
                         containerRef={coperateRef}
                         // onClick={() => navigate("/coperate/Basic-details")}
-                        onClick={() => handleClick('coperate')}
+                        onClick={() => handleClick('corporate')}
                     />
                 </div>
             </div>
