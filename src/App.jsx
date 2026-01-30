@@ -61,6 +61,7 @@ import AuthFailure from "./pages/auth/AuthFailure.jsx";
 import CompleteSignup from "./pages/CompleteSignup.jsx";
 import { ToastContainer } from 'react-toastify';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import ResetPassword from "./pages/ResetPassword.jsx";
 import 'react-toastify/dist/ReactToastify.css';
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
@@ -152,6 +153,7 @@ function App() {
           <Route path="/security-advice" element={<SecurityAdvice />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
         <ToastContainer
           position="top-right"
