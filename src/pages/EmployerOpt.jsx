@@ -71,7 +71,6 @@ const EmployerOpt = () => {
     }, []);
 
     return (
-        <>
         <div className="bg-white min-h-screen flex flex-col items-center">
             <div className="w-full px-4 py-6 flex items-center max-w-screen-xl">
                 <img
@@ -115,15 +114,13 @@ const EmployerOpt = () => {
                         showInfo={showCoperateInfo}
                         setShowInfo={setShowCoperateInfo}
                         containerRef={coperateRef}
-                        // onClick={() => navigate("/corporate/Basic-details")}
-                        onClick={() => handleClick('corporate')}
+                        // onClick={() => navigate("/coperate/Basic-details")}
+                        onClick={() => handleClick('coperate')}
                     />
                 </div>
             </div>
-            
+            <Loader show={show} />
         </div>
-        <Loader show={show} />
-        </>
     );
 };
 
