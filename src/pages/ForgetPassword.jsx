@@ -1,12 +1,41 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import axiosPublic from '../services/axiosPublic';
+import { toast } from 'react-toastify';
 
 function ForgetPassword() {
   const [email, setEmail] = useState("");
-  const isDisabled = !email;
+/*   const isDisabled = !email; */
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(true);
+
+  useEffect(() => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    setIsDisabled(!emailRegex.test(email));
+  }, [email]);
+
+  const handleSendResetLink = async () => {
+    if (!email) return;
+
+    try {
+      setLoading(true);
+      const res = await axiosPublic.post("/auth/forgot-password", { email });
+
+      toast.success(res.data.message || "Reset link sent! Check your email.");
+      navigate("/email-check"); 
+    } catch (error) {
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "Failed to send reset link";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="bg-white min-h-screen flex flex-col items-center">
@@ -38,9 +67,9 @@ function ForgetPassword() {
                   ? "bg-[#1A3E32] cursor-not-allowed"
                   : "bg-[#16730F]"
               }`}
-              onClick={() => navigate("/email-check")}
+              onClick={handleSendResetLink}
             >
-              Send Reset Link
+              {loading ? "Sending..." : "Send Reset Link"}
             </button>
           </div>
         </div>
