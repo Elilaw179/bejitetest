@@ -1,60 +1,104 @@
 import React, { useEffect, useState } from "react";
+import axiosInstance from "../../utils/axiosInstance";
 
-const CandidateSearchResults = ({ onViewProfile }) => {
+const CandidateSearchResults = ({ onViewProfile, filters }) => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // useEffect(() => {
+  //   const fetchCandidates = async () => {
+  //     try {
+  //       setLoading(true);
+
+  //       // ✅ Correct backend route
+  //       const API_URL = `${import.meta.env.VITE_API_URL}/api/candidates`;
+
+  //       const response = await fetch(API_URL, {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+
+  //       if (!response.ok) {
+  //         throw new Error(`HTTP error! status: ${response.status}`);
+  //       }
+
+  //       const data = await response.json();
+
+  //       // Validate & format
+  //       if (data.success && Array.isArray(data.data)) {
+  //         const formatted = data.data.map((candidate) => ({
+  //           id: candidate.id,
+  //           name: `${candidate.first_name} ${candidate.last_name}`,
+  //           type: "Jobseeker",
+  //           jobTitle: candidate.title || "N/A",
+  //           location: candidate.location || "Unknown",
+  //           skills: candidate.skills || [],
+  //           availability: candidate.availability || "Unknown",
+  //           experienceYears: candidate.experience_years || 0,
+  //           initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
+  //           online: candidate.availability === "Available",
+  //         }));
+
+  //         setCandidates(formatted);
+  //       } else {
+  //         throw new Error("Invalid data format received from API");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching candidates:", error);
+  //       setError(error.message);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchCandidates();
+  // }, []);
+
   useEffect(() => {
+    if (!filters) return;
+
     const fetchCandidates = async () => {
       try {
         setLoading(true);
+        setError(null);
 
-        // ✅ Correct backend route
-        const API_URL = `${import.meta.env.VITE_API_URL}/api/candidates`;
-
-        const response = await fetch(API_URL, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+        const response = await axiosInstance.get("/api/candidates/search", {
+          params: filters,
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.data?.success) {
+          throw new Error("Failed to fetch candidates");
         }
 
-        const data = await response.json();
+        const formatted = response.data.data.map((candidate) => ({
+          id: candidate.id,
+          name: `${candidate.first_name} ${candidate.last_name}`,
+          jobTitle: candidate.title || "N/A",
+          location: candidate.location || "Unknown",
+          type: "Jobseeker",
+          experienceYears: candidate.experience_years || 0,
+          skills: candidate.skills || [],
+          availability: candidate.availability || "Unknown",
+          initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
+          online: candidate.availability === "Available",
+          image: candidate.image || null,
+        }));
 
-        // Validate & format
-        if (data.success && Array.isArray(data.data)) {
-          const formatted = data.data.map((candidate) => ({
-            id: candidate.id,
-            name: `${candidate.first_name} ${candidate.last_name}`,
-            type: "Jobseeker",
-            jobTitle: candidate.title || "N/A",
-            location: candidate.location || "Unknown",
-            skills: candidate.skills || [],
-            availability: candidate.availability || "Unknown",
-            experienceYears: candidate.experience_years || 0,
-            initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
-            online: candidate.availability === "Available",
-          }));
-
-          setCandidates(formatted);
-        } else {
-          throw new Error("Invalid data format received from API");
-        }
-      } catch (error) {
-        console.error("Error fetching candidates:", error);
-        setError(error.message);
+        setCandidates(formatted);
+        console.log("candidates: ", candidates);
+      } catch (err) {
+        console.error("Search error:", err);
+        setError(err.response?.data?.message || err.message);
       } finally {
         setLoading(false);
       }
     };
 
     fetchCandidates();
-  }, []);
+  }, [filters, candidates]);
 
   if (loading) {
     return (
@@ -71,7 +115,9 @@ const CandidateSearchResults = ({ onViewProfile }) => {
     return (
       <div className="bg-[#1A3E32] w-full max-w-[500px] px-10 py-8 rounded-2xl shadow-lg">
         <div className="text-center">
-          <p className="text-red-400 text-lg font-semibold">Error Loading Candidates</p>
+          <p className="text-red-400 text-lg font-semibold">
+            Error Loading Candidates
+          </p>
           <p className="text-[#828282] mt-2 text-sm">{error}</p>
         </div>
       </div>
@@ -85,13 +131,18 @@ const CandidateSearchResults = ({ onViewProfile }) => {
         {candidates.length > 0 ? (
           candidates.map((candidate) => (
             <React.Fragment key={candidate.id}>
-              <CandidateProfile candidate={candidate} onViewProfile={onViewProfile} />
+              <CandidateProfile
+                candidate={candidate}
+                onViewProfile={onViewProfile}
+              />
               <Divider />
             </React.Fragment>
           ))
         ) : (
           <div className="text-center p-5">
-            <p className="text-[#6B8E23] text-[20px] font-semibold">No candidates found</p>
+            <p className="text-[#6B8E23] text-[20px] font-semibold">
+              No candidates found
+            </p>
           </div>
         )}
       </div>
@@ -108,7 +159,12 @@ const SearchResultsHeader = ({ count }) => (
 
 const CandidateProfile = ({ candidate, onViewProfile }) => (
   <div className="flex justify-between mt-6 p-2">
-    <ProfileImage initials={candidate.initials} name={candidate.name} online={candidate.online} image={candidate.image} />
+    <ProfileImage
+      initials={candidate.initials}
+      name={candidate.name}
+      online={candidate.online}
+      image={candidate.image}
+    />
     <ProfileDetails
       name={candidate.name}
       type={candidate.type}
@@ -124,13 +180,15 @@ const CandidateProfile = ({ candidate, onViewProfile }) => (
 const ProfileImage = ({ initials, name, online, image }) => (
   <div className="relative">
     <div className="rounded-full w-[100px] h-[100px] overflow-hidden bg-[#6B8E23] flex items-center justify-center">
-      
       {image ? (
-        <img src={image} alt={`${name} profile`} className="w-full h-full object-cover" />
+        <img
+          src={image}
+          alt={`${name} profile`}
+          className="w-full h-full object-cover"
+        />
       ) : (
         <span className="text-white text-2xl font-bold">{initials}</span>
       )}
-
     </div>
 
     <span
@@ -141,8 +199,15 @@ const ProfileImage = ({ initials, name, online, image }) => (
   </div>
 );
 
-
-const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYears, onViewProfile }) => (
+const ProfileDetails = ({
+  name,
+  type,
+  jobTitle,
+  location,
+  skills,
+  experienceYears,
+  onViewProfile,
+}) => (
   <div className="ml-3 flex-1 space-y-1">
     <div className="ml-0.5">
       <p className="text-[#6B8E23] text-[13px] font-medium">{name}</p>
@@ -153,18 +218,25 @@ const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYear
       <p className="text-[#6B8E23] text-[5px]">{location}</p>
 
       {experienceYears > 0 && (
-        <p className="text-[#6B8E23] text-[5px]">{experienceYears} years experience</p>
+        <p className="text-[#6B8E23] text-[5px]">
+          {experienceYears} years experience
+        </p>
       )}
 
       {skills.length > 0 && (
         <div className="flex flex-wrap gap-0.5 mt-1">
           {skills.slice(0, 3).map((skill, index) => (
-            <span key={index} className="text-[4px] bg-[#556B1F] text-white px-1 py-0.5 rounded">
+            <span
+              key={index}
+              className="text-[4px] bg-[#556B1F] text-white px-1 py-0.5 rounded"
+            >
               {skill}
             </span>
           ))}
           {skills.length > 3 && (
-            <span className="text-[4px] text-[#6B8E23]">+{skills.length - 3} more</span>
+            <span className="text-[4px] text-[#6B8E23]">
+              +{skills.length - 3} more
+            </span>
           )}
         </div>
       )}

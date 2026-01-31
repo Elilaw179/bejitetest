@@ -9,23 +9,19 @@ import PeopleConnect from "../../components/candidate-search-page/PeopleConnect"
 
 const CandidateSearchPage = () => {
   const [formData, setFormData] = useState({
-    jobInput: "",
-    industryInput: "",
-    countryInput: "",
-    stateInput: "",
-    workTypeInput: "",
-    salaryInput: "",
-    currencyInput: "",
-    remoteInput: "",
-    availabilityInput: "",
-    educationInput: "",
-    skillInput: "",
-    tribeInput: "",
-    ageInput: "",
-    genderInput: "",
-    maritalInput: "",
+    q: "",
+    location: "",
+    skills: "",
+    experience_min: "",
+    experience_max: "",
+    availability: "",
+    remote_preference: "",
+    salary_expectation: "",
+    page: 1,
+    limit: 10,
   });
 
+  const [searchParams, setSearchParams] = useState(null);
   const [showResults, setShowResults] = useState(false);
   const [viewProfile, setViewProfile] = useState(false);
   const [showMainProfile, setShowMainProfile] = useState(false);
@@ -43,9 +39,11 @@ const CandidateSearchPage = () => {
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
-  const isFormComplete = Object.values(formData).every(
-    (val) => val.trim() !== ""
-  );
+  const isFormComplete = Object.values(formData).every((val) => {
+    if (typeof val === "string") return val.trim() !== "";
+    if (typeof val === "number") return !isNaN(val);
+    return val !== null && val !== undefined;
+  });
 
   // Handler for viewing a profile
   const handleViewProfile = (candidateId) => {
@@ -61,11 +59,19 @@ const CandidateSearchPage = () => {
           formData={formData}
           setFormData={setFormData}
           isFormComplete={isFormComplete}
-          onSearch={() => setShowResults(true)}
+          onSearch={() => {
+            setSearchParams(formData);
+            setShowResults(true);
+          }}
         />
       );
     } else if (!viewProfile) {
-      return <CandidateSearchResults onViewProfile={handleViewProfile} />;
+      return (
+        <CandidateSearchResults
+          filters={searchParams}
+          onViewProfile={handleViewProfile}
+        />
+      );
     } else if (!showMainProfile) {
       return (
         <UserProfilePanel
@@ -98,7 +104,10 @@ const CandidateSearchPage = () => {
             {/* Left Column */}
             <div className="overflow-y-auto h-full p-4 border-gray-300">
               {showResults && (
-                <CandidateSearchResults onViewProfile={handleViewProfile} />
+                <CandidateSearchResults
+                  filters={searchParams}
+                  onViewProfile={handleViewProfile}
+                />
               )}
             </div>
 
@@ -109,7 +118,10 @@ const CandidateSearchPage = () => {
                   formData={formData}
                   setFormData={setFormData}
                   isFormComplete={isFormComplete}
-                  onSearch={() => setShowResults(true)}
+                  onSearch={() => {
+                    setSearchParams(formData);
+                    setShowResults(true);
+                  }}
                 />
               ) : !showMainProfile ? (
                 <UserProfilePanel

@@ -6,8 +6,15 @@ import { FaCheck } from "react-icons/fa";
 import useAuth from "../../hooks/useAuth";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
+import { CountryDropdown, RegionDropdown } from "react-country-region-selector";
 
-const SelectField = ({ label, value, onChange, options, placeholder = "Select" }) => (
+const SelectField = ({
+  label,
+  value,
+  onChange,
+  options,
+  placeholder = "Select",
+}) => (
   <div className="w-full md:w-[48%] lg:w-[30%]">
     <p className="text-[12px] font-semibold mb-1">{label}</p>
     <div className="relative w-full">
@@ -18,10 +25,14 @@ const SelectField = ({ label, value, onChange, options, placeholder = "Select" }
       >
         <option value="">{placeholder}</option>
         {options.map((opt, i) => (
-          <option key={i} value={opt}>{opt}</option>
+          <option key={i} value={opt}>
+            {opt}
+          </option>
         ))}
       </select>
-      {value && <FaCheck className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />}
+      {value && (
+        <FaCheck className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />
+      )}
     </div>
   </div>
 );
@@ -29,7 +40,14 @@ const SelectField = ({ label, value, onChange, options, placeholder = "Select" }
 function JobType() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [country, setCountry] = useState("");
+  const [state, setState] = useState("");
 
+  const selectClass = (value) =>
+    `select-with-check appearance-none focus:outline-1 focus:outline-[#1A3E32]
+     ${value ? "filled" : ""}
+     w-full text-[#33333380] text-sm p-3 pr-10 rounded-[10px]
+     border-[#F5F5F5] border-2`;
   const [form, setForm] = useState({
     jobTitle: "",
     industry: "",
@@ -42,66 +60,181 @@ function JobType() {
     availability: "",
   });
 
-  const updateField = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const updateField = (field) => (e) =>
+    setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  const allFilled = Object.values(form).every((val) => val.trim() !== "");
+  const allFormFilled = Object.values(form).every(
+    (val) => typeof val === "string" && val.trim() !== "",
+  );
+
+  const isFormComplete =
+    allFormFilled && form.country.trim() !== "" && form.statePref.trim() !== "";
 
   const jobTypes = [
-    "Software Engineer", "Project Manager", "Data Analyst", "Graphic Designer", "Marketing Manager", "Sales Representative",
-    "Customer Service Representative", "Product Manager", "Human Resources Specialist", "Administrative Assistant", "Accountant",
-    "Financial Analyst", "Business Analyst", "UX/UI Designer", "Operations Manager", "IT Support Specialist", "Mechanical Engineer",
-    "Civil Engineer", "Electrician", "Plumber", "Teacher", "Nurse", "Physician", "Pharmacist", "Legal Assistant", "Attorney",
-    "Real Estate Agent", "Construction Worker", "Truck Driver", "Chef", "Not Available"
+    "Software Engineer",
+    "Project Manager",
+    "Data Analyst",
+    "Graphic Designer",
+    "Marketing Manager",
+    "Sales Representative",
+    "Customer Service Representative",
+    "Product Manager",
+    "Human Resources Specialist",
+    "Administrative Assistant",
+    "Accountant",
+    "Financial Analyst",
+    "Business Analyst",
+    "UX/UI Designer",
+    "Operations Manager",
+    "IT Support Specialist",
+    "Mechanical Engineer",
+    "Civil Engineer",
+    "Electrician",
+    "Plumber",
+    "Teacher",
+    "Nurse",
+    "Physician",
+    "Pharmacist",
+    "Legal Assistant",
+    "Attorney",
+    "Real Estate Agent",
+    "Construction Worker",
+    "Truck Driver",
+    "Chef",
+    "Not Available",
   ];
 
   const industries = [
-    "Information Technology", "Healthcare", "Finance", "Education", "Construction", "Manufacturing", "Retail",
-    "Transportation and Logistics", "Hospitality", "Energy", "Telecommunications", "Real Estate", "Legal",
-    "Marketing and Advertising", "Media and Entertainment", "Agriculture", "Aerospace", "Biotechnology",
-    "Automotive", "Nonprofit", "Government", "Insurance", "Pharmaceuticals", "Environmental Services",
-    "Engineering", "Consulting", "Human Resources", "Public Relations", "Utilities", "Mining", "Not Available"
+    "Information Technology",
+    "Healthcare",
+    "Finance",
+    "Education",
+    "Construction",
+    "Manufacturing",
+    "Retail",
+    "Transportation and Logistics",
+    "Hospitality",
+    "Energy",
+    "Telecommunications",
+    "Real Estate",
+    "Legal",
+    "Marketing and Advertising",
+    "Media and Entertainment",
+    "Agriculture",
+    "Aerospace",
+    "Biotechnology",
+    "Automotive",
+    "Nonprofit",
+    "Government",
+    "Insurance",
+    "Pharmaceuticals",
+    "Environmental Services",
+    "Engineering",
+    "Consulting",
+    "Human Resources",
+    "Public Relations",
+    "Utilities",
+    "Mining",
+    "Not Available",
   ];
-
-  const countries = [
-    "Nigeria", "United States", "Canada", "United Kingdom", "Germany", "France", "India", "China", "South Africa",
-    "Brazil", "Australia", "Italy", "Japan", "Kenya", "Mexico", "Netherlands", "Russia", "Spain", "Sweden", "Argentina",
-    "Egypt", "Turkey", "South Korea", "Norway", "Poland", "Indonesia", "Saudi Arabia", "Thailand", "Vietnam",
-    "Philippines", "Malaysia", "Greece", "Ukraine", "Pakistan", "Bangladesh", "New Zealand", "Colombia", "Chile",
-    "Peru", "Finland", "Portugal", "Denmark", "Switzerland", "Belgium", "Austria", "Ireland", "Czech Republic", "Hungary", "Not Available"
-  ];
-
-  const states = [
-    "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo",
-    "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa",
-    "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara", "Federal Capital Territory"
-  ];
-
 
   const workTypes = [
-    "Full-time", "NYSC Posting", "Part-time", "Contract", "Temporary", "Paid Internship", "Freelance", "Remote", "On-site", "Hybrid",
-    "Commission-based", "Volunteer", "Unpaid volunteer internship", "Seasonal", "Per diem", "Apprenticeship", "Consultant", "	I.T (Industrial Training)"
+    "Full-time",
+    "NYSC Posting",
+    "Part-time",
+    "Contract",
+    "Temporary",
+    "Paid Internship",
+    "Freelance",
+    "Remote",
+    "On-site",
+    "Hybrid",
+    "Commission-based",
+    "Volunteer",
+    "Unpaid volunteer internship",
+    "Seasonal",
+    "Per diem",
+    "Apprenticeship",
+    "Consultant",
+    "	I.T (Industrial Training)",
   ];
 
   const currencies = [
-    "United States Dollar (USD)", "Euro (EUR)", "Japanese Yen (JPY)", "British Pound Sterling (GBP)", "Australian Dollar (AUD)",
-    "Canadian Dollar (CAD)", "Swiss Franc (CHF)", "Chinese Yuan (CNY)", "Swedish Krona (SEK)", "New Zealand Dollar (NZD)",
-    "Mexican Peso (MXN)", "Singapore Dollar (SGD)", "Hong Kong Dollar (HKD)", "Norwegian Krone (NOK)", "South Korean Won (KRW)",
-    "Turkish Lira (TRY)", "Indian Rupee (INR)", "Russian Ruble (RUB)", "Brazilian Real (BRL)", "South African Rand (ZAR)",
-    "Polish Zloty (PLN)", "Danish Krone (DKK)", "Thai Baht (THB)", "Malaysian Ringgit (MYR)", "Philippine Peso (PHP)",
-    "Indonesian Rupiah (IDR)", "Czech Koruna (CZK)", "Hungarian Forint (HUF)", "Israeli New Shekel (ILS)",
-    "Chilean Peso (CLP)", "Colombian Peso (COP)", "United Arab Emirates Dirham (AED)", "Saudi Riyal (SAR)",
-    "Egyptian Pound (EGP)", "Nigerian Naira (NGN)", "Argentinian Peso (ARS)", "Pakistani Rupee (PKR)"
+    "USD",
+    "EUR",
+    "JPY",
+    "GBP",
+    "AUD",
+    "CAD",
+    "CHF",
+    "CNY",
+    "SEK",
+    "NZD",
+    "MXN",
+    "SGD",
+    "HKD",
+    "NOK",
+    "KRW",
+    "TRY",
+    "INR",
+    "RUB",
+    "BRL",
+    "ZAR",
+    "PLN",
+    "DKK",
+    "THB",
+    "MYR",
+    "PHP",
+    "IDR",
+    "CZK",
+    "HUF",
+    "ILS",
+    "CLP",
+    "COP",
+    "AED",
+    "SAR",
+    "EGP",
+    "NGN",
+    "ARS",
+    "PKR",
   ];
 
   const remotePrefs = [
-    "Remote", "Remote-First", "Remote-Only", "Hybrid", "Work From Home (WFH)", "Distributed Team", "Telecommute", "Fully Remote",
-    "Flexible Location", "Location Independent", "Virtual Position", "Cloud-Based Role", "Remote-Optional", "100% Remote", "Home-Based"
+    "Remote",
+    "Remote-First",
+    "Remote-Only",
+    "Hybrid",
+    "Work From Home (WFH)",
+    "Distributed Team",
+    "Telecommute",
+    "Fully Remote",
+    "Flexible Location",
+    "Location Independent",
+    "Virtual Position",
+    "Cloud-Based Role",
+    "Remote-Optional",
+    "100% Remote",
+    "Home-Based",
   ];
 
   const availabilities = [
-    "Immediate", "1 Week Notice", "2 Weeks Notice", "1 Month Notice", "Part-time Available", "Full-time Available",
-    "Weekdays Only", "Weekends Only", "Evenings Only", "Flexible Hours", "On-Call", "Freelance Basis",
-    "Seasonal Availability", "Temporary Availability", "Contractual Availability", "Not Currently Available", "Available Upon Request"
+    "Immediate",
+    "1 Week Notice",
+    "2 Weeks Notice",
+    "1 Month Notice",
+    "Part-time Available",
+    "Full-time Available",
+    "Weekdays Only",
+    "Weekends Only",
+    "Evenings Only",
+    "Flexible Hours",
+    "On-Call",
+    "Freelance Basis",
+    "Seasonal Availability",
+    "Temporary Availability",
+    "Contractual Availability",
+    "Not Currently Available",
+    "Available Upon Request",
   ];
 
   const location = useLocation();
@@ -109,61 +242,60 @@ function JobType() {
   const { email, firstName, lastName, role, mode, followings } =
     location.state || {};
 
-
   const handleSubmit = async () => {
-    if (!allFilled) {
-      toast.error("Form is not completely filled")
+    console.log("all Form filled: ", allFormFilled);
+    console.log("allfilld: ", isFormComplete);
+
+    if (!isFormComplete) {
+      toast.error("Form is not completely filled");
       return;
     }
-    const location = `${form.country}, ${form.statePref}`;
-    const salary = `${form.salary} ${form.currency}`
-    const isRemotePreference = form.remotePref.toLowerCase().includes('remote');
-    
+    // const location = `${form.country}, ${form.statePref}`;
+    // const salary = `${form.salary} ${form.currency}`;
+    const isRemotePreference = form.remotePref.toLowerCase().includes("remote");
 
     const apiPayLoad = {
-      title: form.jobTitle,
-      company: form.industry,
-      location: location,
-      type: form.workType,
-      salary_min: salary,
-      salary_max: salary,
-      description: form.availability,
-      remote:isRemotePreference,
-      requirements: [],
-      skills: [],
-      tags: [],
-      experience_level: form.jobTitle,
+      job_title: form.jobTitle,
+      industry_sector: form.industry,
+      preferred_country: form.country,
+      preferred_state: form.statePref,
+      work_type: form.workType,
+      expected_salary: form.salary,
+      currency: form.currency,
+      remote_preference: isRemotePreference,
+      availability: form.availability,
       posted_by: user?.id,
-    }
+    };
 
     try {
-      const response = await axiosInstance.post("/api/job-board/job", apiPayLoad);
+      const response = await axiosInstance.post("/api/jobs", apiPayLoad);
 
       if (response.data.success) {
         toast.success("Job preference submitted successfully!");
-        navigate("/save-progress"), {
-          state: { email, firstName, lastName, role, mode, followings },
-        };
+        (navigate("/save-progress"),
+          {
+            state: { email, firstName, lastName, role, mode, followings },
+          });
       } else {
         console.error(
           "Server responded but with error:",
-          response.data.message
+          response.data.message,
         );
       }
     } catch (error) {
-      toast.error("Submission failed")
+      toast.error("Submission failed");
       console.error("Submission failed:", error);
     }
-
   };
-
 
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">
       <Header />
       <div className="max-w-3xl mx-auto text-center space-y-2">
         <p className="font-medium text-[#16730F] text-2xl">Almost there!</p>
-        <p className="text-[#16730F] text-3xl font-semibold">What type of job do you want?</p>
+        <p className="text-[#16730F] text-3xl font-semibold">
+          What type of job do you want?
+        </p>
         <p className="text-[#000] text-sm font-light mt-5">
           Tell us exactly what you're looking for, so the right employers can
           find you faster. Our Advanced Search Engine (ASE) uses your
@@ -191,18 +323,55 @@ function JobType() {
         </div>
 
         <div className="bg-[#82828280] p-5 rounded-2xl flex flex-wrap gap-4 justify-between">
-          <SelectField
-            label="PREFERRED COUNTRY"
-            value={form.country}
-            onChange={updateField("country")}
-            options={countries}
-          />
-          <SelectField
-            label="PREFERRED STATE"
-            value={form.statePref}
-            onChange={updateField("statePref")}
-            options={states}
-          />
+          {/* Country */}
+          <div className="w-full md:w-[48%] lg:w-[30%]">
+            <p className="text-[12px] font-semibold mb-1">PREFERRED COUNTRY</p>
+            <div className="relative">
+              <CountryDropdown
+                value={country}
+                onChange={(val) => {
+                  setCountry(val);
+                  setState("");
+                  setForm((f) => ({
+                    ...f,
+                    country: val,
+                    statePref: "",
+                  }));
+                }}
+                className={selectClass(country)}
+              />
+
+              {country && (
+                <FaCheck className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />
+              )}
+            </div>
+          </div>
+
+          {/* State */}
+          <div className="w-full md:w-[48%] lg:w-[30%]">
+            <p className="text-[12px] font-semibold mb-1">PREFERRED STATE</p>
+            <div className="relative">
+              <RegionDropdown
+                country={country}
+                value={state}
+                onChange={(val) => {
+                  setState(val);
+                  setForm((f) => ({
+                    ...f,
+                    statePref: val,
+                  }));
+                }}
+                className={selectClass(state)}
+                blankOptionLabel="Select state"
+                disableWhenEmpty
+              />
+
+              {state && (
+                <FaCheck className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />
+              )}
+            </div>
+          </div>
+
           <SelectField
             label="WORK TYPE"
             value={form.workType}
@@ -222,7 +391,7 @@ function JobType() {
                   onChange={updateField("salary")}
                   className="w-full text-[#33333380] text-sm p-3 pr-10 rounded-[10px]
                    border-[#F5F5F5] border-2 focus:outline-1 focus:outline-[#1A3E32]"
-                  placeholder="Enter salary"
+                  placeholder="e.g. N150,000"
                 />
                 {form.salary && (
                   <FaCheck className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />
@@ -252,12 +421,9 @@ function JobType() {
       </div>
 
       <NavigationButtons
-        isFormComplete={allFilled}
+        isFormComplete={isFormComplete}
         onBack={() => navigate(-1)}
-        onNext={() =>
-          allFilled &&
-           handleSubmit()
-        }
+        onNext={() => isFormComplete && handleSubmit()}
       />
     </div>
   );

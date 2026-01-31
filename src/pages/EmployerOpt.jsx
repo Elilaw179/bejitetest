@@ -5,7 +5,6 @@ import fakePdfFile from "../utils/fake-pdf";
 import { toast } from "react-hot-toast";
 import Loader from "../components/ui/Loader";
 import axiosInstance from "../services/axios";
-import axios from "axios";
 
 const EmployerOpt = () => {
   const navigate = useNavigate();

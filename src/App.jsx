@@ -61,6 +61,7 @@ import AuthFailure from "./pages/auth/AuthFailure.jsx";
 import CompleteSignup from "./pages/CompleteSignup.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+// import "./select-reset.css";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
