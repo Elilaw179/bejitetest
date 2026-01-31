@@ -6,57 +6,6 @@ const CandidateSearchResults = ({ onViewProfile, filters }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // useEffect(() => {
-  //   const fetchCandidates = async () => {
-  //     try {
-  //       setLoading(true);
-
-  //       // ✅ Correct backend route
-  //       const API_URL = `${import.meta.env.VITE_API_URL}/api/candidates`;
-
-  //       const response = await fetch(API_URL, {
-  //         method: "GET",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //       });
-
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! status: ${response.status}`);
-  //       }
-
-  //       const data = await response.json();
-
-  //       // Validate & format
-  //       if (data.success && Array.isArray(data.data)) {
-  //         const formatted = data.data.map((candidate) => ({
-  //           id: candidate.id,
-  //           name: `${candidate.first_name} ${candidate.last_name}`,
-  //           type: "Jobseeker",
-  //           jobTitle: candidate.title || "N/A",
-  //           location: candidate.location || "Unknown",
-  //           skills: candidate.skills || [],
-  //           availability: candidate.availability || "Unknown",
-  //           experienceYears: candidate.experience_years || 0,
-  //           initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
-  //           online: candidate.availability === "Available",
-  //         }));
-
-  //         setCandidates(formatted);
-  //       } else {
-  //         throw new Error("Invalid data format received from API");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching candidates:", error);
-  //       setError(error.message);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchCandidates();
-  // }, []);
-
   useEffect(() => {
     if (!filters) return;
 
