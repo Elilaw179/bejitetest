@@ -4,9 +4,8 @@ import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
-import ImageUpload from "../../components/ImageUpload";
 
-const CoperateProfileSetup = () => {
+const CoperateBasicDetails = () => {
   const navigate = useNavigate();
   const { currentStep } = useOutletContext();
 
@@ -18,24 +17,16 @@ const CoperateProfileSetup = () => {
   ];
 
   const [formData, setFormData] = useState({
-    nickname: "",
-    summary: "",
+    full_name: "",
+    email: "",
+    phone_number: "",
   });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  const [imagePreview, setImagePreview] = useState(null);
 
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) setImagePreview(URL.createObjectURL(file));
-  };
-
-  const isFormComplete =
-    Object.values(formData).every((v) => v.trim() !== "") && imagePreview;
-
+  const isFormComplete = Object.values(formData).every((v) => v.trim() !== "");
 
   return (
     <div className="bg-white min-h-screen">
@@ -45,49 +36,56 @@ const CoperateProfileSetup = () => {
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
-        Profile Setup
+        Basic Details
       </section>
       <p className="max-w-3xl mx-auto px-4 text-[#333] text-[15px]">
-        Introduce yourself to jobseekers
+        Let’s get to know you
       </p>
 
-      <div className="max-w-4xl mx-auto mt-6 lg:border-2 border-[#E0E0E0] flex flex-col lg:flex-row gap-8 lg:p-4 items-center">
-        <ImageUpload
-          imagePreview={imagePreview}
-          handleImageChange={handleImageChange}
-          bio={formData.bio}
-          onBioChange={handleChange}
-        />
-
-        <div className="lg:bg-[#F5F5F5] lg:w-[90%] w-full mx-auto lg:rounded-2xl p-5 ">
-          {/* NICK NAME*/}
-          <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
+      <div className="max-w-4xl mx-auto mt-6 border-2 border-[#E0E0E0] flex flex-col lg:flex-row gap-8 lg:p-4">
+        <div className="lg:w-[90%] w-full mx-auto lg:rounded-2xl p-5 ">
+          {/* FULL NAME */}
+          <div className="p-5 bg-[#82828280] lg:rounded-3xl  mb-4 rounded-md">
             <label className="font-semibold text-[12px] mb-2 block">
-              Unique Identifier (required)
+              FULL NAME
             </label>
             <input
               type="text"
-              name="nickname"
-              placeholder="@Nickname"
-              value={formData.nickname}
+              name="full_name"
+              placeholder="Enter your full name"
+              value={formData.full_name}
               onChange={handleChange}
               className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
             />
           </div>
 
-          {/* SUMMARY */}
+          {/* EMAIL */}
           <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
             <label className="font-semibold text-[12px] mb-2 block">
-              Bio/Summary (Required, 500 chars max)
+              OFFICIAL EMAIL
             </label>
-            <textarea
-              name="summary"
-              placeholder="e.g., I own a food delivery brand and need a social media manager for daily content."
-              value={formData.summary}
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
               onChange={handleChange}
-              rows={4}
-              maxLength={500}
-              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none resize-none"
+              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
+            />
+          </div>
+
+          {/* PHONE NUMBER */}
+          <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-2 rounded-md">
+            <label className="font-semibold text-[12px] mb-2 block">
+              PHONE NUMBER
+            </label>
+            <input
+              type="tel"
+              name="phone_number"
+              placeholder="e.g +234706004000"
+              value={formData.phone_number}
+              onChange={handleChange}
+              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
             />
           </div>
         </div>
@@ -96,10 +94,10 @@ const CoperateProfileSetup = () => {
       <NavigationButtons
         isFormComplete={isFormComplete}
         onBack={() => navigate(-1)}
-        onNext={() => isFormComplete && navigate("/coperate/company-details")}
+        onNext={() => isFormComplete && navigate("/corporate/profile-setup")}
       />
     </div>
   );
 };
 
-export default CoperateProfileSetup;
+export default CoperateBasicDetails;

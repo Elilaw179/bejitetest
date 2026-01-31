@@ -154,7 +154,7 @@ const CoperateLocation = () => {
       <NavigationButtons
         isFormComplete={isFormComplete}
         onBack={() => navigate(-1)}
-        onNext={() => isFormComplete && navigate("/coperate/verify")}
+        onNext={() => isFormComplete && navigate("/corporate/verify")}
       />
     </div>
   );

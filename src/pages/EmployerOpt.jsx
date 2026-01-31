@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import MemberCard from "../components/MemberCard";
-import fakePdfFile from "../utils/fake-pdf";
 import { toast } from "react-hot-toast";
 import Loader from "../components/ui/Loader";
-import axiosInstance from "../services/axios";
+import axiosPublic from "../services/axiosPublic";
 
 const EmployerOpt = () => {
   const navigate = useNavigate();
@@ -27,36 +26,29 @@ const EmployerOpt = () => {
       password,
       role,
       mode,
-      followings: JSON.stringify([]),
+      followings: [],
     };
-    const formData = new FormData();
-
-    Object.entries(payload).forEach(([key, value]) =>
-      formData.append(key, value),
-    );
-    formData.append("cv", fakePdfFile);
 
     try {
       setShow(true);
-      await axiosInstance.post("/auth/signup", formData);
+      await axiosPublic.post("/auth/complete-signup", payload, {
+        headers: { "Content-Type": "application/json" },
+      });
 
       toast.success("Registration successful");
+
+      if (mode === "individual") {
+        navigate("/individual/basic-details");
+      } else if (mode === "corporate") {
+        navigate("/corporate/basic-details");
+      }
     } catch (error) {
-      const { error: errorText } = error.response.data;
+      console.error("Complete signup error:", error);
+      const errorText = error?.response?.data?.error || "Signup failed";
       toast.error(errorText);
-      return;
     } finally {
       setShow(false);
     }
-
-    navigate("/resume");
-
-    if (mode === "individual") {
-      navigate("/individual/basic-details");
-    } else {
-      navigate("/coperate/Basic-details");
-    }
-    // }
   };
 
   useEffect(() => {
@@ -71,8 +63,8 @@ const EmployerOpt = () => {
   }, []);
 
   return (
-    <div className="bg-white min-h-screen flex flex-col">
-      <div className="w-full px-4 py-6 flex items-center max-w-screen-xl mx-auto">
+    <div className="bg-white min-h-screen flex flex-col items-center">
+      <div className="w-full px-4 py-6 flex items-center max-w-screen-xl">
         <img src="/assets/images/logo.png" alt="logo" className="h-10" />
       </div>
 
@@ -84,7 +76,7 @@ const EmployerOpt = () => {
           Choose the account type that fits your hiring needs
         </p>
 
-        <div className="lg:w-[50%] w-full px-4 mt-12 flex flex-wrap justify-around gap-6 py-10 bg-[#E0E0E01A] rounded-2xl border border-[#82828226]">
+        <div className="lg:w-[50%] w-full px-4 mt-12 flex flex-wrap justify-center gap-6 py-10 bg-[#E0E0E01A] rounded-2xl border border-[#82828226]">
           <MemberCard
             label="INDIVIDUAL"
             iconSrc="/assets/images/user.svg"
@@ -111,7 +103,7 @@ const EmployerOpt = () => {
             setShowInfo={setShowCoperateInfo}
             containerRef={coperateRef}
             // onClick={() => navigate("/coperate/Basic-details")}
-            onClick={() => handleClick("corperate")}
+            onClick={() => handleClick("corporate")}
           />
         </div>
       </div>

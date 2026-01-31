@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { Eye, EyeOff } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,8 @@ import BejiteLogo from "../../public/assets/images/logo.png";
 import GoogleImg from "../../public/assets/images/google.png";
 import Hyperlinks from "../components/Hyperlinks";
 import { decodeToken } from "../utils/tokenManager";
+
+
 
 function SignIn() {
   const [email, setEmail] = useState("");
@@ -130,7 +133,7 @@ function SignIn() {
   const handleGoogleLogin = () => {
     setGoogleLoading(true);
     // Backend should redirect to /auth/success?token=...
-    window.open(`${import.meta.env.VITE_API_URL}/auth/google`, "_self");
+    window.open(`${API_URL}/auth/google`, "_self");
   };
 
   return (
