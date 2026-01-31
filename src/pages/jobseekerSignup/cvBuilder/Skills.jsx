@@ -91,7 +91,7 @@ const categoryOptions = [
   "Not Available",
 ];
 
-const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);
+      toast.success(response.data.message || "Skills Added Successfully")
 
 const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
   <div className="relative w-full">
@@ -129,22 +129,21 @@ function Skills() {
     "Links",
   ];
 
-  const [skillSector, setSkillSector] = useState("");
-  const [category, setCategory] = useState("");
-  const [experience, setExperience] = useState("");
   const [allFilled, setAllFilled] = useState(false);
   const { user } = useAuth();
   const [allSkill, setAllSkill] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setAllFilled(skillSector && category && experience);
-  }, [skillSector, category, experience]);
+    setAllFilled(skillsData.skillSector && skillsData.category && skillsData.experience);
+  }, [skillsData.skillSector, skillsData.category, skillsData.experience]);
 
   const clearForm = () => {
-    setSkillSector("");
-    setCategory("");
-    setExperience("");
+    setSkillsData({
+        skillSector: "",
+        category: "",
+        experience: "",
+      })
   };
 
   const location = useLocation();
@@ -202,8 +201,9 @@ function Skills() {
           <div className="bg-[#82828280] rounded-2xl p-4">
             <p className="font-semibold text-xs mb-1">SKILL SELECTOR</p>
             <SelectWithIcon
-              value={skillSector}
-              onChange={(e) => setSkillSector(e.target.value)}
+              value={skillsData.skillSector}
+              name="skillSector"
+              onChange={handleChange}
               options={skillOptions}
               placeholder="Select "
             />
@@ -213,8 +213,9 @@ function Skills() {
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">CATEGORY</p>
               <SelectWithIcon
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={skillsData.category}
+                name="category"
+                onChange={handleChange}
                 options={categoryOptions}
                 placeholder="Select"
               />
@@ -222,8 +223,9 @@ function Skills() {
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">YEARS OF EXPERIENCE</p>
               <SelectWithIcon
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
+                value={skillsData.experience}
+                name="experience"
+                onChange={handleChange}
                 options={experienceOptions}
                 placeholder="Select."
               />

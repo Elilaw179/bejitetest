@@ -39,8 +39,8 @@ const EmployerOpt = () => {
 
       if (mode === "individual") {
         navigate("/individual/basic-details");
-      } else if (mode === "corporate") {
-        navigate("/corporate/basic-details");
+      } else if (mode === "coperate") {
+        navigate("/coperate/basic-details");
       }
     } catch (error) {
       console.error("Complete signup error:", error);
@@ -49,7 +49,14 @@ const EmployerOpt = () => {
     } finally {
       setShow(false);
     }
+
+    if (mode === "individual") {
+      navigate("/individual/basic-details");
+    } else if (mode === "coperate") {
+      navigate("/coperate/basic-details");
+    }
   };
+  const formData = new FormData();
 
   useEffect(() => {
     const handleClickOutside = (e) => {
