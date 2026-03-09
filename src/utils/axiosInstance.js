@@ -13,8 +13,10 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const accessToken = localStorage.getItem("accessToken");
+    console.log("Axios request token check:", accessToken ? "Token found" : "No token found");
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+      console.log("Authorization header set:", config.headers.Authorization.substring(0, 20) + "...");
     }
     return config;
   },
@@ -28,6 +30,9 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    
+    console.log("API Error status:", error.response?.status);
+    console.log("API Error data:", error.response?.data);
 
     // If error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -35,11 +40,12 @@ axiosInstance.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem("refreshToken");
+        console.log("Refresh token found:", refreshToken ? "Yes" : "No");
 
         if (!refreshToken) {
-          // No refresh token, redirect to login
-          localStorage.clear();
-          window.location.href = "/";
+          // No refresh token available - this is likely a Google OAuth login
+          // Don't redirect, just reject the error so the UI can handle it
+          console.log("No refresh token available, showing error to user");
           return Promise.reject(error);
         }
 

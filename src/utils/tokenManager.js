@@ -49,11 +49,18 @@ export const isAuthenticated = () => {
   const token = getAccessToken();
   if (!token) return false;
   
-  // Optional: check if token is expired
+  // Check if token is expired
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    const expirationTime = payload.exp * 1000; // convert to milliseconds
-    return Date.now() < expirationTime;
+    
+    // If token has expiration, check it; otherwise consider valid
+    if (payload.exp) {
+      const expirationTime = payload.exp * 1000; // convert to milliseconds
+      return Date.now() < expirationTime;
+    }
+    
+    // No expiration claim in token, consider it valid
+    return true;
   } catch (error) {
     console.error('Error checking token expiration:', error);
     return false;

@@ -33,7 +33,8 @@ const AuthSuccess = () => {
         }
 
         // Store both token and user data
-        localStorage.setItem('authToken', token);
+        localStorage.setItem('accessToken', token); // Primary token key for authentication checks
+        localStorage.setItem('authToken', token); // Legacy key for backward compatibility
         localStorage.setItem('user', JSON.stringify(userData));
 
         console.log('Authentication successful:', { token, userData });
