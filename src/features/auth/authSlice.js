@@ -118,9 +118,15 @@ const authSlice = createSlice({
           localStorage.setItem("refreshToken", action.payload.refreshToken);
         }
         if (action.payload.confirmedUser || action.payload.user) {
+          const userData = action.payload.confirmedUser || action.payload.user;
+          // Add profileCompleted flag to user data
+          const userWithProfileStatus = {
+            ...userData,
+            profileCompleted: action.payload.profileCompleted || false
+          };
           localStorage.setItem(
             "user",
-            JSON.stringify(action.payload.confirmedUser || action.payload.user)
+            JSON.stringify(userWithProfileStatus)
           );
         }
       })

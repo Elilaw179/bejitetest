@@ -73,10 +73,14 @@ function SignIn() {
         const isVerified = user?.verified || user?.isEmailVerified;
         const hasCompletedSignup =
           user?.role !== null && user?.role !== undefined;
+        const hasCompletedProfile = data.profileCompleted;
+        const userRole = user?.role;
 
         console.log("User verification status:", {
           isVerified,
           hasCompletedSignup,
+          hasCompletedProfile,
+          userRole,
           user,
         });
 
@@ -93,8 +97,14 @@ function SignIn() {
                 user.email
               )}&status=verified`
             );
+          } else if (userRole === 'recruiter') {
+            // User is a recruiter, redirect to employer dashboard
+            navigate("/recruitment");
+          } else if (hasCompletedProfile) {
+            // User is a jobseeker and has completed profile, redirect to dashboard
+            navigate("/recruitment");
           } else {
-            // User is verified and has completed signup
+            // User is a jobseeker who hasn't completed profile
             navigate("/resume");
           }
         }, 500);
