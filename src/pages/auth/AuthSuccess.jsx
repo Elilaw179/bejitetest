@@ -55,6 +55,7 @@ const AuthSuccess = () => {
         
         // Check profile completion status (from query param for Google OAuth)
         const hasCompletedProfile = profileCompletedParam === 'true';
+        const userRole = userData.role;
 
         if (!isVerified) {
           // User not verified, redirect to email verification
@@ -68,13 +69,18 @@ const AuthSuccess = () => {
           setTimeout(() => {
             navigate(`/complete-signup?email=${encodeURIComponent(userData.email)}&status=verified`);
           }, 1000);
+        } else if (userRole === 'recruiter') {
+          // User is a recruiter, redirect to employer dashboard
+          console.log('User is a recruiter, redirecting to recruitment dashboard');
+          toast.success('Welcome back!');
+          setTimeout(() => navigate('/recruitment'), 1000);
         } else if (hasCompletedProfile) {
-          // User has completed profile, redirect to dashboard
+          // User is a jobseeker with completed profile, redirect to dashboard
           console.log('User verified and profile complete, redirecting to recruitment dashboard');
           toast.success('Welcome back!');
           setTimeout(() => navigate('/recruitment'), 1000);
         } else {
-          // User is verified and has completed signup but not profile
+          // User is a jobseeker who hasn't completed profile
           console.log('User verified and signup complete, redirecting to resume');
           toast.success('Welcome back!');
           setTimeout(() => navigate('/resume'), 1000);
