@@ -12,6 +12,7 @@ const AuthSuccess = () => {
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
     const userParam = params.get('user');
+    const profileCompletedParam = params.get('profileCompleted');
 
     if (token) {
       try {
@@ -35,7 +36,13 @@ const AuthSuccess = () => {
         // Store both token and user data
         localStorage.setItem('accessToken', token); // Primary token key for authentication checks
         localStorage.setItem('authToken', token); // Legacy key for backward compatibility
-        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Add profileCompleted flag to user data before storing
+        const userDataWithProfileStatus = {
+          ...userData,
+          profileCompleted: profileCompletedParam === 'true'
+        };
+        localStorage.setItem('user', JSON.stringify(userDataWithProfileStatus));
 
         console.log('Authentication successful:', { token, userData });
         
@@ -46,6 +53,9 @@ const AuthSuccess = () => {
         // User has completed signup if they have a role (jobseeker/recruiter)
         const hasCompletedSignup = userData.role !== null && userData.role !== undefined;
         
+        // Check profile completion status (from query param for Google OAuth)
+        const hasCompletedProfile = profileCompletedParam === 'true';
+
         if (!isVerified) {
           // User not verified, redirect to email verification
           console.log('User not verified, redirecting to email sent page');
@@ -58,8 +68,13 @@ const AuthSuccess = () => {
           setTimeout(() => {
             navigate(`/complete-signup?email=${encodeURIComponent(userData.email)}&status=verified`);
           }, 1000);
+        } else if (hasCompletedProfile) {
+          // User has completed profile, redirect to dashboard
+          console.log('User verified and profile complete, redirecting to recruitment dashboard');
+          toast.success('Welcome back!');
+          setTimeout(() => navigate('/recruitment'), 1000);
         } else {
-          // User is verified and has completed signup, redirect to resume
+          // User is verified and has completed signup but not profile
           console.log('User verified and signup complete, redirecting to resume');
           toast.success('Welcome back!');
           setTimeout(() => navigate('/resume'), 1000);

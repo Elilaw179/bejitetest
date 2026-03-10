@@ -73,10 +73,12 @@ function SignIn() {
         const isVerified = user?.verified || user?.isEmailVerified;
         const hasCompletedSignup =
           user?.role !== null && user?.role !== undefined;
+        const hasCompletedProfile = data.profileCompleted;
 
         console.log("User verification status:", {
           isVerified,
           hasCompletedSignup,
+          hasCompletedProfile,
           user,
         });
 
@@ -93,8 +95,11 @@ function SignIn() {
                 user.email
               )}&status=verified`
             );
+          } else if (hasCompletedProfile) {
+            // User has completed profile, redirect to dashboard
+            navigate("/recruitment");
           } else {
-            // User is verified and has completed signup
+            // User is verified and has completed signup but not profile
             navigate("/resume");
           }
         }, 500);
