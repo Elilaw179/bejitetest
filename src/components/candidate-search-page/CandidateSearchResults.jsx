@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { API_URL } from "../../config";
 
-const CandidateSearchResults = ({ onViewProfile }) => {
+const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,30 +11,79 @@ const CandidateSearchResults = ({ onViewProfile }) => {
       try {
         setLoading(true);
 
-        //  Correct backend route
-        const url = `${API_URL}/api/candidates`;
+        // Build query parameters from search criteria
+        const queryParams = new URLSearchParams();
+        
+        // Use 'q' for general text search - combine job title and skills
+        // This searches across multiple fields: name, title, bio, industry, etc.
+        const searchTerms = [];
+        if (searchCriteria.jobInput) searchTerms.push(searchCriteria.jobInput);
+        // Don't add skill to q - use separate skills filter
+        
+        if (searchTerms.length > 0) {
+          queryParams.append('q', searchTerms.join(' '));
+        }
+        
+        // Individual filters - these work independently of 'q'
+        if (searchCriteria.industryInput) queryParams.append('industry', searchCriteria.industryInput);
+        if (searchCriteria.countryInput) queryParams.append('preferred_country', searchCriteria.countryInput);
+        if (searchCriteria.stateInput) queryParams.append('preferred_state', searchCriteria.stateInput);
+        if (searchCriteria.workTypeInput) queryParams.append('work_type', searchCriteria.workTypeInput);
+        if (searchCriteria.salaryInput) queryParams.append('salary_min', searchCriteria.salaryInput);
+        if (searchCriteria.currencyInput) queryParams.append('currency', searchCriteria.currencyInput);
+        if (searchCriteria.remoteInput) queryParams.append('remote_preference', searchCriteria.remoteInput);
+        if (searchCriteria.availabilityInput) queryParams.append('availability', searchCriteria.availabilityInput);
+        if (searchCriteria.educationInput) queryParams.append('education_level', searchCriteria.educationInput);
+        // Always pass skills filter separately (not as part of q)
+        if (searchCriteria.skillInput) queryParams.append('skills', searchCriteria.skillInput);
+        if (searchCriteria.tribeInput) queryParams.append('tribe', searchCriteria.tribeInput);
+        if (searchCriteria.ageInput) queryParams.append('age', searchCriteria.ageInput);
+        if (searchCriteria.genderInput) queryParams.append('gender', searchCriteria.genderInput);
+        if (searchCriteria.maritalInput) queryParams.append('marital_status', searchCriteria.maritalInput);
+
+        // Add default pagination
+        queryParams.append('page', '1');
+        queryParams.append('limit', '10');
+
+        // Get auth token from localStorage (check multiple keys for compatibility)
+        const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+        
+        console.log("Token retrieval - accessToken:", !!localStorage.getItem('accessToken'));
+        console.log("Token retrieval - authToken:", !!localStorage.getItem('authToken'));
+        console.log("Token retrieval - token:", !!localStorage.getItem('token'));
+        console.log("Final token value:", token ? token.substring(0, 20) + "..." : "NULL");
+        
+        // Build the API URL with query parameters
+        const url = `${API_URL}/api/cv/employee/search?${queryParams.toString()}`;
 
         const response = await fetch(url, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": token ? `Bearer ${token}` : ""
           },
+          credentials: "include"
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          console.error("API Error Response:", errorData);
+          throw new Error(`HTTP error! status: ${response.status} - ${errorData.error || 'Unknown error'}`);
         }
 
         const data = await response.json();
 
-        // Validate & format
-        if (data.success && Array.isArray(data.data)) {
-          const formatted = data.data.map((candidate) => ({
+        console.log("API Response:", data);
+
+        // Validate & format - handle different response formats
+        const candidatesData = data.data || data.candidates || [];
+        if (Array.isArray(candidatesData)) {
+          const formatted = candidatesData.map((candidate) => ({
             id: candidate.id,
             name: `${candidate.first_name} ${candidate.last_name}`,
             type: "Jobseeker",
             jobTitle: candidate.title || "N/A",
-            location: candidate.location || "Unknown",
+            location: candidate.location || candidate.preferred_country || "Unknown",
             skills: candidate.skills || [],
             availability: candidate.availability || "Unknown",
             experienceYears: candidate.experience_years || 0,
@@ -55,7 +104,7 @@ const CandidateSearchResults = ({ onViewProfile }) => {
     };
 
     fetchCandidates();
-  }, []);
+  }, [searchCriteria]);
 
   if (loading) {
     return (

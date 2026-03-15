@@ -43,14 +43,18 @@ const CandidateSearchPage = () => {
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
-  const isFormComplete = Object.values(formData).every(
-    (val) => val.trim() !== ""
-  );
+  // Check if at least one field has a value for partial search
+  const hasAtLeastOneField = Object.values(formData).some(val => val.trim() !== "");
 
   // Handler for viewing a profile
   const handleViewProfile = (candidateId) => {
     setSelectedCandidateId(candidateId);
     setViewProfile(true);
+  };
+
+  // Handle search with criteria
+  const handleSearch = () => {
+    setShowResults(true);
   };
 
   // Handle mobile rendering: only one component at a time
@@ -60,12 +64,12 @@ const CandidateSearchPage = () => {
         <SearchCriteria
           formData={formData}
           setFormData={setFormData}
-          isFormComplete={isFormComplete}
-          onSearch={() => setShowResults(true)}
+          isFormComplete={hasAtLeastOneField}
+          onSearch={handleSearch}
         />
       );
     } else if (!viewProfile) {
-      return <CandidateSearchResults onViewProfile={handleViewProfile} />;
+      return <CandidateSearchResults searchCriteria={formData} onViewProfile={handleViewProfile} />;
     } else if (!showMainProfile) {
       return (
         <UserProfilePanel
@@ -98,7 +102,10 @@ const CandidateSearchPage = () => {
             {/* Left Column */}
             <div className="overflow-y-auto h-full p-4 border-gray-300">
               {showResults && (
-                <CandidateSearchResults onViewProfile={handleViewProfile} />
+                <CandidateSearchResults 
+                  searchCriteria={formData} 
+                  onViewProfile={handleViewProfile} 
+                />
               )}
             </div>
 
@@ -108,8 +115,8 @@ const CandidateSearchPage = () => {
                 <SearchCriteria
                   formData={formData}
                   setFormData={setFormData}
-                  isFormComplete={isFormComplete}
-                  onSearch={() => setShowResults(true)}
+                  isFormComplete={hasAtLeastOneField}
+                  onSearch={handleSearch}
                 />
               ) : !showMainProfile ? (
                 <UserProfilePanel
