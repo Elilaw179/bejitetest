@@ -51,6 +51,8 @@ import PaymentSuccess from "./pages/paymentMethod/PaymentSuccessPage.jsx";
 import SentInvite from "./pages/individual/SentInvite.jsx";
 import EmployeeSentInvite from "./pages/employerDashboard/EmployeeSentInvite.jsx";
 import InterviewInvite from "./components/InterviewInvite.jsx";
+import InterviewNotifications from "./pages/individual/InterviewNotifications.jsx";
+import SentInvitations from "./pages/employerDashboard/SentInvitations.jsx";
 import About from "./pages/misc/About.jsx";
 import Teams from "./pages/misc/Teams.jsx";
 import SecurityAdvice from "./pages/misc/SecurityAdvice.jsx";
@@ -148,6 +150,8 @@ function App() {
             element={<EmployeeSentInvite />}
           />
           <Route path="/interview-invite" element={<InterviewInvite />} />
+          <Route path="/my-invitations" element={<InterviewNotifications />} />
+          <Route path="/sent-invitations" element={<SentInvitations />} />
           <Route path="/about" element={<About />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/security-advice" element={<SecurityAdvice />} />

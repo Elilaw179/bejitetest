@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { API_URL } from "../../config";
+import InterviewInviteModal from "./InterviewInviteModal";
 
 const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [inviteSuccess, setInviteSuccess] = useState(false);
 
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -128,14 +132,38 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
     );
   }
 
+  const handleInviteClick = (candidate) => {
+    setSelectedCandidate(candidate);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedCandidate(null);
+  };
+
+  const handleInviteSuccess = () => {
+    setInviteSuccess(true);
+    setTimeout(() => setInviteSuccess(false), 3000);
+  };
+
   return (
     <div className="bg-[#1A3E32] w-full max-w-[500px] px-10 py-4 rounded-2xl shadow-lg">
+      {inviteSuccess && (
+        <div className="mb-4 p-3 bg-green-500/20 border border-green-500 rounded-lg text-green-400 text-sm text-center">
+          Interview invitation sent successfully!
+        </div>
+      )}
       <SearchResultsHeader count={candidates.length} />
       <div>
         {candidates.length > 0 ? (
           candidates.map((candidate) => (
             <React.Fragment key={candidate.id}>
-              <CandidateProfile candidate={candidate} onViewProfile={onViewProfile} />
+              <CandidateProfile 
+                candidate={candidate} 
+                onViewProfile={onViewProfile}
+                onInvite={handleInviteClick}
+              />
               <Divider />
             </React.Fragment>
           ))
@@ -145,6 +173,12 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
           </div>
         )}
       </div>
+      <InterviewInviteModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        candidate={selectedCandidate}
+        onSuccess={handleInviteSuccess}
+      />
     </div>
   );
 };
@@ -156,7 +190,7 @@ const SearchResultsHeader = ({ count }) => (
   </div>
 );
 
-const CandidateProfile = ({ candidate, onViewProfile }) => (
+const CandidateProfile = ({ candidate, onViewProfile, onInvite }) => (
   <div className="flex justify-between mt-6 p-2">
     <ProfileImage initials={candidate.initials} name={candidate.name} online={candidate.online} image={candidate.image} />
     <ProfileDetails
@@ -167,6 +201,7 @@ const CandidateProfile = ({ candidate, onViewProfile }) => (
       skills={candidate.skills}
       experienceYears={candidate.experienceYears}
       onViewProfile={() => onViewProfile(candidate.id)}
+      onInvite={() => onInvite(candidate)}
     />
   </div>
 );
@@ -192,7 +227,7 @@ const ProfileImage = ({ initials, name, online, image }) => (
 );
 
 
-const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYears, onViewProfile }) => (
+const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYears, onViewProfile, onInvite }) => (
   <div className="ml-3 flex-1 space-y-1">
     <div className="ml-0.5">
       <p className="text-[#6B8E23] text-[13px] font-medium">{name}</p>
@@ -219,11 +254,11 @@ const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYear
         </div>
       )}
     </div>
-    <ProfileActions onViewProfile={onViewProfile} />
+    <ProfileActions onViewProfile={onViewProfile} onInvite={onInvite} />
   </div>
 );
 
-const ProfileActions = ({ onViewProfile }) => (
+const ProfileActions = ({ onViewProfile, onInvite }) => (
   <div className="space-y-1 mt-2">
     <button
       onClick={onViewProfile}
@@ -231,7 +266,10 @@ const ProfileActions = ({ onViewProfile }) => (
     >
       View Profile
     </button>
-    <button className="p-1 w-[100px] text-[5px] rounded-3xl border-2 border-[#6B8E23] hover:bg-[#6B8E23]/10 text-[#6B8E23] font-medium transition-colors">
+    <button 
+      onClick={onInvite}
+      className="p-1 w-[100px] text-[5px] rounded-3xl border-2 border-[#6B8E23] hover:bg-[#6B8E23]/10 text-[#6B8E23] font-medium transition-colors"
+    >
       Invite for interview
     </button>
   </div>
