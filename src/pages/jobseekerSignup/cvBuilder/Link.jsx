@@ -65,8 +65,6 @@ function Link() {
     portfolio: "",
   });
 
-  const [allFilled, setAllFilled] = useState(true);
-
   const handleChange = (e, key) => {
     setFormLinks({ ...formLinks, [key]: e.target.value });
     // Clear error when user starts typing

@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import NewsFeedHeader from "../../components/NewsFeedHeader";
-import { getSubscriptionPlans, checkASEEligibility, initializeOneTimePayment, initializeSubscriptionPayment, useFreeTrial } from "../../services/paymentApi";
+import { getSubscriptionPlans, checkASEEligibility, initializeOneTimePayment, initializeSubscriptionPayment, activateFreeTrial } from "../../services/paymentApi";
 
 const ASEPricingPage = () => {
   const navigate = useNavigate();
@@ -12,12 +12,11 @@ const ASEPricingPage = () => {
   const [processing, setProcessing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
 
-  // Default plans as fallback
-  const defaultPlans = [
+  const defaultPlans = useMemo(() => [
     { id: "standard", name: "Standard Plan", type: "one_time", price: 10, currency: "USD", priceNaira: 10000, currencyNaira: "NGN", candidateLimit: 20, features: ["One-time payment per search", "View up to 20 candidates", "Invite any or all candidates", "No card storage required"] },
     { id: "premium", name: "Premium Plan", type: "subscription", price: 7, currency: "USD", priceNaira: 7000, currencyNaira: "NGN", candidateLimit: 20, billingPeriod: "monthly", features: ["$7/month (billed annually)", "View up to 20 candidates per search", "Unlimited searches", "Save card for automatic billing", "Cancel anytime"] },
     { id: "jumbo", name: "Jumbo Plan", type: "subscription", price: 15, currency: "USD", priceNaira: 15000, currencyNaira: "NGN", candidateLimit: 30, billingPeriod: "monthly", features: ["$15/month (billed annually)", "View up to 30 candidates per search", "For high-volume recruiters", "Save card for automatic billing", "Cancel anytime"] }
-  ];
+  ], []);
 
   const loadData = useCallback(async () => {
     try {
@@ -331,7 +330,7 @@ const ASEPricingPage = () => {
                   <button
                     onClick={async () => {
                       try {
-                        await useFreeTrial();
+                        await activateFreeTrial();
                         navigate('/candidate-search-page');
                       } catch (error) {
                         console.error("Free trial error:", error);

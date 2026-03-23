@@ -22,7 +22,7 @@ export const checkASEEligibility = async () => {
   }
 };
 
-export const useFreeTrial = async () => {
+export const activateFreeTrial = async () => {
   try {
     const response = await axiosInstance.post(`${PAYSTACK_API_URL}/ase/free-trial`);
     return response.data;
@@ -115,7 +115,7 @@ export const getSubscriptionStatus = async () => {
 export default {
   getSubscriptionPlans,
   checkASEEligibility,
-  useFreeTrial,
+  activateFreeTrial,
   initializeOneTimePayment,
   verifyOneTimePayment,
   initializeSubscriptionPayment,
