@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import NewsFeedHeader from "../../components/NewsFeedHeader";
 import { getSubscriptionStatus, deleteSavedCard } from "../../services/paymentApi";
 
-const ASESubscriptionDashboard = ({ onUpgradeClick }) => {
+const ASESubscriptionDashboard = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);

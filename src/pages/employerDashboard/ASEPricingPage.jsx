@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import NewsFeedHeader from "../../components/NewsFeedHeader";
-import { getSubscriptionPlans, checkASEEligibility, initializeOneTimePayment, initializeSubscriptionPayment } from "../../services/paymentApi";
+import { getSubscriptionPlans, checkASEEligibility, initializeOneTimePayment, initializeSubscriptionPayment, useFreeTrial } from "../../services/paymentApi";
 
 const ASEPricingPage = () => {
   const navigate = useNavigate();
@@ -19,34 +19,30 @@ const ASEPricingPage = () => {
     { id: "jumbo", name: "Jumbo Plan", type: "subscription", price: 15, currency: "USD", priceNaira: 15000, currencyNaira: "NGN", candidateLimit: 30, billingPeriod: "monthly", features: ["$15/month (billed annually)", "View up to 30 candidates per search", "For high-volume recruiters", "Save card for automatic billing", "Cancel anytime"] }
   ];
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      // Get plans (this should work)
       const plansRes = await getSubscriptionPlans();
       setPlans(plansRes.plans || defaultPlans);
       
-      // Try to get eligibility (may fail if not logged in)
       try {
         const eligRes = await checkASEEligibility();
         setEligibility(eligRes);
-      } catch (eligError) {
-        // If eligibility check fails, set default
+      } catch {
         console.log("Eligibility check failed, using default");
         setEligibility({ success: true, eligible: false, accessType: "none", message: "Log in to check eligibility" });
       }
     } catch (error) {
       console.error("Error loading data:", error);
-      // Use default plans as fallback
       setPlans(defaultPlans);
       setEligibility({ success: true, eligible: false, accessType: "none", message: "Unable to load eligibility" });
     } finally {
       setLoading(false);
     }
-  };
+  }, [defaultPlans]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSelectPlan = async (plan) => {
     setSelectedPlan(plan);
@@ -335,7 +331,6 @@ const ASEPricingPage = () => {
                   <button
                     onClick={async () => {
                       try {
-                        const { useFreeTrial } = await import("../../services/paymentApi");
                         await useFreeTrial();
                         navigate('/candidate-search-page');
                       } catch (error) {

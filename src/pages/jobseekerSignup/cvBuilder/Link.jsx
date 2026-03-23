@@ -65,7 +65,7 @@ function Link() {
     portfolio: "",
   });
 
-  const [allFilled, setAllFilled] = useState(false);
+  const [allFilled, setAllFilled] = useState(true);
 
   const handleChange = (e, key) => {
     setFormLinks({ ...formLinks, [key]: e.target.value });
@@ -160,11 +160,10 @@ function Link() {
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <div className="max-w-3xl mx-auto mt-6 text-[#1A3E32] text-2xl font-semibold">
-        Links
+        Links (Optional)
       </div>
       <p className="max-w-3xl mx-auto text-[#333] text-sm mb-6">
-        Add at least one link to your online presence. Employers love to see
-        your work, projects, or portfolio.
+        Add your social media links and portfolio. You can skip this step and add links later.
       </p>
 
       <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4">
@@ -195,15 +194,9 @@ function Link() {
       </div>
 
       <NavigationButtons
-        isFormComplete={allFilled}
+        isFormComplete={true}
         onBack={() => navigate(-1)}
         onNext={async () => {
-          // Check if at least one link is provided
-          if (!allFilled) {
-            toast.error("Please add at least one valid link");
-            return;
-          }
-
           // Filter out empty links before sending
           const linksToSend = Object.entries(formLinks)
             .filter(([, value]) => value.trim() !== "")
@@ -211,6 +204,14 @@ function Link() {
               acc[key] = value.trim();
               return acc;
             }, {});
+
+          // If no links provided, skip to next step
+          if (Object.keys(linksToSend).length === 0) {
+            navigate("/save-progress", {
+              state: { email, firstName, lastName, role, mode, followings },
+            });
+            return;
+          }
 
           const data = { userId: user.id, ...linksToSend };
           console.log("data: ", data);
@@ -239,6 +240,12 @@ function Link() {
             console.error("Error:", err);
             toast.error(err.response?.data?.message || "Error saving links");
           }
+        }}
+        showSkip={true}
+        onSkip={() => {
+          navigate("/save-progress", {
+            state: { email, firstName, lastName, role, mode, followings },
+          });
         }}
       />
 
