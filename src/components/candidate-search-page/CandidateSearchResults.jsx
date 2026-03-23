@@ -1,19 +1,37 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { API_URL } from "../../config";
 import InterviewInviteModal from "./InterviewInviteModal";
+import { useNavigate } from "react-router-dom";
 
 const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
+  const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState(false);
+  const [paymentRequired, setPaymentRequired] = useState(false);
+
+  // Refs to track and cancel duplicate requests (handles React StrictMode)
+  const abortControllerRef = useRef(null);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
+    // Abort any pending request from previous render
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
     const fetchCandidates = async () => {
+      // Create new abort controller for this request
+      abortControllerRef.current = new AbortController();
+      const currentRequestId = ++requestIdRef.current;
+
       try {
         setLoading(true);
+        setError(null);
+        setPaymentRequired(false);
 
         // Build query parameters from search criteria
         const queryParams = new URLSearchParams();
@@ -66,18 +84,44 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
             "Content-Type": "application/json",
             "Authorization": token ? `Bearer ${token}` : ""
           },
-          credentials: "include"
+          credentials: "include",
+          signal: abortControllerRef.current.signal
         });
+
+        // Check if this request was aborted (stale request)
+        if (currentRequestId !== requestIdRef.current) {
+          return;
+        }
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          
+          // Check if this request was aborted (stale request)
+          if (currentRequestId !== requestIdRef.current) {
+            return;
+          }
+          
           console.error("API Error Response:", errorData);
-          throw new Error(`HTTP error! status: ${response.status} - ${errorData.error || 'Unknown error'}`);
+          
+          // Check if it's a payment required error (403)
+          if (response.status === 403 && errorData.code === 'PAYMENT_REQUIRED') {
+            setPaymentRequired(true);
+            throw new Error(errorData.message || 'Payment required to continue using search');
+          }
+          
+          // Read message first, then error, then fallback
+          const errorMessage = errorData.message || errorData.error || 'Unknown error';
+          throw new Error(`HTTP error! status: ${response.status} - ${errorMessage}`);
         }
 
         const data = await response.json();
 
         console.log("API Response:", data);
+
+        // Check if this request was aborted (stale request)
+        if (currentRequestId !== requestIdRef.current) {
+          return;
+        }
 
         // Validate & format - handle different response formats
         const candidatesData = data.data || data.candidates || [];
@@ -100,14 +144,36 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
           throw new Error("Invalid data format received from API");
         }
       } catch (error) {
+        // Ignore abort errors - they're expected when cancelling stale requests
+        if (error.name === 'AbortError') {
+          console.log('Request aborted');
+          return;
+        }
+        
         console.error("Error fetching candidates:", error);
+        
+        // Check if this request was aborted (stale request)
+        if (currentRequestId !== requestIdRef.current) {
+          return;
+        }
+        
         setError(error.message);
       } finally {
-        setLoading(false);
+        // Check if this request is still the latest one before updating loading state
+        if (currentRequestId === requestIdRef.current) {
+          setLoading(false);
+        }
       }
     };
 
     fetchCandidates();
+
+    // Cleanup: abort request when component unmounts or searchCriteria changes
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [searchCriteria]);
 
   if (loading) {
@@ -125,8 +191,26 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
     return (
       <div className="bg-[#1A3E32] w-full max-w-[500px] px-10 py-8 rounded-2xl shadow-lg">
         <div className="text-center">
-          <p className="text-red-400 text-lg font-semibold">Error Loading Candidates</p>
-          <p className="text-[#828282] mt-2 text-sm">{error}</p>
+          {paymentRequired ? (
+            <>
+              <svg className="w-16 h-16 mx-auto text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-yellow-400 text-lg font-semibold mt-4">Free Trial Used</p>
+              <p className="text-[#828282] mt-2 text-sm">{error}</p>
+              <button
+                onClick={() => navigate('/ase/pricing')}
+                className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+              >
+                Upgrade Now
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-red-400 text-lg font-semibold">Error Loading Candidates</p>
+              <p className="text-[#828282] mt-2 text-sm">{error}</p>
+            </>
+          )}
         </div>
       </div>
     );

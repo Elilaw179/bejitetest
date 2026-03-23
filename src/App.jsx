@@ -64,6 +64,9 @@ import CompleteSignup from "./pages/CompleteSignup.jsx";
 import { ToastContainer } from 'react-toastify';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import ResetPassword from "./pages/ResetPassword.jsx";
+import ASEPricingPage from "./pages/employerDashboard/ASEPricingPage.jsx";
+import ASEPaymentCallback from "./pages/employerDashboard/ASEPaymentCallback.jsx";
+import ASESubscriptionDashboard from "./pages/employerDashboard/ASESubscriptionDashboard.jsx";
 import 'react-toastify/dist/ReactToastify.css';
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
@@ -134,7 +137,7 @@ function App() {
           <Route path="/recruitment" element={<Recruitment />} />
           <Route
             path="/candidate-search-page"
-            element={<CandidateSearchPage />}
+            element={<ProtectedRoute redirectMessage="Your session has expired. Please log in again."><CandidateSearchPage /></ProtectedRoute>}
           />
           <Route path="/chats" element={<Chat />} />
           <Route path="/connection" element={<Connection />} />
@@ -158,6 +161,10 @@ function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/ase/pricing" element={<ASEPricingPage />} />
+          <Route path="/ase/payment-callback" element={<ASEPaymentCallback />} />
+          <Route path="/ase/subscription-callback" element={<ASEPaymentCallback />} />
+          <Route path="/ase/dashboard" element={<ASESubscriptionDashboard />} />
         </Routes>
         <ToastContainer
           position="top-right"

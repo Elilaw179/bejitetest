@@ -49,17 +49,22 @@ axiosInstance.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        // Call refresh token endpoint
-        const response = await axios.post(
+        // Call refresh token endpoint (backend expects GET)
+        const response = await axios.get(
           `${API_URL}/auth/refresh`,
-          { refreshToken },
-          { withCredentials: true },
+          { 
+            params: { refreshToken },
+            withCredentials: true 
+          },
         );
 
-        const { accessToken: newAccessToken } = response.data;
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
 
-        // Store new access token
+        // Store new tokens
         localStorage.setItem("accessToken", newAccessToken);
+        if (newRefreshToken) {
+          localStorage.setItem("refreshToken", newRefreshToken);
+        }
 
         // Retry original request with new token
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;

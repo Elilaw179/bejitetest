@@ -70,6 +70,8 @@ const NewsFeedHeader = ({
     "/notification": "notifications",
     "/candidate-search-page": "recruitment",
     "/recruitment": "connection",
+    "/ase/pricing": "recruitment",
+    "/ase/dashboard": "recruitment",
   };
 
   const currentIcon = pathToIconMap[location.pathname] || "";
@@ -106,11 +108,11 @@ const NewsFeedHeader = ({
     <header className="bg-[#F5F5F5] w-full relative z-50">
       <div className="max-w-[1440px] w-full mx-auto flex flex-col sm:flex-row items-center justify-between px-4 py-3 gap-3 sm:gap-4">
         <div className="w-full sm:w-auto flex items-center justify-between">
-          <img
-            src="assets/images/logo.png"
-            alt="Logo"
-            className="h-10 md:h-14 lg:h-16"
-          />
+            <img
+              src="/assets/images/logo.png"
+              alt="Logo"
+              className="h-10 md:h-14 lg:h-16"
+            />
           <FaList
             className="text-2xl text-[#333] block sm:hidden cursor-pointer"
             onClick={toggleSidebar}
@@ -139,7 +141,7 @@ const NewsFeedHeader = ({
                 />
               ) : (
                 <img
-                  src={`assets/images/${name}.svg`}
+                  src={`/assets/images/${name}.svg`}
                   alt={name}
                   className="h-6 md:h-8 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => handleIconClick(name)}
@@ -184,7 +186,33 @@ const NewsFeedHeader = ({
                 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute left-0 mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 overflow-hidden">
+                  <div className="absolute left-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 overflow-hidden">
+                    <button
+                      onClick={() => {
+                        navigate('/candidate-search-page');
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                        location.pathname === '/candidate-search-page'
+                          ? 'bg-green-100 text-[#16730F] font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span>Candidate Search</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate('/ase/dashboard');
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                        ['/ase/dashboard', '/ase/pricing'].includes(location.pathname)
+                          ? 'bg-green-100 text-[#16730F] font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span>My Subscription</span>
+                    </button>
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -223,7 +251,7 @@ const NewsFeedHeader = ({
                   <FaHome className="text-[#16730F]" />
                 ) : (
                   <img
-                    src={`assets/images/${name}.svg`}
+                    src={`/assets/images/${name}.svg`}
                     alt={name}
                     className="h-5"
                   />
