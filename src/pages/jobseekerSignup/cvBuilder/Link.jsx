@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Header from "../../../components/Header";
 import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
@@ -104,21 +104,6 @@ function Link() {
     const error = validateField(key, formLinks[key]);
     setErrors({ ...errors, [key]: error });
   };
-
-  useEffect(() => {
-    // Check if at least one field is filled
-    const hasAtLeastOne = Object.values(formLinks).some(
-      (val) => val.trim() !== ""
-    );
-
-    // Check if all filled fields are valid
-    const allValid = Object.entries(formLinks).every(([key, value]) => {
-      if (!value.trim()) return true; // Empty fields are OK
-      return validateField(key, value) === "";
-    });
-
-    setAllFilled(hasAtLeastOne && allValid);
-  }, [formLinks]);
 
   const linkFields = [
     {
