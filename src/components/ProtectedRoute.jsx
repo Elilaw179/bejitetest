@@ -6,13 +6,17 @@ import { toast } from 'react-toastify';
  * Protected Route Component
  * Wraps routes that require authentication
  */
-const ProtectedRoute = ({ children, requireVerified = false, requiredRole = null }) => {
+const ProtectedRoute = ({ children, requireVerified = false, requiredRole = null, redirectMessage = null }) => {
   const authenticated = isAuthenticated();
   const user = getUser();
 
   // Check if user is authenticated
   if (!authenticated) {
-    toast.error('Please log in to access this page');
+    if (redirectMessage) {
+      toast.error(redirectMessage);
+    } else {
+      toast.error('Please log in to access this page');
+    }
     return <Navigate to="/" replace />;
   }
 

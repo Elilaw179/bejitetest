@@ -52,7 +52,7 @@ function Certificate() {
   const [issuer, setIssuer] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [file, setFile] = useState(null);
-  const [allFilled, setAllFilled] = useState(false);
+  const [allFilled, setAllFilled] = useState(true);
   const {postCertficateData} = useCreateCertificate();
 
   useEffect(() => {
@@ -72,6 +72,14 @@ function Certificate() {
   
 
   const handleSubmit = async () => {
+    // If no certificate data is provided, skip to next step
+    if (!certName && !issuer && !issueDate && !file) {
+      navigate("/links", {
+        state: { email, firstName, lastName, role, mode, followings },
+      });
+      return;
+    }
+
     const payLoad = {
       userId,
       certName,
@@ -207,6 +215,12 @@ function Certificate() {
         isFormComplete={allFilled}
         onBack={() => navigate(-1)}
         onNext={handleSubmit}
+        showSkip={true}
+        onSkip={() => {
+          navigate("/links", {
+            state: { email, firstName, lastName, role, mode, followings },
+          });
+        }}
       />
     </div>
   );

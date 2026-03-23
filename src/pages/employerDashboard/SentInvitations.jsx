@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { API_URL } from "../../config";
 import { useNavigate } from "react-router-dom";
 
@@ -9,11 +9,7 @@ const SentInvitations = () => {
   const [filter, setFilter] = useState("all");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchInvitations();
-  }, [filter]);
-
-  const fetchInvitations = async () => {
+  const fetchInvitations = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("accessToken") || localStorage.getItem("authToken") || localStorage.getItem("token");
@@ -51,7 +47,11 @@ const SentInvitations = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchInvitations();
+  }, [fetchInvitations]);
 
   const getStatusBadge = (status) => {
     const statusClasses = {
