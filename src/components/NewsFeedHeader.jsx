@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from "react";
-import { FaHome, FaList, FaSearch, FaChevronDown, FaSignOutAlt } from "react-icons/fa";
+import { FaHome, FaList, FaSearch, FaChevronDown, FaSignOutAlt, FaUserEdit, FaCreditCard } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout as logoutAction } from "../features/auth/authSlice";
@@ -186,40 +185,92 @@ const NewsFeedHeader = ({
                 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute left-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 overflow-hidden">
-                    <button
-                      onClick={() => {
-                        navigate('/candidate-search-page');
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
-                        location.pathname === '/candidate-search-page'
-                          ? 'bg-green-100 text-[#16730F] font-medium'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <span>Candidate Search</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate('/ase/dashboard');
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
-                        ['/ase/dashboard', '/ase/pricing'].includes(location.pathname)
-                          ? 'bg-green-100 text-[#16730F] font-medium'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <span>My Subscription</span>
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <FaSignOutAlt className="text-xs" />
-                      <span>Logout</span>
-                    </button>
+                  <div className="absolute left-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden">
+                    {/* User Info Header */}
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={user.image}
+                          alt={getDisplayName()}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-[#16730F]"
+                        />
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-sm text-[#1A3E32]">
+                            {getDisplayName()}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {getDisplayRole()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 1: Profile */}
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          navigate('/education');
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                          location.pathname === '/education'
+                            ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
+                            : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
+                        }`}
+                      >
+                        <FaUserEdit className="text-base" />
+                        <span>Edit Profile</span>
+                      </button>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t border-gray-100 my-1"></div>
+
+                    {/* Section 2: Navigation */}
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          navigate('/candidate-search-page');
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                          location.pathname === '/candidate-search-page'
+                            ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
+                            : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
+                        }`}
+                      >
+                        <FaSearch className="text-base" />
+                        <span>Candidate Search</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate('/ase/dashboard');
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                          ['/ase/dashboard', '/ase/pricing'].includes(location.pathname)
+                            ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
+                            : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
+                        }`}
+                      >
+                        <FaCreditCard className="text-base" />
+                        <span>My Subscription</span>
+                      </button>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t border-gray-100 my-1"></div>
+
+                    {/* Section 3: Account */}
+                    <div className="py-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-all duration-200 hover:pl-5"
+                      >
+                        <FaSignOutAlt className="text-base" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
