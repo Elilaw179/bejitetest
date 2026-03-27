@@ -119,8 +119,6 @@ export default function RecruitmentMiddle() {
     }
   };
 
-  const displayName = getDisplayName(user);
-
   return (
     <main className="w-full px-4 py-6 space-y-8 bg-[#F5F5F5]">
       {/* Create Post Button */}

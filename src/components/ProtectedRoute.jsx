@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children, requireVerified = false, requiredRole = null
         if (payload.exp && Date.now() > payload.exp * 1000) {
           sessionStorage.setItem("sessionExpired", "true");
         }
-      } catch (e) {
+      } catch {
         // Invalid token
       }
     }

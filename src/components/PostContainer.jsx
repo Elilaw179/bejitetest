@@ -165,6 +165,14 @@ const PostContainer = () => {
           />
         ))
       )}
+      <PostCreationModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onPost={async (postData) => {
+          await createPost(postData);
+          fetchFeed();
+        }}
+      />
     </div>
   );
 };
@@ -496,16 +504,8 @@ const PostHeader = ({ author, createdAt, showMenu, setShowMenu, onEdit, onDelete
               </button>
             </div>
       )}
-      <PostCreationModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onPost={async (postData) => {
-          await createPost(postData);
-          fetchFeed();
-        }}
-      />
     </div>
-      )}
+       )}
     </div>
   );
 };

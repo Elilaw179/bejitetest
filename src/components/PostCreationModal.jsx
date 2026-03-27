@@ -14,7 +14,7 @@ const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'publi
 
   if (!isOpen) return null;
 
-  const handleMediaSelect = async (e, kind) => {
+  const handleMediaSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
