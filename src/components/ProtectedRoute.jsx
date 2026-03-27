@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { isAuthenticated, getUser } from '../utils/tokenManager';
+import { isAuthenticated, getUser, getAccessToken } from '../utils/tokenManager';
 import { toast } from 'react-toastify';
 
 /**
@@ -12,6 +12,19 @@ const ProtectedRoute = ({ children, requireVerified = false, requiredRole = null
 
   // Check if user is authenticated
   if (!authenticated) {
+    // Check if token exists but is expired
+    const token = getAccessToken();
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp && Date.now() > payload.exp * 1000) {
+          sessionStorage.setItem("sessionExpired", "true");
+        }
+      } catch {
+        // Invalid token
+      }
+    }
+    
     if (redirectMessage) {
       toast.error(redirectMessage);
     } else {

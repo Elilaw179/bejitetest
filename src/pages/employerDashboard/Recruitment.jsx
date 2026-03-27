@@ -8,15 +8,15 @@ import Hyperlinks from "../../components/Hyperlinks";
 
 export default function Recruitment() {
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col min-h-screen">
       <NewsFeedHeader />
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_3fr_1fr] gap-4 p-4 max-w-screen-xl mx-auto flex-1">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_3fr_1fr] gap-4 p-4 max-w-screen-xl mx-auto flex-1 overflow-hidden h-0">
         <div>
           <RecruitmentLeft />
         </div>
 
-        <div className="h-full">
+        <div className="overflow-y-auto">
           <RecruitmentMiddle />
           <Hyperlinks />
         </div>

@@ -72,9 +72,19 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, clear storage and redirect to login
         console.error("Token refresh failed:", refreshError);
-        // localStorage.clear();
-        // window.location.href = "/";
-        // return Promise.reject(refreshError);
+        
+        // Clear auth data
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+        localStorage.removeItem("authToken");
+        
+        // Store message for login page
+        sessionStorage.setItem("sessionExpired", "true");
+        
+        // Redirect to login
+        window.location.href = "/";
+        return Promise.reject(refreshError);
       }
     }
 

@@ -29,6 +29,13 @@ function SignIn() {
     // Clear any existing auth data to ensure fresh login
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
+    
+    // Check if user was redirected due to session expiration
+    const sessionExpired = sessionStorage.getItem("sessionExpired");
+    if (sessionExpired) {
+      sessionStorage.removeItem("sessionExpired");
+      toast.error("Your session is expired, please login to continue");
+    }
   }, [dispatch]);
 
   // -----------------------------
