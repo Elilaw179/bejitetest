@@ -15,8 +15,8 @@ const navItems = [
 export default function RecruitmentLeft() {
   const navigate = useNavigate()
   return (
-    <div className="hidden md:block bg-[#F5F5F5] p-2 min-h-screen">
-  <aside className="bg-[#16730F] rounded-2xl">
+    <div className="hidden md:block bg-[#F5F5F5] p-2">
+  <aside className="bg-[#16730F] rounded-2xl h-[calc(100vh-120px)]">
       <div className="space-y-2 p-7">
         <FaArrowLeft className="text-[#1A3E32]" />
         <h2 className="text-[20px] text-[#ffffff]">Dashboard</h2>
@@ -33,7 +33,7 @@ export default function RecruitmentLeft() {
           </div>
         ))}
       </nav>
-      <div className="bg-[#1A3E32] h-[560px] rounded-b-2xl mt-10 flex flex-col items-center pt-10 space-y-5">
+      <div className="bg-[#1A3E32] h-[calc(100%-320px)] rounded-b-2xl mt-10 flex flex-col items-center pt-10 space-y-5">
         <button 
         className="text-white"
         onClick={()=>navigate('/payment')}

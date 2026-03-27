@@ -4,7 +4,7 @@ import { FaArrowLeft } from "react-icons/fa";
 function RecruitmentRight() {
   return (
     <div className="bg-[#F5F5F5] p-2 hidden md:block">
- <aside className="bg-[#1A3E32] rounded-2xl">
+  <aside className="bg-[#1A3E32] rounded-2xl h-[calc(100vh-120px)]">
       <div className="bg-[#16730F] rounded-2xl p-3">
         <div className="p-5 space-y-2 bg-">
           <FaArrowLeft className="text-[#1A3E32]" />
@@ -45,7 +45,7 @@ function RecruitmentRight() {
         </div>
       </div>
 
-      <div className="bg-[#1A3E32] h-[600px] mt-3 p-2">
+      <div className="bg-[#1A3E32] h-[calc(100%-180px)] mt-3 p-2">
         <div className="m-auto mt-10 ml-6 space-y-5 cursor-pointer max-w-60">
           <div className="flex items-center space-x-3">
             <img src="assets/images/setting.png" alt="df" />
