@@ -1,16 +1,29 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Camera, Upload } from "lucide-react";
 import NavigationButtons from "../../components/NavigationButtons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import { toast } from "react-toastify";
 import Header from "../../components/Header";
 
 const CoperateUploadDoc = () => {
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
 
   const [fileName, setFileName] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
   const [isUploaded, setIsUploaded] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  useEffect(() => {
+    if (isEditMode && recruiterData && !dataLoaded) {
+      if (recruiterData.id_document) {
+        setPreviewUrl(recruiterData.id_document);
+        setIsUploaded(true);
+        setDataLoaded(true);
+      }
+    }
+  }, [isEditMode, recruiterData, dataLoaded]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -27,7 +40,6 @@ const CoperateUploadDoc = () => {
 
   const handleUpload = () => {
     if (fileName) {
-      // Simulate upload logic
       setIsUploaded(true);
     }
   };
@@ -107,8 +119,25 @@ const CoperateUploadDoc = () => {
       {/* Navigation Buttons */}
       <NavigationButtons
         isFormComplete={isFormComplete}
-        onBack={() => navigate(-1)}
-        onNext={() => isFormComplete && navigate("/corporate/inreview")}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
+        onNext={() => {
+          if (isEditMode) {
+            if (currentStep === 6) {
+              navigate("/recruitment");
+              toast.success("Profile updated successfully!");
+            } else {
+              navigate(getPath(currentStep + 1));
+            }
+          } else if (isFormComplete) {
+            navigate("/corporate/inreview");
+          }
+        }}
       />
     </div>
   );

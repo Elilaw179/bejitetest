@@ -38,7 +38,7 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 function Certificate() {
   const navigate = useNavigate();
 
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
   const steps = [
     "Bio",
     "Education",
@@ -46,14 +46,33 @@ function Certificate() {
     "Work history",
     "Certificate",
     "Links",
+    "Job Type",
   ];
+
+  const { id: userId } = useLocalStorage("user");
 
   const [certName, setCertName] = useState("");
   const [issuer, setIssuer] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [file, setFile] = useState(null);
   const [allFilled, setAllFilled] = useState(true);
+  const [allCertificates, setAllCertificates] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const {postCertficateData} = useCreateCertificate();
+
+  // Load existing certificate data when in edit mode
+  useEffect(() => {
+    if (isEditMode && cvData?.certificates && cvData.certificates.length > 0 && !dataLoaded) {
+      const existingCerts = cvData.certificates.map(cert => ({
+        userId: userId,
+        certName: cert.cert_name,
+        issuer: cert.issuer,
+        issueDate: cert.issue_date,
+      }));
+      setAllCertificates(existingCerts);
+      setDataLoaded(true);
+    }
+  }, [isEditMode, cvData, userId, dataLoaded]);
 
   useEffect(() => {
     setAllFilled(certName && issuer && issueDate && file);
@@ -68,15 +87,16 @@ function Certificate() {
   };
   const BASE_URL = import.meta.env.VITE_API_URL;
 
-  const { id: userId } = useLocalStorage("user");
-  
-
   const handleSubmit = async () => {
     // If no certificate data is provided, skip to next step
     if (!certName && !issuer && !issueDate && !file) {
-      navigate("/links", {
-        state: { email, firstName, lastName, role, mode, followings },
-      });
+      if (isEditMode) {
+        navigate(getPath(currentStep + 1));
+      } else {
+        navigate("/links", {
+          state: { email, firstName, lastName, role, mode, followings },
+        });
+      }
       return;
     }
 
@@ -99,9 +119,13 @@ function Certificate() {
         error: "Failed to save certificate",
       });
       clearForm();
-      navigate("/links", {
-        state: { email, firstName, lastName, role, mode, followings },
-      });
+      if (isEditMode) {
+        navigate(getPath(currentStep + 1));
+      } else {
+        navigate("/links", {
+          state: { email, firstName, lastName, role, mode, followings },
+        });
+      }
     } catch (error) {
       console.error(error);
     }
@@ -213,13 +237,23 @@ function Certificate() {
 
       <NavigationButtons
         isFormComplete={allFilled}
-        onBack={() => navigate(-1)}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
         onNext={handleSubmit}
         showSkip={true}
         onSkip={() => {
-          navigate("/links", {
-            state: { email, firstName, lastName, role, mode, followings },
-          });
+          if (isEditMode) {
+            navigate(getPath(currentStep + 1));
+          } else {
+            navigate("/links", {
+              state: { email, firstName, lastName, role, mode, followings },
+            });
+          }
         }}
       />
     </div>

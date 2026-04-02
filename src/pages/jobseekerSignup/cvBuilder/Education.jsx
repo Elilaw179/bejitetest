@@ -205,22 +205,22 @@ const optionsDegree = [
   "Not Available",
 ];
 
-const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
+const InputOrSelectWithIcon = ({ value, onChange, options, placeholder, listId = "custom-list" }) => (
   <div className="relative w-full">
-    <select
+    <input
+      list={listId}
       value={value}
       onChange={onChange}
-      className={`w-full h-12 border-2  pl-4 rounded-[10px] pr-10 appearance-none focus:outline-1 focus:outline-[#1A3E32] ${
+      placeholder={placeholder}
+      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
         value ? "border-[#828282]" : "border-[#F5F5F5]"
       }`}
-    >
-      <option value="">{placeholder}</option>
+    />
+    <datalist id={listId}>
       {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
+        <option key={opt} value={opt} />
       ))}
-    </select>
+    </datalist>
     {value ? (
       <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
     ) : (
@@ -249,7 +249,7 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 function Education() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
   const steps = [
     "Bio",
     "Education",
@@ -257,6 +257,7 @@ function Education() {
     "Work history",
     "Certificate",
     "Links",
+    "Job Type",
   ];
 
   const [educationLevel, setEducationLevel] = useState("");
@@ -268,6 +269,28 @@ function Education() {
   const [endDate, setEndDate] = useState("");
   const [allFilled, setAllFilled] = useState(false);
   const [allEducation, setAllEducation] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Load existing education data when in edit mode
+  useEffect(() => {
+    if (isEditMode && cvData?.education && cvData.education.length > 0 && !dataLoaded) {
+      console.log("Loading education data:", cvData.education);
+      const existingEducation = cvData.education.map(edu => ({
+        id: edu.id, // Store the database ID for deletion
+        userId: user?.id,
+        educationLevel: edu.education_level,
+        institutionName: edu.institution_name,
+        location: edu.location,
+        fieldOfStudy: edu.field_of_study,
+        degree: edu.degree,
+        startDate: edu.start_date,
+        endDate: edu.end_date,
+      }));
+      console.log("Mapped education:", existingEducation);
+      setAllEducation(existingEducation);
+      setDataLoaded(true);
+    }
+  }, [isEditMode, cvData, user?.id, dataLoaded]);
 
   useEffect(() => {
     setAllFilled(
@@ -316,7 +339,7 @@ function Education() {
       userId: user?.id,
       educationLevel,
       institutionName,
-      userLocation,
+      location: userLocation,
       fieldOfStudy,
       degree,
       startDate,
@@ -328,7 +351,7 @@ function Education() {
       (item) =>
         item.educationLevel === newEntry.educationLevel &&
         item.institutionName === newEntry.institutionName &&
-        item.userLocation === newEntry.userLocation &&
+        item.location === newEntry.location &&
         item.fieldOfStudy === newEntry.fieldOfStudy &&
         item.degree === newEntry.degree &&
         item.startDate === newEntry.startDate &&
@@ -360,33 +383,36 @@ function Education() {
 
       <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4 ">
         <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-1">
-          <div className="bg-[#82828280] rounded-2xl p-4 ">
+          <div className="bg-[#82828280] rounded-2xl p-4">
             <p className="font-semibold text-xs mb-1">EDUCATIONAL LEVEL</p>
-            <SelectWithIcon
+            <InputOrSelectWithIcon
               value={educationLevel}
               onChange={(e) => setEducationLevel(e.target.value)}
               options={optionsEdu}
-              placeholder="Select..."
+              placeholder="Select or type education level..."
+              listId="education-level-list"
             />
           </div>
 
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">INSTITUTION NAME</p>
-              <SelectWithIcon
+              <InputOrSelectWithIcon
                 value={institutionName}
                 onChange={(e) => setInstitutionName(e.target.value)}
                 options={optionsInst}
-                placeholder="Select institution..."
+                placeholder="Select or type institution..."
+                listId="institution-list"
               />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">LOCATION</p>
-              <SelectWithIcon
+              <InputOrSelectWithIcon
                 value={userLocation}
                 onChange={(e) => setLocation(e.target.value)}
                 options={optionsLoc}
-                placeholder="Select location..."
+                placeholder="Select or type location..."
+                listId="location-list"
               />
             </div>
           </div>
@@ -394,11 +420,12 @@ function Education() {
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">FIELD OF STUDY</p>
-              <SelectWithIcon
+              <InputOrSelectWithIcon
                 value={fieldOfStudy}
                 onChange={(e) => setFieldOfStudy(e.target.value)}
                 options={optionsField}
-                placeholder="Select field..."
+                placeholder="Select or type field..."
+                listId="field-list"
               />
             </div>
 
@@ -471,9 +498,20 @@ function Education() {
                   </p>
                 </div>
                 <button
-                  onClick={() =>
-                    setAllEducation((prev) => prev.filter((_, i) => i !== idx))
-                  }
+                  onClick={async () => {
+                    // If the item has an ID, delete from database
+                    if (item.id) {
+                      try {
+                        await axiosInstance.delete(`/api/cv-builder/education/${user?.id}/${item.id}`);
+                        toast.success("Education deleted successfully!");
+                      } catch (error) {
+                        console.error("Error deleting education:", error);
+                        toast.error("Failed to delete education");
+                        return;
+                      }
+                    }
+                    setAllEducation((prev) => prev.filter((_, i) => i !== idx));
+                  }}
                   className="text-white text-xl  "
                 >
                   <FaTrash />
@@ -485,7 +523,13 @@ function Education() {
 
       <NavigationButtons
         isFormComplete={allEducation.length > 0 || allFilled}
-        onBack={() => navigate(-1)}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
         onNext={async () => {
           // Collect all education saved in state
           let educationToSave = [...allEducation];
@@ -538,9 +582,14 @@ function Education() {
             setIsLoading(false);
             toast.success("Education saved successfully!");
 
-            navigate("/skills", {
-              state: { email, firstName, lastName, role, mode, followings },
-            });
+            // Navigate to next step
+            if (isEditMode) {
+              navigate(getPath(currentStep + 1));
+            } else {
+              navigate("/skills", {
+                state: { email, firstName, lastName, role, mode, followings },
+              });
+            }
           } catch (error) {
             setIsLoading(false);
             console.error("Error:", error);

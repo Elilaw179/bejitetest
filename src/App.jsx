@@ -95,9 +95,18 @@ function App() {
             <Route path="/bio" element={<Bio />} />
             <Route path="/education" element={<Education />} />
             <Route path="/skills" element={<Skills />} />
+            <Route path="/job-type" element={<JobType />} />
             <Route path="/work-history" element={<WorkHistory />} />
             <Route path="/certificate" element={<Certificate />} />
             <Route path="/links" element={<Link />} />
+          </Route>
+          <Route element={<ProtectedRoute><ResumeLayout /></ProtectedRoute>}>
+            <Route path="/edit-profile/bio" element={<Bio />} />
+            <Route path="/edit-profile/education" element={<Education />} />
+            <Route path="/edit-profile/skills" element={<Skills />} />
+            <Route path="/edit-profile/work-history" element={<WorkHistory />} />
+            <Route path="/edit-profile/certificate" element={<Certificate />} />
+            <Route path="/edit-profile/links" element={<Link />} />
           </Route>
           <Route element={<IndividualVerificationLayout />}>
             <Route
@@ -131,6 +140,30 @@ function App() {
             <Route path="/corporate/verify" element={<CoperateVerify />} />
             <Route path="/corporate/upload" element={<CoperateUploadDoc />} />
             <Route path="/corporate/inreview" element={<CoperateInReview />} />
+            <Route
+              path="/edit-profile/recruiter/basic-details"
+              element={<CoperateBasicDetails />}
+            />
+            <Route
+              path="/edit-profile/recruiter/profile-setup"
+              element={<CoperateProfileSetup />}
+            />
+            <Route
+              path="/edit-profile/recruiter/company-details"
+              element={<CompanyDetails />}
+            />
+            <Route
+              path="/edit-profile/recruiter/location"
+              element={<CoperateLocation />}
+            />
+            <Route
+              path="/edit-profile/recruiter/verify"
+              element={<CoperateVerify />}
+            />
+            <Route
+              path="/edit-profile/recruiter/upload-doc"
+              element={<CoperateUploadDoc />}
+            />
           </Route>
           <Route path="/job-type" element={<JobType />} />
           <Route path="/post-page" element={<PostPage />} />

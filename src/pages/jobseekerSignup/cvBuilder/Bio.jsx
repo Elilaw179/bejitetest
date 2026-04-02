@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import StepTabs from '../../../components/StepTabs';
 import ProgressBar from '../../../components/ProgressBar';
@@ -14,10 +14,11 @@ import { steps } from '../../../data/bioSteps';
 
 const Bio = () => {
     const navigate = useNavigate();
-    const { currentStep } = useOutletContext();
+    const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
 
     const [imageFile, setImageFile] = useState(null); 
     const [imagePreview, setImagePreview] = useState(null);
+    const [dataLoaded, setDataLoaded] = useState(false);
     const [formData, setFormData] = useState({
         nickname: '',
         phone: '',
@@ -31,6 +32,30 @@ const Bio = () => {
         zip: '',
         bio: '',
     });
+
+    // Load existing bio data when in edit mode
+    useEffect(() => {
+        if (isEditMode && cvData?.bio && !dataLoaded) {
+            const bio = cvData.bio;
+            setFormData({
+                nickname: bio.nickname || '',
+                phone: bio.phone || '',
+                gender: bio.gender || '',
+                maritalStatus: bio.marital_status || '',
+                age: bio.age || '',
+                country: bio.country || '',
+                street: bio.street || '',
+                city: bio.city || '',
+                tribe: bio.tribe || '',
+                zip: bio.zip || '',
+                bio: bio.bio || '',
+            });
+            if (bio.profile_photo) {
+                setImagePreview(bio.profile_photo);
+            }
+            setDataLoaded(true);
+        }
+    }, [isEditMode, cvData, dataLoaded]);
 
     const handleChange = (e) =>
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,7 +71,7 @@ const Bio = () => {
     };
 
     const isFormComplete =
-        Object.values(formData).every((v) => v.trim() !== '') && imageFile;
+        Object.values(formData).every((v) => v.trim() !== '') && (imageFile || imagePreview);
 
     //pass data and image to createBio Api
     const { postBioData, uploadProfileImage } = CreateBio(); 
@@ -91,7 +116,11 @@ const Bio = () => {
             );
             
             // Navigate only after the entire sequence completes successfully
-            navigate('/education'); 
+            if (isEditMode) {
+                navigate(getPath(currentStep + 1));
+            } else {
+                navigate('/education'); 
+            }
 
         } catch (error) {
             console.error(error); 
@@ -129,7 +158,13 @@ const Bio = () => {
 
             <NavigationButtons
                 isFormComplete={isFormComplete}
-                onBack={() => navigate(-1)}
+                onBack={() => {
+                    if (isEditMode) {
+                        navigate(getPath(currentStep - 1));
+                    } else {
+                        navigate(-1);
+                    }
+                }}
                 onNext={handleNextStep}
             />
         </div>

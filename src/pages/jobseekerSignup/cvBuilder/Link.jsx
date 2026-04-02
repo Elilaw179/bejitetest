@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../../../components/Header";
 import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
@@ -38,7 +38,7 @@ const validatePortfolio = (url) => {
 
 function Link() {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
@@ -49,6 +49,7 @@ function Link() {
     "Work history",
     "Certificate",
     "Links",
+    "Job Type",
   ];
 
   const [formLinks, setFormLinks] = useState({
@@ -64,6 +65,22 @@ function Link() {
     instagram: "",
     portfolio: "",
   });
+
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Load existing links data when in edit mode
+  useEffect(() => {
+    if (isEditMode && cvData?.links && !dataLoaded) {
+      const links = cvData.links;
+      setFormLinks({
+        linkedin: links.linkedin || "",
+        twitter: links.twitter || "",
+        instagram: links.instagram || "",
+        portfolio: links.portfolio || "",
+      });
+      setDataLoaded(true);
+    }
+  }, [isEditMode, cvData, dataLoaded]);
 
   const handleChange = (e, key) => {
     setFormLinks({ ...formLinks, [key]: e.target.value });
@@ -178,7 +195,13 @@ function Link() {
 
       <NavigationButtons
         isFormComplete={true}
-        onBack={() => navigate(-1)}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
         onNext={async () => {
           // Filter out empty links before sending
           const linksToSend = Object.entries(formLinks)
@@ -190,9 +213,16 @@ function Link() {
 
           // If no links provided, skip to next step
           if (Object.keys(linksToSend).length === 0) {
-            navigate("/save-progress", {
-              state: { email, firstName, lastName, role, mode, followings },
-            });
+            if (isEditMode) {
+              // Navigate to recruitment page with success message
+              navigate("/job-type", {
+                state: { profileUpdateComplete: true }
+              });
+            } else {
+              navigate("/save-progress", {
+                state: { email, firstName, lastName, role, mode, followings },
+              });
+            }
             return;
           }
 
@@ -211,9 +241,16 @@ function Link() {
             if (response.status === 200 || response.status === 201) {
               console.log("Links saved:", response.data);
               toast.success("Links saved successfully!");
-              navigate("/save-progress", {
-                state: { email, firstName, lastName, role, mode, followings },
-              });
+              if (isEditMode) {
+                // Navigate to recruitment page with success message
+                navigate("/job-type", {
+                  state: { profileUpdateComplete: true }
+                });
+              } else {
+                navigate("/save-progress", {
+                  state: { email, firstName, lastName, role, mode, followings },
+                });
+              }
             } else {
               toast.error("Failed to save Links");
               console.error("Failed to save Links", response);
@@ -226,9 +263,16 @@ function Link() {
         }}
         showSkip={true}
         onSkip={() => {
-          navigate("/save-progress", {
-            state: { email, firstName, lastName, role, mode, followings },
-          });
+          if (isEditMode) {
+            // Navigate to recruitment page when skipping in edit mode
+            navigate("/job-type", {
+              state: { profileUpdateComplete: true }
+            });
+          } else {
+            navigate("/save-progress", {
+              state: { email, firstName, lastName, role, mode, followings },
+            });
+          }
         }}
       />
 

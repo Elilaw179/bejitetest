@@ -119,7 +119,7 @@ const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
 
 function Skills() {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
   const steps = [
     "Bio",
     "Education",
@@ -127,6 +127,7 @@ function Skills() {
     "Work history",
     "Certificate",
     "Links",
+    "Job Type",
   ];
 
   const [skillSector, setSkillSector] = useState("");
@@ -136,6 +137,24 @@ function Skills() {
   const { user } = useAuth();
   const [allSkill, setAllSkill] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Load existing skills data when in edit mode
+  useEffect(() => {
+    if (isEditMode && cvData?.skills && cvData.skills.length > 0 && !dataLoaded) {
+      console.log("Loading skills data:", cvData.skills);
+      const existingSkills = cvData.skills.map(skill => ({
+        id: skill.id, // Store the database ID for deletion
+        userId: user?.id,
+        skillSector: skill.skill_sector,
+        category: skill.category,
+        experience: skill.experience,
+      }));
+      console.log("Mapped skills:", existingSkills);
+      setAllSkill(existingSkills);
+      setDataLoaded(true);
+    }
+  }, [isEditMode, cvData, user?.id, dataLoaded]);
 
   useEffect(() => {
     setAllFilled(skillSector && category && experience);
@@ -257,9 +276,20 @@ function Skills() {
                 <p className="text-sm">{item.experience} Experience</p>
               </div>
               <button
-                onClick={() =>
-                  setAllSkill((prev) => prev.filter((_, i) => i !== idx))
-                }
+                onClick={async () => {
+                  // If the item has an ID, delete from database
+                  if (item.id) {
+                    try {
+                      await axiosInstance.delete(`/api/cv-builder/skills/${user?.id}/${item.id}`);
+                      toast.success("Skill deleted successfully!");
+                    } catch (err) {
+                      console.error("Error deleting skill:", err);
+                      toast.error("Failed to delete skill");
+                      return;
+                    }
+                  }
+                  setAllSkill((prev) => prev.filter((_, i) => i !== idx));
+                }}
                 className="text-white text-xl  "
               >
                 <FaTrash />
@@ -270,7 +300,13 @@ function Skills() {
 
       <NavigationButtons
         isFormComplete={allFilled || allSkill.length > 0}
-        onBack={() => navigate(-1)}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
         onNext={async () => {
           let skillsToSave = [...allSkill];
 
@@ -309,16 +345,20 @@ function Skills() {
             setIsLoading(false);
             toast.success("Skills saved successfully!");
 
-            navigate("/work-history", {
-              state: {
-                email,
-                firstName,
-                lastName,
-                role,
-                mode,
-                followings,
-              },
-            });
+            if (isEditMode) {
+              navigate(getPath(currentStep + 1));
+            } else {
+              navigate("/work-history", {
+                state: {
+                  email,
+                  firstName,
+                  lastName,
+                  role,
+                  mode,
+                  followings,
+                },
+              });
+            }
           } catch (err) {
             setIsLoading(false);
             console.error("Error:", err);

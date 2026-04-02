@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import { toast } from "react-toastify";
 import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
 import ImageUpload from "../../components/ImageUpload";
+import recruiterProfile from "../../services/recruiterProfile";
 
 const CoperateProfileSetup = () => {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
 
   const steps = [
     "Basic Details",
@@ -17,25 +19,84 @@ const CoperateProfileSetup = () => {
     "Location",
   ];
 
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [formData, setFormData] = useState({
     nickname: "",
     summary: "",
   });
 
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+
+  const { updateProfileSetup, uploadProfilePhoto } = recruiterProfile();
+
+  useEffect(() => {
+    if (isEditMode && recruiterData && !dataLoaded) {
+      setFormData({
+        nickname: recruiterData.nickname || "",
+        summary: recruiterData.summary || "",
+      });
+      if (recruiterData.profile_photo) {
+        setImagePreview(recruiterData.profile_photo);
+      }
+      setDataLoaded(true);
+    }
+  }, [isEditMode, recruiterData, dataLoaded]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  const [imagePreview, setImagePreview] = useState(null);
-
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) setImagePreview(URL.createObjectURL(file));
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const isFormComplete =
-    Object.values(formData).every((v) => v.trim() !== "") && imagePreview;
+    Object.values(formData).every((v) => v.trim() !== "") && (imagePreview || imageFile);
 
+  const handleNextStep = async () => {
+    if (!isFormComplete) {
+      toast.error("Please complete all fields and upload an image.");
+      return;
+    }
+
+    const submitProfileSequence = async () => {
+      await updateProfileSetup({
+        nickname: formData.nickname,
+        summary: formData.summary,
+      });
+
+      if (imageFile) {
+        await uploadProfilePhoto(imageFile);
+      }
+
+      return "Profile setup saved successfully!";
+    };
+
+    try {
+      await toast.promise(submitProfileSequence(), {
+        pending: "Saving profile setup...",
+        success: "Profile setup saved successfully!",
+        error: {
+          render({ data }) {
+            return `Save failed: ${data}`;
+          },
+        },
+      });
+
+      if (isEditMode) {
+        navigate(getPath(currentStep + 1));
+      } else {
+        navigate("/corporate/company-details");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="bg-white min-h-screen">
@@ -95,8 +156,14 @@ const CoperateProfileSetup = () => {
 
       <NavigationButtons
         isFormComplete={isFormComplete}
-        onBack={() => navigate(-1)}
-        onNext={() => isFormComplete && navigate("/corporate/company-details")}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
+        onNext={handleNextStep}
       />
     </div>
   );
