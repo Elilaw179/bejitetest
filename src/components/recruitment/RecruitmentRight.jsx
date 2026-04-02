@@ -1,7 +1,23 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa";
+import { getUser } from "../../utils/tokenManager";
+import { getUserProfileImage } from "../../utils/profileImageUtils";
+import { getUserPosts } from "../../services/postsApi";
 
 function RecruitmentRight() {
+  const [userData, setUserData] = useState(null);
+  const [postCount, setPostCount] = useState(0);
+
+  useEffect(() => {
+    const user = getUser();
+    if (user) {
+      setUserData(user);
+      getUserPosts(user.id, 100).then(data => {
+        setPostCount(data.posts?.length || 0);
+      }).catch(err => console.error('Error fetching posts:', err));
+    }
+  }, []);
+
   return (
     <div className="bg-[#F5F5F5] p-2 hidden md:block">
   <aside className="bg-[#1A3E32] rounded-2xl h-[calc(100vh-120px)]">
@@ -14,19 +30,21 @@ function RecruitmentRight() {
           <div className="border-[#16730F] border-5 rounded-full relative bottom-10">
             <img
               className="w-16 h-16 rounded-full"
-              src="assets/images/prisca.jpg"
+              src={userData ? getUserProfileImage() : "assets/images/prisca.jpg"}
               alt=""
             />
           </div>
           <div className="text-[#FFFFFF] text-center mt-[-40px]">
-            <p className="text-[20px]">Osakwe Prisca</p>
+            <p className="text-[20px]">
+              {userData ? `${userData.firstName || ''} ${userData.lastName || ''}`.trim() : 'Osakwe Prisca'}
+            </p>
             <p className="text-[11px]">@nd_creations</p>
           </div>
         </div>
         <div className="text-[#ffffff] mt-5">
           <div className="flex items-center justify-around m-auto">
         <div>
-                <p>100</p>
+                <p>{postCount}</p>
                 <p>Post</p>
             
         </div>

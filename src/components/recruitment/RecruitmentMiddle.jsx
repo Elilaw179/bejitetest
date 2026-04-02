@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH } from "react-icons/fa";
 import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment } from '../../services/postsApi';
 import { getUser } from '../../utils/tokenManager';
+import { getUserProfileImage, getProfileImageUrl } from '../../utils/profileImageUtils';
 import PostCreationModal from '../PostCreationModal';
 import ConfirmModal from '../ConfirmModal';
 
@@ -18,22 +19,29 @@ const getDisplayName = (user) => {
   return 'Guest';
 };
 
-// Helper function to format date
+// Helper function to format date (LinkedIn-style)
 const formatDate = (dateString) => {
   if (!dateString) return 'Just now';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return 'Just now';
+  
   const now = new Date();
   const diffMs = now - date;
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
-
+  
   if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 2) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  const isThisYear = date.getFullYear() === now.getFullYear();
+  const options = isThisYear 
+    ? { month: 'short', day: 'numeric' }
+    : { month: 'short', day: 'numeric', year: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
 };
 
 // Helper function to parse text with links
@@ -55,6 +63,7 @@ export default function RecruitmentMiddle() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const user = getUser();
+  const currentUserImage = getUserProfileImage();
 
   useEffect(() => {
     fetchFeed();
@@ -125,7 +134,7 @@ export default function RecruitmentMiddle() {
       <div className="max-w-3xl p-6 mx-auto bg-white shadow rounded-2xl">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setShowModal(true)}>
           <img 
-            src={user?.image || "assets/images/eli.jpg"} 
+            src={currentUserImage} 
             alt="profile" 
             className="rounded-full w-12 h-12" 
           />
@@ -295,16 +304,21 @@ const RecruitmentPostCard = ({ post, onLike, onSave, onUpdate, onDelete, current
   };
 
   const authorName = getDisplayName(post.author);
+  const authorImage = getProfileImageUrl(post.author?.image || post.author?.profile_photo);
+
+  const getCommentAuthorImage = (comment) => {
+    return getProfileImageUrl(comment.author?.image || comment.author?.profile_photo);
+  };
 
   return (
     <div className="max-w-3xl p-6 mx-auto space-y-6 bg-white shadow rounded-2xl">
       {/* Post Header */}
       <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
         <div className="flex items-center gap-4">
-          <img src="assets/images/eli.jpg" alt="profile" className="rounded-full w-12 h-12" />
+          <img src={authorImage} alt="profile" className="rounded-full w-12 h-12" />
           <div>
             <p className="font-semibold text-lg text-[#16730F]">{authorName}</p>
-            <p className="text-[#1A3E32] text-sm">{formatDate(post.created_at)}</p>
+            <p className="text-[#1A3E32] text-sm">{formatDate(post.publishedAt)}</p>
           </div>
         </div>
         {isOwner && (
@@ -492,7 +506,7 @@ const RecruitmentPostCard = ({ post, onLike, onSave, onUpdate, onDelete, current
               {comments.map(comment => (
                 <div key={comment.id} className="flex gap-2">
                   <img
-                    src="assets/images/eli.jpg"
+                    src={getCommentAuthorImage(comment)}
                     alt="profile"
                     className="w-8 h-8 rounded-full"
                   />

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { FaHome, FaList, FaSearch, FaChevronDown, FaSignOutAlt, FaUserEdit, FaCreditCard } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout as logoutAction } from "../features/auth/authSlice";
 import { getUser } from "../utils/tokenManager";
+import { API_URL } from "../config";
 
 const NewsFeedHeader = ({
   user: propUser,
@@ -16,16 +17,32 @@ const NewsFeedHeader = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Get user from Redux store, fallback to prop or localStorage
+  // Get user from Redux store first (most up-to-date after login), fallback to prop or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
-  const localStorageUser = getUser();
   
-  // Priority: prop user > Redux user > localStorage user
-  const user = propUser || reduxUser || localStorageUser || {
-    name: "Guest",
-    image: "assets/images/eli.jpg",
-    role: "user",
-  };
+  // Compute user - this runs on every render to get fresh localStorage data
+  // The location.pathname in dependency ensures fresh data on navigation
+  const user = useMemo(() => {
+    // First priority: Redux store (updated immediately after login)
+    if (reduxUser) {
+      console.log('[NewsFeedHeader] Using reduxUser:', reduxUser?.image);
+      return {
+        name: reduxUser.name || reduxUser.firstName || reduxUser.lastName ? `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim() : "Guest",
+        image: reduxUser.image || reduxUser.profilePhoto || reduxUser.profile_photo || "assets/images/eli.jpg",
+        role: reduxUser.role || "user",
+        ...reduxUser
+      };
+    }
+    
+    // Second priority: localStorage (fallback)
+    const localUser = getUser();
+    console.log('[NewsFeedHeader] Using localStorage user:', localUser?.image);
+    return propUser || localUser || {
+      name: "Guest",
+      image: "assets/images/eli.jpg",
+      role: "user",
+    };
+  }, [propUser, reduxUser]);
 
   // Get display name
   const getDisplayName = () => {
@@ -41,6 +58,25 @@ const NewsFeedHeader = ({
     if (!user?.role) return "User";
     return user.role.charAt(0).toUpperCase() + user.role.slice(1);
   };
+
+  // Function to get full URL for profile photo
+  const getProfileImageUrl = (imagePath) => {
+    if (!imagePath) return imagePath;
+    // If it's already a full URL, return as is
+    if (imagePath.startsWith('http')) return imagePath;
+    // For local paths like /uploads/filename.jpg, use the config API_URL with fallback
+    if (imagePath.startsWith('/uploads')) {
+      const baseUrl = API_URL || 'http://localhost:3001';
+      return `${baseUrl}${imagePath}`;
+    }
+    // Otherwise, prepend the API URL
+    return `${API_URL || 'http://localhost:3001'}${imagePath}`;
+  };
+
+  // Debug: log the image URL
+  console.log('[NewsFeedHeader] User image from localStorage:', user?.image);
+  console.log('[NewsFeedHeader] API_URL from config:', API_URL);
+  console.log('[NewsFeedHeader] Full image URL:', getProfileImageUrl(user?.image));
 
   // Handle logout
   const handleLogout = () => {
@@ -161,7 +197,7 @@ const NewsFeedHeader = ({
           <div className="relative">
             <img
               className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full object-cover"
-              src={user.image}
+              src={getProfileImageUrl(user.image)}
               alt={getDisplayName()}
             />
             <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 bg-[#6B8E23] rounded-full border-2 border-white absolute right-0 sm:right-1 bottom-0 sm:bottom-1" />
@@ -190,7 +226,7 @@ const NewsFeedHeader = ({
                     <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                       <div className="flex items-center gap-3">
                         <img
-                          src={user.image}
+                          src={getProfileImageUrl(user.image)}
                           alt={getDisplayName()}
                           className="w-10 h-10 rounded-full object-cover border-2 border-[#16730F]"
                         />
@@ -209,11 +245,11 @@ const NewsFeedHeader = ({
                     <div className="py-1">
                       <button
                         onClick={() => {
-                          navigate(user?.role === 'recruiter' ? '/corporate/profile-setup' : '/education');
+                          navigate(user?.role === 'recruiter' ? '/edit-profile/recruiter/basic-details' : '/edit-profile/bio');
                           setIsDropdownOpen(false);
                         }}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
-                          location.pathname === '/education' || location.pathname === '/corporate/profile-setup'
+                          location.pathname.startsWith('/edit-profile')
                             ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
                             : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
                         }`}

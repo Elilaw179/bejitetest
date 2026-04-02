@@ -1,12 +1,25 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import NewsFeedHeader from "../../components/NewsFeedHeader";
 import RecruitmentLeft from "../../components/recruitment/RecruitmentLeft";
 import RecruitmentMiddle from "../../components/recruitment/RecruitmentMiddle";
 import RecruitmentRight from "../../components/recruitment/RecruitmentRight";
 import Hyperlinks from "../../components/Hyperlinks";
+import { useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function Recruitment() {
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Check if user just completed profile update
+    if (location.state?.profileUpdateComplete) {
+      toast.success("Profile update completed successfully!");
+      // Clear the state to prevent showing toast on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   return (
     <div className="flex flex-col min-h-screen">
       <NewsFeedHeader />

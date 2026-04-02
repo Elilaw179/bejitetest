@@ -98,7 +98,7 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 
 function WorkHistory() {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
   const steps = [
     "Bio",
     "Education",
@@ -106,6 +106,7 @@ function WorkHistory() {
     "Work history",
     "Certificate",
     "Links",
+    "Job Type",
   ];
 
   const [isLoading, setIsLoading] = useState(false);
@@ -117,6 +118,24 @@ function WorkHistory() {
   const [allFilled, setAllFilled] = useState(false);
   const { user } = useAuth();
   const [allWorkHistory, setAllWorkHistory] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Load existing work history data when in edit mode
+  useEffect(() => {
+    if (isEditMode && cvData?.workHistory && cvData.workHistory.length > 0 && !dataLoaded) {
+      const existingWork = cvData.workHistory.map(work => ({
+        id: work.id, // Store the database ID for deletion
+        userId: user?.id,
+        jobTitle: work.job_title,
+        companyName: work.company_name,
+        responsibilities: work.responsibilities,
+        startDate: work.start_date,
+        endDate: work.end_date,
+      }));
+      setAllWorkHistory(existingWork);
+      setDataLoaded(true);
+    }
+  }, [isEditMode, cvData, user?.id, dataLoaded]);
 
   // Update allFilled whenever form fields change
   useEffect(() => {
@@ -270,11 +289,22 @@ function WorkHistory() {
 
                 <button
                   className="text-white text-xl hover:text-red-400 transition-colors"
-                  onClick={() =>
+                  onClick={async () => {
+                    // If the item has an ID, delete from database
+                    if (item.id) {
+                      try {
+                        await axiosInstance.delete(`/api/cv-builder/work-history/${user?.id}/${item.id}`);
+                        toast.success("Work history deleted successfully!");
+                      } catch (err) {
+                        console.error("Error deleting work history:", err);
+                        toast.error("Failed to delete work history");
+                        return;
+                      }
+                    }
                     setAllWorkHistory((prev) =>
                       prev.filter((_, i) => i !== idx)
-                    )
-                  }
+                    );
+                  }}
                 >
                   <FaTrash />
                 </button>
@@ -285,6 +315,13 @@ function WorkHistory() {
 
       <NavigationButtons
         isFormComplete={allWorkHistory.length > 0 || allFilled}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
         onNext={async () => {
           // Collect all work history to save
           let historyToSave = [...allWorkHistory];
@@ -329,9 +366,13 @@ function WorkHistory() {
             }
             setIsLoading(false);
             toast.success("Work history saved successfully!");
-            navigate("/certificate", {
-              state: { email, firstName, lastName, role, mode, followings },
-            });
+            if (isEditMode) {
+              navigate(getPath(currentStep + 1));
+            } else {
+              navigate("/certificate", {
+                state: { email, firstName, lastName, role, mode, followings },
+              });
+            }
           } catch (err) {
             setIsLoading(false);
             console.error("Error:", err);

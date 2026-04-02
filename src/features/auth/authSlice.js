@@ -75,9 +75,21 @@ const authSlice = createSlice({
     // ✅ New reducer for Google login
     setGoogleAuth: (state, action) => {
       console.log("Setting Google auth data:", action.payload);
-      state.user = action.payload.user || null;
       state.token = action.payload.token || null;
       state.errors = {};
+      
+      // Build merged user with image and set both Redux state and localStorage
+      if (action.payload.user) {
+        const userData = action.payload.user;
+        const userWithImage = {
+          ...userData,
+          image: action.payload.profilePhoto || userData.image || null
+        };
+        state.user = userWithImage;
+        localStorage.setItem("user", JSON.stringify(userWithImage));
+      } else {
+        state.user = null;
+      }
     },
   },
   extraReducers: (builder) => {
@@ -105,10 +117,26 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         console.log("loginUser fulfilled with:", action.payload);
+        console.log("[AuthSlice] ProfilePhoto from API:", action.payload.profilePhoto);
         state.loading = false;
-        state.user = action.payload.confirmedUser || action.payload.user;
         state.token = action.payload.accessToken;
         state.errors = {};
+
+        // Build the merged user object with image and profileCompleted
+        const userData = action.payload.confirmedUser || action.payload.user;
+        if (userData) {
+          const userWithProfileStatus = {
+            ...userData,
+            profileCompleted: action.payload.profileCompleted || false,
+            image: action.payload.profilePhoto || userData.image || null
+          };
+          // Set Redux state with the merged user (includes image)
+          state.user = userWithProfileStatus;
+          // Also persist to localStorage
+          localStorage.setItem("user", JSON.stringify(userWithProfileStatus));
+        } else {
+          state.user = null;
+        }
 
         // Store tokens in localStorage
         if (action.payload.accessToken) {
@@ -116,18 +144,6 @@ const authSlice = createSlice({
         }
         if (action.payload.refreshToken) {
           localStorage.setItem("refreshToken", action.payload.refreshToken);
-        }
-        if (action.payload.confirmedUser || action.payload.user) {
-          const userData = action.payload.confirmedUser || action.payload.user;
-          // Add profileCompleted flag to user data
-          const userWithProfileStatus = {
-            ...userData,
-            profileCompleted: action.payload.profileCompleted || false
-          };
-          localStorage.setItem(
-            "user",
-            JSON.stringify(userWithProfileStatus)
-          );
         }
       })
       .addCase(loginUser.rejected, (state, action) => {

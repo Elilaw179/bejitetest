@@ -140,10 +140,10 @@ function JobType() {
       const response = await axiosInstance.post("/api/job-board/job", apiPayLoad);
 
       if (response.data.success) {
-        toast.success("Job preference submitted successfully!");
-        navigate("/save-progress"), {
+        toast.success("Profile completed successfully!");
+        navigate("/recruitment", {
           state: { email, firstName, lastName, role, mode, followings },
-        };
+        });
       } else {
         console.error(
           "Server responded but with error:",

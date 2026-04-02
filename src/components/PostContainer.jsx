@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH, FaTimes } from 'react-icons/fa';
 import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment } from '../services/postsApi';
 import { getUser } from '../utils/tokenManager';
+import { getUserProfileImage, getProfileImageUrl } from '../utils/profileImageUtils';
 import PostCreationModal from './PostCreationModal';
 import ConfirmModal from './ConfirmModal';
 
@@ -18,22 +19,29 @@ const getDisplayName = (user) => {
   return 'Guest';
 };
 
-// Helper function to format date
+// Helper function to format date (LinkedIn-style)
 const formatDate = (dateString) => {
   if (!dateString) return 'Just now';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return 'Just now';
+  
   const now = new Date();
   const diffMs = now - date;
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
-
+  
   if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 2) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  const isThisYear = date.getFullYear() === now.getFullYear();
+  const options = isThisYear 
+    ? { month: 'short', day: 'numeric' }
+    : { month: 'short', day: 'numeric', year: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
 };
 
 const PostContainer = () => {
@@ -42,6 +50,7 @@ const PostContainer = () => {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const user = getUser();
+  const currentUserImage = getUserProfileImage();
 
   useEffect(() => {
     fetchFeed();
@@ -112,7 +121,7 @@ const PostContainer = () => {
       <div className="max-w-3xl mx-auto rounded-2xl p-4 bg-[#ffffff]">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setShowModal(true)}>
           <img
-            src={user?.image || "assets/images/eli.jpg"}
+            src={currentUserImage}
             alt="profile"
             className="rounded-full w-12 h-12"
           />
@@ -179,11 +188,12 @@ const PostContainer = () => {
 
 const CreatePostSection = ({ postBody, setPostBody, visibility, setVisibility, onSubmit, submitting, user, mediaFiles, removeMedia, handleMediaSelect, uploadingMedia }) => {
   const displayName = getDisplayName(user);
+  const userImage = getProfileImageUrl(user?.image);
   return (
     <form id="create-post-form" onSubmit={onSubmit} className="max-w-3xl mx-auto rounded-2xl p-6 bg-[#ffffff]">
       <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
         <img
-          src={user?.image || "assets/images/eli.jpg"}
+          src={userImage}
           alt="profile"
           className="rounded-full w-[60px] h-[60px]"
         />
@@ -402,7 +412,7 @@ const PostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId }) =
     <div className="bg-white p-6 max-w-3xl mx-auto rounded-2xl space-y-6 mb-6">
       <PostHeader 
         author={post.author}
-        createdAt={post.created_at}
+        createdAt={post.publishedAt}
         showMenu={showMenu}
         setShowMenu={setShowMenu}
         onEdit={handleEditClick}
@@ -468,12 +478,13 @@ const PostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId }) =
 
 const PostHeader = ({ author, createdAt, showMenu, setShowMenu, onEdit, onDelete, isOwner }) => {
   const displayName = getDisplayName(author);
+  const authorImage = getProfileImageUrl(author?.image || author?.profile_photo);
 
   return (
     <div className="flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
       <div className="flex items-center gap-4">
         <img
-          src="assets/images/eli.jpg"
+          src={authorImage}
           alt="profile"
           className="rounded-full w-12 h-12"
         />
@@ -656,6 +667,10 @@ const PostActions = ({ liked, saved, onLike, onComment, onShare, onSave }) => {
 };
 
 const CommentSection = ({ comments, newComment, setNewComment, onSubmit, loading }) => {
+  const getCommentAuthorImage = (comment) => {
+    return getProfileImageUrl(comment.author?.image || comment.author?.profile_photo);
+  };
+
   return (
     <div className="border-t pt-4 mt-4">
       <form onSubmit={onSubmit} className="flex gap-2 mb-4">
@@ -683,7 +698,7 @@ const CommentSection = ({ comments, newComment, setNewComment, onSubmit, loading
           {comments.map(comment => (
             <div key={comment.id} className="flex gap-2">
               <img
-                src="assets/images/eli.jpg"
+                src={getCommentAuthorImage(comment)}
                 alt="profile"
                 className="w-8 h-8 rounded-full"
               />
