@@ -6,7 +6,7 @@ import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
 import ImageUpload from "../../components/ImageUpload";
-import recruiterProfile from "../../services/recruiterProfile";
+import useRecruiterProfile from "../../services/recruiterProfile";
 
 const CoperateProfileSetup = () => {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ const CoperateProfileSetup = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
 
-  const { updateProfileSetup, uploadProfilePhoto } = recruiterProfile();
+  const { updateProfileSetup, uploadProfilePhoto } = useRecruiterProfile();
 
   useEffect(() => {
     if (isEditMode && recruiterData && !dataLoaded) {

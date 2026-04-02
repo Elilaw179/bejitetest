@@ -5,7 +5,7 @@ import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
-import recruiterProfile from "../../services/recruiterProfile";
+import useRecruiterProfile from "../../services/recruiterProfile";
 
 const CoperateBasicDetails = () => {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ const CoperateBasicDetails = () => {
     phone_number: "",
   });
 
-  const { updateBasicDetails } = recruiterProfile();
+  const { updateBasicDetails } = useRecruiterProfile();
 
   useEffect(() => {
     if (isEditMode && recruiterData && !dataLoaded) {

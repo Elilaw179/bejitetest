@@ -38,7 +38,7 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 function Certificate() {
   const navigate = useNavigate();
 
-  const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
+  const { currentStep, isEditMode, getPath } = useOutletContext();
   const steps = [
     "Bio",
     "Education",
@@ -56,23 +56,9 @@ function Certificate() {
   const [issueDate, setIssueDate] = useState("");
   const [file, setFile] = useState(null);
   const [allFilled, setAllFilled] = useState(true);
-  const [allCertificates, setAllCertificates] = useState([]);
-  const [dataLoaded, setDataLoaded] = useState(false);
   const {postCertficateData} = useCreateCertificate();
 
-  // Load existing certificate data when in edit mode
-  useEffect(() => {
-    if (isEditMode && cvData?.certificates && cvData.certificates.length > 0 && !dataLoaded) {
-      const existingCerts = cvData.certificates.map(cert => ({
-        userId: userId,
-        certName: cert.cert_name,
-        issuer: cert.issuer,
-        issueDate: cert.issue_date,
-      }));
-      setAllCertificates(existingCerts);
-      setDataLoaded(true);
-    }
-  }, [isEditMode, cvData, userId, dataLoaded]);
+
 
   useEffect(() => {
     setAllFilled(certName && issuer && issueDate && file);

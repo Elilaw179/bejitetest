@@ -5,7 +5,7 @@ import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
-import recruiterProfile from "../../services/recruiterProfile";
+import useRecruiterProfile from "../../services/recruiterProfile";
 
 const CompanyDetails = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const CompanyDetails = () => {
     website: "",
   });
 
-  const { updateCompanyDetails } = recruiterProfile();
+  const { updateCompanyDetails } = useRecruiterProfile();
 
   useEffect(() => {
     if (isEditMode && recruiterData && !dataLoaded) {

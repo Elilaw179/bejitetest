@@ -5,7 +5,7 @@ import { API_URL } from "../config";
 
 const BASE_URL = API_URL;
 
-const recruiterProfile = () => {
+const useRecruiterProfile = () => {
   const { id: userId } = useLocalStorage('user');
 
   const handleApiError = (error) => {
@@ -95,4 +95,4 @@ const recruiterProfile = () => {
   };
 };
 
-export default recruiterProfile;
+export default useRecruiterProfile;

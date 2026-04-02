@@ -42,7 +42,7 @@ const NewsFeedHeader = ({
       image: "assets/images/eli.jpg",
       role: "user",
     };
-  }, [propUser, reduxUser, location.pathname]);
+  }, [propUser, reduxUser]);
 
   // Get display name
   const getDisplayName = () => {

@@ -5,7 +5,7 @@ import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
-import recruiterProfile from "../../services/recruiterProfile";
+import useRecruiterProfile from "../../services/recruiterProfile";
 
 const CoperateLocation = () => {
   const navigate = useNavigate();
@@ -76,7 +76,7 @@ const CoperateLocation = () => {
     country: "",
   });
 
-  const { updateLocation } = recruiterProfile();
+  const { updateLocation } = useRecruiterProfile();
 
   useEffect(() => {
     if (isEditMode && recruiterData && !dataLoaded) {
