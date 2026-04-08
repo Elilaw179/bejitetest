@@ -153,19 +153,21 @@ const ASEPricingPage = () => {
                     <div>
                       <p className="font-semibold text-gray-900">
                         {eligibility.accessType === "free_trial" && "Free Trial Available"}
+                        {eligibility.accessType === "free_trial_upgrade" && "Free Trial Upgrade Available"}
                         {eligibility.accessType === "one_time" && `${eligibility.remainingSearches} Search Credits Remaining`}
                         {eligibility.accessType === "subscription" && `Active ${eligibility.planType?.toUpperCase()} Plan`}
                         {eligibility.accessType === "none" && "No Active Plan"}
                       </p>
                       <p className="text-sm text-gray-500">
                         {eligibility.accessType === "free_trial" && "Use your free search to test our platform"}
+                        {eligibility.accessType === "free_trial_upgrade" && eligibility.message}
                         {eligibility.accessType === "one_time" && "Purchase more searches or upgrade to unlimited"}
                         {eligibility.accessType === "subscription" && "Your subscription is active"}
                         {eligibility.accessType === "none" && "Choose a plan below to continue"}
                       </p>
                     </div>
                   </div>
-                  {eligibility.accessType !== "none" && eligibility.accessType !== "subscription" && (
+                  {(eligibility.accessType !== "none" && eligibility.accessType !== "subscription") || eligibility.accessType === "free_trial_upgrade" && (
                     <button
                       onClick={() => navigate('/candidate-search-page')}
                       className="px-4 py-2 bg-[#1A3E32] text-white rounded-lg hover:bg-[#2d5a47] transition-colors"
@@ -322,11 +324,17 @@ const ASEPricingPage = () => {
             </div>
 
             {/* Free Trial Section */}
-            {eligibility && !eligibility.hasUsedFreeTrial && eligibility.accessType === "none" && (
+            {eligibility && ((eligibility.accessType === "free_trial_upgrade") || (!eligibility.hasUsedFreeTrial && eligibility.accessType === "none")) && (
               <div className="px-6 pb-6">
                 <div className="border-2 border-dashed border-[#16730F] bg-green-50 rounded-xl p-6 text-center">
-                  <h3 className="text-lg font-bold text-[#1A3E32]">Try Before You Buy</h3>
-                  <p className="text-gray-600 mt-2">Get one free search to test our candidate matching quality</p>
+                  <h3 className="text-lg font-bold text-[#1A3E32]">
+                    {eligibility.accessType === "free_trial_upgrade" ? "Free Trial Upgrade" : "Try Before You Buy"}
+                  </h3>
+                  <p className="text-gray-600 mt-2">
+                    {eligibility.accessType === "free_trial_upgrade"
+                      ? eligibility.message || "Get additional free searches to continue exploring candidates"
+                      : "Get free searches to test our candidate matching quality"}
+                  </p>
                   <button
                     onClick={async () => {
                       try {
@@ -338,7 +346,7 @@ const ASEPricingPage = () => {
                     }}
                     className="mt-4 px-6 py-2 bg-[#16730F] text-white font-semibold rounded-lg hover:bg-[#145c0c]"
                   >
-                    Use Free Trial
+                    {eligibility.accessType === "free_trial_upgrade" ? "Activate Upgrade" : "Use Free Trial"}
                   </button>
                 </div>
               </div>

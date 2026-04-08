@@ -126,7 +126,7 @@ const NewsFeedHeader = ({
         navigate("/candidate-search-page");
         break;
       case "connection":
-        navigate("/recruitment");
+        navigate("/connection");
         break;
       default:
         console.log("Icon not defined");

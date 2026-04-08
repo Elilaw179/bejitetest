@@ -3,18 +3,26 @@ import { FaArrowLeft } from "react-icons/fa";
 import { getUser } from "../../utils/tokenManager";
 import { getUserProfileImage } from "../../utils/profileImageUtils";
 import { getUserPosts } from "../../services/postsApi";
+import { getConnections } from "../../services/connectionsApi";
 
 function RecruitmentRight() {
   const [userData, setUserData] = useState(null);
   const [postCount, setPostCount] = useState(0);
+  const [connectionCount, setConnectionCount] = useState(0);
 
   useEffect(() => {
     const user = getUser();
     if (user) {
       setUserData(user);
+      // Fetch posts count
       getUserPosts(user.id, 100).then(data => {
         setPostCount(data.posts?.length || 0);
       }).catch(err => console.error('Error fetching posts:', err));
+
+      // Fetch connections count
+      getConnections().then(data => {
+        setConnectionCount(data.connections?.length || 0);
+      }).catch(err => console.error('Error fetching connections:', err));
     }
   }, []);
 
@@ -26,7 +34,7 @@ function RecruitmentRight() {
           <FaArrowLeft className="text-[#1A3E32]" />
         </div>
         <div className="flex flex-col items-center ">
-          <img className="w-[90%]" src="/assets/images/post-ads.png" alt="" />
+          {/* <img className="w-[90%]" src="/assets/images/post-ads.png" alt="" /> */}
           <div className="border-[#16730F] border-5 rounded-full relative bottom-10">
             <img
               className="w-16 h-16 rounded-full"
@@ -49,7 +57,7 @@ function RecruitmentRight() {
             
         </div>
         <div>
-            <p>209</p>
+            <p>{connectionCount}</p>
             <p>Connections</p>
           </div>
           </div>
