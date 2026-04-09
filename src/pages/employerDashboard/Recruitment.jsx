@@ -22,19 +22,25 @@ export default function Recruitment() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <NewsFeedHeader />
+      {/* Fixed Header */}
+      <div className="sticky top-0 z-50 bg-white shadow-sm">
+        <NewsFeedHeader />
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_3fr_1fr] gap-4 p-4 max-w-screen-xl mx-auto flex-1 overflow-hidden h-0">
-        <div>
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_3fr_1fr] gap-4 p-4 max-w-screen-xl mx-auto flex-1">
+        {/* Fixed Left Sidebar - Not Scrollable */}
+        <div className="sticky top-20 self-start">
           <RecruitmentLeft />
         </div>
 
-        <div className="overflow-y-auto">
+        {/* Floating Middle Section - Only This Scrolls */}
+        <div className="overflow-y-auto max-h-[calc(100vh-120px)]">
           <RecruitmentMiddle />
           <Hyperlinks />
         </div>
 
-        <div>
+        {/* Fixed Right Sidebar - Not Scrollable */}
+        <div className="sticky top-20 self-start">
           <RecruitmentRight />
         </div>
       </div>

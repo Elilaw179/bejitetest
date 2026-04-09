@@ -1,6 +1,6 @@
 
 import React from "react";
-import { FaArrowLeft, FaHome } from "react-icons/fa";
+import { FaArrowLeft, FaHome, FaUserPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const navItems = [
@@ -14,6 +14,29 @@ const navItems = [
 
 export default function RecruitmentLeft() {
   const navigate = useNavigate()
+
+  const handleNavClick = (label) => {
+    switch (label) {
+      case "News Feed":
+        navigate("/recruitment");
+        break;
+      case "Connections":
+        navigate("/connection");
+        break;
+      case "Chats":
+        navigate("/chats");
+        break;
+      case "Recruitment":
+        navigate("/candidate-search-page");
+        break;
+      case "Notifications":
+        navigate("/notification");
+        break;
+      default:
+        console.log("Navigation not defined for:", label);
+    }
+  };
+
   return (
     <div className="hidden md:block bg-[#F5F5F5] p-2">
   <aside className="bg-[#16730F] rounded-2xl h-[calc(100vh-120px)]">
@@ -23,7 +46,11 @@ export default function RecruitmentLeft() {
       </div>
       <nav className="m-auto space-y-4 max-w-48">
         {navItems.map(({ icon: Icon, label }, idx) => (
-          <div key={idx} className="flex items-center space-x-3 cursor-pointer px-4 py-2 hover:bg-[#15600b] rounded-lg">
+          <div
+            key={idx}
+            className="flex items-center space-x-3 cursor-pointer px-4 py-2 hover:bg-[#15600b] rounded-lg"
+            onClick={() => handleNavClick(label)}
+          >
             {typeof Icon === "string" ? (
               <img src={Icon} alt={label} />
             ) : (
@@ -33,6 +60,22 @@ export default function RecruitmentLeft() {
           </div>
         ))}
       </nav>
+
+      {/* Invite Friends Button */}
+      <div className="m-auto max-w-48 px-4 py-2">
+        <button
+          onClick={() => {
+            const message = encodeURIComponent(
+              "Hey! Join me on Bejite - the best platform for job seekers and recruiters! Sign up here: https://bejite.com"
+            );
+            window.open(`https://wa.me/?text=${message}`, '_blank');
+          }}
+          className="flex items-center space-x-3 w-full px-4 py-2 bg-[#15600b] hover:bg-[#0f4a08] rounded-lg transition-colors"
+        >
+          <FaUserPlus className="text-[#F5F5F5]" />
+          <span className="text-[#F5F5F5]">Invite Friends</span>
+        </button>
+      </div>
       <div className="bg-[#1A3E32] h-[calc(100%-320px)] rounded-b-2xl mt-10 flex flex-col items-center pt-10 space-y-5">
         <button 
         className="text-white"

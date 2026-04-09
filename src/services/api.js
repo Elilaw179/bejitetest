@@ -109,11 +109,11 @@ export const uploadFile = async (file, fileType = 'resume') => {
 // ============================================
 
 /**
- * Get user connections
+ * Get user connections (accepted connections)
  */
 export const getConnections = async () => {
   try {
-    const response = await axiosInstance.get('/connections');
+    const response = await axiosInstance.get('/api/connections');
     return response.data;
   } catch (error) {
     console.error('Error fetching connections:', error);
@@ -124,9 +124,9 @@ export const getConnections = async () => {
 /**
  * Send connection request
  */
-export const sendConnectionRequest = async (userId) => {
+export const sendConnectionRequest = async (toUserId) => {
   try {
-    const response = await axiosInstance.post('/connections/request', { userId });
+    const response = await axiosInstance.post('/api/connections/requests', { toUserId });
     return response.data;
   } catch (error) {
     console.error('Error sending connection request:', error);
@@ -143,6 +143,97 @@ export const getChatMessages = async (chatId) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching chat messages:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get connection status with another user
+ */
+export const getConnectionStatus = async (otherUserId) => {
+  try {
+    const response = await axiosInstance.get(`/api/connections/status/${otherUserId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching connection status:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get incoming connection requests
+ */
+export const getIncomingRequests = async () => {
+  try {
+    const response = await axiosInstance.get('/api/connections/requests/incoming');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching incoming requests:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get outgoing connection requests
+ */
+export const getOutgoingRequests = async () => {
+  try {
+    const response = await axiosInstance.get('/api/connections/requests/outgoing');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching outgoing requests:', error);
+    throw error;
+  }
+};
+
+/**
+ * Accept connection request
+ */
+export const acceptConnectionRequest = async (requestId) => {
+  try {
+    const response = await axiosInstance.post(`/api/connections/requests/${requestId}/accept`);
+    return response.data;
+  } catch (error) {
+    console.error('Error accepting connection request:', error);
+    throw error;
+  }
+};
+
+/**
+ * Reject connection request
+ */
+export const rejectConnectionRequest = async (requestId) => {
+  try {
+    const response = await axiosInstance.post(`/api/connections/requests/${requestId}/reject`);
+    return response.data;
+  } catch (error) {
+    console.error('Error rejecting connection request:', error);
+    throw error;
+  }
+};
+
+/**
+ * Cancel outgoing connection request
+ */
+export const cancelConnectionRequest = async (requestId) => {
+  try {
+    const response = await axiosInstance.delete(`/api/connections/requests/${requestId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error canceling connection request:', error);
+    throw error;
+  }
+};
+
+/**
+ * Remove connection (unfriend)
+ */
+export const removeConnection = async (peerUserId) => {
+  try {
+    const response = await axiosInstance.delete(`/api/connections/${peerUserId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error removing connection:', error);
     throw error;
   }
 };

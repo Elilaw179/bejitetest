@@ -39,7 +39,7 @@ import CoperateInReview from "./pages/corporate/InReview.jsx";
 import Recruitment from "./pages/employerDashboard/Recruitment.jsx";
 import CandidateSearchPage from "./pages/employerDashboard/CandidateSearchPage.jsx";
 import Chat from "./pages/employerDashboard/Chat.jsx";
-import Connection from "./pages/employerDashboard/Connection.jsx";
+import Connections from "./pages/Connections.jsx";
 import PostPage from "./pages/employerDashboard/PostPage.jsx";
 import Notifications from "./pages/employerDashboard/Notifications.jsx";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -173,7 +173,7 @@ function App() {
             element={<ProtectedRoute redirectMessage="Your session has expired. Please log in again."><CandidateSearchPage /></ProtectedRoute>}
           />
           <Route path="/chats" element={<Chat />} />
-          <Route path="/connection" element={<Connection />} />
+           <Route path="/connection" element={<Connections />} />
           <Route path="/notification" element={<Notifications />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/payment-type" element={<PaymentType />} />

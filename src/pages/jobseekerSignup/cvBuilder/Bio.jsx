@@ -33,22 +33,28 @@ const Bio = () => {
         bio: '',
     });
 
+    // Helper function to safely convert values to strings
+    const toString = (value) => {
+        if (value === null || value === undefined) return '';
+        return String(value);
+    };
+
     // Load existing bio data when in edit mode
     useEffect(() => {
         if (isEditMode && cvData?.bio && !dataLoaded) {
             const bio = cvData.bio;
             setFormData({
-                nickname: bio.nickname || '',
-                phone: bio.phone || '',
-                gender: bio.gender || '',
-                maritalStatus: bio.marital_status || '',
-                age: bio.age || '',
-                country: bio.country || '',
-                street: bio.street || '',
-                city: bio.city || '',
-                tribe: bio.tribe || '',
-                zip: bio.zip || '',
-                bio: bio.bio || '',
+                nickname: toString(bio.nickname),
+                phone: toString(bio.phone),
+                gender: toString(bio.gender),
+                maritalStatus: toString(bio.marital_status),
+                age: toString(bio.age),
+                country: toString(bio.country),
+                street: toString(bio.street),
+                city: toString(bio.city),
+                tribe: toString(bio.tribe),
+                zip: toString(bio.zip),
+                bio: toString(bio.bio),
             });
             if (bio.profile_photo) {
                 setImagePreview(bio.profile_photo);
@@ -57,8 +63,11 @@ const Bio = () => {
         }
     }, [isEditMode, cvData, dataLoaded]);
 
-    const handleChange = (e) =>
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        // Ensure all form values are strings
+        setFormData({ ...formData, [name]: String(value) });
+    };
     const handleImageChange = (e) => {
         const file = e.target.files?.[0]; 
         if (file) {
@@ -71,7 +80,10 @@ const Bio = () => {
     };
 
     const isFormComplete =
-        Object.values(formData).every((v) => v.trim() !== '') && (imageFile || imagePreview);
+        Object.values(formData).every((v) => {
+            const str = typeof v === 'string' ? v : String(v || '');
+            return str.trim() !== '';
+        }) && (imageFile || imagePreview);
 
     //pass data and image to createBio Api
     const { postBioData, uploadProfileImage } = CreateBio(); 
