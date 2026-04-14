@@ -21,10 +21,10 @@ function Link() {
   const [twitter, setTwitter] = useState("");
   const [instagram, setInstagram] = useState("");
   const [portfolio, setPortfolio] = useState("");
-  const [allFilled, setAllFilled] = useState(false);
+  const [_allFilled, _setAllFilled] = useState(false);
 
   useEffect(() => {
-    setAllFilled(linkedin || twitter || instagram || portfolio);
+    _setAllFilled(linkedin || twitter || instagram || portfolio);
   }, [linkedin, twitter, instagram, portfolio]);
 
   return (
