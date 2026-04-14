@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { FaHome, FaList, FaSearch, FaChevronDown, FaSignOutAlt, FaUserEdit, FaCreditCard } from "react-icons/fa";
+import { FaHome, FaList, FaSearch, FaChevronDown, FaSignOutAlt, FaUserEdit, FaUser, FaCreditCard } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout as logoutAction } from "../features/auth/authSlice";
@@ -133,6 +133,11 @@ const NewsFeedHeader = ({
     }
   };
 
+  // Filter menu items based on user role
+  const menuItems = user?.role === 'jobseeker'
+    ? ["home-icon", "CHAT", "notifications", "connection"]
+    : ["home-icon", "CHAT", "notifications", "recruitment", "connection"];
+
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
   useEffect(() => {
@@ -167,7 +172,7 @@ const NewsFeedHeader = ({
         </div>
 
         <div className="hidden sm:flex gap-3 md:gap-4 items-center">
-          {["home-icon", "CHAT", "notifications", "recruitment", "connection"].map((name, i) => (
+          {menuItems.map((name, i) => (
             <div key={i} className="relative flex items-center">
               {name === "home-icon" ? (
                 <FaHome
@@ -243,6 +248,20 @@ const NewsFeedHeader = ({
 
                     {/* Section 1: Profile */}
                     <div className="py-1">
+                      <button
+                        onClick={() => {
+                          navigate('/profile');
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                          location.pathname === '/profile'
+                            ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
+                            : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
+                        }`}
+                      >
+                        <FaUser className="text-base" />
+                        <span>View Profile</span>
+                      </button>
                       <button
                         onClick={() => {
                           navigate(user?.role === 'recruiter' ? '/edit-profile/recruiter/basic-details' : '/edit-profile/bio');
@@ -329,7 +348,7 @@ const NewsFeedHeader = ({
             ✕ Close
           </button>
           <nav className="flex flex-col gap-4">
-            {["home-icon", "CHAT", "notifications", "recruitment", "connection"].map((name, i) => (
+            {menuItems.map((name, i) => (
               <div
                 key={i}
                 className="flex items-center gap-2 cursor-pointer"

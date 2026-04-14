@@ -24,7 +24,7 @@ function Link() {
   const [allFilled, setAllFilled] = useState(false);
 
   useEffect(() => {
-    setAllFilled(linkedin && twitter && instagram && portfolio);
+    setAllFilled(linkedin || twitter || instagram || portfolio);
   }, [linkedin, twitter, instagram, portfolio]);
 
   return (
@@ -100,13 +100,13 @@ function Link() {
       </div>
 
       <NavigationButtons
-        isFormComplete={allFilled}
+        isFormComplete={true}
         onBack={() => navigate(-1)}
         onNext={() => {
-          if (allFilled) {
-            navigate("/job-type");
-          }
+          console.log("Link.jsx - Next clicked, navigating to /job-type");
+          navigate("/job-type");
         }}
+
       />
     </div>
   );

@@ -61,6 +61,7 @@ import Contact from "./pages/misc/Contact.jsx";
 import AuthSuccess from "./pages/auth/AuthSuccess.jsx";
 import AuthFailure from "./pages/auth/AuthFailure.jsx";
 import CompleteSignup from "./pages/CompleteSignup.jsx";
+import Profile from "./pages/Profile.jsx";
 import { ToastContainer } from 'react-toastify';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import ResetPassword from "./pages/ResetPassword.jsx";
@@ -188,12 +189,13 @@ function App() {
           <Route path="/interview-invite" element={<InterviewInvite />} />
           <Route path="/my-invitations" element={<InterviewNotifications />} />
           <Route path="/sent-invitations" element={<SentInvitations />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/teams" element={<Teams />} />
-          <Route path="/security-advice" element={<SecurityAdvice />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+           <Route path="/about" element={<About />} />
+           <Route path="/teams" element={<Teams />} />
+           <Route path="/security-advice" element={<SecurityAdvice />} />
+           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+           <Route path="/contact" element={<Contact />} />
+           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/ase/pricing" element={<ASEPricingPage />} />
           <Route path="/ase/payment-callback" element={<ASEPaymentCallback />} />
           <Route path="/ase/subscription-callback" element={<ASEPaymentCallback />} />

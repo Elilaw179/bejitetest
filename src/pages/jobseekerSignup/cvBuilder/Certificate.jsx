@@ -39,6 +39,10 @@ function Certificate() {
   const navigate = useNavigate();
 
   const { currentStep, isEditMode, getPath } = useOutletContext();
+
+  const handleStepClick = (path) => {
+    navigate(path);
+  };
   const steps = [
     "Bio",
     "Education",
@@ -125,7 +129,7 @@ function Certificate() {
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">
       <Header />
-      <StepTabs steps={steps} currentStep={currentStep} />
+      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <div className="max-w-3xl mx-auto mt-6 text-[#1A3E32] text-2xl font-semibold">

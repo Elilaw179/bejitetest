@@ -11,10 +11,15 @@ import useLocalStorage from '../../../hooks/useLocalStorage';
 import CreateBio from '../../../services/createBio';
 import { countries } from '../../../data/countries';
 import { steps } from '../../../data/bioSteps';
+import { API_URL } from '../../../config';
 
 const Bio = () => {
     const navigate = useNavigate();
     const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
+
+    const handleStepClick = (path) => {
+        navigate(path);
+    };
 
     const [imageFile, setImageFile] = useState(null); 
     const [imagePreview, setImagePreview] = useState(null);
@@ -39,6 +44,20 @@ const Bio = () => {
         return String(value);
     };
 
+    // Function to get full URL for profile photo
+    const getProfileImageUrl = (imagePath) => {
+        if (!imagePath) return imagePath;
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith('http')) return imagePath;
+        // For local paths like /uploads/filename.jpg, use the config API_URL with fallback
+        if (imagePath.startsWith('/uploads')) {
+            const baseUrl = API_URL || 'http://localhost:3001';
+            return `${baseUrl}${imagePath}`;
+        }
+        // Otherwise, prepend the API URL
+        return `${API_URL || 'http://localhost:3001'}${imagePath}`;
+    };
+
     // Load existing bio data when in edit mode
     useEffect(() => {
         if (isEditMode && cvData?.bio && !dataLoaded) {
@@ -57,7 +76,7 @@ const Bio = () => {
                 bio: toString(bio.bio),
             });
             if (bio.profile_photo) {
-                setImagePreview(bio.profile_photo);
+                setImagePreview(getProfileImageUrl(bio.profile_photo));
             }
             setDataLoaded(true);
         }
@@ -89,16 +108,32 @@ const Bio = () => {
     const { postBioData, uploadProfileImage } = CreateBio(); 
     const { id: userId } = useLocalStorage('user');
 
+    // Utility function to normalize text for consistent storage
+    const normalizeText = (text) => {
+        if (!text || typeof text !== 'string') return text;
+        return text.trim().toLowerCase();
+    };
+
     // function that chains both API calls
     const handleNextStep = async () => {
         if (!isFormComplete) {
             toast.error('Please complete all fields and upload an image.');
             return;
         }
-        
+
         const bioPayload = {
             userId,
-            ...formData,
+            nickname: normalizeText(formData.nickname), // Normalize nickname
+            phone: normalizeText(formData.phone), // Normalize phone (though it's usually already clean)
+            gender: normalizeText(formData.gender), // Normalize gender
+            maritalStatus: normalizeText(formData.maritalStatus), // Normalize marital status
+            age: formData.age, // Age is numeric, no normalization needed
+            country: normalizeText(formData.country), // Normalize country
+            street: normalizeText(formData.street), // Normalize street
+            city: normalizeText(formData.city), // Normalize city
+            tribe: normalizeText(formData.tribe), // Normalize tribe
+            zip: normalizeText(formData.zip), // Normalize zip
+            bio: formData.bio, // Bio text can contain mixed case, keep as-is for readability
         };
 
         //  sequential logic
@@ -143,7 +178,7 @@ const Bio = () => {
         <div className="bg-white">
             <Header />
 
-            <StepTabs steps={steps} currentStep={currentStep} />
+            <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
             <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
             <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">

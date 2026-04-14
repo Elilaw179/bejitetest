@@ -17,81 +17,10 @@ import Loader from "../../../components/ui/Loader";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../utils/axiosInstance";
 
-const skillOptions = [
-  "Frontend Development",
-  "Backend Development",
-  "Full Stack Development",
-  "UI/UX Design",
-  "Mobile App Development",
-  "DevOps",
-  "Database Management",
-  "Cloud Computing",
-  "Cybersecurity",
-  "Software Testing/QA",
-
-  "JavaScript",
-  "Python",
-  "Java",
-  "C++",
-  "C#",
-  "PHP",
-  "Ruby",
-  "SQL",
-  "TypeScript",
-  "Go",
-
-  "Data Analysis",
-  "Data Science",
-  "Machine Learning",
-  "Artificial Intelligence",
-  "Big Data",
-  "Data Engineering",
-  "Business Intelligence",
-
-  "Graphic Design",
-  "Motion Graphics",
-  "3D Modelling",
-  "Video Editing",
-  "Animation",
-
-  "Digital Marketing",
-  "SEO",
-  "Content Creation",
-  "Social Media Management",
-  "Product Management",
-  "Project Management",
-  "Sales",
-  "Customer Support",
-
-  "Copywriting",
-  "Technical Writing",
-  "Translation",
-  "Public Speaking",
-
-  "Git",
-  "Docker",
-  "Kubernetes",
-  "Jira",
-  "Figma",
-  "Adobe Photoshop",
-  "Microsoft Office Suite",
-  "Not Available",
-];
-
-const categoryOptions = [
-  "Internship",
-  "Entry-Level",
-  "Junior",
-  "Mid-Level",
-  "Senior",
-  "Lead",
-  "Manager",
-  "Director",
-  "Executive (C-Level)",
-  "Not Available",
-];
-
-const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);
+// Skills options removed - now using text inputs
+// const skillOptions = [...];
+// const categoryOptions = [...];
+// const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);
 
 const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
   <div className="relative w-full">
@@ -117,9 +46,29 @@ const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
   </div>
 );
 
+const InputWithIcon = ({ value, onChange, placeholder }) => (
+  <div className="relative w-full">
+    <input
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
+        value ? "border-[#828282]" : "border-[#F5F5F5]"
+      }`}
+    />
+    {value && (
+      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
+    )}
+  </div>
+);
+
 function Skills() {
   const navigate = useNavigate();
   const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
+
+  const handleStepClick = (path) => {
+    navigate(path);
+  };
   const steps = [
     "Bio",
     "Education",
@@ -205,7 +154,7 @@ function Skills() {
   return (
     <div className="min-h-screen py-4">
       <Header />
-      <StepTabs steps={steps} currentStep={currentStep} />
+      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <div className="max-w-3xl mx-auto mt-6 px-4 text-[#1A3E32] text-2xl font-semibold">
@@ -219,32 +168,29 @@ function Skills() {
       <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4">
         <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-1">
           <div className="bg-[#82828280] rounded-2xl p-4">
-            <p className="font-semibold text-xs mb-1">SKILL SELECTOR</p>
-            <SelectWithIcon
+            <p className="font-semibold text-xs mb-1">SKILL</p>
+            <InputWithIcon
               value={skillSector}
               onChange={(e) => setSkillSector(e.target.value)}
-              options={skillOptions}
-              placeholder="Select "
+              placeholder="Enter skill name"
             />
           </div>
 
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">CATEGORY</p>
-              <SelectWithIcon
+              <InputWithIcon
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                options={categoryOptions}
-                placeholder="Select"
+                placeholder="Enter category"
               />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">YEARS OF EXPERIENCE</p>
-              <SelectWithIcon
+              <InputWithIcon
                 value={experience}
                 onChange={(e) => setExperience(e.target.value)}
-                options={experienceOptions}
-                placeholder="Select."
+                placeholder="Enter years of experience"
               />
             </div>
           </div>
@@ -299,13 +245,39 @@ function Skills() {
         ))}
 
       <NavigationButtons
-        isFormComplete={allFilled || allSkill.length > 0}
+        isFormComplete={true} // Always allow proceeding since it's optional
         onBack={() => {
           if (isEditMode) {
             navigate(getPath(currentStep - 1));
           } else {
             navigate(-1);
           }
+        }}
+        onNext={async () => {
+          let skillsToSave = [...allSkill];
+
+          if (allFilled) {
+            const currentEntry = {
+              userId: user?.id,
+              skillSector,
+              category,
+              experience,
+            };
+
+            const exists = skillsToSave.some(
+              (item) =>
+                item.skillSector === currentEntry.skillSector &&
+                item.category === currentEntry.category &&
+                item.experience === currentEntry.experience
+            );
+
+            if (!exists) {
+              skillsToSave.push(currentEntry);
+            }
+
+          }
+
+          // No validation required - skills are optional
         }}
         onNext={async () => {
           let skillsToSave = [...allSkill];
@@ -363,6 +335,23 @@ function Skills() {
             setIsLoading(false);
             console.error("Error:", err);
             toast.error("Failed to save Skills. Try again.");
+          }
+        }}
+        showSkip={true}
+        onSkip={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep + 1));
+          } else {
+            navigate("/work-history", {
+              state: {
+                email,
+                firstName,
+                lastName,
+                role,
+                mode,
+                followings,
+              },
+            });
           }
         }}
       />

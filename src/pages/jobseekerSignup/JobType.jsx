@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../../components/Header";
 import NavigationButtons from "../../components/NavigationButtons";
-import { useNavigate, useLocation } from "react-router-dom";
+import StepTabs from "../../components/StepTabs";
+import ProgressBar from "../../components/ProgressBar";
+import { useNavigate, useLocation, useOutletContext } from "react-router-dom";
 import { FaCheck } from "react-icons/fa";
 import useAuth from "../../hooks/useAuth";
 import axiosInstance from "../../utils/axiosInstance";
@@ -29,6 +31,13 @@ const SelectField = ({ label, value, onChange, options, placeholder = "Select" }
 function JobType() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { currentStep, isEditMode, getPath } = useOutletContext();
+
+
+
+  const handleStepClick = (path) => {
+    navigate(path);
+  };
 
   const [form, setForm] = useState({
     jobTitle: "",
@@ -42,9 +51,56 @@ function JobType() {
     availability: "",
   });
 
-  const updateField = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  const updateField = (field) => (e) => {
+    const value = e.target.value;
+    setForm((f) => {
+      const updatedForm = { ...f, [field]: value };
+
+      // Reset state when country changes
+      if (field === 'country') {
+        updatedForm.statePref = '';
+      }
+
+      return updatedForm;
+    });
+  };
 
   const allFilled = Object.values(form).every((val) => val.trim() !== "");
+
+  // Load existing data when in edit mode
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (isEditMode && !dataLoaded) {
+        try {
+          // Get candidate data which includes job type preferences
+          const candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${user?.id}`);
+
+          if (candidateResponse.data.success) {
+            const candidate = candidateResponse.data.data;
+            setForm({
+              jobTitle: candidate.title || "",
+              industry: candidate.industry || "",
+              country: candidate.preferred_country || "",
+              statePref: candidate.preferred_state || "",
+              workType: candidate.work_type || "",
+              salary: candidate.salary_expectation ? String(candidate.salary_expectation) : "",
+              currency: candidate.currency || "",
+              remotePref: candidate.remote_preference || "",
+              availability: candidate.availability || "",
+            });
+          }
+        } catch (error) {
+          console.error('Error loading existing job type data:', error);
+        } finally {
+          setDataLoaded(true);
+        }
+      }
+    };
+
+    loadExistingData();
+  }, [isEditMode, user?.id, dataLoaded]);
 
   const jobTypes = [
     "Software Engineer", "Project Manager", "Data Analyst", "Graphic Designer", "Marketing Manager", "Sales Representative",
@@ -70,11 +126,51 @@ function JobType() {
     "Peru", "Finland", "Portugal", "Denmark", "Switzerland", "Belgium", "Austria", "Ireland", "Czech Republic", "Hungary", "Not Available"
   ];
 
-  const states = [
-    "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo",
-    "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa",
-    "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara", "Federal Capital Territory"
-  ];
+  // State/Province options for different countries
+  const getStateOptions = (country) => {
+    const normalizedCountry = country.toLowerCase();
+
+    if (normalizedCountry.includes('nigeria')) {
+      return [
+        "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo",
+        "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa",
+        "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara", "Federal Capital Territory"
+      ];
+    } else if (normalizedCountry.includes('united states') || normalizedCountry.includes('usa')) {
+      return [
+        "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
+        "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
+        "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
+        "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+        "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
+      ];
+    } else if (normalizedCountry.includes('canada')) {
+      return [
+        "Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador", "Northwest Territories",
+        "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island", "Quebec", "Saskatchewan", "Yukon"
+      ];
+    } else if (normalizedCountry.includes('united kingdom') || normalizedCountry.includes('uk')) {
+      return [
+        "England", "Scotland", "Wales", "Northern Ireland"
+      ];
+    } else if (normalizedCountry.includes('australia')) {
+      return [
+        "Australian Capital Territory", "New South Wales", "Northern Territory", "Queensland", "South Australia",
+        "Tasmania", "Victoria", "Western Australia"
+      ];
+    } else if (normalizedCountry.includes('germany')) {
+      return [
+        "Baden-Württemberg", "Bavaria", "Berlin", "Brandenburg", "Bremen", "Hamburg", "Hesse", "Lower Saxony",
+        "Mecklenburg-Vorpommern", "North Rhine-Westphalia", "Rhineland-Palatinate", "Saarland", "Saxony",
+        "Saxony-Anhalt", "Schleswig-Holstein", "Thuringia"
+      ];
+    }
+
+    // Default states for other countries
+    return ["Not Available"];
+  };
+
+  const states = getStateOptions(form.country);
 
 
   const workTypes = [
@@ -83,18 +179,12 @@ function JobType() {
   ];
 
   const currencies = [
-    "United States Dollar (USD)", "Euro (EUR)", "Japanese Yen (JPY)", "British Pound Sterling (GBP)", "Australian Dollar (AUD)",
-    "Canadian Dollar (CAD)", "Swiss Franc (CHF)", "Chinese Yuan (CNY)", "Swedish Krona (SEK)", "New Zealand Dollar (NZD)",
-    "Mexican Peso (MXN)", "Singapore Dollar (SGD)", "Hong Kong Dollar (HKD)", "Norwegian Krone (NOK)", "South Korean Won (KRW)",
-    "Turkish Lira (TRY)", "Indian Rupee (INR)", "Russian Ruble (RUB)", "Brazilian Real (BRL)", "South African Rand (ZAR)",
-    "Polish Zloty (PLN)", "Danish Krone (DKK)", "Thai Baht (THB)", "Malaysian Ringgit (MYR)", "Philippine Peso (PHP)",
-    "Indonesian Rupiah (IDR)", "Czech Koruna (CZK)", "Hungarian Forint (HUF)", "Israeli New Shekel (ILS)",
-    "Chilean Peso (CLP)", "Colombian Peso (COP)", "United Arab Emirates Dirham (AED)", "Saudi Riyal (SAR)",
-    "Egyptian Pound (EGP)", "Nigerian Naira (NGN)", "Argentinian Peso (ARS)", "Pakistani Rupee (PKR)"
+    "United States Dollar (USD)",
+    "Nigerian Naira (NGN)"
   ];
 
   const remotePrefs = [
-    "Remote", "Remote-First", "Remote-Only", "Hybrid", "Work From Home (WFH)", "Distributed Team", "Telecommute", "Fully Remote",
+    "Remote", "Remote First", "Remote Only", "Hybrid", "Work From Home (WFH)", "Distributed Team", "Telecommute", "Fully Remote",
     "Flexible Location", "Location Independent", "Virtual Position", "Cloud-Based Role", "Remote-Optional", "100% Remote", "Home-Based"
   ];
 
@@ -109,46 +199,87 @@ function JobType() {
   const { email, firstName, lastName, role, mode, followings } =
     location.state || {};
 
+  const steps = [
+    "Bio",
+    "Education",
+    "Skills",
+    "Work history",
+    "Certificate",
+    "Links",
+    "Job Type"
+  ];
+
+
+  // Utility function to normalize text for consistent storage
+  const normalizeText = (text) => {
+    if (!text || typeof text !== 'string') return text;
+    return text.trim().toLowerCase();
+  };
 
   const handleSubmit = async () => {
     if (!allFilled) {
       toast.error("Form is not completely filled")
       return;
     }
-    const location = `${form.country}, ${form.statePref}`;
-    const salary = `${form.salary} ${form.currency}`
-    const isRemotePreference = form.remotePref.toLowerCase().includes('remote');
-    
-
-    const apiPayLoad = {
-      title: form.jobTitle,
-      company: form.industry,
-      location: location,
-      type: form.workType,
-      salary_min: salary,
-      salary_max: salary,
-      description: form.availability,
-      remote:isRemotePreference,
-      requirements: [],
-      skills: [],
-      tags: [],
-      experience_level: form.jobTitle,
-      posted_by: user?.id,
-    }
 
     try {
-      const response = await axiosInstance.post("/api/job-board/job", apiPayLoad);
+      // First get the candidate ID for this user
+      let candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${user?.id}`);
 
-      if (response.data.success) {
-        toast.success("Profile completed successfully!");
-        navigate("/recruitment", {
-          state: { email, firstName, lastName, role, mode, followings },
-        });
+      // If candidate doesn't exist, trigger sync and try again
+      if (!candidateResponse.data.success) {
+        console.log("Candidate not found, triggering sync...");
+        try {
+          await axiosInstance.post(`/api/cv-builder/sync-candidate/${user?.id}`);
+          // Try to get candidate again after sync
+          candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${user?.id}`);
+          if (!candidateResponse.data.success) {
+            toast.error("Failed to create candidate profile. Please try again.");
+            return;
+          }
+        } catch (syncError) {
+          console.error("Sync failed:", syncError);
+          toast.error("Failed to sync candidate data. Please complete your CV first.");
+          return;
+        }
+      }
+
+      const candidateId = candidateResponse.data.data.id;
+
+      // Extract currency code from format "Name (CODE)"
+      const currencyCode = form.currency.match(/\(([^)]+)\)$/)?.[1] || form.currency;
+
+      // Prepare update payload for candidate with normalized text fields
+      const updatePayload = {
+        title: normalizeText(form.jobTitle), // Normalize job title
+        industry: normalizeText(form.industry), // Normalize industry
+        preferred_country: normalizeText(form.country), // Normalize country
+        preferred_state: normalizeText(form.statePref), // Normalize state
+        work_type: normalizeText(form.workType), // Normalize work type
+        salary_expectation: parseInt(form.salary) || null,
+        currency: currencyCode,
+        remote_preference: normalizeText(form.remotePref), // Normalize remote preference
+        availability: normalizeText(form.availability) // Normalize availability
+      };
+
+      // Update the candidate record
+      const updateResponse = await axiosInstance.put(`/api/job-board/candidates/${candidateId}`, updatePayload);
+
+      if (updateResponse.data.success) {
+        toast.success("Job preferences updated successfully!");
+        if (isEditMode) {
+          // In edit mode, navigate to the next step or back to profile
+          navigate(getPath(currentStep + 1) || "/profile");
+        } else {
+          // In initial signup, navigate to recruitment
+          console.log("Navigating to /recruitment with state:", { email, firstName, lastName, role, mode, followings });
+          navigate("/recruitment", {
+            state: { email, firstName, lastName, role, mode, followings },
+          });
+        }
       } else {
-        console.error(
-          "Server responded but with error:",
-          response.data.message
-        );
+        console.error("Server responded but with error:", updateResponse.data.message);
+        toast.error("Failed to update job preferences");
       }
     } catch (error) {
       toast.error("Submission failed")
@@ -159,9 +290,13 @@ function JobType() {
 
 
   return (
-    <div className="min-h-screen py-4 px-2 sm:px-4">
+    <div className="bg-white">
       <Header />
-      <div className="max-w-3xl mx-auto text-center space-y-2">
+
+      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
+      <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
+
+      <div className="max-w-3xl mx-auto text-center space-y-2 px-4">
         <p className="font-medium text-[#16730F] text-2xl">Almost there!</p>
         <p className="text-[#16730F] text-3xl font-semibold">What type of job do you want?</p>
         <p className="text-[#000] text-sm font-light mt-5">
@@ -253,7 +388,13 @@ function JobType() {
 
       <NavigationButtons
         isFormComplete={allFilled}
-        onBack={() => navigate(-1)}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
         onNext={() =>
           allFilled &&
            handleSubmit()

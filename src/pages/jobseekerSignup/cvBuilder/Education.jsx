@@ -17,217 +17,7 @@ import { FaDeleteLeft } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import Loader from "../../../components/ui/Loader";
 import axiosInstance from "../../../utils/axiosInstance";
-const optionsEdu = [
-  "No Formal Education",
-  "Primary",
-  "Secondary",
-  "Vocational/Technical Training",
-  "Tertiary Institution",
-  "Postgraduate (Masters/PhD)",
-  "Professional Certification",
-  "Not Available",
-];
-
-const optionsInst = [
-  "University of Ibadan",
-  "Covenant University",
-  "University of Lagos",
-
-  "Massachusetts Institute of Technology (MIT)",
-  "Harvard University",
-  "Stanford University",
-
-  "University of Oxford",
-  "University of Cambridge",
-  "Imperial College London",
-
-  "University of Toronto",
-  "University of Melbourne",
-  "National University of Singapore",
-  "Not Available",
-];
-
-const optionsLoc = [
-  "Lagos",
-  "Abuja",
-  "Johannesburg",
-  "Nairobi",
-  "Cairo",
-  "Accra",
-  "Kampala",
-  "Dar es Salaam",
-  "Casablanca",
-  "Addis Ababa",
-
-  "New York",
-  "Los Angeles",
-  "Toronto",
-  "Vancouver",
-  "Chicago",
-  "Mexico City",
-  "Houston",
-  "Miami",
-  "Montreal",
-  "Boston",
-
-  "São Paulo",
-  "Buenos Aires",
-  "Rio de Janeiro",
-  "Bogotá",
-  "Santiago",
-  "Lima",
-  "Caracas",
-  "Quito",
-  "Montevideo",
-  "Curitiba",
-
-  "London",
-  "Paris",
-  "Berlin",
-  "Madrid",
-  "Rome",
-  "Moscow",
-  "Amsterdam",
-  "Stockholm",
-  "Vienna",
-  "Zurich",
-  "Brussels",
-  "Lisbon",
-  "Dublin",
-  "Warsaw",
-  "Prague",
-  "Budapest",
-
-  "Beijing",
-  "Shanghai",
-  "Tokyo",
-  "Seoul",
-  "Mumbai",
-  "Delhi",
-  "Bangkok",
-  "Singapore",
-  "Kuala Lumpur",
-  "Jakarta",
-  "Manila",
-  "Dubai",
-  "Hong Kong",
-  "Taipei",
-  "Hanoi",
-  "Karachi",
-
-  "Sydney",
-  "Melbourne",
-  "Auckland",
-  "Brisbane",
-  "Perth",
-  "Not Available",
-];
-
-const optionsField = [
-  "Accounting",
-  "Agriculture",
-  "Anthropology",
-  "Architecture",
-  "Art and Design",
-  "Astronomy",
-  "Biology",
-  "Business Administration",
-  "Chemical Engineering",
-  "Civil Engineering",
-  "Communication Studies",
-  "Computer Science",
-  "Criminology",
-  "Data Science",
-  "Dentistry",
-  "Economics",
-  "Educaton",
-  "Electrical Engineering",
-  "Environmental Science",
-  "Finance",
-  "Geography",
-  "Geology",
-  "History",
-  "Hospitality Management",
-  "Human Resource Management",
-  "Industrial Engineering",
-  "Information Technology",
-  "International Relations",
-  "Journalism",
-  "Law",
-  "Linguistics",
-  "Marketing",
-  "Mathematics",
-  "Mechanical Engineering",
-  "Medicine",
-  "Music",
-  "Nursing",
-  "Pharmacy",
-  "Philosophy",
-  "Physics",
-  "Political Science",
-  "Psychology",
-  "Public Administration",
-  "Public Health",
-  "Religious Studies",
-  "Social Work",
-  "Sociology",
-  "Software Engineering",
-  "Statistics",
-  "Theatre Arts",
-  "Theology",
-  "Tourism and Travel",
-  "Veterinary Medicine",
-  "Zoology",
-  "Not Available",
-];
-
-const optionsDegree = [
-  "WAEC",
-  "NECO",
-  "NABTEB",
-  "B.Sc",
-  "B.A",
-  "B.Eng",
-  "LLB",
-  "MBBS",
-  "HND",
-  "OND",
-  "PGD",
-  "M.Sc",
-  "M.A",
-  "MBA",
-  "M.Eng",
-  "PhD",
-  "MD",
-  "JD",
-  "Ed.D",
-  "DVM",
-  "Not Available",
-];
-
-const InputOrSelectWithIcon = ({ value, onChange, options, placeholder, listId = "custom-list" }) => (
-  <div className="relative w-full">
-    <input
-      list={listId}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      }`}
-    />
-    <datalist id={listId}>
-      {options.map((opt) => (
-        <option key={opt} value={opt} />
-      ))}
-    </datalist>
-    {value ? (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    ) : (
-      <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
-    )}
-  </div>
-);
+// Education dropdown options removed - now using text inputs
 
 const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
   <div className="relative w-full">
@@ -250,6 +40,10 @@ function Education() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
+
+  const handleStepClick = (path) => {
+    navigate(path);
+  };
   const steps = [
     "Bio",
     "Education",
@@ -371,7 +165,7 @@ function Education() {
   return (
     <div className=" min-h-screen py-4">
       <Header />
-      <StepTabs steps={steps} currentStep={currentStep} />
+      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <div className="max-w-3xl mx-auto mt-6 px-4 text-[#1A3E32] text-2xl font-semibold">
@@ -383,36 +177,30 @@ function Education() {
 
       <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4 ">
         <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-1">
-          <div className="bg-[#82828280] rounded-2xl p-4">
-            <p className="font-semibold text-xs mb-1">EDUCATIONAL LEVEL</p>
-            <InputOrSelectWithIcon
-              value={educationLevel}
-              onChange={(e) => setEducationLevel(e.target.value)}
-              options={optionsEdu}
-              placeholder="Select or type education level..."
-              listId="education-level-list"
-            />
-          </div>
+            <div className="bg-[#82828280] rounded-2xl p-4">
+              <p className="font-semibold text-xs mb-1">EDUCATIONAL LEVEL</p>
+              <InputWithIcon
+                value={educationLevel}
+                onChange={(e) => setEducationLevel(e.target.value)}
+                placeholder="Enter education level"
+              />
+            </div>
 
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">INSTITUTION NAME</p>
-              <InputOrSelectWithIcon
+              <InputWithIcon
                 value={institutionName}
                 onChange={(e) => setInstitutionName(e.target.value)}
-                options={optionsInst}
-                placeholder="Select or type institution..."
-                listId="institution-list"
+                placeholder="Enter institution name"
               />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">LOCATION</p>
-              <InputOrSelectWithIcon
+              <InputWithIcon
                 value={userLocation}
                 onChange={(e) => setLocation(e.target.value)}
-                options={optionsLoc}
-                placeholder="Select or type location..."
-                listId="location-list"
+                placeholder="Enter location"
               />
             </div>
           </div>
@@ -420,36 +208,20 @@ function Education() {
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">FIELD OF STUDY</p>
-              <InputOrSelectWithIcon
+              <InputWithIcon
                 value={fieldOfStudy}
                 onChange={(e) => setFieldOfStudy(e.target.value)}
-                options={optionsField}
-                placeholder="Select or type field..."
-                listId="field-list"
+                placeholder="Enter field of study"
               />
             </div>
 
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">DEGREE</p>
-              <div className="relative w-full">
-                <input
-                  list="degree-list"
-                  value={degree}
-                  onChange={(e) => setDegree(e.target.value)}
-                  placeholder="e.g. B.Sc or select"
-                  className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
-                    degree ? "border-[#828282]" : "border-[#F5F5F5]"
-                  }`}
-                />
-                <datalist id="degree-list">
-                  {optionsDegree.map((opt) => (
-                    <option key={opt} value={opt} />
-                  ))}
-                </datalist>
-                {degree && (
-                  <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-                )}
-              </div>
+              <InputWithIcon
+                value={degree}
+                onChange={(e) => setDegree(e.target.value)}
+                placeholder="Enter degree"
+              />
             </div>
           </div>
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
@@ -522,7 +294,7 @@ function Education() {
         })}
 
       <NavigationButtons
-        isFormComplete={allEducation.length > 0 || allFilled}
+        isFormComplete={true} // Always allow proceeding since it's optional
         onBack={() => {
           if (isEditMode) {
             navigate(getPath(currentStep - 1));
@@ -563,13 +335,7 @@ function Education() {
             }
           }
 
-          // Validate
-          if (educationToSave.length === 0) {
-            toast.error(
-              "Please add at least one education entry before continuing."
-            );
-            return;
-          }
+          // No validation required - education is optional
 
           setIsLoading(true);
 
@@ -594,6 +360,16 @@ function Education() {
             setIsLoading(false);
             console.error("Error:", error);
             toast.error("Failed to save education. Try again.");
+          }
+        }}
+        showSkip={true}
+        onSkip={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep + 1));
+          } else {
+            navigate("/skills", {
+              state: { email, firstName, lastName, role, mode, followings },
+            });
           }
         }}
       />
