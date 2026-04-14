@@ -1,7 +1,9 @@
 
-import React from "react";
+import React, { useMemo } from "react";
 import { FaArrowLeft, FaHome, FaUserPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getUser } from "../../utils/tokenManager";
 
 const navItems = [
   { icon: FaHome, label: "News Feed" },
@@ -14,6 +16,18 @@ const navItems = [
 
 export default function RecruitmentLeft() {
   const navigate = useNavigate()
+
+  // Get user from Redux store or localStorage
+  const reduxUser = useSelector((state) => state.auth?.user);
+  const user = useMemo(() => {
+    if (reduxUser) return reduxUser;
+    return getUser() || {};
+  }, [reduxUser]);
+
+  // Filter nav items based on user role
+  const filteredNavItems = user?.role === 'jobseeker'
+    ? navItems.filter(item => item.label !== "Recruitment")
+    : navItems;
 
   const handleNavClick = (label) => {
     switch (label) {
@@ -45,7 +59,7 @@ export default function RecruitmentLeft() {
         <h2 className="text-[20px] text-[#ffffff]">Dashboard</h2>
       </div>
       <nav className="m-auto space-y-4 max-w-48">
-        {navItems.map(({ icon: Icon, label }, idx) => (
+        {filteredNavItems.map(({ icon: Icon, label }, idx) => (
           <div
             key={idx}
             className="flex items-center space-x-3 cursor-pointer px-4 py-2 hover:bg-[#15600b] rounded-lg"

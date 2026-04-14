@@ -15,7 +15,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
       { name: "phone", label: "PHONE NUMBER", type: "Number", placeholder: "e.g +234 706 004 0000", width: "sm:w-[226px]" },
     ],
     [
-      { name: "gender", label: "GENDER", type: "select", options: ["Male", "Female", "Other"], width: "sm:w-44" },
+      { name: "gender", label: "GENDER", type: "select", options: ["Male", "Female"], width: "sm:w-44" },
       { name: "maritalStatus", label: "MARITAL STATUS", type: "select", options: ["Single", "Married", "Divorced", "Widowed"], width: "sm:w-44" },
       { name: "age", label: "AGE", type: "select", options: bioAges, width: "sm:w-32" },
     ],

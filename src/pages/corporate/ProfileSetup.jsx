@@ -7,10 +7,15 @@ import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
 import ImageUpload from "../../components/ImageUpload";
 import useRecruiterProfile from "../../services/recruiterProfile";
+import { API_URL } from "../../config";
 
 const CoperateProfileSetup = () => {
   const navigate = useNavigate();
   const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
+
+  const handleStepClick = (path) => {
+    navigate(path);
+  };
 
   const steps = [
     "Basic Details",
@@ -30,6 +35,20 @@ const CoperateProfileSetup = () => {
 
   const { updateProfileSetup, uploadProfilePhoto } = useRecruiterProfile();
 
+  // Function to get full URL for profile photo
+  const getProfileImageUrl = (imagePath) => {
+    if (!imagePath) return imagePath;
+    // If it's already a full URL, return as is
+    if (imagePath.startsWith('http')) return imagePath;
+    // For local paths like /uploads/filename.jpg, use the config API_URL with fallback
+    if (imagePath.startsWith('/uploads')) {
+      const baseUrl = API_URL || 'http://localhost:3001';
+      return `${baseUrl}${imagePath}`;
+    }
+    // Otherwise, prepend the API URL
+    return `${API_URL || 'http://localhost:3001'}${imagePath}`;
+  };
+
   useEffect(() => {
     if (isEditMode && recruiterData && !dataLoaded) {
       setFormData({
@@ -37,7 +56,7 @@ const CoperateProfileSetup = () => {
         summary: recruiterData.summary || "",
       });
       if (recruiterData.profile_photo) {
-        setImagePreview(recruiterData.profile_photo);
+        setImagePreview(getProfileImageUrl(recruiterData.profile_photo));
       }
       setDataLoaded(true);
     }
@@ -102,7 +121,7 @@ const CoperateProfileSetup = () => {
     <div className="bg-white min-h-screen">
       <Header />
 
-      <StepTabs steps={steps} currentStep={currentStep} />
+      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">

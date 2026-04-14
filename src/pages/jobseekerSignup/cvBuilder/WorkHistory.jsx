@@ -10,50 +10,50 @@ import axiosInstance from "../../../utils/axiosInstance";
 import { FaPlus, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
 import Loader from "../../../components/ui/Loader";
 
-const optionsJob = [
-  "Software Developer",
-  "Frontend Developer",
-  "Backend Developer",
-  "Full Stack Developer",
-  "UI/UX Designer",
-  "Data Analyst",
-  "Data Scientist",
-  "DevOps Engineer",
-  "Product Manager",
-  "QA Tester",
-  "Cybersecurity Analyst",
-  "Administrative Assistant",
-  "Project Manager",
-  "Operations Manager",
-  "Business Analyst",
-  "Customer Support Representative",
-  "Sales Executive",
-  "Human Resources Manager",
-  "Digital Marketer",
-  "SEO Specialist",
-  "Content Writer",
-  "Social Media Manager",
-  "Copywriter",
-  "Brand Manager",
-  "Accountant",
-  "Financial Analyst",
-  "Auditor",
-  "Bank Teller",
-  "Teacher",
-  "Lecturer",
-  "Academic Advisor",
-  "School Administrator",
-  "Nurse",
-  "Medical Doctor",
-  "Pharmacist",
-  "Laboratory Technician",
-  "Electrician",
-  "Plumber",
-  "Driver",
-  "Chef",
-  "Security Guard",
-  "Not Available",
-];
+// const optionsJob = [
+//   "Software Developer",
+//   "Frontend Developer",
+//   "Backend Developer",
+//   "Full Stack Developer",
+//   "UI/UX Designer",
+//   "Data Analyst",
+//   "Data Scientist",
+//   "DevOps Engineer",
+//   "Product Manager",
+//   "QA Tester",
+//   "Cybersecurity Analyst",
+//   "Administrative Assistant",
+//   "Project Manager",
+//   "Operations Manager",
+//   "Business Analyst",
+//   "Customer Support Representative",
+//   "Sales Executive",
+//   "Human Resources Manager",
+//   "Digital Marketer",
+//   "SEO Specialist",
+//   "Content Writer",
+//   "Social Media Manager",
+//   "Copywriter",
+//   "Brand Manager",
+//   "Accountant",
+//   "Financial Analyst",
+//   "Auditor",
+//   "Bank Teller",
+//   "Teacher",
+//   "Lecturer",
+//   "Academic Advisor",
+//   "School Administrator",
+//   "Nurse",
+//   "Medical Doctor",
+//   "Pharmacist",
+//   "Laboratory Technician",
+//   "Electrician",
+//   "Plumber",
+//   "Driver",
+//   "Chef",
+//   "Security Guard",
+//   "Not Available",
+// ];
 
 const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
   <div className="relative w-full">
@@ -99,6 +99,10 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 function WorkHistory() {
   const navigate = useNavigate();
   const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
+
+  const handleStepClick = (path) => {
+    navigate(path);
+  };
   const steps = [
     "Bio",
     "Education",
@@ -198,7 +202,7 @@ function WorkHistory() {
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">
       <Header />
-      <StepTabs steps={steps} currentStep={currentStep} />
+      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <div className="max-w-3xl mx-auto mt-6 text-[#1A3E32] text-2xl font-semibold">
@@ -213,11 +217,10 @@ function WorkHistory() {
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">JOB TITLE</p>
-              <SelectWithIcon
+              <InputWithIcon
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
-                options={optionsJob}
-                placeholder="Select "
+                placeholder="Enter job title"
               />
             </div>
             <div className="flex-1">
@@ -314,7 +317,7 @@ function WorkHistory() {
       </div>
 
       <NavigationButtons
-        isFormComplete={allWorkHistory.length > 0 || allFilled}
+        isFormComplete={true} // Always allow proceeding since it's optional
         onBack={() => {
           if (isEditMode) {
             navigate(getPath(currentStep - 1));
@@ -351,12 +354,7 @@ function WorkHistory() {
             }
           }
 
-          if (historyToSave.length === 0) {
-            toast.error(
-              "Please add at least one work history before continuing."
-            );
-            return;
-          }
+          // No validation required - work history is optional
 
           setIsLoading(true);
           try {
@@ -377,6 +375,16 @@ function WorkHistory() {
             setIsLoading(false);
             console.error("Error:", err);
             toast.error("Failed to save work history. Try again.");
+          }
+        }}
+        showSkip={true}
+        onSkip={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep + 1));
+          } else {
+            navigate("/certificate", {
+              state: { email, firstName, lastName, role, mode, followings },
+            });
           }
         }}
       />
