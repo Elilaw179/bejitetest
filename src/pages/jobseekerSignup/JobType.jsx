@@ -12,36 +12,15 @@ import { toast } from "react-toastify";
 
 const SelectField = ({ label, value, onChange, options, placeholder = "Select" }) => {
   const [inputValue, setInputValue] = useState(value);
-  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     setInputValue(value);
   }, [value]);
 
-  const filteredOptions = inputValue 
-    ? options.filter(opt => opt.toLowerCase().includes(inputValue.toLowerCase()))
-    : options;
-
-  const handleSelect = (opt) => {
-    setInputValue(opt);
-    onChange({ target: { value: opt } });
-    setIsOpen(false);
-  };
-
   const handleInputChange = (e) => {
     const val = e.target.value;
     setInputValue(val);
     onChange({ target: { value: val } });
-    setIsOpen(true);
-  };
-
-  const handleInputFocus = () => {
-    setIsOpen(true);
-  };
-
-  const handleInputBlur = () => {
-    // Delay closing to allow click on option
-    setTimeout(() => setIsOpen(false), 200);
   };
 
   return (
@@ -53,8 +32,6 @@ const SelectField = ({ label, value, onChange, options, placeholder = "Select" }
           className={`select-with-check appearance-none focus:outline-1 focus:outline-[#1A3E32] ${value ? "filled" : ""} w-full text-[#333333] text-sm p-3 pr-10 rounded-[10px] border-[#F5F5F5] border-2`}
           value={inputValue}
           onChange={handleInputChange}
-          onFocus={handleInputFocus}
-          onBlur={handleInputBlur}
           placeholder={placeholder}
           list="select-options"
         />

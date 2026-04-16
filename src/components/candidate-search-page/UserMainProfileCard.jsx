@@ -183,7 +183,7 @@ const UserMainProfileCard = ({ candidateId, onConnect }) => {
   );
 };
 
-const ProfileHeader = ({ candidate, profileImage, initials }) => (
+const ProfileHeader = ({ profileImage, initials }) => (
   <div>
     <div className="w-full h-32 bg-gradient-to-r from-[#1A3E32] to-[#6B8E23]"></div>
     <div className="relative left-8 sm:left-20 bottom-20 sm:bottom-24">
