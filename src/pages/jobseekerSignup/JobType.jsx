@@ -6,32 +6,78 @@ import ProgressBar from "../../components/ProgressBar";
 import { useNavigate, useLocation, useOutletContext } from "react-router-dom";
 import { FaCheck } from "react-icons/fa";
 import useAuth from "../../hooks/useAuth";
+import useLocalStorage from "../../hooks/useLocalStorage";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
 
-const SelectField = ({ label, value, onChange, options, placeholder = "Select" }) => (
-  <div className="w-full md:w-[48%] lg:w-[30%]">
-    <p className="text-[12px] font-semibold mb-1">{label}</p>
-    <div className="relative w-full">
-      <select
-        className={`select-with-check appearance-none focus:outline-1 focus:outline-[#1A3E32] ${value ? "filled" : ""} w-full text-[#33333380] text-sm p-3 pr-10 rounded-[10px] border-[#F5F5F5] border-2`}
-        value={value}
-        onChange={onChange}
-      >
-        <option value="">{placeholder}</option>
-        {options.map((opt, i) => (
-          <option key={i} value={opt}>{opt}</option>
-        ))}
-      </select>
-      {value && <FaCheck className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />}
+const SelectField = ({ label, value, onChange, options, placeholder = "Select" }) => {
+  const [inputValue, setInputValue] = useState(value);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  const filteredOptions = inputValue 
+    ? options.filter(opt => opt.toLowerCase().includes(inputValue.toLowerCase()))
+    : options;
+
+  const handleSelect = (opt) => {
+    setInputValue(opt);
+    onChange({ target: { value: opt } });
+    setIsOpen(false);
+  };
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+    onChange({ target: { value: val } });
+    setIsOpen(true);
+  };
+
+  const handleInputFocus = () => {
+    setIsOpen(true);
+  };
+
+  const handleInputBlur = () => {
+    // Delay closing to allow click on option
+    setTimeout(() => setIsOpen(false), 200);
+  };
+
+  return (
+    <div className="w-full md:w-[48%] lg:w-[30%]">
+      <p className="text-[12px] font-semibold mb-1">{label}</p>
+      <div className="relative w-full">
+        <input
+          type="text"
+          className={`select-with-check appearance-none focus:outline-1 focus:outline-[#1A3E32] ${value ? "filled" : ""} w-full text-[#333333] text-sm p-3 pr-10 rounded-[10px] border-[#F5F5F5] border-2`}
+          value={inputValue}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
+          placeholder={placeholder}
+          list="select-options"
+        />
+        <datalist id="select-options">
+          {options.map((opt, i) => (
+            <option key={i} value={opt}>{opt}</option>
+          ))}
+        </datalist>
+        {(value || inputValue) && <FaCheck className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 function JobType() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
-  const { currentStep, isEditMode, getPath } = useOutletContext();
+  const { currentStep, isEditMode, getPath, cvData } = useOutletContext();
+  
+  // Get user ID from localStorage as fallback
+  const { id: localUserId } = useLocalStorage('user');
+  const userId = user?.id || localUserId;
 
 
 
@@ -71,14 +117,43 @@ function JobType() {
 
   // Load existing data when in edit mode
   useEffect(() => {
+    console.log('JobType useEffect:', { isEditMode, dataLoaded, userId, cvData: !!cvData });
     const loadExistingData = async () => {
-      if (isEditMode && !dataLoaded) {
+      if (isEditMode && !dataLoaded && userId) {
+        console.log('Loading data for user:', userId);
+        
+        // First try to get data from cvData if available (from ResumeLayout)
+        if (cvData?.bio) {
+          console.log('Using cvData.bio:', cvData.bio);
+          // Map bio data to form - CV builder might have job preferences in bio
+          setForm(prev => ({
+            ...prev,
+            // If bio has any job-related fields, use them
+            jobTitle: cvData.bio.title || prev.jobTitle,
+            country: cvData.bio.country || prev.country,
+          }));
+        }
+
         try {
-          // Get candidate data which includes job type preferences
-          const candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${user?.id}`);
+          // Get candidate data from job-board API
+          let candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${userId}`);
+          console.log('Candidate response:', candidateResponse.data);
+
+          // If candidate doesn't exist, try to sync from CV builder data
+          if (!candidateResponse.data.success) {
+            console.log('Candidate not found, trying sync...');
+            try {
+              await axiosInstance.post(`/api/cv-builder/sync-candidate/${userId}`);
+              candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${userId}`);
+              console.log('After sync response:', candidateResponse.data);
+            } catch (syncError) {
+              console.error('Sync failed:', syncError);
+            }
+          }
 
           if (candidateResponse.data.success) {
             const candidate = candidateResponse.data.data;
+            console.log('Candidate data loaded:', candidate);
             setForm({
               jobTitle: candidate.title || "",
               industry: candidate.industry || "",
@@ -100,7 +175,7 @@ function JobType() {
     };
 
     loadExistingData();
-  }, [isEditMode, user?.id, dataLoaded]);
+  }, [isEditMode, userId, dataLoaded, cvData]);
 
   const jobTypes = [
     "Software Engineer", "Project Manager", "Data Analyst", "Graphic Designer", "Marketing Manager", "Sales Representative",
@@ -194,8 +269,6 @@ function JobType() {
     "Seasonal Availability", "Temporary Availability", "Contractual Availability", "Not Currently Available", "Available Upon Request"
   ];
 
-  const location = useLocation();
-
   const { email, firstName, lastName, role, mode, followings } =
     location.state || {};
 
@@ -224,15 +297,15 @@ function JobType() {
 
     try {
       // First get the candidate ID for this user
-      let candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${user?.id}`);
+      let candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${userId}`);
 
       // If candidate doesn't exist, trigger sync and try again
       if (!candidateResponse.data.success) {
         console.log("Candidate not found, triggering sync...");
         try {
-          await axiosInstance.post(`/api/cv-builder/sync-candidate/${user?.id}`);
+          await axiosInstance.post(`/api/cv-builder/sync-candidate/${userId}`);
           // Try to get candidate again after sync
-          candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${user?.id}`);
+          candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${userId}`);
           if (!candidateResponse.data.success) {
             toast.error("Failed to create candidate profile. Please try again.");
             return;

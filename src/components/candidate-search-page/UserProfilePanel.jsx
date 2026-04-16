@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { API_URL } from "../../config";
+import { getProfileImageUrl } from "../../utils/profileImageUtils";
 
 const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
   const [candidate, setCandidate] = useState(null);
@@ -188,6 +189,11 @@ const ProfileHeader = ({ candidate }) => {
     candidate.last_name?.[0] || ""
   }`;
   const isAvailable = candidate.availability === "Available";
+  
+  // Get profile image URL
+  const profileImage = candidate.profile_photo 
+    ? getProfileImageUrl(candidate.profile_photo) 
+    : null;
 
   return (
     <div>
@@ -195,19 +201,22 @@ const ProfileHeader = ({ candidate }) => {
         <div className="h-32"></div>
       </div>
       <div className="relative left-8 sm:left-20 bottom-15 sm:bottom-16">
-        <div className="relative rounded-full w-[80px] sm:w-[100px] h-[80px] sm:h-[100px]  bg-[#6B8E23] flex items-center justify-center border-4 border-white">
-          <span className="text-white text-3xl font-bold">{initials}</span>
+        <div className="relative rounded-full w-[80px] sm:w-[100px] h-[80px] sm:h-[100px] bg-[#6B8E23] flex items-center justify-center border-4 border-white overflow-hidden">
+          {profileImage ? (
+            <img 
+              src={profileImage} 
+              alt={`${candidate.first_name} ${candidate.last_name}`}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-white text-3xl font-bold">{initials}</span>
+          )}
           <span
             className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-0 right-0 z-99 ${
               isAvailable ? "bg-[#6B8E23]" : "bg-[#828282]"
             }`}
           ></span>
         </div>
-        {/* <span
-          className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-0 right-2 ${
-            isAvailable ? "bg-[#6B8E23]" : "bg-[#828282]"
-          }`}
-        ></span> */}
       </div>
     </div>
   );
@@ -260,7 +269,10 @@ const ActionButtons = ({ onViewMainProfile }) => (
       onClick={onViewMainProfile}
     />
     <Button icon="/assets/images/Send_Submit.svg" text="Message" />
-    <button className="text-[#6B8E23] text-[12px] hover:underline">
+    <button 
+      className="text-[#6B8E23] text-[12px] hover:underline"
+      onClick={onViewMainProfile}
+    >
       View Full Profile
     </button>
   </div>
@@ -386,26 +398,41 @@ const PostCard = ({ candidate }) => (
   </div>
 );
 
-const PostHeader = ({ candidate }) => (
-  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div className="flex items-center gap-4">
-      <img
-        src="assets/images/eli.jpg"
-        alt="profile"
-        className="rounded-full w-12 h-12 sm:w-[60px] sm:h-[60px]"
-      />
-      <div>
-        <p className="text-[#16730F] font-semibold text-sm">
-          {candidate.first_name} {candidate.last_name}
-        </p>
-        <p className="text-[#1A3E32] text-[10px] sm:text-xs">
-          Posted 12 minutes ago
-        </p>
+const PostHeader = ({ candidate }) => {
+  // Get profile image URL
+  const profileImage = candidate.profile_photo 
+    ? getProfileImageUrl(candidate.profile_photo) 
+    : null;
+    
+  return (
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex items-center gap-4">
+        {profileImage ? (
+          <img
+            src={profileImage}
+            alt="profile"
+            className="rounded-full w-12 h-12 sm:w-[60px] sm:h-[60px] object-cover"
+          />
+        ) : (
+          <img
+            src="assets/images/eli.jpg"
+            alt="profile"
+            className="rounded-full w-12 h-12 sm:w-[60px] sm:h-[60px]"
+          />
+        )}
+        <div>
+          <p className="text-[#16730F] font-semibold text-sm">
+            {candidate.first_name} {candidate.last_name}
+          </p>
+          <p className="text-[#1A3E32] text-[10px] sm:text-xs">
+            Posted 12 minutes ago
+          </p>
+        </div>
       </div>
+      <img src="assets/images/more.svg" alt="more" className="w-4 h-4" />
     </div>
-    <img src="assets/images/more.svg" alt="more" className="w-4 h-4" />
-  </div>
-);
+  );
+};
 
 const PostContent = () => (
   <div>

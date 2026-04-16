@@ -79,7 +79,10 @@ const CandidateSearchPage = () => {
       );
     } else if (!showPeopleConnect) {
       return (
-        <UserMainProfileCard onConnect={() => setShowPeopleConnect(true)} />
+        <UserMainProfileCard 
+          candidateId={selectedCandidateId} 
+          onConnect={() => setShowPeopleConnect(true)} 
+        />
       );
     } else {
       return <PeopleConnect />;
@@ -125,6 +128,7 @@ const CandidateSearchPage = () => {
                 />
               ) : !showPeopleConnect ? (
                 <UserMainProfileCard
+                  candidateId={selectedCandidateId}
                   onConnect={() => setShowPeopleConnect(true)}
                 />
               ) : (

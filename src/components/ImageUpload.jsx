@@ -15,7 +15,7 @@ const ImageUpload = ({ imagePreview, handleImageChange, bio, onBioChange }) => (
             Upload <br /> your image
           </span>
         )}
-        <input type="file" className="hidden" onChange={handleImageChange} />
+        <input type="file" className="hidden" onChange={handleImageChange} accept="image/png, image/jpeg, image/jpg" />
       </label>
     </div>
     <p className="text-[10px] text-black bg-white w-[100px] m-auto font-medium mt-1">

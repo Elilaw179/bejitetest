@@ -268,12 +268,11 @@ function Link() {
         showSkip={true}
         onSkip={() => {
           if (isEditMode) {
-            // Navigate to recruitment page when skipping in edit mode
             navigate("/job-type", {
               state: { profileUpdateComplete: true }
             });
           } else {
-            navigate("/save-progress", {
+            navigate("/job-type", {
               state: { email, firstName, lastName, role, mode, followings },
             });
           }
