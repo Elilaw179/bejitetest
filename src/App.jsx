@@ -108,6 +108,7 @@ function App() {
             <Route path="/edit-profile/work-history" element={<WorkHistory />} />
             <Route path="/edit-profile/certificate" element={<Certificate />} />
             <Route path="/edit-profile/links" element={<Link />} />
+            <Route path="/edit-profile/job-type" element={<JobType />} />
           </Route>
           <Route element={<IndividualVerificationLayout />}>
             <Route

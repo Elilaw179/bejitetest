@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { API_URL } from "../../config";
 import InterviewInviteModal from "./InterviewInviteModal";
 import { useNavigate } from "react-router-dom";
+import { getProfileImageUrl } from "../../utils/profileImageUtils";
 
 const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
   const navigate = useNavigate();
@@ -137,6 +138,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
             experienceYears: candidate.experience_years || 0,
             initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
             online: candidate.availability === "Available",
+            image: candidate.profile_photo ? getProfileImageUrl(candidate.profile_photo) : null,
           }));
 
           setCandidates(formatted);
