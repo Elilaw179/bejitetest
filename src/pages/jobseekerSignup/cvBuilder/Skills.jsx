@@ -274,32 +274,6 @@ function Skills() {
             if (!exists) {
               skillsToSave.push(currentEntry);
             }
-
-          }
-
-          // No validation required - skills are optional
-        }}
-        onNext={async () => {
-          let skillsToSave = [...allSkill];
-
-          if (allFilled) {
-            const currentEntry = {
-              userId: user?.id,
-              skillSector,
-              category,
-              experience,
-            };
-
-            const exists = skillsToSave.some(
-              (item) =>
-                item.skillSector === currentEntry.skillSector &&
-                item.category === currentEntry.category &&
-                item.experience === currentEntry.experience
-            );
-
-            if (!exists) {
-              skillsToSave.push(currentEntry);
-            }
           }
 
           if (skillsToSave.length === 0) {

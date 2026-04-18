@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, clearErrors } from "../features/auth/authSlice";
 import { toast } from "react-toastify";
-import BejiteLogo from "../../public/assets/images/logo.png";
-import GoogleImg from "../../public/assets/images/google.png";
+const bejiteLogoUrl = "/assets/images/logo.png";
+const googleImgUrl = "/assets/images/google.png";
 import Hyperlinks from "../components/Hyperlinks";
 import { decodeToken } from "../utils/tokenManager";
 
@@ -157,7 +157,7 @@ function SignIn() {
     <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
       <div className="w-full lg:w-[70%] px-4 py-6 mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 lg:absolute lg:right-4 lg:left-4 lg:top-1/12 lg:transform lg:-translate-y-1/2 lg:z-10">
-        <img src={BejiteLogo} alt="Logo" className="h-10" />
+        <img src={bejiteLogoUrl} alt="Logo" className="h-10" />
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-3">
           <h1 className="text-[#828282] text-base sm:text-xl font-medium text-center sm:text-left">
             Don't have an account?
@@ -270,7 +270,7 @@ function SignIn() {
                 {googleLoading ? (
                   <div className="w-6 h-6 border-2 border-gray-400 rounded-full border-t-transparent animate-spin"></div>
                 ) : (
-                  <img src={GoogleImg} alt="google logo" className="w-8 h-8" />
+                  <img src={googleImgUrl} alt="google logo" className="w-8 h-8" />
                 )}
               </button>
             </div>

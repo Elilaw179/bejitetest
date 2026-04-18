@@ -50,10 +50,10 @@ function JobType() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { currentStep, isEditMode, getPath, cvData } = useOutletContext();
-  
-  // Get user ID from localStorage as fallback
-  const { id: localUserId } = useLocalStorage('user');
+  const outlet = useOutletContext() ?? {};
+  const { currentStep = 7, isEditMode = false, getPath, cvData } = outlet;
+
+  const { id: localUserId } = useLocalStorage("user");
   const userId = user?.id || localUserId;
 
 
@@ -92,67 +92,18 @@ function JobType() {
 
   const allFilled = Object.values(form).every((val) => val.trim() !== "");
 
-  // Load existing data when in edit mode
+  // Edit mode: prefill from CV layout data only (job posting is created on submit)
   useEffect(() => {
-    console.log('JobType useEffect:', { isEditMode, dataLoaded, userId, cvData: !!cvData });
-    const loadExistingData = async () => {
-      if (isEditMode && !dataLoaded && userId) {
-        console.log('Loading data for user:', userId);
-        
-        // First try to get data from cvData if available (from ResumeLayout)
-        if (cvData?.bio) {
-          console.log('Using cvData.bio:', cvData.bio);
-          // Map bio data to form - CV builder might have job preferences in bio
-          setForm(prev => ({
-            ...prev,
-            // If bio has any job-related fields, use them
-            jobTitle: cvData.bio.title || prev.jobTitle,
-            country: cvData.bio.country || prev.country,
-          }));
-        }
-
-        try {
-          // Get candidate data from job-board API
-          let candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${userId}`);
-          console.log('Candidate response:', candidateResponse.data);
-
-          // If candidate doesn't exist, try to sync from CV builder data
-          if (!candidateResponse.data.success) {
-            console.log('Candidate not found, trying sync...');
-            try {
-              await axiosInstance.post(`/api/cv-builder/sync-candidate/${userId}`);
-              candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${userId}`);
-              console.log('After sync response:', candidateResponse.data);
-            } catch (syncError) {
-              console.error('Sync failed:', syncError);
-            }
-          }
-
-          if (candidateResponse.data.success) {
-            const candidate = candidateResponse.data.data;
-            console.log('Candidate data loaded:', candidate);
-            setForm({
-              jobTitle: candidate.title || "",
-              industry: candidate.industry || "",
-              country: candidate.preferred_country || "",
-              statePref: candidate.preferred_state || "",
-              workType: candidate.work_type || "",
-              salary: candidate.salary_expectation ? String(candidate.salary_expectation) : "",
-              currency: candidate.currency || "",
-              remotePref: candidate.remote_preference || "",
-              availability: candidate.availability || "",
-            });
-          }
-        } catch (error) {
-          console.error('Error loading existing job type data:', error);
-        } finally {
-          setDataLoaded(true);
-        }
-      }
-    };
-
-    loadExistingData();
-  }, [isEditMode, userId, dataLoaded, cvData]);
+    if (!isEditMode || dataLoaded) return;
+    if (cvData?.bio) {
+      setForm((prev) => ({
+        ...prev,
+        jobTitle: cvData.bio.title || prev.jobTitle,
+        country: cvData.bio.country || prev.country,
+      }));
+    }
+    setDataLoaded(true);
+  }, [isEditMode, dataLoaded, cvData]);
 
   const jobTypes = [
     "Software Engineer", "Project Manager", "Data Analyst", "Graphic Designer", "Marketing Manager", "Sales Representative",
@@ -260,82 +211,62 @@ function JobType() {
   ];
 
 
-  // Utility function to normalize text for consistent storage
-  const normalizeText = (text) => {
-    if (!text || typeof text !== 'string') return text;
-    return text.trim().toLowerCase();
-  };
-
   const handleSubmit = async () => {
     if (!allFilled) {
-      toast.error("Form is not completely filled")
+      toast.error("Form is not completely filled");
+      return;
+    }
+    if (!userId) {
+      toast.error("Could not determine your account. Please sign in again.");
       return;
     }
 
+    const currencyCode =
+      form.currency.match(/\(([^)]+)\)$/)?.[1] || form.currency.trim();
+
+    const payload = {
+      job_title: form.jobTitle.trim(),
+      industry_sector: form.industry.trim(),
+      preferred_country: form.country.trim(),
+      preferred_state: form.statePref.trim(),
+      work_type: form.workType.trim(),
+      expected_salary: form.salary.trim(),
+      currency: currencyCode,
+      remote_preference: form.remotePref.trim(),
+      availability: form.availability.trim(),
+      posted_by: userId,
+    };
+
     try {
-      // First get the candidate ID for this user
-      let candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${userId}`);
+      const res = await axiosInstance.post("/api/job-board/job", payload);
+      const ok =
+        res.data?.success === true ||
+        (res.status >= 200 &&
+          res.status < 300 &&
+          res.data?.success !== false);
 
-      // If candidate doesn't exist, trigger sync and try again
-      if (!candidateResponse.data.success) {
-        console.log("Candidate not found, triggering sync...");
-        try {
-          await axiosInstance.post(`/api/cv-builder/sync-candidate/${userId}`);
-          // Try to get candidate again after sync
-          candidateResponse = await axiosInstance.get(`/api/job-board/candidates/by-user/${userId}`);
-          if (!candidateResponse.data.success) {
-            toast.error("Failed to create candidate profile. Please try again.");
-            return;
-          }
-        } catch (syncError) {
-          console.error("Sync failed:", syncError);
-          toast.error("Failed to sync candidate data. Please complete your CV first.");
-          return;
-        }
-      }
-
-      const candidateId = candidateResponse.data.data.id;
-
-      // Extract currency code from format "Name (CODE)"
-      const currencyCode = form.currency.match(/\(([^)]+)\)$/)?.[1] || form.currency;
-
-      // Prepare update payload for candidate with normalized text fields
-      const updatePayload = {
-        title: normalizeText(form.jobTitle), // Normalize job title
-        industry: normalizeText(form.industry), // Normalize industry
-        preferred_country: normalizeText(form.country), // Normalize country
-        preferred_state: normalizeText(form.statePref), // Normalize state
-        work_type: normalizeText(form.workType), // Normalize work type
-        salary_expectation: parseInt(form.salary) || null,
-        currency: currencyCode,
-        remote_preference: normalizeText(form.remotePref), // Normalize remote preference
-        availability: normalizeText(form.availability) // Normalize availability
-      };
-
-      // Update the candidate record
-      const updateResponse = await axiosInstance.put(`/api/job-board/candidates/${candidateId}`, updatePayload);
-
-      if (updateResponse.data.success) {
-        toast.success("Job preferences updated successfully!");
-        if (isEditMode) {
-          // In edit mode, navigate to the next step or back to profile
+      if (ok) {
+        toast.success("Job preferences saved successfully!");
+        if (isEditMode && typeof getPath === "function") {
           navigate(getPath(currentStep + 1) || "/profile");
+        } else if (isEditMode) {
+          navigate("/profile");
         } else {
-          // In initial signup, navigate to recruitment
-          console.log("Navigating to /recruitment with state:", { email, firstName, lastName, role, mode, followings });
           navigate("/recruitment", {
             state: { email, firstName, lastName, role, mode, followings },
           });
         }
       } else {
-        console.error("Server responded but with error:", updateResponse.data.message);
-        toast.error("Failed to update job preferences");
+        toast.error(res.data?.message || "Failed to save job preferences");
       }
     } catch (error) {
-      toast.error("Submission failed")
-      console.error("Submission failed:", error);
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message;
+      toast.error(msg || "Submission failed");
+      console.error("POST /api/job-board/job failed:", error);
     }
-
   };
 
 
@@ -445,10 +376,10 @@ function JobType() {
             navigate(-1);
           }
         }}
-        onNext={() =>
-          allFilled &&
-           handleSubmit()
-        }
+        onNext={() => {
+          if (!allFilled) return;
+          void handleSubmit();
+        }}
       />
     </div>
   );
