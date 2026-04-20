@@ -7,6 +7,7 @@ import useAuth from "../../hooks/useAuth";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
 
+<<<<<<< Updated upstream
 const SelectField = ({ label, value, onChange, options, placeholder = "Select" }) => (
   <div className="w-full md:w-[48%] lg:w-[30%]">
     <p className="text-[12px] font-semibold mb-1">{label}</p>
@@ -22,6 +23,43 @@ const SelectField = ({ label, value, onChange, options, placeholder = "Select" }
         ))}
       </select>
       {value && <FaCheck className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />}
+=======
+const SelectField = ({ label, value, onChange, options, placeholder = "Select" }) => {
+  const [inputValue, setInputValue] = useState(value);
+
+  // Generate unique ID for datalist based on label
+  const listId = `options-${label.toLowerCase().replace(/\s+/g, '-')}`;
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+    onChange({ target: { value: val } });
+  };
+
+  return (
+    <div className="w-full md:w-[48%] lg:w-[30%]">
+      <p className="text-[12px] font-semibold mb-1">{label}</p>
+      <div className="relative w-full">
+        <input
+          type="text"
+          className={`select-with-check appearance-none focus:outline-1 focus:outline-[#1A3E32] ${value ? "filled" : ""} w-full text-[#333333] text-sm p-3 pr-10 rounded-[10px] border-[#F5F5F5] border-2`}
+          value={inputValue}
+          onChange={handleInputChange}
+          placeholder={placeholder}
+          list={listId}
+        />
+        <datalist id={listId}>
+          {options.map((opt, i) => (
+            <option key={i} value={opt}>{opt}</option>
+          ))}
+        </datalist>
+        {(value || inputValue) && <FaCheck className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />}
+      </div>
+>>>>>>> Stashed changes
     </div>
   </div>
 );
@@ -42,10 +80,64 @@ function JobType() {
     availability: "",
   });
 
+<<<<<<< Updated upstream
   const updateField = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+=======
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const allFilled = Object.values(form).every((val) => val.trim() !== "");
+  const updateField = (field) => (e) => {
+    const value = e.target.value;
+    setForm((f) => {
+      const updatedForm = { ...f, [field]: value };
 
+      // Reset state when country changes
+      if (field === 'country') {
+        updatedForm.statePref = '';
+      }
+
+      return updatedForm;
+    });
+  };
+>>>>>>> Stashed changes
+
+  const allFilled = Object.values(form).every((val) => val && String(val).trim() !== "");
+
+<<<<<<< Updated upstream
+=======
+  // Fetch job type from candidates table
+  useEffect(() => {
+    if (dataLoaded || !userId) return;
+    
+    const fetchJobType = async () => {
+      try {
+        const res = await axiosInstance.get(`/api/cv-builder/job-type/${userId}`);
+        if (res.data?.success && res.data?.data) {
+          const data = res.data.data;
+          setForm((prev) => ({
+            ...prev,
+            jobTitle: data.job_title || prev.jobTitle,
+            industry: data.industry_sector || data.industry || prev.industry,
+            country: data.preferred_country || prev.country,
+            statePref: data.preferred_state || prev.statePref,
+            workType: data.work_type || prev.workType,
+            salary: data.expected_salary || data.salary_expectation || prev.salary,
+            currency: data.currency || prev.currency,
+            remotePref: data.remote_preference || prev.remotePref,
+            availability: data.availability || prev.availability,
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching job type:', err);
+      } finally {
+        setDataLoaded(true);
+      }
+    };
+    
+    fetchJobType();
+  }, [userId, dataLoaded]);
+
+>>>>>>> Stashed changes
   const jobTypes = [
     "Software Engineer", "Project Manager", "Data Analyst", "Graphic Designer", "Marketing Manager", "Sales Representative",
     "Customer Service Representative", "Product Manager", "Human Resources Specialist", "Administrative Assistant", "Accountant",
@@ -136,8 +228,35 @@ function JobType() {
       posted_by: user?.id,
     }
 
+<<<<<<< Updated upstream
     try {
       const response = await axiosInstance.post("/api/job-board/job", apiPayLoad);
+=======
+    setIsSubmitting(true);
+
+    const currencyCode =
+      form.currency?.match(/\(([^)]+)\)$/)?.[1] || form.currency?.trim() || '';
+
+    const payload = {
+      job_title: String(form.jobTitle || '').trim(),
+      industry_sector: String(form.industry || '').trim(),
+      preferred_country: String(form.country || '').trim(),
+      preferred_state: String(form.statePref || '').trim(),
+      work_type: String(form.workType || '').trim(),
+      expected_salary: String(form.salary || '').trim(),
+      currency: currencyCode,
+      remote_preference: String(form.remotePref || '').trim(),
+      availability: String(form.availability || '').trim(),
+    };
+
+    try {
+      const res = await axiosInstance.post("/api/cv-builder/job-type", payload);
+      const ok =
+        res.data?.success === true ||
+        (res.status >= 200 &&
+          res.status < 300 &&
+          res.data?.success !== false);
+>>>>>>> Stashed changes
 
       if (response.data.success) {
         toast.success("Profile completed successfully!");
@@ -151,8 +270,19 @@ function JobType() {
         );
       }
     } catch (error) {
+<<<<<<< Updated upstream
       toast.error("Submission failed")
       console.error("Submission failed:", error);
+=======
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message;
+      toast.error(msg || "Submission failed");
+      console.error("POST /api/cv-builder/job-type failed:", error);
+    } finally {
+      setIsSubmitting(false);
+>>>>>>> Stashed changes
     }
 
   };
@@ -253,11 +383,26 @@ function JobType() {
 
       <NavigationButtons
         isFormComplete={allFilled}
+<<<<<<< Updated upstream
         onBack={() => navigate(-1)}
         onNext={() =>
           allFilled &&
            handleSubmit()
         }
+=======
+        isLoading={isSubmitting}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
+        onNext={() => {
+          if (!allFilled || isSubmitting) return;
+          void handleSubmit();
+        }}
+>>>>>>> Stashed changes
       />
     </div>
   );

@@ -1,4 +1,5 @@
 import React from 'react';
+import { getProfileImageUrl } from '../../utils/profileImageUtils';
 
 const RequestCard = ({ request, type, onAccept, onReject, onCancel }) => {
   const user = type === 'incoming' ? request.requester : request.recipient;
@@ -7,7 +8,7 @@ const RequestCard = ({ request, type, onAccept, onReject, onCancel }) => {
     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
       <div className="flex items-center gap-4">
         <img
-          src={user?.image || '/assets/images/eli.jpg'}
+          src={getProfileImageUrl(user?.image)}
           alt={user?.name}
           className="w-12 h-12 rounded-full object-cover"
         />

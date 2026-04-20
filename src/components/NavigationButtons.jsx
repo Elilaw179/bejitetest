@@ -1,5 +1,6 @@
 import React from "react";
 import { FaArrowLeft } from "react-icons/fa";
+import { FaSpinner } from "react-icons/fa";
 
 const NavigationButtons = ({ 
   isFormComplete, 
@@ -7,7 +8,8 @@ const NavigationButtons = ({
   onNext,
   showSkip = false,
   onSkip,
-  nextLabel = "Next"
+  nextLabel = "Next",
+  isLoading = false
 }) => (
   <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center mt-[5%] px-4 gap-4 mb-[7%]">
     <div
@@ -29,14 +31,21 @@ const NavigationButtons = ({
 
     <button
       className={`w-full shadow-md sm:w-[107px] ${
-        isFormComplete
+        isFormComplete && !isLoading
           ? "bg-[#16730F] cursor-pointer"
           : "bg-[#16730F40] cursor-not-allowed"
-      } rounded-2xl h-9 text-center text-white text-[14px]`}
-      disabled={!isFormComplete}
+      } rounded-2xl h-9 text-center text-white text-[14px] flex items-center justify-center gap-2`}
+      disabled={!isFormComplete || isLoading}
       onClick={onNext}
     >
-      {nextLabel}
+      {isLoading ? (
+        <>
+          <FaSpinner className="animate-spin" />
+          Saving...
+        </>
+      ) : (
+        nextLabel
+      )}
     </button>
   </div>
 );
