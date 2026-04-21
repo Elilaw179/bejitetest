@@ -1,16 +1,17 @@
 import React from 'react';
+import { getProfileImageUrl } from '../../utils/profileImageUtils';
 
 const ConnectionCard = ({ user, onRemove, showRemoveButton = false }) => (
   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
     <div className="flex items-center gap-4">
       <img
-        src={user.image || '/assets/images/eli.jpg'}
+        src={getProfileImageUrl(user.image)}
         alt={user.name}
         className="w-12 h-12 rounded-full object-cover"
       />
       <div>
         <h3 className="font-semibold text-[#1A3E32]">{user.name}</h3>
-        <p className="text-sm text-gray-600">{user.role || 'Professional'}</p>
+        <p className="text-sm text-gray-600">{user.jobTitle || user.role || 'Professional'}</p>
       </div>
     </div>
     {showRemoveButton && (

@@ -4,6 +4,7 @@ import { ConnectionList, RequestList } from '../components/connections';
 import { FaUserFriends, FaUserPlus, FaClock, FaSearch } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import * as connectionsApi from '../services/connectionsApi';
+import { getProfileImageUrl } from '../utils/profileImageUtils';
 
 const Connections = () => {
   const [activeTab, setActiveTab] = useState('network');
@@ -37,8 +38,8 @@ const Connections = () => {
         lastName: conn.user?.lastName,
         email: conn.user?.email,
         connectedAt: conn.connectedAt,
-        image: null, // Backend doesn't provide image in connections
-        role: 'Professional' // Default role
+        image: conn.user?.profilePhoto || null,
+        role: conn.user?.jobTitle || 'Professional'
       })) : [];
 
       // Transform incoming requests data - handle both {requests: [...]} and direct array responses
@@ -52,7 +53,7 @@ const Connections = () => {
           lastName: req.fromUser?.lastName,
           email: req.fromUser?.email,
           image: null,
-          role: 'Professional'
+          role: req.fromUser?.jobTitle || 'Professional'
         },
         createdAt: req.createdAt
       })) : [];
@@ -68,7 +69,7 @@ const Connections = () => {
           lastName: req.toUser?.lastName,
           email: req.toUser?.email,
           image: null,
-          role: 'Professional'
+          role: req.toUser?.jobTitle || 'Professional'
         },
         createdAt: req.createdAt
       })) : [];
@@ -82,7 +83,7 @@ const Connections = () => {
         lastName: user.lastName,
         email: user.email,
         image: user.profilePhoto,
-        role: 'Professional'
+        role: user.jobTitle || 'Professional'
       })) : [];
 
       setConnections(transformedConnections);
@@ -335,7 +336,7 @@ const PeopleList = ({ users, onSendRequest, searchQuery }) => {
         <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
           <div className="flex items-center gap-4">
             <img
-              src={user.image || '/assets/images/eli.jpg'}
+              src={getProfileImageUrl(user.image)}
               alt={user.name}
               className="w-12 h-12 rounded-full object-cover"
             />
