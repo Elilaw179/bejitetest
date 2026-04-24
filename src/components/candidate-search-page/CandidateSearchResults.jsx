@@ -2,7 +2,26 @@ import React, { useEffect, useState, useRef } from "react";
 import { API_URL } from "../../config";
 import InterviewInviteModal from "./InterviewInviteModal";
 import { useNavigate } from "react-router-dom";
-import { getProfileImageUrl } from "../../utils/profileImageUtils";
+
+// Helper function to get profile image URL (consistent with NewsFeedHeader and Profile page)
+const getProfileImageUrl = (imagePath) => {
+  // First priority: Use provided image path from API data (candidate's image)
+  if (imagePath) {
+    if (imagePath.startsWith('http')) {
+      return imagePath; // Cloudinary URLs
+    }
+    // For old /uploads/ paths, don't try to load them as they're likely not accessible
+    // Return null so component shows initials instead
+    if (imagePath.startsWith('/uploads')) {
+      return null;
+    }
+    // For any other paths, try with API_URL
+    return `${API_URL}${imagePath}`;
+  }
+
+  // Final fallback
+  return null; // Return null so component shows initials
+};
 
 const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
   const navigate = useNavigate();
@@ -182,8 +201,8 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
     return (
       <div className="bg-[#1A3E32] w-full max-w-[500px] px-10 py-8 rounded-2xl shadow-lg">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B8E23]"></div>
-          <p className="text-[#6B8E23] mt-4">Loading candidates...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+          <p className="text-white mt-4">Loading candidates...</p>
         </div>
       </div>
     );
@@ -195,22 +214,22 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
         <div className="text-center">
           {paymentRequired ? (
             <>
-              <svg className="w-16 h-16 mx-auto text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-16 h-16 mx-auto text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-yellow-400 text-lg font-semibold mt-4">Free Trial Used</p>
-              <p className="text-[#828282] mt-2 text-sm">{error}</p>
+              <p className="text-white text-lg font-semibold mt-4">Free Trial Used</p>
+              <p className="text-white mt-2 text-sm">{error}</p>
               <button
                 onClick={() => navigate('/ase/pricing')}
-                className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 Upgrade Now
               </button>
             </>
           ) : (
             <>
-              <p className="text-red-400 text-lg font-semibold">Error Loading Candidates</p>
-              <p className="text-[#828282] mt-2 text-sm">{error}</p>
+              <p className="text-white text-lg font-semibold">Error Loading Candidates</p>
+              <p className="text-white mt-2 text-sm">{error}</p>
             </>
           )}
         </div>
@@ -255,7 +274,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
           ))
         ) : (
           <div className="text-center p-5">
-            <p className="text-[#6B8E23] text-[20px] font-semibold">No candidates found</p>
+            <p className="text-white text-[20px] font-semibold">No candidates found</p>
           </div>
         )}
       </div>
@@ -271,8 +290,8 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
 
 const SearchResultsHeader = ({ count }) => (
   <div className="text-center p-5">
-    <p className="text-[#6B8E23] text-[20px] font-semibold">Search Results</p>
-    <p className="text-[#828282]">{count} Candidates found</p>
+    <p className="text-white text-[20px] font-semibold">Search Results</p>
+    <p className="text-white">{count} Candidates found</p>
   </div>
 );
 
@@ -295,7 +314,7 @@ const CandidateProfile = ({ candidate, onViewProfile, onInvite }) => (
 const ProfileImage = ({ initials, name, online, image }) => (
   <div className="relative">
     <div className="rounded-full w-[100px] h-[100px] overflow-hidden bg-[#6B8E23] flex items-center justify-center">
-      
+
       {image ? (
         <img src={image} alt={`${name} profile`} className="w-full h-full object-cover" />
       ) : (
@@ -316,15 +335,15 @@ const ProfileImage = ({ initials, name, online, image }) => (
 const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYears, onViewProfile, onInvite }) => (
   <div className="ml-3 flex-1 space-y-1">
     <div className="ml-0.5">
-      <p className="text-[#6B8E23] text-[13px] font-medium">{name}</p>
-      <p className="text-[5px] text-[#6B8E23]">{type}</p>
+      <p className="text-white text-[13px] font-medium">{name}</p>
+      <p className="text-[5px] text-white">{type}</p>
     </div>
     <div className="ml-0.5">
-      <p className="text-[#6B8E23] text-[8px] font-medium">{jobTitle}</p>
-      <p className="text-[#6B8E23] text-[5px]">{location}</p>
+      <p className="text-white text-[8px] font-medium">{jobTitle}</p>
+      <p className="text-white text-[5px]">{location}</p>
 
       {experienceYears > 0 && (
-        <p className="text-[#6B8E23] text-[5px]">{experienceYears} years experience</p>
+        <p className="text-white text-[5px]">{experienceYears} years experience</p>
       )}
 
       {skills.length > 0 && (
@@ -335,7 +354,7 @@ const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYear
             </span>
           ))}
           {skills.length > 3 && (
-            <span className="text-[4px] text-[#6B8E23]">+{skills.length - 3} more</span>
+            <span className="text-[4px] text-white">+{skills.length - 3} more</span>
           )}
         </div>
       )}

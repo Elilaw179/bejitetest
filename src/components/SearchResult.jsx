@@ -89,8 +89,8 @@ const SearchResult = () => {
     <div className="min-h-screen flex justify-center items-center p-4">
       <div className="bg-[#1A3E32] w-full max-w-[400px] p-5 rounded-2xl shadow-lg">
         <div className="text-center p-5">
-          <p className="text-[#6B8E23] text-[20px] font-semibold">Search Result</p>
-          <p className="text-[#828282]">{candidates.length} Candidates found</p>
+          <p className="text-white text-[20px] font-semibold">Search Result</p>
+          <p className="text-white">{candidates.length} Candidates found</p>
         </div> 
         
         <div className="bg-[#556B1F] h-1"></div>

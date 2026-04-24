@@ -2,9 +2,50 @@ import React, { useState, useEffect } from "react";
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH } from "react-icons/fa";
 import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment } from '../../services/postsApi';
 import { getUser } from '../../utils/tokenManager';
-import { getUserProfileImage, getProfileImageUrl } from '../../utils/profileImageUtils';
+import { API_URL } from '../../config';
 import PostCreationModal from '../PostCreationModal';
 import ConfirmModal from '../ConfirmModal';
+
+// Helper function to get profile image URL (consistent with NewsFeedHeader and Profile page)
+const getProfileImageUrl = (imagePath) => {
+  // First priority: Use provided image path from API data (post author's image)
+  if (imagePath) {
+    if (imagePath.startsWith('http')) return imagePath; // Cloudinary URLs
+    if (imagePath.startsWith('/uploads')) {
+      return `${API_URL}${imagePath}`;
+    }
+    return `${API_URL}${imagePath}`;
+  }
+
+  // Second priority: Check current user data (for current user's posts if API data missing)
+  const user = getUser();
+  const userImage = user?.image || user?.profilePhoto || user?.profile_photo;
+  if (userImage) {
+    if (userImage.startsWith('http')) return userImage;
+    if (userImage.startsWith('/uploads')) {
+      return `${API_URL}${userImage}`;
+    }
+    return `${API_URL}${userImage}`;
+  }
+
+  // Final fallback
+  return 'assets/images/eli.jpg';
+};
+
+// Helper function to get current user profile image
+const getCurrentUserProfileImage = () => {
+  const user = getUser();
+  if (!user) return "assets/images/eli.jpg";
+
+  const image = user.image || user.profilePhoto || user.profile_photo || "assets/images/eli.jpg";
+
+  if (!image) return "assets/images/eli.jpg";
+  if (image.startsWith('http')) return image;
+  if (image.startsWith('/uploads')) {
+    return `${API_URL || 'http://localhost:3001'}${image}`;
+  }
+  return image;
+};
 
 // Helper function to get display name (same pattern as NewsFeedHeader)
 const getDisplayName = (user) => {
@@ -63,7 +104,7 @@ export default function RecruitmentMiddle() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const user = getUser();
-  const currentUserImage = getUserProfileImage();
+  const currentUserImage = getCurrentUserProfileImage();
 
   useEffect(() => {
     fetchFeed();
@@ -178,10 +219,11 @@ export default function RecruitmentMiddle() {
         <div className="text-center py-8 text-gray-500">No posts yet. Be the first to post!</div>
       ) : (
         posts.map(post => (
-          <RecruitmentPostCard 
-            key={post.id} 
-            post={post} 
+          <RecruitmentPostCard
+            key={post.id}
+            post={post}
             currentUserId={user?.id}
+            currentUser={user}
             onLike={handleLike}
             onSave={handleSave}
             onUpdate={handleUpdatePost}
@@ -201,7 +243,7 @@ export default function RecruitmentMiddle() {
   );
 }
 
-const RecruitmentPostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId }) => {
+const RecruitmentPostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId, currentUser }) => {
   const isOwner = String(post.authorId) === String(currentUserId);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
@@ -304,10 +346,17 @@ const RecruitmentPostCard = ({ post, onLike, onSave, onUpdate, onDelete, current
   };
 
   const authorName = getDisplayName(post.author);
-  const authorImage = getProfileImageUrl(post.author?.image || post.author?.profile_photo);
+  // For current user's posts, prioritize local image over API data
+  const isCurrentUserPost = String(post.authorId) === String(currentUserId);
+  const authorImage = isCurrentUserPost
+    ? getCurrentUserProfileImage() // Use local image for current user's posts
+    : getProfileImageUrl(post.author?.image); // Use API data for other users' posts
 
   const getCommentAuthorImage = (comment) => {
-    return getProfileImageUrl(comment.author?.image || comment.author?.profile_photo);
+    const isCurrentUserComment = String(comment.authorId) === String(currentUserId);
+    return isCurrentUserComment
+      ? getCurrentUserProfileImage() // Use local image for current user's comments
+      : getProfileImageUrl(comment.author?.image); // Use API data for other users' comments
   };
 
   return (

@@ -389,7 +389,7 @@ const RecommendedProfile = ({ onConnect }) => (
           </div>
           <button
             onClick={onConnect}
-            className="bg-[#1A3E32] w-40 flex items-center justify-center mt-2 space-x-1 p-1 rounded-3xl text-[10px]">
+            className="bg-[#1A3E32] w-40 flex items-center justify-center mt-2 space-x-1 p-1 rounded-3xl text-[10px] text-white">
             <img className='w-3 h-3' src="/assets/images/repeate-one.svg" alt="Connect" />
             <span>Connect</span>
           </button>

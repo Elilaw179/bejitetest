@@ -62,6 +62,14 @@ const authSlice = createSlice({
       console.log("Clearing errors");
       state.errors = {};
     },
+    updateUser: (state, action) => {
+      console.log("Updating user data:", action.payload);
+      if (state.user) {
+        const updatedUser = { ...state.user, ...action.payload };
+        state.user = updatedUser;
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      }
+    },
     logout: (state) => {
       console.log("Logging out");
       state.user = null;
@@ -154,5 +162,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearErrors, logout, setGoogleAuth } = authSlice.actions;
+export const { clearErrors, logout, setGoogleAuth, updateUser } = authSlice.actions;
 export default authSlice.reducer;

@@ -130,7 +130,7 @@ function Link() {
     {
       name: "linkedin",
       label: "LinkedIn",
-      textColor: "text-[#D9D9D9]",
+      textColor: "text-white",
       placeholder: "linkedin.com/in/username",
     },
     {
@@ -142,13 +142,13 @@ function Link() {
     {
       name: "instagram",
       label: "Instagram",
-      textColor: "text-[#D9D9D9]",
+      textColor: "text-white",
       placeholder: "instagram.com/username",
     },
     {
       name: "portfolio",
       label: "Portfolio website",
-      textColor: "text-[#D9D9D9]",
+      textColor: "text-white",
       placeholder: "yourwebsite.com",
     },
   ];
