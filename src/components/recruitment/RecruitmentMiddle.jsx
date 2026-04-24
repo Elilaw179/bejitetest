@@ -223,7 +223,6 @@ export default function RecruitmentMiddle() {
             key={post.id}
             post={post}
             currentUserId={user?.id}
-            currentUser={user}
             onLike={handleLike}
             onSave={handleSave}
             onUpdate={handleUpdatePost}
@@ -243,7 +242,7 @@ export default function RecruitmentMiddle() {
   );
 }
 
-const RecruitmentPostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId, currentUser }) => {
+const RecruitmentPostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId }) => {
   const isOwner = String(post.authorId) === String(currentUserId);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
