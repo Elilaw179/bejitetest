@@ -15,6 +15,7 @@ const NewsFeedHeader = ({
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
   const dropdownRef = useRef(null);
 
   // Get user from Redux store first (most up-to-date after login), fallback to prop or localStorage
@@ -78,6 +79,29 @@ const NewsFeedHeader = ({
   console.log('[NewsFeedHeader] API_URL from config:', API_URL);
   console.log('[NewsFeedHeader] Full image URL:', getProfileImageUrl(user?.image));
 
+  // Fetch notification count
+  const fetchNotificationCount = async () => {
+    try {
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/notifications`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+      if (response.ok && data.data) {
+        const unreadCount = data.data.filter(notification => !notification.is_read).length;
+        setNotificationCount(unreadCount);
+      }
+    } catch (err) {
+      console.error('Error fetching notification count:', err);
+    }
+  };
+
   // Handle logout
   const handleLogout = () => {
     dispatch(logoutAction());
@@ -97,6 +121,13 @@ const NewsFeedHeader = ({
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Fetch notification count on mount and periodically
+  useEffect(() => {
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const pathToIconMap = {
@@ -180,12 +211,19 @@ const NewsFeedHeader = ({
                   onClick={() => handleIconClick(name)}
                 />
               ) : (
-                <img
-                  src={`/assets/images/${name}.svg`}
-                  alt={name}
-                  className="h-6 md:h-8 cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => handleIconClick(name)}
-                />
+                <div className="relative">
+                  <img
+                    src={`/assets/images/${name}.svg`}
+                    alt={name}
+                    className="h-6 md:h-8 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => handleIconClick(name)}
+                  />
+                  {name === "notifications" && notificationCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                      {notificationCount > 99 ? '99+' : notificationCount}
+                    </span>
+                  )}
+                </div>
               )}
               {currentIcon === name && (
                 <span className="px-2 py-1 text-xs bg-[#1A3E32] rounded-r-2xl text-white rounded">
@@ -248,20 +286,7 @@ const NewsFeedHeader = ({
 
                     {/* Section 1: Profile */}
                     <div className="py-1">
-                      <button
-                        onClick={() => {
-                          navigate('/profile');
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
-                          location.pathname === '/profile'
-                            ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
-                            : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
-                        }`}
-                      >
-                        <FaUser className="text-base" />
-                        <span>View Profile</span>
-                      </button>
+                      
                       <button
                         onClick={() => {
                           navigate(user?.role === 'recruiter' ? '/edit-profile/recruiter/basic-details' : '/edit-profile/bio');
@@ -347,31 +372,38 @@ const NewsFeedHeader = ({
           >
             ✕ Close
           </button>
-          <nav className="flex flex-col gap-4">
-            {menuItems.map((name, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => {
-                  handleIconClick(name);
-                  setIsSidebarOpen(false);
-                }}
-              >
-                {name === "home-icon" ? (
-                  <FaHome className="text-[#16730F]" />
-                ) : (
-                  <img
-                    src={`/assets/images/${name}.svg`}
-                    alt={name}
-                    className="h-5"
-                  />
-                )}
-                <span className="text-[#1A3E32] font-medium capitalize text-sm">
-                  {name === "home-icon" ? "News Feed" : name.toLowerCase()}
-                </span>
-              </div>
-            ))}
-          </nav>
+           <nav className="flex flex-col gap-4">
+             {menuItems.map((name, i) => (
+               <div
+                 key={i}
+                 className="flex items-center gap-2 cursor-pointer"
+                 onClick={() => {
+                   handleIconClick(name);
+                   setIsSidebarOpen(false);
+                 }}
+               >
+                 {name === "home-icon" ? (
+                   <FaHome className="text-[#16730F]" />
+                 ) : (
+                   <div className="relative">
+                     <img
+                       src={`/assets/images/${name}.svg`}
+                       alt={name}
+                       className="h-5"
+                     />
+                     {name === "notifications" && notificationCount > 0 && (
+                       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                         {notificationCount > 9 ? '9+' : notificationCount}
+                       </span>
+                     )}
+                   </div>
+                 )}
+                 <span className="text-[#1A3E32] font-medium capitalize text-sm">
+                   {name === "home-icon" ? "News Feed" : name.toLowerCase()}
+                 </span>
+               </div>
+             ))}
+           </nav>
         </div>
       )}
     </header>

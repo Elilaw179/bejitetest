@@ -28,12 +28,12 @@ const StepTabs = ({ steps, currentStep, onStepClick, getPath, isEditMode = false
           disabled={!isClickable}
           className={`px-4 py-2 font-semibold rounded-[8px] text-white shadow-md transition-colors ${
             isCompleted
-              ? "bg-[#16730F] shadow-[#00000040] hover:bg-[#145a0c] cursor-pointer"
+              ? "bg-[#16730F] shadow-[#00000040] hover:bg-[#145a0c] cursor-pointer text-white"
               : isCurrent
-              ? "bg-[#2A4E42] hover:bg-[#3A5E52] cursor-pointer"
+              ? "bg-[#2A4E42] hover:bg-[#3A5E52] cursor-pointer text-white"
               : isFuture
-              ? "bg-[#1A3E32] hover:bg-[#2A4E42] cursor-pointer"
-              : "bg-[#1A3E3240] cursor-not-allowed"
+              ? "bg-[#1A3E32] hover:bg-[#2A4E42] cursor-pointer text-white"
+              : "bg-[#1A3E3240] cursor-not-allowed text-white"
           }`}
         >
           {step}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import StepTabs from '../../../components/StepTabs';
 import ProgressBar from '../../../components/ProgressBar';
 import ImageUpload from '../../../components/ImageUpload';
@@ -12,9 +13,11 @@ import CreateBio from '../../../services/createBio';
 import { countries } from '../../../data/countries';
 import { steps } from '../../../data/bioSteps';
 import { API_URL } from '../../../config';
+import { updateUser } from '../../../features/auth/authSlice';
 
 const Bio = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
 
     const handleStepClick = (path) => {
@@ -138,14 +141,19 @@ const Bio = () => {
 
         //  sequential logic
         const submitProfileSequence = async () => {
-            await postBioData(bioPayload); 
+            await postBioData(bioPayload);
+            let photoResponse = null;
             if (imageFile) {
-                await uploadProfileImage(imageFile);
+                photoResponse = await uploadProfileImage(imageFile);
+                // Update user data with new profile photo URL
+                if (photoResponse?.data?.profilePhoto) {
+                    dispatch(updateUser({ image: photoResponse.data.profilePhoto }));
+                }
             } else {
-                throw new Error('Image file is missing for upload.'); 
+                throw new Error('Image file is missing for upload.');
             }
-            
-            return 'Profile updated successfully!'; 
+
+            return 'Profile updated successfully!';
         };
 
         try {

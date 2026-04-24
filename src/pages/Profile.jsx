@@ -63,6 +63,16 @@ const Profile = () => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getProfileImageUrl = (imagePath) => {
+    // First check if local user has an image (more up-to-date)
+    if (user?.image) {
+      if (user.image.startsWith('http')) return user.image;
+      if (user.image.startsWith('/uploads')) {
+        return `${API_URL}${user.image}`;
+      }
+      return `${API_URL}${user.image}`;
+    }
+
+    // Fallback to profile data from API
     if (!imagePath) return '/assets/images/eli.jpg';
     if (imagePath.startsWith('http')) return imagePath;
     if (imagePath.startsWith('/uploads')) {

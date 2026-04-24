@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { getUser } from "../../utils/tokenManager";
 import { getUserProfileImage } from "../../utils/profileImageUtils";
 import { getUserPosts } from "../../services/postsApi";
 import { getConnections } from "../../services/connectionsApi";
 
 function RecruitmentRight() {
+  const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
   const [postCount, setPostCount] = useState(0);
   const [connectionCount, setConnectionCount] = useState(0);
@@ -65,7 +67,10 @@ function RecruitmentRight() {
         </div>
 
         <div className="w-[150px] m-auto mt-4">
-          <button className="bg-[#6B8E23] mb-4 p-2 text-[10px] text-[#FFFFFF] w-full rounded-3xl">
+          <button
+            className="bg-[#6B8E23] mb-4 p-2 text-[10px] text-[#FFFFFF] w-full rounded-3xl"
+            onClick={() => navigate('/profile')}
+          >
             View Profile
           </button>
         </div>
