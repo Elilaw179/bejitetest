@@ -5,6 +5,7 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import { Briefcase, CheckCircle, Activity, Users } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 
+// eslint-disable-next-line no-unused-vars
 const StatCard = ({ title, value, icon: Icon, colorClass, subtitle }) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-shadow">
     <div className="flex items-start justify-between mb-4">

@@ -3,7 +3,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
-import { logout } from '../../features/auth/authSlice';
 import { 
   Users, Briefcase, FileText, Activity, 
   TrendingUp, BarChart2, PieChart as PieChartIcon 
@@ -20,10 +19,6 @@ const AdminDashboard = () => {
   const [jobMetrics, setJobMetrics] = useState(null);
   const [advancedUserMetrics, setAdvancedUserMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const { user } = useSelector(state => state.auth);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const COLORS = ['#16730F', '#2563eb', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
 
