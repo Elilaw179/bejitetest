@@ -70,6 +70,19 @@ import ASEPaymentCallback from "./pages/employerDashboard/ASEPaymentCallback.jsx
 import ASESubscriptionDashboard from "./pages/employerDashboard/ASESubscriptionDashboard.jsx";
 import 'react-toastify/dist/ReactToastify.css';
 
+// Admin imports
+import AdminLogin from "./pages/admin/AdminLogin.jsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminUsers from "./pages/admin/AdminUsers.jsx";
+import AdminJobs from "./pages/admin/AdminJobs.jsx";
+import AdminRevenue from "./pages/admin/AdminRevenue.jsx";
+import AdminEngagement from "./pages/admin/AdminEngagement.jsx";
+import AdminRecruitment from "./pages/admin/AdminRecruitment.jsx";
+import AdminDemographics from "./pages/admin/AdminDemographics.jsx";
+import AdminList from "./pages/admin/AdminList.jsx";
+import AdminProtectedRoute from "./components/admin/AdminProtectedRoute.jsx";
+import { Navigate } from "react-router-dom";
+
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
 function App() {
@@ -77,6 +90,74 @@ function App() {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Router>
         <Routes>
+          {/* Admin Routes */}
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <AdminProtectedRoute>
+                <AdminDashboard />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/users" 
+            element={
+              <AdminProtectedRoute>
+                <AdminUsers />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/jobs" 
+            element={
+              <AdminProtectedRoute>
+                <AdminJobs />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/revenue" 
+            element={
+              <AdminProtectedRoute>
+                <AdminRevenue />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/engagement" 
+            element={
+              <AdminProtectedRoute>
+                <AdminEngagement />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/recruitment" 
+            element={
+              <AdminProtectedRoute>
+                <AdminRecruitment />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/demographics" 
+            element={
+              <AdminProtectedRoute>
+                <AdminDemographics />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/admins" 
+            element={
+              <AdminProtectedRoute>
+                <AdminList />
+              </AdminProtectedRoute>
+            } 
+          />
+
           <Route path="/auth/email-sent" element={<EmailSent />} />
           <Route path="/auth/success" element={<AuthSuccess />} />
           <Route path="/auth/failure" element={<AuthFailure />} />
