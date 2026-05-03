@@ -272,6 +272,7 @@ function App() {
           <Route path="/my-invitations" element={<InterviewNotifications />} />
           <Route path="/sent-invitations" element={<SentInvitations />} />
            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+           <Route path="/user-profile/:userId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
            <Route path="/about" element={<About />} />
            <Route path="/teams" element={<Teams />} />
            <Route path="/security-advice" element={<SecurityAdvice />} />
