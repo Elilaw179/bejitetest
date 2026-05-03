@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { FaHome, FaList, FaSearch, FaChevronDown, FaSignOutAlt, FaUserEdit, FaUser, FaCreditCard } from "react-icons/fa";
+import { FaHome, FaList, FaSearch, FaChevronDown, FaSignOutAlt, FaUserEdit, FaUser, FaCreditCard, FaUserFriends, FaBriefcase, FaNewspaper } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout as logoutAction } from "../features/auth/authSlice";
 import { getUser } from "../utils/tokenManager";
 import { API_URL } from "../config";
+import axiosInstance from "../utils/axiosInstance";
 
 const NewsFeedHeader = ({
   user: propUser,
-  onSearch = () => {},
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -16,7 +16,13 @@ const NewsFeedHeader = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const dropdownRef = useRef(null);
+  const searchRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
 
   // Get user from Redux store first (most up-to-date after login), fallback to prop or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
@@ -112,11 +118,119 @@ const NewsFeedHeader = ({
     navigate("/");
   };
 
-  // Close dropdown when clicking outside
+  // Global search function
+  const performGlobalSearch = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const searchPromises = [];
+
+      // Search users/candidates
+      searchPromises.push(
+        axiosInstance.get(`/api/candidates/search?q=${encodeURIComponent(query)}&limit=5`)
+          .then(response => ({
+            type: 'people',
+            results: response.data.success ? response.data.data.map(candidate => ({
+              id: candidate.id,
+              name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Unknown User',
+              subtitle: candidate.title || 'Professional',
+              image: candidate.profile_photo,
+              url: `/user-profile/${candidate.id}`
+            })) : []
+          }))
+          .catch(() => ({ type: 'people', results: [] }))
+      );
+
+      // Search jobs
+      searchPromises.push(
+        axiosInstance.get(`/api/jobs/search?q=${encodeURIComponent(query)}&limit=5`)
+          .then(response => ({
+            type: 'jobs',
+            results: response.data.success ? response.data.data.map(job => ({
+              id: job.id,
+              name: job.job_title || job.title,
+              subtitle: job.company_name || job.industry_sector,
+              image: null,
+              url: `/candidate-search-page` // Navigate to search page with job filter
+            })) : []
+          }))
+          .catch(() => ({ type: 'jobs', results: [] }))
+      );
+
+      // Note: Posts search API not implemented yet
+      // When available, add posts search here
+
+      const results = await Promise.all(searchPromises);
+      const combinedResults = results.flatMap(result => result.results);
+      setSearchResults(combinedResults.slice(0, 10)); // Limit to 10 total results
+      if (combinedResults.length > 0) {
+        setShowSearchResults(true);
+      }
+    } catch (error) {
+      console.error('Global search error:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Debounce search
+    if (value.trim()) {
+      searchTimeoutRef.current = setTimeout(() => {
+        performGlobalSearch(value);
+      }, 300);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      setIsSearching(false);
+    }
+  };
+
+  // Handle search input focus
+  const handleSearchFocus = () => {
+    if (searchQuery.trim() && searchResults.length > 0) {
+      setShowSearchResults(true);
+    }
+  };
+
+  // Handle search result click
+  const handleSearchResultClick = (result) => {
+    // Clear any pending search timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = null;
+    }
+
+    setShowSearchResults(false);
+    setSearchQuery('');
+    setSearchResults([]);
+    setIsSearching(false);
+    navigate(result.url);
+  };
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSearchResults(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -128,6 +242,15 @@ const NewsFeedHeader = ({
     fetchNotificationCount();
     const interval = setInterval(fetchNotificationCount, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
+  }, []);
+
+  // Cleanup search timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
   }, []);
 
   const pathToIconMap = {
@@ -190,16 +313,61 @@ const NewsFeedHeader = ({
           />
         </div>
 
-        <div className="relative w-full sm:w-[250px] md:max-w-[350px] lg:max-w-[400px]">
+        <div ref={searchRef} className="relative w-full sm:w-[250px] md:max-w-[350px] lg:max-w-[400px]">
           <input
             type="text"
-            placeholder="Search"
-            onChange={(e) => onSearch(e.target.value)}
+            placeholder="Search people, jobs, posts..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onFocus={handleSearchFocus}
             className="w-full border-2 border-[#16730F] p-2 pl-4 rounded-2xl focus:outline-none text-sm md:text-base"
           />
           <span className="absolute right-4 top-1/2 transform -translate-y-1/2">
-            <FaSearch className="text-[#1A3E32] h-4 w-4 md:h-5 md:w-5" />
+            {isSearching ? (
+              <div className="animate-spin rounded-full h-4 w-4 md:h-5 md:w-5 border-b-2 border-[#1A3E32]"></div>
+            ) : (
+              <FaSearch className="text-[#1A3E32] h-4 w-4 md:h-5 md:w-5" />
+            )}
           </span>
+
+          {/* Search Results Dropdown */}
+          {showSearchResults && searchResults.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 max-h-96 overflow-y-auto">
+              {searchResults.map((result, index) => (
+                <div
+                  key={`${result.type}-${result.id}-${index}`}
+                  onClick={() => handleSearchResultClick(result)}
+                  className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                    {result.image ? (
+                      <img
+                        src={getProfileImageUrl(result.image)}
+                        alt={result.name}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-gray-500">
+                        {result.type === 'people' && <FaUserFriends />}
+                        {result.type === 'jobs' && <FaBriefcase />}
+                        {result.type === 'posts' && <FaNewspaper />}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-[#1A3E32] truncate">{result.name}</div>
+                    <div className="text-sm text-gray-500 truncate">{result.subtitle}</div>
+                    <div className="text-xs text-[#16730F] capitalize">{result.type}</div>
+                  </div>
+                </div>
+              ))}
+              {searchResults.length === 0 && !isSearching && (
+                <div className="p-4 text-center text-gray-500">
+                  No results found
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="hidden sm:flex gap-3 md:gap-4 items-center">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import { ConnectionList, RequestList } from '../components/connections';
 import { FaUserFriends, FaUserPlus, FaClock, FaSearch } from 'react-icons/fa';
@@ -7,6 +8,7 @@ import * as connectionsApi from '../services/connectionsApi';
 import { getProfileImageUrl } from '../utils/profileImageUtils';
 
 const Connections = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('network');
   const [connections, setConnections] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
@@ -85,6 +87,9 @@ const Connections = () => {
         image: user.profilePhoto,
         role: user.jobTitle || 'Professional'
       })) : [];
+
+      // Shuffle the users to avoid alphabetical order
+      transformedUsers.sort(() => Math.random() - 0.5);
 
       setConnections(transformedConnections);
       setIncomingRequests(transformedIncoming);
@@ -190,6 +195,7 @@ const Connections = () => {
         <PeopleList
           users={discoverableUsers}
           onSendRequest={handleSendRequest}
+          onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
           searchQuery={searchQuery}
         />
       )
@@ -306,7 +312,7 @@ const Connections = () => {
 
 
 // People List Component
-const PeopleList = ({ users, onSendRequest, searchQuery }) => {
+const PeopleList = ({ users, onSendRequest, onViewProfile, searchQuery }) => {
   const usersArray = Array.isArray(users) ? users : [];
   const filteredUsers = usersArray.filter(user =>
     user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -341,7 +347,12 @@ const PeopleList = ({ users, onSendRequest, searchQuery }) => {
               className="w-12 h-12 rounded-full object-cover"
             />
             <div>
-              <h3 className="font-semibold text-[#1A3E32]">{user.name}</h3>
+              <h3
+                className="font-semibold text-[#1A3E32] cursor-pointer hover:text-[#16730F] transition-colors"
+                onClick={() => onViewProfile(user.id)}
+              >
+                {user.name}
+              </h3>
               <p className="text-sm text-gray-600">{user.role || 'Professional'}</p>
             </div>
           </div>

@@ -87,7 +87,7 @@ export default function RecruitmentLeft() {
           className="flex items-center space-x-3 w-full px-4 py-2 bg-[#15600b] hover:bg-[#0f4a08] rounded-lg transition-colors"
         >
           <FaUserPlus className="text-[#F5F5F5]" />
-          <span className="text-[#F5F5F5]">Invite Friends</span>
+          <span className="text-[#F5F5F5] text-sm font-bold whitespace-nowrap">Invite Friends</span>
         </button>
       </div>
       <div className="bg-[#1A3E32] h-[calc(100%-320px)] rounded-b-2xl mt-10 flex flex-col items-center pt-10 space-y-5">

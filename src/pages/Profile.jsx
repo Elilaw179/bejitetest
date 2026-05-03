@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarker, FaBuilding, FaGlobe, FaEdit, FaArrowLeft } from 'react-icons/fa';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import axiosInstance from '../utils/axiosInstance';
@@ -8,48 +8,82 @@ import { API_URL } from '../config';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { userId } = useParams();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const user = getUser();
   console.log('Profile component - User data:', user);
+  console.log('Profile component - Viewing userId:', userId);
 
   const fetchProfileData = async () => {
     try {
       setLoading(true);
       setError(null);
-      let response;
 
-      // First try to get basic user profile data
+      // Determine which user ID to fetch
+      const targetUserId = userId || user.id;
+
+      // Try different endpoints in order of preference
+      let profileFound = false;
+
+      // 1. First try to get basic user profile data
       try {
-        response = await axiosInstance.get(`/auth/user/profile/${user.id}`);
+        const response = await axiosInstance.get(`/auth/user/profile/${targetUserId}`);
         if (response.data.success) {
           setProfileData(response.data.data);
-          setLoading(false);
-          return;
+          profileFound = true;
         }
       } catch (basicUserError) {
-        console.log('Basic user profile not found, trying role-specific endpoint:', basicUserError.message);
+        console.log('Basic user profile not found, trying other endpoints:', basicUserError.message);
       }
 
-      // If basic profile fails, try role-specific endpoints
-      if (user?.role === 'jobseeker') {
+      // 2. If viewing another user and basic profile failed, try direct candidate lookup
+      if (!profileFound && userId) {
         try {
-          response = await axiosInstance.get(`/job-board/candidates/by-user/${user.id}`);
+          console.log('Trying direct candidate lookup for ID:', userId);
+          const response = await axiosInstance.get(`/api/candidates/${userId}`);
+          if (response.data.success && response.data.data) {
+            // Transform candidate data to match profile format
+            const candidate = response.data.data;
+            setProfileData({
+              first_name: candidate.first_name,
+              last_name: candidate.last_name,
+              email: candidate.email,
+              profile_photo: candidate.profile_photo,
+              title: candidate.title,
+              location: candidate.location,
+              bio: candidate.bio,
+              phone: candidate.phone,
+              // Add other fields as needed
+              ...candidate
+            });
+            profileFound = true;
+          }
+        } catch (candidateError) {
+          console.error('Direct candidate lookup failed:', candidateError);
+        }
+      }
+
+      // 3. If still not found, try job-board candidates by user
+      if (!profileFound && (user?.role === 'jobseeker' || (userId && !userId.includes('recruiter')))) {
+        try {
+          const response = await axiosInstance.get(`/job-board/candidates/by-user/${targetUserId}`);
           if (response.data.success) {
             setProfileData(response.data.data);
-          } else {
-            setError('Profile data not found. Please complete your profile setup.');
+            profileFound = true;
           }
         } catch (jobseekerError) {
           console.error('Jobseeker profile fetch failed:', jobseekerError);
-          setError('Profile data not found. Please complete your profile setup.');
         }
-      } else {
-        // For recruiters, we already tried the basic endpoint above
+      }
+
+      // If no profile data found after all attempts
+      if (!profileFound) {
         setError('Profile data not found. Please complete your profile setup.');
       }
+
     } catch (err) {
       console.error('Error fetching profile:', err);
       setError('Failed to load profile data');
@@ -60,7 +94,7 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfileData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getProfileImageUrl = (imagePath) => {
     // First check if local user has an image (more up-to-date)
@@ -88,6 +122,8 @@ const Profile = () => {
       navigate('/edit-profile/recruiter/basic-details');
     }
   };
+
+  const isViewingOwnProfile = !userId || userId === user?.id;
 
   if (loading) {
     return (
@@ -159,13 +195,15 @@ const Profile = () => {
             <FaArrowLeft />
             <span>Back</span>
           </button>
-          <button
-            onClick={handleEditProfile}
-            className="flex items-center gap-2 bg-[#16730F] text-white px-4 py-2 rounded-lg hover:bg-[#145a0c] transition-colors"
-          >
-            <FaEdit />
-            <span>Edit Profile</span>
-          </button>
+          {isViewingOwnProfile && (
+            <button
+              onClick={handleEditProfile}
+              className="flex items-center gap-2 bg-[#16730F] text-white px-4 py-2 rounded-lg hover:bg-[#145a0c] transition-colors"
+            >
+              <FaEdit />
+              <span>Edit Profile</span>
+            </button>
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
