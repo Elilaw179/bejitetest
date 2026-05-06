@@ -1,22 +1,77 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaArrowLeft, FaSearch } from 'react-icons/fa';
 import image from '../../assets/Ellipse.png';
-
+import messagingService from '../../services/messagingService';
 
 function ChatsLeft({ onSelectChat, onBack }) {
+  const [conversations, setConversations] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
-  const conversations = [
-    { 
-      id: 1, 
-      name: "Okpata Favour", 
-      image: "https://via.placeholder.com/50", 
-      lastMessage: "Hi precika osak", 
-      time: "09:45 AM", 
-      unread: 1,
-      online: true
+
+
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      handleUserSearch(searchTerm);
+      setIsSearching(true);
+    } else {
+      setIsSearching(false);
+      setSearchResults([]);
     }
-   
-  ];
+  }, [searchTerm]);
+
+  const fetchConversations = async () => {
+    try {
+      setLoading(true);
+      const data = await messagingService.getConversations();
+      setConversations(data || []);
+    } catch (err) {
+      setError('Failed to load conversations');
+      console.error('Error fetching conversations:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUserSearch = async (query) => {
+    if (!query.trim()) return;
+
+    try {
+      setSearchLoading(true);
+      const users = await messagingService.searchUsers(query);
+      setSearchResults(users || []);
+    } catch (err) {
+      console.error('Error searching users:', err);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+const handleUserSelect = async (user) => {
+    try {
+      // Start a conversation with the selected user (ensure string ID)
+      const conversation = await messagingService.startConversation(String(user.id));
+      // Refresh conversations to include the new one
+      await fetchConversations();
+      // Select the new conversation for viewing
+      onSelectChat(conversation);
+      // Clear search
+      setSearchTerm('');
+      setIsSearching(false);
+    } catch (err) {
+      console.error('Error starting conversation:', err);
+      setError(`Failed to start conversation: ${err.response?.data?.error || err.message}`);
+    }
+  };
 
   return (
     <div className="bg-[#1A3E32] h-full flex flex-col">
@@ -38,9 +93,15 @@ function ChatsLeft({ onSelectChat, onBack }) {
         <div className="flex items-center bg-white rounded-full px-3 py-2">
           <input
             className="w-full outline-none bg-transparent text-sm placeholder-gray-500"
-            placeholder="Search"
+            placeholder="Search users to start a conversation"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <FaSearch className="text-gray-500 ml-2" />
+          {searchLoading ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500 ml-2"></div>
+          ) : (
+            <FaSearch className="text-gray-500 ml-2" />
+          )}
         </div>
       </div>
 
@@ -72,36 +133,94 @@ function ChatsLeft({ onSelectChat, onBack }) {
 </div>
 
 
-      {/* Conversations List */}
+      {/* Conversations/Search Results List */}
       <div className="flex-1 overflow-y-auto border-t border-[#556B1F]">
         <div className="px-2 mt-4">
-          {conversations.map((chat) => (
-            <div
-              key={chat.id}
-              onClick={() => onSelectChat(chat)}
-              className={`flex items-center gap-3 p-3 mx-2 rounded-lg hover:bg-[#556B1F]/20 cursor-pointer transition-colors `}
-            >
-              <div className="relative">
-                <img
-                  src={image}
-                  alt={chat.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              
-                
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-white text-sm font-medium truncate">{chat.name}</h3>
-                  <span className="text-[#556B1F] text-xs flex-shrink-0">{chat.time}</span>
-                </div>
-                <p className="text-[#556B1F] text-xs truncate">{chat.lastMessage}</p>
-              </div>
+          {loading && !isSearching ? (
+            <div className="text-center text-[#556B1F] py-4">
+              Loading conversations...
             </div>
-          ))}
-        </div>
+          ) : error ? (
+            <div className="text-center text-red-400 py-4">
+              {error}
+            </div>
+          ) : isSearching ? (
+            // Show search results
+            searchResults.length === 0 ? (
+              <div className="text-center text-[#556B1F] py-4">
+                {searchLoading ? 'Searching...' : 'No users found'}
+              </div>
+            ) : (
+              searchResults.map((user) => {
+                const displayName = `${user.firstName} ${user.lastName}`;
+                const profileImage = user.profilePhoto || image;
 
-       
+                return (
+                  <div
+                    key={user.id}
+                    onClick={() => handleUserSelect(user)}
+                    className="flex items-center gap-3 p-3 mx-2 rounded-lg hover:bg-[#556B1F]/20 cursor-pointer transition-colors"
+                  >
+                    <div className="relative">
+                      <img
+                        src={profileImage}
+                        alt={displayName}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-white text-sm font-medium truncate">{displayName}</h3>
+                      </div>
+                      <p className="text-[#556B1F] text-xs truncate">
+                        {user.jobTitle || 'Click to start conversation'}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            )
+          ) : (
+            // Show conversations
+            conversations.length === 0 ? (
+              <div className="text-center text-[#556B1F] py-4">
+                No conversations yet. Search for users to start chatting!
+              </div>
+            ) : (
+conversations.map((conversation) => {
+                const otherUser = conversation.other_user;
+                const displayName = otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : 'Unknown User';
+                const profileImage = otherUser?.profilePictureUrl || otherUser?.profilePhoto || image;
+                const lastMessageTime = conversation.last_message_at ?
+                  new Date(conversation.last_message_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) :
+                  '';
+
+                return (
+                  <div
+                    key={conversation.id}
+                    onClick={() => onSelectChat(conversation)}
+                    className="flex items-center gap-3 p-3 mx-2 rounded-lg hover:bg-[#556B1F]/20 cursor-pointer transition-colors"
+                  >
+                    <div className="relative">
+                      <img
+                        src={profileImage}
+                        alt={displayName}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-white text-sm font-medium truncate">{displayName}</h3>
+                        <span className="text-[#556B1F] text-xs flex-shrink-0">{lastMessageTime}</span>
+                      </div>
+                      <p className="text-[#556B1F] text-xs truncate">{conversation.lastMessage || 'No messages yet'}</p>
+                    </div>
+                  </div>
+                );
+              })
+            )
+          )}
+        </div>
       </div>
     </div>
   );
