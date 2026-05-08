@@ -7,7 +7,24 @@ const BASE_URL = API_URL;
 
 const useRecruiterProfile = () => {
   const storedUser = useLocalStorage('user');
-  const userId = storedUser?.id || storedUser?.userId || storedUser?.sub || null;
+  const decodeJwtPayload = (token) => {
+    if (!token) return null;
+    try {
+      const payload = token.split('.')[1];
+      if (!payload) return null;
+      return JSON.parse(atob(payload));
+    } catch (error) {
+      console.warn('[useRecruiterProfile] Failed to decode token payload:', error);
+      return null;
+    }
+  };
+
+  const accessToken = localStorage.getItem('accessToken');
+  const legacyAuthToken = localStorage.getItem('authToken');
+  const tokenPayload = decodeJwtPayload(accessToken || legacyAuthToken);
+  const tokenUserId = tokenPayload?.id || tokenPayload?.userId || tokenPayload?.sub || null;
+
+  const userId = storedUser?.id || storedUser?.userId || storedUser?.sub || tokenUserId || null;
 
   const handleApiError = (error) => {
     const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
@@ -15,11 +32,13 @@ const useRecruiterProfile = () => {
   };
 
   const assertUserId = () => {
-    const accessToken = localStorage.getItem('accessToken');
     console.log('[useRecruiterProfile] User resolution:', {
       storedUser,
+      tokenPayload,
+      tokenUserId,
       resolvedUserId: userId,
       hasAccessToken: !!accessToken,
+      hasLegacyAuthToken: !!legacyAuthToken,
     });
 
     if (!userId) {

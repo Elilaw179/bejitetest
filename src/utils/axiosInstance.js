@@ -13,9 +13,21 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const accessToken = localStorage.getItem("accessToken");
-    console.log("Axios request token check:", accessToken ? "Token found" : "No token found");
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    const legacyAuthToken = localStorage.getItem("authToken");
+    const tokenToUse = accessToken || legacyAuthToken;
+
+    console.log(
+      "Axios request token check:",
+      tokenToUse ? `Token found (${accessToken ? "accessToken" : "authToken"})` : "No token found"
+    );
+
+    // Promote legacy token key so other parts of app can rely on accessToken.
+    if (!accessToken && legacyAuthToken) {
+      localStorage.setItem("accessToken", legacyAuthToken);
+    }
+
+    if (tokenToUse) {
+      config.headers.Authorization = `Bearer ${tokenToUse}`;
       console.log("Authorization header set:", config.headers.Authorization.substring(0, 20) + "...");
     }
     return config;
