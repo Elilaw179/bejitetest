@@ -56,10 +56,59 @@ const EmployerOpt = () => {
         try {
             setShow(true);
             console.log('[EmployerOpt] Sending complete-signup payload:', payload);
-            await axiosPublic.post('/auth/complete-signup', payload, {
+            const response = await axiosPublic.post('/auth/complete-signup', payload, {
                 headers: { 'Content-Type': 'application/json' },
             });
             console.log('[EmployerOpt] Complete-signup API success');
+            console.log('[EmployerOpt] Complete-signup API response:', response?.data);
+
+            const responseData = response?.data || {};
+            const responseUser =
+                responseData?.user ||
+                responseData?.confirmedUser ||
+                responseData?.data?.user ||
+                null;
+            const responseAccessToken =
+                responseData?.accessToken ||
+                responseData?.token ||
+                responseData?.data?.accessToken ||
+                null;
+            const responseRefreshToken =
+                responseData?.refreshToken ||
+                responseData?.data?.refreshToken ||
+                null;
+
+            if (responseAccessToken) {
+                localStorage.setItem('accessToken', responseAccessToken);
+                localStorage.setItem('authToken', responseAccessToken);
+                console.log('[EmployerOpt] Stored access token from complete-signup response');
+            }
+            if (responseRefreshToken) {
+                localStorage.setItem('refreshToken', responseRefreshToken);
+                console.log('[EmployerOpt] Stored refresh token from complete-signup response');
+            }
+
+            // Keep local user context for subsequent profile setup steps.
+            const normalizedUser = responseUser
+                ? {
+                    ...storedUser,
+                    ...responseUser,
+                    id: responseUser?.id || responseUser?.userId || responseUser?.sub || storedUser?.id || null,
+                    email: responseUser?.email || resolvedEmail,
+                    firstName: responseUser?.firstName || resolvedFirstName || storedUser?.firstName || '',
+                    lastName: responseUser?.lastName || resolvedLastName || storedUser?.lastName || '',
+                    role: responseUser?.role || resolvedRole,
+                }
+                : {
+                    ...storedUser,
+                    email: storedUser?.email || resolvedEmail,
+                    firstName: storedUser?.firstName || resolvedFirstName || '',
+                    lastName: storedUser?.lastName || resolvedLastName || '',
+                    role: storedUser?.role || resolvedRole,
+                };
+
+            localStorage.setItem('user', JSON.stringify(normalizedUser));
+            console.log('[EmployerOpt] Stored normalized user after complete-signup:', normalizedUser);
 
             toast.success('Registration successful');
 
