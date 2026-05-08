@@ -3,7 +3,12 @@ import { FaHome, FaList, FaSearch, FaChevronDown, FaSignOutAlt, FaUserEdit, FaUs
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout as logoutAction } from "../features/auth/authSlice";
-import { getUser } from "../utils/tokenManager";
+import {
+  getUser,
+  mergeAuthUsers,
+  pickProfilePhotoPath,
+  resolveProfileImageSrc,
+} from "../utils/tokenManager";
 import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
 
@@ -27,29 +32,42 @@ const NewsFeedHeader = ({
   // Get user from Redux store first (most up-to-date after login), fallback to prop or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
   
-  // Compute user - this runs on every render to get fresh localStorage data
-  // The location.pathname in dependency ensures fresh data on navigation
+  // Merge Redux + localStorage without wiping photo fields when Redux has undefined/null.
   const user = useMemo(() => {
-    // First priority: Redux store (updated immediately after login)
+    const localUser = getUser() || {};
     if (reduxUser) {
-      console.log('[NewsFeedHeader] Using reduxUser:', reduxUser?.image);
+      const merged = mergeAuthUsers(localUser, reduxUser);
+      const resolvedPhoto =
+        pickProfilePhotoPath(merged) ||
+        pickProfilePhotoPath(localUser) ||
+        pickProfilePhotoPath(reduxUser) ||
+        "/assets/images/eli.jpg";
+      const displayName =
+        merged.name ||
+        (`${merged.firstName || ""} ${merged.lastName || ""}`.trim() || null);
       return {
-        name: reduxUser.name || reduxUser.firstName || reduxUser.lastName ? `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim() : "Guest",
-        image: reduxUser.image || reduxUser.profilePhoto || reduxUser.profile_photo || "assets/images/eli.jpg",
-        role: reduxUser.role || "user",
-        ...reduxUser
+        ...merged,
+        name: displayName || "Guest",
+        image: resolvedPhoto,
+        role: merged.role || "user",
       };
     }
-    
-    // Second priority: localStorage (fallback)
-    const localUser = getUser();
-    console.log('[NewsFeedHeader] Using localStorage user:', localUser?.image);
-    return propUser || localUser || {
-      name: "Guest",
-      image: "assets/images/eli.jpg",
-      role: "user",
-    };
-  }, [propUser, reduxUser]);
+    const fallback = propUser || localUser;
+    const resolvedPhoto =
+      pickProfilePhotoPath(fallback) ||
+      "/assets/images/eli.jpg";
+    return fallback && typeof fallback === "object"
+      ? {
+          ...fallback,
+          image: resolvedPhoto,
+          role: fallback.role || "user",
+        }
+      : {
+          name: "Guest",
+          image: "/assets/images/eli.jpg",
+          role: "user",
+        };
+  }, [propUser, reduxUser, location.pathname]);
 
   // Get display name
   const getDisplayName = () => {
@@ -66,24 +84,8 @@ const NewsFeedHeader = ({
     return user.role.charAt(0).toUpperCase() + user.role.slice(1);
   };
 
-  // Function to get full URL for profile photo
-  const getProfileImageUrl = (imagePath) => {
-    if (!imagePath) return imagePath;
-    // If it's already a full URL, return as is
-    if (imagePath.startsWith('http')) return imagePath;
-    // For local paths like /uploads/filename.jpg, use the config API_URL with fallback
-    if (imagePath.startsWith('/uploads')) {
-      const baseUrl = API_URL || 'http://localhost:3001';
-      return `${baseUrl}${imagePath}`;
-    }
-    // Otherwise, prepend the API URL
-    return `${API_URL || 'http://localhost:3001'}${imagePath}`;
-  };
-
-  // Debug: log the image URL
-  console.log('[NewsFeedHeader] User image from localStorage:', user?.image);
-  console.log('[NewsFeedHeader] API_URL from config:', API_URL);
-  console.log('[NewsFeedHeader] Full image URL:', getProfileImageUrl(user?.image));
+  const getProfileImageUrl = (imagePath) =>
+    resolveProfileImageSrc(imagePath, API_URL || "http://localhost:3001") || imagePath;
 
   // Fetch notification count
   const fetchNotificationCount = async () => {

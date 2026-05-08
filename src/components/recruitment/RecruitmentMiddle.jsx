@@ -1,50 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH } from "react-icons/fa";
 import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment } from '../../services/postsApi';
-import { getUser } from '../../utils/tokenManager';
+import {
+  getUser,
+  mergeAuthUsers,
+  pickProfilePhotoPath,
+  resolveProfileImageSrc,
+} from '../../utils/tokenManager';
 import { API_URL } from '../../config';
 import PostCreationModal from '../PostCreationModal';
 import ConfirmModal from '../ConfirmModal';
 
-// Helper function to get profile image URL (consistent with NewsFeedHeader and Profile page)
 const getProfileImageUrl = (imagePath) => {
-  // First priority: Use provided image path from API data (post author's image)
-  if (imagePath) {
-    if (imagePath.startsWith('http')) return imagePath; // Cloudinary URLs
-    if (imagePath.startsWith('/uploads')) {
-      return `${API_URL}${imagePath}`;
-    }
-    return `${API_URL}${imagePath}`;
-  }
-
-  // Second priority: Check current user data (for current user's posts if API data missing)
-  const user = getUser();
-  const userImage = user?.image || user?.profilePhoto || user?.profile_photo;
-  if (userImage) {
-    if (userImage.startsWith('http')) return userImage;
-    if (userImage.startsWith('/uploads')) {
-      return `${API_URL}${userImage}`;
-    }
-    return `${API_URL}${userImage}`;
-  }
-
-  // Final fallback
-  return 'assets/images/eli.jpg';
-};
-
-// Helper function to get current user profile image
-const getCurrentUserProfileImage = () => {
-  const user = getUser();
-  if (!user) return "assets/images/eli.jpg";
-
-  const image = user.image || user.profilePhoto || user.profile_photo || "assets/images/eli.jpg";
-
-  if (!image) return "assets/images/eli.jpg";
-  if (image.startsWith('http')) return image;
-  if (image.startsWith('/uploads')) {
-    return `${API_URL || 'http://localhost:3001'}${image}`;
-  }
-  return image;
+  if (!imagePath) return "/assets/images/eli.jpg";
+  return resolveProfileImageSrc(imagePath, API_URL) || imagePath;
 };
 
 // Helper function to get display name (same pattern as NewsFeedHeader)
@@ -103,8 +74,24 @@ export default function RecruitmentMiddle() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const user = getUser();
-  const currentUserImage = getCurrentUserProfileImage();
+  const location = useLocation();
+  const reduxUser = useSelector((state) => state.auth?.user);
+
+  const mergedUser = useMemo(
+    () => mergeAuthUsers(getUser() || {}, reduxUser),
+    [reduxUser, location.pathname],
+  );
+
+  const currentUserImage = useMemo(() => {
+    const stored = getUser() || {};
+    const merged = mergeAuthUsers(stored, reduxUser);
+    const raw =
+      pickProfilePhotoPath(merged) ||
+      pickProfilePhotoPath(stored) ||
+      pickProfilePhotoPath(reduxUser) ||
+      "/assets/images/eli.jpg";
+    return resolveProfileImageSrc(raw, API_URL) || raw;
+  }, [reduxUser, location.pathname]);
 
   useEffect(() => {
     fetchFeed();
@@ -222,7 +209,8 @@ export default function RecruitmentMiddle() {
           <RecruitmentPostCard
             key={post.id}
             post={post}
-            currentUserId={user?.id}
+            currentUserId={mergedUser?.id}
+            currentUserPhotoUrl={currentUserImage}
             onLike={handleLike}
             onSave={handleSave}
             onUpdate={handleUpdatePost}
@@ -242,7 +230,15 @@ export default function RecruitmentMiddle() {
   );
 }
 
-const RecruitmentPostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId }) => {
+const RecruitmentPostCard = ({
+  post,
+  onLike,
+  onSave,
+  onUpdate,
+  onDelete,
+  currentUserId,
+  currentUserPhotoUrl,
+}) => {
   const isOwner = String(post.authorId) === String(currentUserId);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
@@ -348,14 +344,14 @@ const RecruitmentPostCard = ({ post, onLike, onSave, onUpdate, onDelete, current
   // For current user's posts, prioritize local image over API data
   const isCurrentUserPost = String(post.authorId) === String(currentUserId);
   const authorImage = isCurrentUserPost
-    ? getCurrentUserProfileImage() // Use local image for current user's posts
-    : getProfileImageUrl(post.author?.image); // Use API data for other users' posts
+    ? currentUserPhotoUrl
+    : getProfileImageUrl(post.author?.image);
 
   const getCommentAuthorImage = (comment) => {
     const isCurrentUserComment = String(comment.authorId) === String(currentUserId);
     return isCurrentUserComment
-      ? getCurrentUserProfileImage() // Use local image for current user's comments
-      : getProfileImageUrl(comment.author?.image); // Use API data for other users' comments
+      ? currentUserPhotoUrl
+      : getProfileImageUrl(comment.author?.image);
   };
 
   return (

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { updateUser } from "../../features/auth/authSlice";
 import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
@@ -11,6 +13,7 @@ import { API_URL } from "../../config";
 
 const CoperateProfileSetup = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
 
   const handleStepClick = (path) => {
@@ -90,7 +93,24 @@ const CoperateProfileSetup = () => {
       });
 
       if (imageFile) {
-        await uploadProfilePhoto(imageFile);
+        const photoRes = await uploadProfilePhoto(imageFile);
+        const photoUrl =
+          photoRes?.profilePhoto ??
+          photoRes?.profile_photo ??
+          photoRes?.image ??
+          photoRes?.data?.profilePhoto ??
+          photoRes?.data?.profile_photo ??
+          photoRes?.url ??
+          null;
+        if (photoUrl) {
+          dispatch(
+            updateUser({
+              image: photoUrl,
+              profilePhoto: photoUrl,
+              profile_photo: photoUrl,
+            }),
+          );
+        }
       }
 
       return "Profile setup saved successfully!";

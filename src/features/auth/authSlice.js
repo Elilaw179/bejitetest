@@ -68,6 +68,14 @@ const authSlice = createSlice({
         const updatedUser = { ...state.user, ...action.payload };
         state.user = updatedUser;
         localStorage.setItem("user", JSON.stringify(updatedUser));
+      } else {
+        try {
+          const stored = JSON.parse(localStorage.getItem("user") || "{}");
+          const merged = { ...stored, ...action.payload };
+          localStorage.setItem("user", JSON.stringify(merged));
+        } catch (_) {
+          localStorage.setItem("user", JSON.stringify(action.payload));
+        }
       }
     },
     logout: (state) => {

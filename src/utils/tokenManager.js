@@ -78,3 +78,35 @@ export const decodeToken = (token) => {
   }
 };
 
+/**
+ * Merge Redux user onto localStorage user without wiping defined fields with null/empty.
+ * Fixes stale Redux overwriting profile_photo afterOAuth/uploads stored only in localStorage.
+ */
+export const mergeAuthUsers = (localUser, reduxUser) => {
+  const local = localUser && typeof localUser === 'object' ? { ...localUser } : {};
+  if (!reduxUser || typeof reduxUser !== 'object') return local;
+  const out = { ...local };
+  Object.entries(reduxUser).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      out[key] = value;
+    }
+  });
+  return out;
+};
+
+export const pickProfilePhotoPath = (user) => {
+  if (!user || typeof user !== 'object') return null;
+  return user.profile_photo || user.profilePhoto || user.image || null;
+};
+
+/** Full URL for display; leaves vite public paths like assets/... unchanged */
+export const resolveProfileImageSrc = (imagePath, apiBaseUrl = '') => {
+  if (!imagePath || typeof imagePath !== 'string') return null;
+  if (imagePath.startsWith('http')) return imagePath;
+  if (imagePath.startsWith('/assets/')) return imagePath;
+  if (imagePath.startsWith('assets/')) return `/${imagePath}`;
+  const base = String(apiBaseUrl || '').replace(/\/$/, '');
+  const path = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  return `${base}${path}`;
+};
+
