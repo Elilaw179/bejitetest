@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
 import useRecruiterProfile from "../../services/recruiterProfile";
+import useAuth from "../../hooks/useAuth";
 
 const CoperateBasicDetails = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
+  const { user } = useAuth();
 
   const steps = [
     "Basic Details",
@@ -28,6 +31,47 @@ const CoperateBasicDetails = () => {
   const { updateBasicDetails } = useRecruiterProfile();
 
   useEffect(() => {
+    console.log("[CorporateBasicDetails] Page mounted");
+    console.log("[CorporateBasicDetails] Raw location.state on mount:", location.state);
+  }, []);
+
+  useEffect(() => {
+    let storedUser = {};
+    try {
+      storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    } catch (error) {
+      console.warn("[CorporateBasicDetails] Failed to parse localStorage user:", error);
+      storedUser = {};
+    }
+
+    const stateUser = location.state || {};
+    const resolvedEmail = stateUser?.email || user?.email || storedUser?.email || "";
+    const resolvedName =
+      `${stateUser?.firstName || user?.firstName || storedUser?.firstName || ""} ${stateUser?.lastName || user?.lastName || storedUser?.lastName || ""}`.trim();
+    const resolvedPhone =
+      user?.phone_number ||
+      user?.phone ||
+      storedUser?.phone_number ||
+      storedUser?.phone ||
+      "";
+
+    console.log("[CorporateBasicDetails] Prefill source route state:", stateUser);
+    console.log("[CorporateBasicDetails] Prefill source auth user:", user);
+    console.log("[CorporateBasicDetails] Prefill source localStorage user:", storedUser);
+    console.log("[CorporateBasicDetails] Prefill resolved:", {
+      resolvedEmail,
+      resolvedName,
+      resolvedPhone,
+    });
+
+    setFormData((prev) => ({
+      full_name: prev.full_name || resolvedName,
+      email: prev.email || resolvedEmail,
+      phone_number: prev.phone_number || resolvedPhone,
+    }));
+  }, [user, location.state]);
+
+  useEffect(() => {
     if (isEditMode && recruiterData && !dataLoaded) {
       setFormData({
         full_name: recruiterData.firstName || "",
@@ -37,6 +81,10 @@ const CoperateBasicDetails = () => {
       setDataLoaded(true);
     }
   }, [isEditMode, recruiterData, dataLoaded]);
+
+  useEffect(() => {
+    console.log("[CorporateBasicDetails] formData updated:", formData);
+  }, [formData]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
