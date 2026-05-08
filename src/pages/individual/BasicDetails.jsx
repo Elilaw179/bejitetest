@@ -58,12 +58,34 @@ const BasicDetails = () => {
       resolvedPhone,
     });
 
-    setFormData((prev) => ({
-      full_name: prev.full_name || resolvedName,
-      email: prev.email || resolvedEmail,
-      phone_number: prev.phone_number || resolvedPhone,
-    }));
-  }, [user, location.state]);
+    setFormData((prev) => {
+      const next = {
+        full_name: prev.full_name || resolvedName,
+        email: prev.email || resolvedEmail,
+        phone_number: prev.phone_number || resolvedPhone,
+      };
+
+      // Avoid rerender loop/log spam when values are unchanged.
+      if (
+        prev.full_name === next.full_name &&
+        prev.email === next.email &&
+        prev.phone_number === next.phone_number
+      ) {
+        return prev;
+      }
+
+      return next;
+    });
+  }, [
+    location.state?.email,
+    location.state?.firstName,
+    location.state?.lastName,
+    user?.email,
+    user?.firstName,
+    user?.lastName,
+    user?.phone_number,
+    user?.phone,
+  ]);
 
   useEffect(() => {
     console.log("[IndividualBasicDetails] formData updated:", formData);
