@@ -12,6 +12,15 @@ const axiosInstance = axios.create({
 // Request interceptor - automatically attach access token to requests
 axiosInstance.interceptors.request.use(
   (config) => {
+    // Default instance Content-Type is application/json — breaks multipart uploads (Multer sees no file).
+    if (config.data instanceof FormData && config.headers) {
+      if (typeof config.headers.delete === "function") {
+        config.headers.delete("Content-Type");
+      } else {
+        delete config.headers["Content-Type"];
+      }
+    }
+
     const accessToken = localStorage.getItem("accessToken");
     const legacyAuthToken = localStorage.getItem("authToken");
     const tokenToUse = accessToken || legacyAuthToken;
