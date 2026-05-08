@@ -24,7 +24,19 @@ const EmployerOpt = () => {
     const coperateRef = useRef(null);
 
     const handleClick = async (mode) => {
+        console.log('[EmployerOpt] Selection clicked:', { mode });
+        console.log('[EmployerOpt] Current resolved values before validation:', {
+            resolvedEmail,
+            resolvedFirstName,
+            resolvedLastName,
+            resolvedRole,
+        });
+
         if (!resolvedEmail) {
+            console.warn('[EmployerOpt] Missing resolvedEmail, cannot continue', {
+                routeState: location.state,
+                storedUser,
+            });
             toast.error('Missing account email. Please sign in and try again.');
             return;
         }
@@ -43,28 +55,34 @@ const EmployerOpt = () => {
         
         try {
             setShow(true);
+            console.log('[EmployerOpt] Sending complete-signup payload:', payload);
             await axiosPublic.post('/auth/complete-signup', payload, {
                 headers: { 'Content-Type': 'application/json' },
             });
+            console.log('[EmployerOpt] Complete-signup API success');
 
             toast.success('Registration successful');
 
             if (mode === 'individual') {
+                const navState = {
+                    email: resolvedEmail,
+                    firstName: resolvedFirstName,
+                    lastName: resolvedLastName,
+                };
+                console.log('[EmployerOpt] Navigating to individual basic-details with state:', navState);
                 navigate('/individual/basic-details', {
-                    state: {
-                        email: resolvedEmail,
-                        firstName: resolvedFirstName,
-                        lastName: resolvedLastName,
-                    },
+                    state: navState,
                 });
             
             } else if (mode === 'corporate') {
+                const navState = {
+                    email: resolvedEmail,
+                    firstName: resolvedFirstName,
+                    lastName: resolvedLastName,
+                };
+                console.log('[EmployerOpt] Navigating to corporate basic-details with state:', navState);
                 navigate('/corporate/basic-details', {
-                    state: {
-                        email: resolvedEmail,
-                        firstName: resolvedFirstName,
-                        lastName: resolvedLastName,
-                    },
+                    state: navState,
                 });
             }
 

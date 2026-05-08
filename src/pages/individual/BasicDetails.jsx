@@ -21,6 +21,11 @@ const BasicDetails = () => {
   });
 
   useEffect(() => {
+    console.log("[IndividualBasicDetails] Page mounted");
+    console.log("[IndividualBasicDetails] Raw location.state on mount:", location.state);
+  }, []);
+
+  useEffect(() => {
     let storedUser = {};
     try {
       storedUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -59,6 +64,10 @@ const BasicDetails = () => {
       phone_number: prev.phone_number || resolvedPhone,
     }));
   }, [user, location.state]);
+
+  useEffect(() => {
+    console.log("[IndividualBasicDetails] formData updated:", formData);
+  }, [formData]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
