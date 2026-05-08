@@ -18,6 +18,7 @@ const AuthSuccess = () => {
       try {
         // Decode the JWT token to get user info
         const decodedToken = jwtDecode(token);
+        console.log('[AuthSuccess] Decoded token payload:', decodedToken);
         
         // If user parameter is provided, use it; otherwise use decoded token data
         let userData;
@@ -25,24 +26,38 @@ const AuthSuccess = () => {
           try {
             // Decode the URL-encoded user data
             userData = JSON.parse(decodeURIComponent(userParam));
+            console.log('[AuthSuccess] Using user data from query param:', userData);
           } catch (err) {
             console.warn('Failed to parse user parameter, using token data:', err);
             userData = decodedToken;
+            console.log('[AuthSuccess] Falling back to decoded token data');
           }
         } else {
           userData = decodedToken;
+          console.log('[AuthSuccess] No user query param, using decoded token data');
         }
 
         // Store both token and user data
         localStorage.setItem('accessToken', token); // Primary token key for authentication checks
         localStorage.setItem('authToken', token); // Legacy key for backward compatibility
         
-        // Add profileCompleted flag to user data before storing
+        // Normalize ID for downstream pages that expect user.id
+        const resolvedUserId = userData?.id || userData?.userId || userData?.sub || null;
+        console.log('[AuthSuccess] ID resolution:', {
+          id: userData?.id,
+          userId: userData?.userId,
+          sub: userData?.sub,
+          resolvedUserId
+        });
+
+        // Add profileCompleted flag and normalized id to user data before storing
         const userDataWithProfileStatus = {
           ...userData,
+          id: resolvedUserId,
           profileCompleted: profileCompletedParam === 'true'
         };
         localStorage.setItem('user', JSON.stringify(userDataWithProfileStatus));
+        console.log('[AuthSuccess] Stored user in localStorage:', userDataWithProfileStatus);
 
         console.log('Authentication successful:', { token, userData });
         
