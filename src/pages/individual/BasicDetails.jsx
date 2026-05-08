@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
@@ -8,6 +8,7 @@ import useAuth from "../../hooks/useAuth";
 
 const BasicDetails = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentStep } = useOutletContext();
   const { user } = useAuth();
 
@@ -20,11 +21,32 @@ const BasicDetails = () => {
   });
 
   useEffect(() => {
-    const resolvedEmail = user?.email || "";
-    const resolvedName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
-    const resolvedPhone = user?.phone_number || user?.phone || "";
+    let storedUser = {};
+    try {
+      storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    } catch (error) {
+      console.warn("[IndividualBasicDetails] Failed to parse localStorage user:", error);
+      storedUser = {};
+    }
 
-    console.log("[IndividualBasicDetails] Prefill source user:", user);
+    const stateUser = location.state || {};
+    const resolvedEmail =
+      stateUser?.email ||
+      user?.email ||
+      storedUser?.email ||
+      "";
+    const resolvedName =
+      `${stateUser?.firstName || user?.firstName || storedUser?.firstName || ""} ${stateUser?.lastName || user?.lastName || storedUser?.lastName || ""}`.trim();
+    const resolvedPhone =
+      user?.phone_number ||
+      user?.phone ||
+      storedUser?.phone_number ||
+      storedUser?.phone ||
+      "";
+
+    console.log("[IndividualBasicDetails] Prefill source route state:", stateUser);
+    console.log("[IndividualBasicDetails] Prefill source auth user:", user);
+    console.log("[IndividualBasicDetails] Prefill source localStorage user:", storedUser);
     console.log("[IndividualBasicDetails] Prefill resolved:", {
       resolvedEmail,
       resolvedName,
@@ -36,7 +58,7 @@ const BasicDetails = () => {
       email: prev.email || resolvedEmail,
       phone_number: prev.phone_number || resolvedPhone,
     }));
-  }, [user]);
+  }, [user, location.state]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

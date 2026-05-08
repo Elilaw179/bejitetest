@@ -50,10 +50,22 @@ const EmployerOpt = () => {
             toast.success('Registration successful');
 
             if (mode === 'individual') {
-                navigate('/individual/basic-details');
+                navigate('/individual/basic-details', {
+                    state: {
+                        email: resolvedEmail,
+                        firstName: resolvedFirstName,
+                        lastName: resolvedLastName,
+                    },
+                });
             
             } else if (mode === 'corporate') {
-                navigate('/corporate/basic-details');
+                navigate('/corporate/basic-details', {
+                    state: {
+                        email: resolvedEmail,
+                        firstName: resolvedFirstName,
+                        lastName: resolvedLastName,
+                    },
+                });
             }
 
         } catch (error) {
