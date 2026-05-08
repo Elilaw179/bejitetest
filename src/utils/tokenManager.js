@@ -3,6 +3,8 @@
  * Provides helper functions to manage JWT tokens in localStorage
  */
 
+import { profilePhotoUrl } from './profilePhotoUrl';
+
 // Store tokens after login/signup
 export const storeTokens = (accessToken, refreshToken) => {
   if (accessToken) {
@@ -99,14 +101,11 @@ export const pickProfilePhotoPath = (user) => {
   return user.profile_photo || user.profilePhoto || user.image || null;
 };
 
-/** Full URL for display; leaves vite public paths like assets/... unchanged */
-export const resolveProfileImageSrc = (imagePath, apiBaseUrl = '') => {
+/** @deprecated Prefer profilePhotoUrl / profileAvatarSrc from ./profilePhotoUrl.js */
+export const resolveProfileImageSrc = (imagePath) => {
   if (!imagePath || typeof imagePath !== 'string') return null;
-  if (imagePath.startsWith('http')) return imagePath;
   if (imagePath.startsWith('/assets/')) return imagePath;
   if (imagePath.startsWith('assets/')) return `/${imagePath}`;
-  const base = String(apiBaseUrl || '').replace(/\/$/, '');
-  const path = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-  return `${base}${path}`;
+  return profilePhotoUrl(imagePath) ?? null;
 };
 

@@ -25,11 +25,6 @@ axiosInstance.interceptors.request.use(
     const legacyAuthToken = localStorage.getItem("authToken");
     const tokenToUse = accessToken || legacyAuthToken;
 
-    console.log(
-      "Axios request token check:",
-      tokenToUse ? `Token found (${accessToken ? "accessToken" : "authToken"})` : "No token found"
-    );
-
     // Promote legacy token key so other parts of app can rely on accessToken.
     if (!accessToken && legacyAuthToken) {
       localStorage.setItem("accessToken", legacyAuthToken);
@@ -37,7 +32,6 @@ axiosInstance.interceptors.request.use(
 
     if (tokenToUse) {
       config.headers.Authorization = `Bearer ${tokenToUse}`;
-      console.log("Authorization header set:", config.headers.Authorization.substring(0, 20) + "...");
     }
     return config;
   },
@@ -52,21 +46,16 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    console.log("API Error status:", error.response?.status);
-    console.log("API Error data:", error.response?.data);
-
     // If error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem("refreshToken");
-        console.log("Refresh token found:", refreshToken ? "Yes" : "No");
 
         if (!refreshToken) {
           // No refresh token available - this is likely a Google OAuth login
           // Don't redirect, just reject the error so the UI can handle it
-          console.log("No refresh token available, showing error to user");
           return Promise.reject(error);
         }
 

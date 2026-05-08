@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarker, FaBuilding, FaGlobe, FaEdit, FaArrowLeft } from 'react-icons/fa';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import axiosInstance from '../utils/axiosInstance';
-import { getUser } from '../utils/tokenManager';
-import { API_URL } from '../config';
+import { getUser, pickProfilePhotoPath } from '../utils/tokenManager';
+import { profileAvatarSrc } from '../utils/profilePhotoUrl';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -14,8 +14,6 @@ const Profile = () => {
   const [error, setError] = useState(null);
 
   const user = getUser();
-  console.log('Profile component - User data:', user);
-  console.log('Profile component - Viewing userId:', userId);
 
   const fetchProfileData = async () => {
     try {
@@ -96,24 +94,10 @@ const Profile = () => {
     fetchProfileData();
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const getProfileImageUrl = (imagePath) => {
-    // First check if local user has an image (more up-to-date)
-    if (user?.image) {
-      if (user.image.startsWith('http')) return user.image;
-      if (user.image.startsWith('/uploads')) {
-        return `${API_URL}${user.image}`;
-      }
-      return `${API_URL}${user.image}`;
-    }
-
-    // Fallback to profile data from API
-    if (!imagePath) return '/assets/images/eli.jpg';
-    if (imagePath.startsWith('http')) return imagePath;
-    if (imagePath.startsWith('/uploads')) {
-      return `${API_URL}${imagePath}`;
-    }
-    return `${API_URL}${imagePath}`;
-  };
+  const isViewingOwnProfile = !userId || userId === user?.id;
+  const profileAvatarStored = isViewingOwnProfile
+    ? pickProfilePhotoPath(user) || profileData?.profile_photo
+    : profileData?.profile_photo;
 
   const handleEditProfile = () => {
     if (user?.role === 'jobseeker') {
@@ -122,8 +106,6 @@ const Profile = () => {
       navigate('/edit-profile/recruiter/basic-details');
     }
   };
-
-  const isViewingOwnProfile = !userId || userId === user?.id;
 
   if (loading) {
     return (
@@ -209,7 +191,7 @@ const Profile = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <img
-              src={getProfileImageUrl(profileData.profile_photo)}
+              src={profileAvatarSrc(profileAvatarStored)}
               alt="Profile"
               className="w-24 h-24 rounded-full object-cover border-4 border-[#16730F]"
             />

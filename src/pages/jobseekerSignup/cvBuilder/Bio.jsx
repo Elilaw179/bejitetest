@@ -12,7 +12,7 @@ import useLocalStorage from '../../../hooks/useLocalStorage';
 import CreateBio from '../../../services/createBio';
 import { countries } from '../../../data/countries';
 import { steps } from '../../../data/bioSteps';
-import { API_URL } from '../../../config';
+import { profilePhotoUrl } from '../../../utils/profilePhotoUrl';
 import { updateUser } from '../../../features/auth/authSlice';
 
 const Bio = () => {
@@ -47,20 +47,6 @@ const Bio = () => {
         return String(value);
     };
 
-    // Function to get full URL for profile photo
-    const getProfileImageUrl = (imagePath) => {
-        if (!imagePath) return imagePath;
-        // If it's already a full URL, return as is
-        if (imagePath.startsWith('http')) return imagePath;
-        // For local paths like /uploads/filename.jpg, use the config API_URL with fallback
-        if (imagePath.startsWith('/uploads')) {
-            const baseUrl = API_URL || 'http://localhost:3001';
-            return `${baseUrl}${imagePath}`;
-        }
-        // Otherwise, prepend the API URL
-        return `${API_URL || 'http://localhost:3001'}${imagePath}`;
-    };
-
     // Load existing bio data when in edit mode
     useEffect(() => {
         if (isEditMode && cvData?.bio && !dataLoaded) {
@@ -79,7 +65,7 @@ const Bio = () => {
                 bio: toString(bio.bio),
             });
             if (bio.profile_photo) {
-                setImagePreview(getProfileImageUrl(bio.profile_photo));
+                setImagePreview(profilePhotoUrl(bio.profile_photo) ?? null);
             }
             setDataLoaded(true);
         }

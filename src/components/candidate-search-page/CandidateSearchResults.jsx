@@ -1,27 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { API_URL } from "../../config";
+import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import InterviewInviteModal from "./InterviewInviteModal";
 import { useNavigate } from "react-router-dom";
-
-// Helper function to get profile image URL (consistent with NewsFeedHeader and Profile page)
-const getProfileImageUrl = (imagePath) => {
-  // First priority: Use provided image path from API data (candidate's image)
-  if (imagePath) {
-    if (imagePath.startsWith('http')) {
-      return imagePath; // Cloudinary URLs
-    }
-    // For old /uploads/ paths, don't try to load them as they're likely not accessible
-    // Return null so component shows initials instead
-    if (imagePath.startsWith('/uploads')) {
-      return null;
-    }
-    // For any other paths, try with API_URL
-    return `${API_URL}${imagePath}`;
-  }
-
-  // Final fallback
-  return null; // Return null so component shows initials
-};
 
 const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
   const navigate = useNavigate();
@@ -89,12 +70,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
 
         // Get auth token from localStorage (check multiple keys for compatibility)
         const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
-        
-        console.log("Token retrieval - accessToken:", !!localStorage.getItem('accessToken'));
-        console.log("Token retrieval - authToken:", !!localStorage.getItem('authToken'));
-        console.log("Token retrieval - token:", !!localStorage.getItem('token'));
-        console.log("Final token value:", token ? token.substring(0, 20) + "..." : "NULL");
-        
+
         // Build the API URL with query parameters
         const url = `${API_URL}/api/cv/employee/search?${queryParams.toString()}`;
 
@@ -136,8 +112,6 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
 
         const data = await response.json();
 
-        console.log("API Response:", data);
-
         // Check if this request was aborted (stale request)
         if (currentRequestId !== requestIdRef.current) {
           return;
@@ -157,7 +131,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
             experienceYears: candidate.experience_years || 0,
             initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
             online: candidate.availability === "Available",
-            image: candidate.profile_photo ? getProfileImageUrl(candidate.profile_photo) : null,
+            image: profilePhotoUrl(candidate.profile_photo) ?? null,
           }));
 
           setCandidates(formatted);

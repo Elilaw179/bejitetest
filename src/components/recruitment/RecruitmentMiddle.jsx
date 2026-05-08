@@ -7,16 +7,12 @@ import {
   getUser,
   mergeAuthUsers,
   pickProfilePhotoPath,
-  resolveProfileImageSrc,
 } from '../../utils/tokenManager';
-import { API_URL } from '../../config';
+import { profileAvatarSrc } from '../../utils/profilePhotoUrl';
 import PostCreationModal from '../PostCreationModal';
 import ConfirmModal from '../ConfirmModal';
 
-const getProfileImageUrl = (imagePath) => {
-  if (!imagePath) return "/assets/images/eli.jpg";
-  return resolveProfileImageSrc(imagePath, API_URL) || imagePath;
-};
+const getProfileImageUrl = (imagePath) => profileAvatarSrc(imagePath);
 
 // Helper function to get display name (same pattern as NewsFeedHeader)
 const getDisplayName = (user) => {
@@ -91,7 +87,7 @@ export default function RecruitmentMiddle() {
       pickProfilePhotoPath(stored) ||
       pickProfilePhotoPath(reduxUser) ||
       "/assets/images/eli.jpg";
-    return resolveProfileImageSrc(raw, API_URL) || raw;
+    return profileAvatarSrc(raw);
   }, [reduxUser, location.pathname]);
 
   useEffect(() => {

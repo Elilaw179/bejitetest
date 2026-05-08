@@ -9,7 +9,7 @@ import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
 import ImageUpload from "../../components/ImageUpload";
 import useRecruiterProfile from "../../services/recruiterProfile";
-import { API_URL } from "../../config";
+import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 
 const CoperateProfileSetup = () => {
   const navigate = useNavigate();
@@ -38,20 +38,6 @@ const CoperateProfileSetup = () => {
 
   const { updateProfileSetup, uploadProfilePhoto } = useRecruiterProfile();
 
-  // Function to get full URL for profile photo
-  const getProfileImageUrl = (imagePath) => {
-    if (!imagePath) return imagePath;
-    // If it's already a full URL, return as is
-    if (imagePath.startsWith('http')) return imagePath;
-    // For local paths like /uploads/filename.jpg, use the config API_URL with fallback
-    if (imagePath.startsWith('/uploads')) {
-      const baseUrl = API_URL || 'http://localhost:3001';
-      return `${baseUrl}${imagePath}`;
-    }
-    // Otherwise, prepend the API URL
-    return `${API_URL || 'http://localhost:3001'}${imagePath}`;
-  };
-
   useEffect(() => {
     if (isEditMode && recruiterData && !dataLoaded) {
       setFormData({
@@ -59,7 +45,7 @@ const CoperateProfileSetup = () => {
         summary: recruiterData.summary || "",
       });
       if (recruiterData.profile_photo) {
-        setImagePreview(getProfileImageUrl(recruiterData.profile_photo));
+        setImagePreview(profilePhotoUrl(recruiterData.profile_photo) ?? null);
       }
       setDataLoaded(true);
     }

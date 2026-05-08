@@ -7,8 +7,8 @@ import {
   getUser,
   mergeAuthUsers,
   pickProfilePhotoPath,
-  resolveProfileImageSrc,
 } from "../utils/tokenManager";
+import { profileAvatarSrc } from "../utils/profilePhotoUrl";
 import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
 
@@ -85,8 +85,7 @@ const NewsFeedHeader = ({
     return user.role.charAt(0).toUpperCase() + user.role.slice(1);
   };
 
-  const getProfileImageUrl = (imagePath) =>
-    resolveProfileImageSrc(imagePath, API_URL || "http://localhost:3001") || imagePath;
+  const avatarSrc = (stored) => profileAvatarSrc(stored);
 
   // Fetch notification count
   const fetchNotificationCount = async () => {
@@ -345,7 +344,7 @@ const NewsFeedHeader = ({
                   <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
                     {result.image ? (
                       <img
-                        src={getProfileImageUrl(result.image)}
+                        src={avatarSrc(result.image)}
                         alt={result.name}
                         className="w-full h-full rounded-full object-cover"
                       />
@@ -411,7 +410,7 @@ const NewsFeedHeader = ({
           <div className="relative">
             <img
               className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full object-cover"
-              src={getProfileImageUrl(user.image)}
+              src={avatarSrc(user.image)}
               alt={getDisplayName()}
             />
             <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 bg-[#6B8E23] rounded-full border-2 border-white absolute right-0 sm:right-1 bottom-0 sm:bottom-1" />
@@ -440,7 +439,7 @@ const NewsFeedHeader = ({
                     <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                       <div className="flex items-center gap-3">
                         <img
-                          src={getProfileImageUrl(user.image)}
+                          src={avatarSrc(user.image)}
                           alt={getDisplayName()}
                           className="w-10 h-10 rounded-full object-cover border-2 border-[#16730F]"
                         />

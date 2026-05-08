@@ -7,13 +7,11 @@ import axiosInstance from '../../utils/axiosInstance';
 export const signupUser = createAsyncThunk(
   "auth/signupUser",
   async (userData, { rejectWithValue }) => {
-    console.log("signupUser thunk called with:", userData);
     try {
       const response = await axiosInstance.post(
         '/auth/signup',
         userData
       );
-      console.log("API response:", response.data);
       return response.data;
     } catch (err) {
       console.error("API error:", err);
@@ -30,13 +28,11 @@ export const signupUser = createAsyncThunk(
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (credentials, { rejectWithValue }) => {
-    console.log("loginUser thunk called with:", credentials);
     try {
       const response = await axiosInstance.post(
         '/auth/login',
         credentials
       );
-      console.log("Login API response:", response.data);
       return response.data;
     } catch (err) {
       console.error("Login API error:", err);
@@ -63,7 +59,6 @@ const authSlice = createSlice({
       state.errors = {};
     },
     updateUser: (state, action) => {
-      console.log("Updating user data:", action.payload);
       if (state.user) {
         const updatedUser = { ...state.user, ...action.payload };
         state.user = updatedUser;
@@ -90,7 +85,6 @@ const authSlice = createSlice({
     },
     // ✅ New reducer for Google login
     setGoogleAuth: (state, action) => {
-      console.log("Setting Google auth data:", action.payload);
       state.token = action.payload.token || null;
       state.errors = {};
       
@@ -111,29 +105,23 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(signupUser.pending, (state) => {
-        console.log("signupUser pending...");
         state.loading = true;
         state.errors = {};
       })
       .addCase(signupUser.fulfilled, (state, action) => {
-        console.log("signupUser fulfilled with:", action.payload);
         state.loading = false;
         state.user = action.payload.user;
         state.errors = {};
       })
       .addCase(signupUser.rejected, (state, action) => {
-        console.log("signupUser rejected with:", action.payload);
         state.loading = false;
         state.errors = action.payload || { error: "Signup failed" };
       })
       .addCase(loginUser.pending, (state) => {
-        console.log("loginUser pending...");
         state.loading = true;
         state.errors = {};
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        console.log("loginUser fulfilled with:", action.payload);
-        console.log("[AuthSlice] ProfilePhoto from API:", action.payload.profilePhoto);
         state.loading = false;
         state.token = action.payload.accessToken;
         state.errors = {};
@@ -163,7 +151,6 @@ const authSlice = createSlice({
         }
       })
       .addCase(loginUser.rejected, (state, action) => {
-        console.log("loginUser rejected with:", action.payload);
         state.loading = false;
         state.errors = action.payload || { error: "Login failed" };
       });
