@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MemberCard from '../components/MemberCard';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import Loader from '../components/ui/Loader';
 import axiosPublic from '../services/axiosPublic';
 
@@ -9,6 +9,11 @@ const EmployerOpt = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { email, firstName, lastName, password, role } = location.state || {};
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const resolvedEmail = email || storedUser?.email || '';
+    const resolvedFirstName = firstName || storedUser?.firstName || '';
+    const resolvedLastName = lastName || storedUser?.lastName || '';
+    const resolvedRole = role || storedUser?.role || 'recruiter';
 
     const [showIndividualInfo, setShowIndividualInfo] = useState(false);
     const [showCoperateInfo, setShowCoperateInfo] = useState(false);
@@ -19,15 +24,22 @@ const EmployerOpt = () => {
     const coperateRef = useRef(null);
 
     const handleClick = async (mode) => {
+        if (!resolvedEmail) {
+            toast.error('Missing account email. Please sign in and try again.');
+            return;
+        }
+
         const payload = {
-            email,
-            firstName,
-            lastName,
-            password,
-            role,
+            email: resolvedEmail,
+            role: resolvedRole,
             mode,
             followings: [],
         };
+
+        // Keep compatibility for non-OAuth flows that still send these fields.
+        if (resolvedFirstName) payload.firstName = resolvedFirstName;
+        if (resolvedLastName) payload.lastName = resolvedLastName;
+        if (password) payload.password = password;
         
         try {
             setShow(true);
