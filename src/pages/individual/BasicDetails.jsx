@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
+import useAuth from "../../hooks/useAuth";
 
 const BasicDetails = () => {
   const navigate = useNavigate();
   const { currentStep } = useOutletContext();
+  const { user } = useAuth();
 
   const steps = ["Basic Details", "Profile Setup", "Location"];
 
@@ -16,6 +18,25 @@ const BasicDetails = () => {
     email: "",
     phone_number: "",
   });
+
+  useEffect(() => {
+    const resolvedEmail = user?.email || "";
+    const resolvedName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
+    const resolvedPhone = user?.phone_number || user?.phone || "";
+
+    console.log("[IndividualBasicDetails] Prefill source user:", user);
+    console.log("[IndividualBasicDetails] Prefill resolved:", {
+      resolvedEmail,
+      resolvedName,
+      resolvedPhone,
+    });
+
+    setFormData((prev) => ({
+      full_name: prev.full_name || resolvedName,
+      email: prev.email || resolvedEmail,
+      phone_number: prev.phone_number || resolvedPhone,
+    }));
+  }, [user]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -64,7 +85,7 @@ const BasicDetails = () => {
               name="email"
               placeholder="Enter your email"
               value={formData.email}
-              onChange={handleChange}
+              disabled
               className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
             />
           </div>
