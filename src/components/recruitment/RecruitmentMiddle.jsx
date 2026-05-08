@@ -77,12 +77,13 @@ export default function RecruitmentMiddle() {
   const location = useLocation();
   const reduxUser = useSelector((state) => state.auth?.user);
 
-  const mergedUser = useMemo(
-    () => mergeAuthUsers(getUser() || {}, reduxUser),
-    [reduxUser, location.pathname],
-  );
+  const mergedUser = useMemo(() => {
+    void location.pathname;
+    return mergeAuthUsers(getUser() || {}, reduxUser);
+  }, [reduxUser, location.pathname]);
 
   const currentUserImage = useMemo(() => {
+    void location.pathname;
     const stored = getUser() || {};
     const merged = mergeAuthUsers(stored, reduxUser);
     const raw =

@@ -34,6 +34,7 @@ const NewsFeedHeader = ({
   
   // Merge Redux + localStorage without wiping photo fields when Redux has undefined/null.
   const user = useMemo(() => {
+    void location.pathname;
     const localUser = getUser() || {};
     if (reduxUser) {
       const merged = mergeAuthUsers(localUser, reduxUser);

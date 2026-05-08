@@ -1,54 +1,63 @@
 import { useCallback } from 'react';
-import useLocalStorage from '../hooks/useLocalStorage';
 import axiosInstance from '../utils/axiosInstance';
 
-const useRecruiterProfile = () => {
-  const storedUser = useLocalStorage('user');
+const decodeJwtPayload = (token) => {
+  if (!token) return null;
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    return JSON.parse(atob(payload));
+  } catch (error) {
+    console.warn('[useRecruiterProfile] Failed to decode token payload:', error);
+    return null;
+  }
+};
 
-  const decodeJwtPayload = (token) => {
-    if (!token) return null;
-    try {
-      const payload = token.split('.')[1];
-      if (!payload) return null;
-      return JSON.parse(atob(payload));
-    } catch (error) {
-      console.warn('[useRecruiterProfile] Failed to decode token payload:', error);
-      return null;
-    }
-  };
+const readStoredUser = () => {
+  try {
+    const raw = localStorage.getItem('user');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+};
 
+const getResolvedUserId = () => {
+  const storedUser = readStoredUser();
   const accessToken = localStorage.getItem('accessToken');
   const legacyAuthToken = localStorage.getItem('authToken');
   const tokenPayload = decodeJwtPayload(accessToken || legacyAuthToken);
   const tokenUserId = tokenPayload?.id || tokenPayload?.userId || tokenPayload?.sub || null;
+  return storedUser?.id || storedUser?.userId || storedUser?.sub || tokenUserId || null;
+};
 
-  const userId =
-    storedUser?.id || storedUser?.userId || storedUser?.sub || tokenUserId || null;
+const handleApiError = (error) => {
+  const errorMessage =
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    error.message ||
+    'An error occurred';
+  throw errorMessage;
+};
 
-  const handleApiError = (error) => {
-    const errorMessage =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      error.message ||
-      'An error occurred';
-    throw errorMessage;
-  };
+const assertBearerAuth = () => {
+  const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
+  if (!token) {
+    throw 'Not authenticated. Please sign in again.';
+  }
+};
 
-  /** Bearer required for token-derived routes */
-  const assertBearerAuth = () => {
-    const token = accessToken || legacyAuthToken;
-    if (!token) {
-      throw 'Not authenticated. Please sign in again.';
-    }
-  };
+const assertUserId = () => {
+  const userId = getResolvedUserId();
+  if (!userId) {
+    throw 'Missing user ID. Please sign in again to continue profile setup.';
+  }
+  return userId;
+};
 
-  /** Legacy routes that still use :userId in the URL */
-  const assertUserId = () => {
-    if (!userId) {
-      throw 'Missing user ID. Please sign in again to continue profile setup.';
-    }
-  };
-
+const useRecruiterProfile = () => {
   /** GET /auth/me — canonical current user */
   const getRecruiterProfile = useCallback(async () => {
     try {
@@ -115,7 +124,7 @@ const useRecruiterProfile = () => {
 
   const updateVerificationConsent = useCallback(async (consent) => {
     try {
-      assertUserId();
+      const userId = assertUserId();
       const response = await axiosInstance.put(`/auth/user/profile/${userId}/verification`, {
         verification_consent: consent,
       });
@@ -123,7 +132,7 @@ const useRecruiterProfile = () => {
     } catch (error) {
       handleApiError(error);
     }
-  }, [userId]);
+  }, []);
 
   return {
     getRecruiterProfile,

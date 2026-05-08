@@ -23,7 +23,7 @@ const BasicDetails = () => {
   useEffect(() => {
     console.log("[IndividualBasicDetails] Page mounted");
     console.log("[IndividualBasicDetails] Raw location.state on mount:", location.state);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- mount log only
 
   useEffect(() => {
     let storedUser = {};
@@ -76,6 +76,7 @@ const BasicDetails = () => {
 
       return next;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- primitive deps only; full location.state/user ref churn causes loops
   }, [
     location.state?.email,
     location.state?.firstName,

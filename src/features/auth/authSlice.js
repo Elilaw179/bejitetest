@@ -73,7 +73,7 @@ const authSlice = createSlice({
           const stored = JSON.parse(localStorage.getItem("user") || "{}");
           const merged = { ...stored, ...action.payload };
           localStorage.setItem("user", JSON.stringify(merged));
-        } catch (_) {
+        } catch {
           localStorage.setItem("user", JSON.stringify(action.payload));
         }
       }
