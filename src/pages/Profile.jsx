@@ -1,10 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FaUser, FaEnvelope, FaPhone, FaMapMarker, FaBuilding, FaGlobe, FaEdit, FaArrowLeft } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaMapMarker, FaBuilding, FaEdit, FaArrowLeft } from 'react-icons/fa';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import axiosInstance from '../utils/axiosInstance';
 import { getUser, pickProfilePhotoPath } from '../utils/tokenManager';
 import { profileAvatarSrc } from '../utils/profilePhotoUrl';
+
+/** Normalize GET /auth/me or profile payloads into the shape this page renders. */
+function normalizeProfileData(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  return {
+    ...raw,
+    first_name: raw.first_name ?? raw.firstName ?? '',
+    last_name: raw.last_name ?? raw.lastName ?? '',
+    firstName: raw.firstName ?? raw.first_name,
+    lastName: raw.lastName ?? raw.last_name,
+    profile_photo: raw.profile_photo ?? raw.profilePhoto ?? raw.image ?? null,
+    email: raw.email,
+    title: raw.title ?? raw.jobTitle,
+    phone: raw.phone ?? raw.phone_number,
+    phone_number: raw.phone_number ?? raw.phone,
+    location: raw.location,
+    bio: raw.bio,
+    summary: raw.summary ?? raw.bio,
+    company_name: raw.company_name ?? raw.companyName,
+    nickname: raw.nickname,
+  };
+}
+
+function unwrapAuthProfileBody(data) {
+  if (!data || typeof data !== 'object') return null;
+  if (data.user && typeof data.user === 'object') return data.user;
+  if (Object.prototype.hasOwnProperty.call(data, 'success') && data.data != null) {
+    return data.data;
+  }
+  return data;
+}
+
+function profilePayloadLooksUsable(row) {
+  if (!row || typeof row !== 'object') return false;
+  return !!(
+    row.id ||
+    row.email ||
+    row.first_name ||
+    row.firstName ||
+    row.last_name ||
+    row.lastName ||
+    row.nickname
+  );
+}
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -20,68 +64,132 @@ const Profile = () => {
       setLoading(true);
       setError(null);
 
-      // Determine which user ID to fetch
-      const targetUserId = userId || user.id;
+      const currentUser = getUser();
+      const targetUserId = userId || currentUser?.id;
+      const viewingOwn =
+        !userId ||
+        String(userId) === String(currentUser?.id ?? '');
 
-      // Try different endpoints in order of preference
       let profileFound = false;
 
-      // 1. First try to get basic user profile data
-      try {
-        const response = await axiosInstance.get(`/auth/user/profile/${targetUserId}`);
-        if (response.data.success) {
-          setProfileData(response.data.data);
-          profileFound = true;
-        }
-      } catch (basicUserError) {
-        console.log('Basic user profile not found, trying other endpoints:', basicUserError.message);
-      }
-
-      // 2. If viewing another user and basic profile failed, try direct candidate lookup
-      if (!profileFound && userId) {
+      // Current user: backend exposes Bearer-scoped routes, not GET /auth/user/profile/:id
+      if (viewingOwn) {
         try {
-          console.log('Trying direct candidate lookup for ID:', userId);
+          const { data } = await axiosInstance.get('/auth/me');
+          const row = unwrapAuthProfileBody(data);
+          const normalized = normalizeProfileData(row);
+          if (profilePayloadLooksUsable(normalized)) {
+            setProfileData(normalized);
+            profileFound = true;
+          }
+        } catch (meError) {
+          console.warn('GET /auth/me failed:', meError?.message || meError);
+        }
+
+        if (!profileFound) {
+          try {
+            const response = await axiosInstance.get('/auth/user/profile');
+            const row = unwrapAuthProfileBody(response.data);
+            const normalized = normalizeProfileData(row);
+            if (profilePayloadLooksUsable(normalized)) {
+              setProfileData(normalized);
+              profileFound = true;
+            }
+          } catch (recruiterProfileError) {
+            console.warn(
+              'GET /auth/user/profile failed:',
+              recruiterProfileError?.message || recruiterProfileError,
+            );
+          }
+        }
+
+        if (!profileFound && targetUserId) {
+          try {
+            const response = await axiosInstance.get(
+              `/job-board/candidates/by-user/${targetUserId}`,
+            );
+            if (response.data.success && response.data.data) {
+              const normalized = normalizeProfileData(response.data.data);
+              if (profilePayloadLooksUsable(normalized)) {
+                setProfileData(normalized);
+                profileFound = true;
+              }
+            }
+          } catch (jobseekerError) {
+            console.warn('Job-board profile fetch failed:', jobseekerError?.message || jobseekerError);
+          }
+        }
+
+        if (!profileFound && targetUserId) {
+          try {
+            const response = await axiosInstance.get(`/api/candidates/${targetUserId}`);
+            if (response.data.success && response.data.data) {
+              const candidate = response.data.data;
+              const normalized = normalizeProfileData({
+                ...candidate,
+                first_name: candidate.first_name,
+                last_name: candidate.last_name,
+              });
+              if (profilePayloadLooksUsable(normalized)) {
+                setProfileData(normalized);
+                profileFound = true;
+              }
+            }
+          } catch (candidateError) {
+            console.warn('Candidate lookup failed:', candidateError?.message || candidateError);
+          }
+        }
+      } else if (userId) {
+        try {
           const response = await axiosInstance.get(`/api/candidates/${userId}`);
           if (response.data.success && response.data.data) {
-            // Transform candidate data to match profile format
             const candidate = response.data.data;
-            setProfileData({
+            const normalized = normalizeProfileData({
+              ...candidate,
               first_name: candidate.first_name,
               last_name: candidate.last_name,
-              email: candidate.email,
-              profile_photo: candidate.profile_photo,
-              title: candidate.title,
-              location: candidate.location,
-              bio: candidate.bio,
-              phone: candidate.phone,
-              // Add other fields as needed
-              ...candidate
             });
-            profileFound = true;
+            if (profilePayloadLooksUsable(normalized)) {
+              setProfileData(normalized);
+              profileFound = true;
+            }
           }
         } catch (candidateError) {
-          console.error('Direct candidate lookup failed:', candidateError);
+          console.warn('Direct candidate lookup failed:', candidateError?.message || candidateError);
         }
-      }
 
-      // 3. If still not found, try job-board candidates by user
-      if (!profileFound && (user?.role === 'jobseeker' || (userId && !userId.includes('recruiter')))) {
-        try {
-          const response = await axiosInstance.get(`/job-board/candidates/by-user/${targetUserId}`);
-          if (response.data.success) {
-            setProfileData(response.data.data);
-            profileFound = true;
+        if (!profileFound) {
+          try {
+            const response = await axiosInstance.get(`/job-board/candidates/by-user/${userId}`);
+            if (response.data.success && response.data.data) {
+              const normalized = normalizeProfileData(response.data.data);
+              if (profilePayloadLooksUsable(normalized)) {
+                setProfileData(normalized);
+                profileFound = true;
+              }
+            }
+          } catch (jobseekerError) {
+            console.warn('Jobseeker profile fetch failed:', jobseekerError?.message || jobseekerError);
           }
-        } catch (jobseekerError) {
-          console.error('Jobseeker profile fetch failed:', jobseekerError);
+        }
+
+        if (!profileFound) {
+          try {
+            const response = await axiosInstance.get(`/api/profile/profile/${userId}`);
+            const normalized = normalizeProfileData(response.data);
+            if (profilePayloadLooksUsable(normalized)) {
+              setProfileData(normalized);
+              profileFound = true;
+            }
+          } catch (legacyError) {
+            console.warn('Legacy profile fetch failed:', legacyError?.message || legacyError);
+          }
         }
       }
 
-      // If no profile data found after all attempts
       if (!profileFound) {
         setError('Profile data not found. Please complete your profile setup.');
       }
-
     } catch (err) {
       console.error('Error fetching profile:', err);
       setError('Failed to load profile data');
