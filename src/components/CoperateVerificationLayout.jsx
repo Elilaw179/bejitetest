@@ -40,8 +40,10 @@ const CoperateVerificationLayout = () => {
       const fetchRecruiterData = async () => {
         setIsLoading(true);
         try {
-          const response = await axiosInstance.get(`/auth/user/profile/${user.id}`);
+          const response = await axiosInstance.get('/auth/user/profile');
           if (response.data && response.data.success) {
+            setRecruiterData(response.data.data);
+          } else if (response.data?.data) {
             setRecruiterData(response.data.data);
           }
           setInitialLoadComplete(true);

@@ -1,12 +1,10 @@
 import { useCallback } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
 import axiosInstance from '../utils/axiosInstance';
-import { API_URL } from "../config";
-
-const BASE_URL = API_URL;
 
 const useRecruiterProfile = () => {
   const storedUser = useLocalStorage('user');
+
   const decodeJwtPayload = (token) => {
     if (!token) return null;
     try {
@@ -24,99 +22,102 @@ const useRecruiterProfile = () => {
   const tokenPayload = decodeJwtPayload(accessToken || legacyAuthToken);
   const tokenUserId = tokenPayload?.id || tokenPayload?.userId || tokenPayload?.sub || null;
 
-  const userId = storedUser?.id || storedUser?.userId || storedUser?.sub || tokenUserId || null;
+  const userId =
+    storedUser?.id || storedUser?.userId || storedUser?.sub || tokenUserId || null;
 
   const handleApiError = (error) => {
-    const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      'An error occurred';
     throw errorMessage;
   };
 
-  const assertUserId = () => {
-    console.log('[useRecruiterProfile] User resolution:', {
-      storedUser,
-      tokenPayload,
-      tokenUserId,
-      resolvedUserId: userId,
-      hasAccessToken: !!accessToken,
-      hasLegacyAuthToken: !!legacyAuthToken,
-    });
+  /** Bearer required for token-derived routes */
+  const assertBearerAuth = () => {
+    const token = accessToken || legacyAuthToken;
+    if (!token) {
+      throw 'Not authenticated. Please sign in again.';
+    }
+  };
 
+  /** Legacy routes that still use :userId in the URL */
+  const assertUserId = () => {
     if (!userId) {
       throw 'Missing user ID. Please sign in again to continue profile setup.';
     }
   };
 
+  /** GET /auth/me — canonical current user */
   const getRecruiterProfile = useCallback(async () => {
     try {
-      assertUserId();
-      const response = await axiosInstance.get(`/auth/user/profile/${userId}`);
-      return response.data;
+      assertBearerAuth();
+      const response = await axiosInstance.get('/auth/me');
+      return response.data?.user ?? response.data;
     } catch (error) {
       handleApiError(error);
     }
-  }, [userId]);
+  }, []);
 
   const updateBasicDetails = useCallback(async (data) => {
     try {
-      assertUserId();
-      const response = await axiosInstance.put(`/auth/user/profile/${userId}/basic-details`, data);
+      assertBearerAuth();
+      const response = await axiosInstance.put('/auth/user/profile/basic-details', data);
       return response.data;
     } catch (error) {
       handleApiError(error);
     }
-  }, [userId]);
+  }, []);
 
   const updateProfileSetup = useCallback(async (data) => {
     try {
-      assertUserId();
-      const response = await axiosInstance.put(`/auth/user/profile/${userId}/profile-setup`, data);
+      assertBearerAuth();
+      const response = await axiosInstance.put('/auth/user/profile/profile-setup', data);
       return response.data;
     } catch (error) {
       handleApiError(error);
     }
-  }, [userId]);
+  }, []);
 
   const updateCompanyDetails = useCallback(async (data) => {
     try {
-      assertUserId();
-      const response = await axiosInstance.put(`/auth/user/profile/${userId}/company-details`, data);
+      assertBearerAuth();
+      const response = await axiosInstance.put('/auth/user/profile/company-details', data);
       return response.data;
     } catch (error) {
       handleApiError(error);
     }
-  }, [userId]);
+  }, []);
 
   const updateLocation = useCallback(async (data) => {
     try {
-      assertUserId();
-      const response = await axiosInstance.put(`/auth/user/profile/${userId}/location`, data);
+      assertBearerAuth();
+      const response = await axiosInstance.put('/auth/user/profile/location', data);
       return response.data;
     } catch (error) {
       handleApiError(error);
     }
-  }, [userId]);
+  }, []);
 
+  /** POST /auth/user/profile/photo — Bearer token; field name profilePhoto */
   const uploadProfilePhoto = useCallback(async (imageFile) => {
     try {
-      assertUserId();
+      assertBearerAuth();
       const formData = new FormData();
       formData.append('profilePhoto', imageFile);
-      const response = await axiosInstance.post(`/auth/user/profile/${userId}/photo`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axiosInstance.post('/auth/user/profile/photo', formData);
       return response.data;
     } catch (error) {
       handleApiError(error);
     }
-  }, [userId]);
+  }, []);
 
   const updateVerificationConsent = useCallback(async (consent) => {
     try {
       assertUserId();
       const response = await axiosInstance.put(`/auth/user/profile/${userId}/verification`, {
-        verification_consent: consent
+        verification_consent: consent,
       });
       return response.data;
     } catch (error) {

@@ -112,23 +112,25 @@ const EmployerOpt = () => {
 
             toast.success('Registration successful');
 
+            const navState = {
+                email: normalizedUser.email || resolvedEmail,
+                firstName:
+                    normalizedUser.firstName !== undefined && normalizedUser.firstName !== null
+                        ? normalizedUser.firstName
+                        : resolvedFirstName,
+                lastName:
+                    normalizedUser.lastName !== undefined && normalizedUser.lastName !== null
+                        ? normalizedUser.lastName
+                        : resolvedLastName,
+            };
+
             if (mode === 'individual') {
-                const navState = {
-                    email: resolvedEmail,
-                    firstName: resolvedFirstName,
-                    lastName: resolvedLastName,
-                };
                 console.log('[EmployerOpt] Navigating to individual basic-details with state:', navState);
                 navigate('/individual/basic-details', {
                     state: navState,
                 });
             
             } else if (mode === 'corporate') {
-                const navState = {
-                    email: resolvedEmail,
-                    firstName: resolvedFirstName,
-                    lastName: resolvedLastName,
-                };
                 console.log('[EmployerOpt] Navigating to corporate basic-details with state:', navState);
                 navigate('/corporate/basic-details', {
                     state: navState,

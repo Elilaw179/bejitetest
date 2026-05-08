@@ -10,9 +10,14 @@ const AuthSuccess = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const token = params.get('token');
+    const token = params.get('token') || params.get('accessToken');
+    const refreshTokenParam = params.get('refreshToken');
     const userParam = params.get('user');
     const profileCompletedParam = params.get('profileCompleted');
+
+    if (refreshTokenParam) {
+      localStorage.setItem('refreshToken', refreshTokenParam);
+    }
 
     if (token) {
       try {
