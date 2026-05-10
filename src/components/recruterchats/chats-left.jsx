@@ -3,7 +3,7 @@ import { FaArrowLeft, FaSearch } from 'react-icons/fa';
 import image from '../../assets/Ellipse.png';
 import messagingService from '../../services/messagingService';
 
-function ChatsLeft({ onSelectChat, onBack }) {
+function ChatsLeft({ onSelectChat }) {
   const [conversations, setConversations] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
