@@ -14,6 +14,10 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   useEffect(() => {
     if (selectedChat?.id) {
       fetchMessages(selectedChat.id);
+      // Mark conversation as read when opened
+      messagingService.markConversationRead(selectedChat.id).catch((err) => {
+        console.error('Error marking conversation as read:', err);
+      });
     }
   }, [selectedChat]);
 
@@ -31,7 +35,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     try {
       if (!silent) setLoading(true);
       const data = await messagingService.getMessages(conversationId);
-      setMessages(data || []);
+      setMessages((data || []).reverse());
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
@@ -109,17 +113,22 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     ) : (
       /* Messages Display */
       <div className="space-y-4">
- {messages.map((msg) => {
+        {messages.map((msg) => {
           const isOwnMessage = `${msg.firstName || msg.first_name || ''} ${msg.lastName || msg.last_name || ''}`.trim() === `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim();
-// Real names from backend JOIN
-// Backend returns firstName/lastName directly on msg (JOIN), NOT msg.sender object
+          // Real names from backend JOIN
+          // Backend returns firstName/lastName directly on msg (JOIN), NOT msg.sender object
           const senderName = `${msg.firstName || msg.first_name || ''} ${msg.lastName || msg.last_name || ''}`.trim() || currentUser?.firstName || 'User';
           const messageTime = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
           return (
-            <div key={msg.id} className={isOwnMessage ? 'flex justify-start mb-2 md:mb-4' : 'flex justify-end mb-2 md:mb-4'}>
-              <div className={`flex flex-col ${isOwnMessage ? 'items-start' : 'items-end'} w-full max-w-xs md:max-w-md`}>
-                <div className={`p-2 md:p-3 rounded-2xl shadow-sm ${isOwnMessage ? 'bg-white text-gray-900 mr-8 md:mr-16 rounded-r-none border' : 'bg-green-500 text-white ml-8 md:ml-16 rounded-l-none'}`}>
+            <div key={msg.id} className={isOwnMessage ? 'flex justify-end mb-2 md:mb-4' : 'flex justify-start mb-2 md:mb-4'}>
+              <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'} w-full max-w-xs md:max-w-md`}>
+                {!isOwnMessage && (
+                  <div className="text-xs font-medium text-gray-500 mb-1">
+                    {senderName}
+                  </div>
+                )}
+                <div className={`p-2 md:p-3 rounded-2xl shadow-sm ${isOwnMessage ? 'bg-green-500 text-white ml-8 md:ml-16 rounded-r-none' : 'bg-white text-gray-900 mr-8 md:mr-16 rounded-l-none border'}`}>
                   {msg.image_url && (
                     <img src={msg.image_url} alt="attachment" className="mb-2 w-full max-w-xs rounded-lg max-h-32 md:max-h-48 object-cover" />
                   )}
@@ -127,14 +136,9 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
                     {msg.content}
                   </p>
                 </div>
-                <div className={`text-xs mt-1 ${isOwnMessage ? 'text-gray-500' : 'text-green-200 ml-auto'} text-xs md:text-xs`}>
+                <div className={`text-xs mt-1 ${isOwnMessage ? 'text-gray-500 ml-auto' : 'text-gray-500'}`}>
                   {messageTime}
                 </div>
-                {!isOwnMessage && (
-                  <div className="text-xs font-medium text-gray-500 mt-1">
-                    {senderName}
-                  </div>
-                )}
               </div>
             </div>
           );

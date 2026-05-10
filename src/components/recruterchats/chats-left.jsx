@@ -56,14 +56,21 @@ function ChatsLeft({ onSelectChat, onBack }) {
     }
   };
 
-const handleUserSelect = async (user) => {
+  const handleUserSelect = async (user) => {
     try {
       // Start a conversation with the selected user (ensure string ID)
       const conversation = await messagingService.startConversation(String(user.id));
-      // Refresh conversations to include the new one
-      await fetchConversations();
-      // Select the new conversation for viewing
-      onSelectChat(conversation);
+      
+      // Fetch the updated conversations list to get the fully populated conversation object
+      const updatedConversations = await messagingService.getConversations();
+      setConversations(updatedConversations || []);
+      
+      // Find the fully populated conversation (which includes other_user details)
+      const fullConversation = (updatedConversations || []).find(c => c.id === conversation.id);
+      
+      // Select the fully populated conversation, fallback to manually attaching user info if needed
+      onSelectChat(fullConversation || { ...conversation, other_user: user });
+      
       // Clear search
       setSearchTerm('');
       setIsSearching(false);
@@ -76,7 +83,7 @@ const handleUserSelect = async (user) => {
   return (
     <div className="bg-[#1A3E32] h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-2 p-4 ">
+      {/* <div className="flex items-center gap-2 p-4 ">
         <button
           type="button"
           aria-label="Go back"
@@ -86,7 +93,7 @@ const handleUserSelect = async (user) => {
           <FaArrowLeft className='text-[#556B1F]'  />
         </button>
         <h2 className="text-[20px] text-[#556B1F]">Invitations</h2>
-      </div>
+      </div> */}
 
       {/* Search Bar */}
       <div className="p-4">
@@ -106,31 +113,7 @@ const handleUserSelect = async (user) => {
       </div>
 
     
-   <div className="flex items-center justify-center gap-4">
-
-     <div className="flex flex-col items-center">
-  <img
-    src={image}
-    className="w-12 h-12 rounded-full object-cover"
-    alt="Employer profile"
-  />
-  <span className="text-[#556B1F] text-sm text-center">
-     Okpata
-    </span>
-    </div>
-
-  {/* Icon + Text */}
-  <div className="flex flex-col items-center">
-    <div className="w-12 h-12 flex items-center justify-center rounded-full bg-black text-white">
-      <FaSearch />
-    </div>
-    <span className="text-[#556B1F] text-sm text-center">
-      See More <br /> Employer
-    </span>
-  </div>
-
-
-</div>
+   
 
 
       {/* Conversations/Search Results List */}
@@ -147,7 +130,7 @@ const handleUserSelect = async (user) => {
           ) : isSearching ? (
             // Show search results
             searchResults.length === 0 ? (
-              <div className="text-center text-[#556B1F] py-4">
+              <div className="text-center text-[#fff] py-4">
                 {searchLoading ? 'Searching...' : 'No users found'}
               </div>
             ) : (
@@ -172,7 +155,7 @@ const handleUserSelect = async (user) => {
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="text-white text-sm font-medium truncate">{displayName}</h3>
                       </div>
-                      <p className="text-[#556B1F] text-xs truncate">
+                      <p className="text-[#fff] text-xs truncate">
                         {user.jobTitle || 'Click to start conversation'}
                       </p>
                     </div>
@@ -194,12 +177,13 @@ conversations.map((conversation) => {
                 const lastMessageTime = conversation.last_message_at ?
                   new Date(conversation.last_message_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) :
                   '';
+                const unreadCount = conversation.unread_count || 0;
 
                 return (
                   <div
                     key={conversation.id}
                     onClick={() => onSelectChat(conversation)}
-                    className="flex items-center gap-3 p-3 mx-2 rounded-lg hover:bg-[#556B1F]/20 cursor-pointer transition-colors"
+                    className={`flex items-center gap-3 p-3 mx-2 rounded-lg hover:bg-[#556B1F]/20 cursor-pointer transition-colors ${unreadCount > 0 ? 'bg-[#556B1F]/10' : ''}`}
                   >
                     <div className="relative">
                       <img
@@ -207,13 +191,18 @@ conversations.map((conversation) => {
                         alt={displayName}
                         className="w-12 h-12 rounded-full object-cover"
                       />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-[#fff] text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-md">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-white text-sm font-medium truncate">{displayName}</h3>
-                        <span className="text-[#556B1F] text-xs flex-shrink-0">{lastMessageTime}</span>
+                        <h3 className={`text-sm truncate ${unreadCount > 0 ? 'text-white font-bold' : 'text-white font-medium'}`}>{displayName}</h3>
+                        <span className={`text-xs flex-shrink-0 ${unreadCount > 0 ? 'text-white font-semibold' : 'text-[#fff]'}`}>{lastMessageTime}</span>
                       </div>
-                      <p className="text-[#556B1F] text-xs truncate">{conversation.lastMessage || 'No messages yet'}</p>
+                      <p className={`text-xs truncate ${unreadCount > 0 ? 'text-white/80 font-semibold' : 'text-[#fff]'}`}>{conversation.lastMessage || 'No messages yet'}</p>
                     </div>
                   </div>
                 );

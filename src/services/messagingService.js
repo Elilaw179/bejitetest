@@ -90,6 +90,28 @@ async startConversation(otherUserId) {
       console.error('Error deleting message:', error);
       throw error;
     }
+  },
+
+  // Get total unread message count across all conversations
+  async getUnreadCount() {
+    try {
+      const response = await axiosInstance.get('/conversations/unread-count');
+      return response.data.unread_count || 0;
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+      return 0;
+    }
+  },
+
+  // Mark a conversation as read
+  async markConversationRead(conversationId) {
+    try {
+      const response = await axiosInstance.post(`/conversations/${conversationId}/read`);
+      return response.data;
+    } catch (error) {
+      console.error('Error marking conversation as read:', error);
+      throw error;
+    }
   }
 };
 
