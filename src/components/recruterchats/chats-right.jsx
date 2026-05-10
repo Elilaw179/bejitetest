@@ -1,10 +1,69 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
-import image from '../../assets/Ellipse.png'; 
+import { useSelector } from 'react-redux';
+import { getUser } from '../../utils/tokenManager';
+import { API_URL } from '../../config'; 
 
 
 function ChatsRight({ onBack }) {
-  
+  // Get user from Redux store first (most up-to-date after login), fallback to localStorage
+  const reduxUser = useSelector((state) => state.auth?.user);
+
+  // Compute user - similar to NewsFeedHeader
+  const user = useMemo(() => {
+    // First priority: Redux store
+    if (reduxUser) {
+      return {
+        name: reduxUser.name || reduxUser.firstName || reduxUser.lastName ? `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim() : "Guest",
+        image: reduxUser.image || reduxUser.profilePhoto || reduxUser.profile_photo || "/assets/images/eli.jpg",
+        role: reduxUser.role || "user",
+        email: reduxUser.email || "Not provided",
+        phone: reduxUser.phone || "Not provided",
+        website: reduxUser.website || "Not provided",
+        ...reduxUser
+      };
+    }
+
+    // Second priority: localStorage
+    const localUser = getUser();
+    return localUser || {
+      name: "Guest",
+      image: "/assets/images/eli.jpg",
+      role: "user",
+      email: "Not provided",
+      phone: "Not provided",
+      website: "Not provided",
+    };
+  }, [reduxUser]);
+
+  // Get display name
+  const getDisplayName = () => {
+    if (user?.name) return user.name;
+    if (user?.firstName || user?.lastName) {
+      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    }
+    return "Guest";
+  };
+
+  // Get display role (capitalize first letter)
+  const getDisplayRole = () => {
+    if (!user?.role) return "User";
+    return user.role.charAt(0).toUpperCase() + user.role.slice(1);
+  };
+
+  // Function to get full URL for profile photo
+  const getProfileImageUrl = (imagePath) => {
+    if (!imagePath) return imagePath;
+    // If it's already a full URL, return as is
+    if (imagePath.startsWith('http')) return imagePath;
+    // For local paths like /uploads/filename.jpg, use the config API_URL
+    if (imagePath.startsWith('/uploads')) {
+      const baseUrl = API_URL || 'http://localhost:3001';
+      return `${baseUrl}${imagePath}`;
+    }
+    // Otherwise, prepend the API URL
+    return `${API_URL || 'http://localhost:3001'}${imagePath}`;
+  };
 
   return (
     <div className="bg-[#F5F5F5] h-full p-2">
@@ -27,14 +86,14 @@ function ChatsRight({ onBack }) {
             <div className="relative -mt-10 rounded-full border-[5px] border-[#16730F]">
               <img
                 className="w-20 h-20 rounded-full object-cover"
-                src={image}
-               
+                src={getProfileImageUrl(user.image)}
+                alt={getDisplayName()}
                 loading="lazy"
               />
             </div>
             <div className="text-white text-center mt-3">
-              <h1 className="text-lg font-semibold">Okpata favour</h1>
-              <p className="text-sm opacity-80">Employer</p>
+              <h1 className="text-lg font-semibold">{getDisplayName()}</h1>
+              <p className="text-sm opacity-80">{getDisplayRole()}</p>
             </div>
             <div className="w-36 mx-auto mt-4">
               <button
@@ -51,9 +110,9 @@ function ChatsRight({ onBack }) {
         {/* Contact + Links */}
         <div className="bg-[#16730F] px-6 py-6 space-y-6 h-full">
           {[
-            { label: "Email", value: "osakweprsca@gmail.com" },
-            { label: "Phone", value: "+234 7061410614" },
-            { label: "Website", value: "https://linktree.com" },
+            { label: "Email", value: user.email },
+            { label: "Phone", value: user.phone },
+            { label: "Website", value: user.website },
           ].map((item, idx) => (
             <div key={idx}>
               <hr className="border-[#6B8E23] mb-2" />
