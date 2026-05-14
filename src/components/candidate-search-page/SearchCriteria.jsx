@@ -100,6 +100,15 @@ const SearchCriteria = ({ formData, setFormData, onSearch }) => {
             <SearchInput id="availabilityInput" label="AVAILABILITY" options={["Immediately","1-2 weeks","1 month","2 months","3+ months"]} placeholder="Enter or select" value={formData.availabilityInput} onChange={handleChange} />
           </GroupedInputs>
 
+          <SearchInput
+            id="rateInput"
+            label="RATE"
+            options={["Hourly rate", "Monthly Salary"]}
+            placeholder="Enter or select"
+            value={formData.rateInput}
+            onChange={handleChange}
+          />
+
           <SearchInput id="educationInput" label="EDUCATION" options={["High School","Secondary","Associate Degree","Bachelor's Degree","Master's Degree","PhD"]} placeholder="Enter or select" value={formData.educationInput} onChange={handleChange} />
           <SearchInput id="skillInput" label="SKILL" options={["JavaScript","React","Node.js","Python","SQL","Backend Development"]} placeholder="Enter or select" value={formData.skillInput} onChange={handleChange} />
 

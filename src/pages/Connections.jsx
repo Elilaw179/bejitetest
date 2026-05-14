@@ -7,6 +7,15 @@ import { toast } from 'react-toastify';
 import * as connectionsApi from '../services/connectionsApi';
 import { getProfileImageUrl } from '../utils/profileImageUtils';
 
+const shuffleArray = (arr) => {
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 const Connections = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('network');
@@ -88,13 +97,13 @@ const Connections = () => {
         role: user.jobTitle || 'Professional'
       })) : [];
 
-      // Shuffle the users to avoid alphabetical order
-      transformedUsers.sort(() => Math.random() - 0.5);
+      // Robust randomization to avoid deterministic/alphabetic order
+      const randomizedUsers = shuffleArray(transformedUsers);
 
       setConnections(transformedConnections);
       setIncomingRequests(transformedIncoming);
       setOutgoingRequests(transformedOutgoing);
-      setDiscoverableUsers(transformedUsers);
+      setDiscoverableUsers(randomizedUsers);
     } catch (error) {
       console.error('Error loading connections data:', error);
       toast.error('Failed to load connections data');

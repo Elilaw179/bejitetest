@@ -138,7 +138,13 @@ const CandidateSearchPage = () => {
 
             {/* Right Column */}
             <div className="overflow-y-auto h-full p-4">
-              {viewProfile && <JobSearchFormGreen />}
+              {viewProfile && (
+                <JobSearchFormGreen
+                  formData={formData}
+                  setFormData={setFormData}
+                  onSearch={handleSearch}
+                />
+              )}
             </div>
           </div>
         )}

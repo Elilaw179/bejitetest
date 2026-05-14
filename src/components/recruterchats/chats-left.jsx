@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaArrowLeft, FaSearch } from 'react-icons/fa';
-import image from '../../assets/Ellipse.png';
 import messagingService from '../../services/messagingService';
+import { API_URL } from '../../config';
 
 function ChatsLeft({ onSelectChat }) {
   const [conversations, setConversations] = useState([]);
@@ -80,6 +80,36 @@ function ChatsLeft({ onSelectChat }) {
     }
   };
 
+  const getInitials = (firstName, lastName) => {
+    const first = (firstName || '').trim().charAt(0).toUpperCase();
+    const last = (lastName || '').trim().charAt(0).toUpperCase();
+    return `${first}${last}` || 'U';
+  };
+
+  const getProfileImageUrl = (imagePath) => {
+    if (!imagePath) return imagePath;
+    if (imagePath.startsWith('http')) return imagePath;
+    if (imagePath.startsWith('/uploads')) {
+      const baseUrl = API_URL || 'http://localhost:3001';
+      return `${baseUrl}${imagePath}`;
+    }
+    return `${API_URL || 'http://localhost:3001'}${imagePath}`;
+  };
+
+  const Avatar = ({ imageUrl, firstName, lastName, alt, sizeClass = 'w-12 h-12' }) => (
+    imageUrl ? (
+      <img
+        src={imageUrl}
+        alt={alt}
+        className={`${sizeClass} rounded-full object-cover`}
+      />
+    ) : (
+      <div className={`${sizeClass} rounded-full bg-[#556B1F] text-white font-semibold flex items-center justify-center`}>
+        {getInitials(firstName, lastName)}
+      </div>
+    )
+  );
+
   return (
     <div className="bg-[#1A3E32] h-full flex flex-col">
       {/* Header */}
@@ -136,7 +166,8 @@ function ChatsLeft({ onSelectChat }) {
             ) : (
               searchResults.map((user) => {
                 const displayName = `${user.firstName} ${user.lastName}`;
-                const profileImage = user.profilePhoto || image;
+                const profileImageRaw = user.profilePictureUrl || user.profilePhoto || user.profile_photo || '';
+                const profileImage = getProfileImageUrl(profileImageRaw);
 
                 return (
                   <div
@@ -145,10 +176,11 @@ function ChatsLeft({ onSelectChat }) {
                     className="flex items-center gap-3 p-3 mx-2 rounded-lg hover:bg-[#556B1F]/20 cursor-pointer transition-colors"
                   >
                     <div className="relative">
-                      <img
-                        src={profileImage}
+                      <Avatar
+                        imageUrl={profileImage}
+                        firstName={user.firstName}
+                        lastName={user.lastName}
                         alt={displayName}
-                        className="w-12 h-12 rounded-full object-cover"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -173,7 +205,8 @@ function ChatsLeft({ onSelectChat }) {
 conversations.map((conversation) => {
                 const otherUser = conversation.other_user;
                 const displayName = otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : 'Unknown User';
-                const profileImage = otherUser?.profilePictureUrl || otherUser?.profilePhoto || image;
+                const profileImageRaw = otherUser?.profilePictureUrl || otherUser?.profilePhoto || otherUser?.profile_photo || '';
+                const profileImage = getProfileImageUrl(profileImageRaw);
                 const lastMessageTime = conversation.last_message_at ?
                   new Date(conversation.last_message_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) :
                   '';
@@ -186,10 +219,11 @@ conversations.map((conversation) => {
                     className={`flex items-center gap-3 p-3 mx-2 rounded-lg hover:bg-[#556B1F]/20 cursor-pointer transition-colors ${unreadCount > 0 ? 'bg-[#556B1F]/10' : ''}`}
                   >
                     <div className="relative">
-                      <img
-                        src={profileImage}
+                      <Avatar
+                        imageUrl={profileImage}
+                        firstName={otherUser?.firstName}
+                        lastName={otherUser?.lastName}
                         alt={displayName}
-                        className="w-12 h-12 rounded-full object-cover"
                       />
                       {unreadCount > 0 && (
                         <span className="absolute -top-1 -right-1 bg-[#fff] text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-md">
