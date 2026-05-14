@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import image from '../../assets/Ellipse.png';
 import { FaArrowLeft, FaPhone, FaVideo, FaBars } from 'react-icons/fa';
 import messagingService from '../../services/messagingService';
+import { API_URL } from '../../config';
 
 function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   const [message, setMessage] = useState('');
@@ -59,10 +59,32 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     }
   };
 
+  const getInitials = (firstName, lastName) => {
+    const first = (firstName || '').trim().charAt(0).toUpperCase();
+    const last = (lastName || '').trim().charAt(0).toUpperCase();
+    return `${first}${last}` || 'U';
+  };
+
+  const getProfileImageUrl = (imagePath) => {
+    if (!imagePath) return imagePath;
+    if (imagePath.startsWith('http')) return imagePath;
+    if (imagePath.startsWith('/uploads')) {
+      const baseUrl = API_URL || 'http://localhost:3001';
+      return `${baseUrl}${imagePath}`;
+    }
+    return `${API_URL || 'http://localhost:3001'}${imagePath}`;
+  };
+
+  const selectedFirstName = selectedChat?.other_user?.firstName || '';
+  const selectedLastName = selectedChat?.other_user?.lastName || '';
+  const selectedFullName = `${selectedFirstName} ${selectedLastName}`.trim() || 'Chat';
+  const selectedProfileImageRaw = selectedChat?.other_user?.profilePictureUrl || selectedChat?.other_user?.profilePhoto || '';
+  const selectedProfileImage = getProfileImageUrl(selectedProfileImageRaw);
+
   return (
-<main className="w-full h-full flex flex-col bg-gray-100">
+<main className="w-full h-full min-h-0 flex flex-col overflow-hidden bg-gray-100">
   {/* Header */}
-  <div className="bg-gray-200 flex items-center justify-between px-4 py-4 md:py-7">
+  <div className="bg-gray-200 shrink-0 flex items-center justify-between px-4 py-4 md:py-7">
     <div className="flex items-center gap-2 md:gap-3">
       <button
         onClick={onShowChatList}
@@ -70,14 +92,20 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       >
         <FaArrowLeft />
       </button>
-      <img
-        src={selectedChat?.other_user?.profilePictureUrl || image}
-        alt="Profile"
-        className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover lg:hidden"
-      />
+      {selectedProfileImage ? (
+        <img
+          src={selectedProfileImage}
+          alt={selectedFullName}
+          className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover lg:hidden"
+        />
+      ) : (
+        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#556B1F] text-white font-semibold flex items-center justify-center lg:hidden">
+          {getInitials(selectedFirstName, selectedLastName)}
+        </div>
+      )}
       <div>
           <h1 className="text-lg md:text-2xl font-semibold text-[#16730F]">
-            {selectedChat?.other_user ? `${selectedChat.other_user.firstName} ${selectedChat.other_user.lastName}` : 'Chat'}
+            {selectedFullName}
           </h1>
           <p className="text-xs md:text-sm text-[#16730F]">Online</p>
        </div>
@@ -100,7 +128,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   </div>
 
   {/* Messages Area */}
-  <div className="flex-1 overflow-y-auto p-2 md:p-4">
+  <div className="flex-1 min-h-0 overflow-y-auto p-2 md:p-4">
     {loading ? (
       <div className="text-center text-[#16730F] py-2 md:py-4">
         Loading messages...
@@ -114,10 +142,39 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       /* Messages Display */
       <div className="space-y-4">
         {messages.map((msg) => {
-          const isOwnMessage = `${msg.firstName || msg.first_name || ''} ${msg.lastName || msg.last_name || ''}`.trim() === `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim();
+          const currentUserId =
+            currentUser?.id ||
+            currentUser?.user_id ||
+            currentUser?.userId ||
+            currentUser?.sub ||
+            currentUser?.authId;
+
+          const selectedOtherUserId =
+            selectedChat?.other_user?.id ||
+            selectedChat?.other_user?.user_id ||
+            selectedChat?.otherUserId;
+
+          const messageSenderId = msg.sender_id || msg.user_id || msg.sender?.id || msg.senderId;
+
+          // Prefer ID-based check for robust sender/receiver separation
+          let isOwnMessage = false;
+          if (currentUserId != null && messageSenderId != null) {
+            isOwnMessage = String(messageSenderId) === String(currentUserId);
+          } else if (selectedOtherUserId != null && messageSenderId != null) {
+            // If current user ID is not available after refresh, infer from selected chat participant
+            isOwnMessage = String(messageSenderId) !== String(selectedOtherUserId);
+          } else {
+            // Final fallback to name match only when IDs are missing
+            isOwnMessage =
+              `${msg.firstName || msg.first_name || ''} ${msg.lastName || msg.last_name || ''}`.trim() ===
+              `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim();
+          }
+
           // Real names from backend JOIN
           // Backend returns firstName/lastName directly on msg (JOIN), NOT msg.sender object
-          const senderName = `${msg.firstName || msg.first_name || ''} ${msg.lastName || msg.last_name || ''}`.trim() || currentUser?.firstName || 'User';
+          const senderName =
+            `${msg.firstName || msg.first_name || ''} ${msg.lastName || msg.last_name || ''}`.trim() ||
+            'User';
           const messageTime = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
           return (
@@ -148,7 +205,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   </div>
 
   {/* Message Input */}
-  <div className="p-2 md:p-4 bg-gray-100">
+  <div className="shrink-0 p-2 md:p-4 bg-gray-100">
     <div className="flex flex-col gap-1 md:gap-2 border border-gray-300 rounded-2xl px-3 md:px-4 py-2 md:py-3 bg-gray-100 shadow-sm">
         <input
           type="text"

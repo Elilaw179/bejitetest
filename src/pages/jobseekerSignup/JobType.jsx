@@ -70,6 +70,7 @@ function JobType() {
     currency: "",
     remotePref: "",
     availability: "",
+    rate: "",
   });
 
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -94,6 +95,7 @@ function JobType() {
             currency: data.currency || prev.currency,
             remotePref: data.remote_preference || prev.remotePref,
             availability: data.availability || prev.availability,
+            rate: data.rate || prev.rate,
           }));
         }
       } catch (err) {
@@ -143,6 +145,7 @@ function JobType() {
       currency: currencyCode,
       remote_preference: String(form.remotePref || '').trim(),
       availability: String(form.availability || '').trim(),
+      rate: String(form.rate || '').trim(),
     };
 
     try {
@@ -186,9 +189,68 @@ function JobType() {
 
   const states = getStateOptions(form.country);
   const workTypes = ["Full-time", "NYSC Posting", "Part-time", "Contract", "Temporary", "Paid Internship", "Freelance", "Remote", "On-site", "Hybrid", "Commission-based", "Volunteer", "Seasonal", "Per diem", "Apprenticeship", "Consultant", "I.T (Industrial Training)"];
-  const currencies = ["United States Dollar (USD)", "Nigerian Naira (NGN)"];
+  const currencies = [
+    "Nigerian Naira (NGN)",
+    "South African Rand (ZAR)",
+    "Kenyan Shilling (KES)",
+    "Ghanaian Cedi (GHS)",
+    "Egyptian Pound (EGP)",
+    "Moroccan Dirham (MAD)",
+    "Tunisian Dinar (TND)",
+    "Algerian Dinar (DZD)",
+    "Ugandan Shilling (UGX)",
+    "Tanzanian Shilling (TZS)",
+    "Rwandan Franc (RWF)",
+    "Burundian Franc (BIF)",
+    "Ethiopian Birr (ETB)",
+    "Sudanese Pound (SDG)",
+    "South Sudanese Pound (SSP)",
+    "Zambian Kwacha (ZMW)",
+    "Malawian Kwacha (MWK)",
+    "Botswana Pula (BWP)",
+    "Namibian Dollar (NAD)",
+    "Angolan Kwanza (AOA)",
+    "Congolese Franc (CDF)",
+    "Central African CFA Franc (XAF)",
+    "West African CFA Franc (XOF)",
+    "Sierra Leonean Leone (SLE)",
+    "Liberian Dollar (LRD)",
+    "Guinean Franc (GNF)",
+    "Gambian Dalasi (GMD)",
+    "Cape Verdean Escudo (CVE)",
+    "Mauritian Rupee (MUR)",
+    "Seychellois Rupee (SCR)",
+    "Comorian Franc (KMF)",
+    "Djiboutian Franc (DJF)",
+    "Eritrean Nakfa (ERN)",
+    "Somali Shilling (SOS)",
+    "Libyan Dinar (LYD)",
+    "Mauritanian Ouguiya (MRU)",
+    "United States Dollar (USD)",
+    "Euro (EUR)",
+    "British Pound Sterling (GBP)",
+    "Canadian Dollar (CAD)",
+    "Australian Dollar (AUD)",
+    "New Zealand Dollar (NZD)",
+    "Swiss Franc (CHF)",
+    "Swedish Krona (SEK)",
+    "Norwegian Krone (NOK)",
+    "Danish Krone (DKK)",
+    "Japanese Yen (JPY)",
+    "Chinese Yuan (CNY)",
+    "Indian Rupee (INR)",
+    "Singapore Dollar (SGD)",
+    "Hong Kong Dollar (HKD)",
+    "UAE Dirham (AED)",
+    "Saudi Riyal (SAR)",
+    "Turkish Lira (TRY)",
+    "Brazilian Real (BRL)",
+    "Mexican Peso (MXN)",
+    "Russian Ruble (RUB)"
+  ];
   const remotePrefs = ["Remote", "Remote First", "Remote Only", "Hybrid", "Work From Home (WFH)", "Distributed Team", "Telecommute", "Fully Remote", "Flexible Location", "Location Independent", "Virtual Position", "Cloud-Based Role", "Remote-Optional", "100% Remote", "Home-Based"];
   const availabilities = ["Immediate", "1 Week Notice", "2 Weeks Notice", "1 Month Notice", "Part-time Available", "Full-time Available", "Weekdays Only", "Weekends Only", "Evenings Only", "Flexible Hours", "On-Call", "Freelance Basis", "Seasonal Availability", "Temporary Availability", "Contractual Availability", "Not Currently Available", "Available Upon Request"];
+  const rates = ["Hourly rate", "Monthly Salary"];
   const steps = ["Bio", "Education", "Skills", "Work history", "Certificate", "Links", "Job Type"];
 
   const { email, firstName, lastName, role, mode, followings } = location.state || {};
@@ -222,6 +284,7 @@ function JobType() {
           </div>
           <SelectField label="REMOTE PREFERENCE" value={form.remotePref} onChange={updateField("remotePref")} options={remotePrefs} />
           <SelectField label="AVAILABILITY" value={form.availability} onChange={updateField("availability")} options={availabilities} />
+          <SelectField label="RATE" value={form.rate} onChange={updateField("rate")} options={rates} />
         </div>
       </div>
       <NavigationButtons

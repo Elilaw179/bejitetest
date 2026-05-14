@@ -56,6 +56,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
         if (searchCriteria.currencyInput) queryParams.append('currency', searchCriteria.currencyInput);
         if (searchCriteria.remoteInput) queryParams.append('remote_preference', searchCriteria.remoteInput);
         if (searchCriteria.availabilityInput) queryParams.append('availability', searchCriteria.availabilityInput);
+        if (searchCriteria.rateInput) queryParams.append('rate', searchCriteria.rateInput);
         if (searchCriteria.educationInput) queryParams.append('education_level', searchCriteria.educationInput);
         // Always pass skills filter separately (not as part of q)
         if (searchCriteria.skillInput) queryParams.append('skills', searchCriteria.skillInput);
@@ -270,24 +271,26 @@ const SearchResultsHeader = ({ count }) => (
 );
 
 const CandidateProfile = ({ candidate, onViewProfile, onInvite }) => (
-  <div className="flex justify-between mt-6 p-2">
-    <ProfileImage initials={candidate.initials} name={candidate.name} online={candidate.online} image={candidate.image} />
-    <ProfileDetails
-      name={candidate.name}
-      type={candidate.type}
-      jobTitle={candidate.jobTitle}
-      location={candidate.location}
-      skills={candidate.skills}
-      experienceYears={candidate.experienceYears}
-      onViewProfile={() => onViewProfile(candidate.id)}
-      onInvite={() => onInvite(candidate)}
-    />
+  <div className="mt-4 px-2 py-2 sm:px-3">
+    <div className="flex flex-col md:flex-row items-start gap-4 md:gap-5">
+      <ProfileImage initials={candidate.initials} name={candidate.name} online={candidate.online} image={candidate.image} />
+      <ProfileDetails
+        name={candidate.name}
+        type={candidate.type}
+        jobTitle={candidate.jobTitle}
+        location={candidate.location}
+        skills={candidate.skills}
+        experienceYears={candidate.experienceYears}
+        onViewProfile={() => onViewProfile(candidate.id)}
+        onInvite={() => onInvite(candidate)}
+      />
+    </div>
   </div>
 );
 
 const ProfileImage = ({ initials, name, online, image }) => (
-  <div className="relative">
-    <div className="rounded-full w-[100px] h-[100px] overflow-hidden bg-[#6B8E23] flex items-center justify-center">
+  <div className="relative shrink-0">
+    <div className="rounded-full w-[88px] h-[88px] sm:w-[96px] sm:h-[96px] overflow-hidden bg-[#6B8E23] flex items-center justify-center">
 
       {image ? (
         <img src={image} alt={`${name} profile`} className="w-full h-full object-cover" />
@@ -307,13 +310,13 @@ const ProfileImage = ({ initials, name, online, image }) => (
 
 
 const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYears, onViewProfile, onInvite }) => (
-  <div className="ml-3 flex-1 space-y-2">
-    <div className="ml-0.5">
-      <p className="text-white text-[16px] font-medium"><strong>Name:</strong> {name}</p>
+  <div className="w-full flex-1 space-y-2">
+    <div>
+      <p className="text-white text-[15px] sm:text-[16px] font-medium"><strong>Name:</strong> {name}</p>
       <p className="text-[12px] text-white"><strong>Type:</strong> {type}</p>
     </div>
-    <div className="ml-0.5">
-      <p className="text-white text-[14px] font-medium"><strong>Job Title:</strong> {jobTitle}</p>
+    <div>
+      <p className="text-white text-[13px] sm:text-[14px] font-medium"><strong>Job Title:</strong> {jobTitle}</p>
       <p className="text-white text-[12px]"><strong>Location:</strong> {location}</p>
 
       {experienceYears > 0 && (
@@ -341,16 +344,16 @@ const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYear
 );
 
 const ProfileActions = ({ onViewProfile, onInvite }) => (
-  <div className="space-y-1 mt-2">
+  <div className="mt-2 flex flex-wrap gap-2">
     <button
       onClick={onViewProfile}
-      className="p-1 w-[120px] text-[12px] rounded-3xl bg-[#556B1F] hover:bg-[#6B8E23] text-white font-medium transition-colors"
+      className="px-3 py-1.5 min-w-[120px] text-[12px] rounded-3xl bg-[#556B1F] hover:bg-[#6B8E23] text-white font-medium transition-colors"
     >
       View Profile
     </button>
     <button
       onClick={onInvite}
-      className="p-1 w-[120px] text-[12px] rounded-3xl bg-[#6B8E23] hover:bg-[#556B1F] text-white font-medium transition-colors"
+      className="px-3 py-1.5 min-w-[120px] text-[12px] rounded-3xl bg-[#6B8E23] hover:bg-[#556B1F] text-white font-medium transition-colors"
     >
       Invite for interview
     </button>
