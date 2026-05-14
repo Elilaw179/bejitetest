@@ -101,6 +101,23 @@ const authSlice = createSlice({
         state.user = null;
       }
     },
+    /** Session from POST /api/admin-auth/login (username/password) */
+    setAdminAuth: (state, action) => {
+      const { accessToken, refreshToken, admin } = action.payload || {};
+      state.loading = false;
+      state.token = accessToken || null;
+      state.user = admin || null;
+      state.errors = {};
+      if (accessToken) {
+        localStorage.setItem("accessToken", accessToken);
+      }
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+      }
+      if (admin) {
+        localStorage.setItem("user", JSON.stringify(admin));
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -157,5 +174,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearErrors, logout, setGoogleAuth, updateUser } = authSlice.actions;
+export const { clearErrors, logout, setGoogleAuth, setAdminAuth, updateUser } = authSlice.actions;
 export default authSlice.reducer;

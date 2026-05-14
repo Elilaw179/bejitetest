@@ -1,50 +1,66 @@
 import { Eye, EyeOff } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { loginUser, clearErrors, logout } from "../../features/auth/authSlice";
+import { useDispatch } from "react-redux";
+import { clearErrors, logout, setAdminAuth } from "../../features/auth/authSlice";
 import { toast } from "react-toastify";
+import axiosInstance from "../../utils/axiosInstance";
 
 const bejiteLogoUrl = "/assets/images/logo.png";
 
 function AdminLogin() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, errors } = useSelector((state) => state.auth);
-  const isDisabled = !email || !password || loading;
+  const isDisabled = !username.trim() || !password || loading;
 
   useEffect(() => {
     dispatch(clearErrors());
-    dispatch(logout()); // Ensure fresh login for admin
+    dispatch(logout());
   }, [dispatch]);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    dispatch(loginUser({ email, password }))
-      .unwrap()
-      .then((data) => {
-        let user = data.confirmedUser || data.user;
-
-        // Verify if user is admin
-        if (!user || !user.is_admin) {
-          dispatch(logout());
-          toast.error("Access Denied. You do not have admin privileges.");
-          return;
-        }
-
-        toast.success("Admin login successful! Redirecting...");
-        setTimeout(() => {
-          navigate("/admin/dashboard");
-        }, 500);
-      })
-      .catch((err) => {
-        const errorMessage = err.error || err.message;
-        toast.error(errorMessage || "Login failed. Please try again.");
+    setFormError("");
+    setLoading(true);
+    try {
+      const { data } = await axiosInstance.post("/api/admin-auth/login", {
+        username: username.trim(),
+        password,
       });
+
+      if (!data?.accessToken || !data?.admin) {
+        toast.error("Unexpected response from server. Please try again.");
+        return;
+      }
+
+      dispatch(
+        setAdminAuth({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          admin: data.admin,
+        })
+      );
+
+      toast.success(data.message || "Admin login successful! Redirecting...");
+      setTimeout(() => {
+        navigate("/admin/dashboard");
+      }, 500);
+    } catch (err) {
+      const message =
+        err.response?.data?.error ||
+        err.message ||
+        "Login failed. Please try again.";
+      setFormError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,20 +78,22 @@ function AdminLogin() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
               <input
-                type="email"
-                placeholder="admin@bejite.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                autoComplete="username"
+                placeholder="Your admin username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:border-[#16730F] focus:ring-1 focus:ring-[#16730F] transition"
               />
             </div>
-            
+
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -90,8 +108,8 @@ function AdminLogin() {
               </button>
             </div>
 
-            {errors?.error && (
-              <p className="text-sm text-red-500 text-center bg-red-50 py-2 rounded-lg">{errors.error}</p>
+            {formError && (
+              <p className="text-sm text-red-500 text-center bg-red-50 py-2 rounded-lg">{formError}</p>
             )}
 
             <button
