@@ -11,6 +11,7 @@ import {
 import { profileAvatarSrc } from "../utils/profilePhotoUrl";
 import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
+import messagingService from "../services/messagingService";
 
 const NewsFeedHeader = ({
   user: propUser,
@@ -21,6 +22,7 @@ const NewsFeedHeader = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -246,6 +248,24 @@ const NewsFeedHeader = ({
     return () => clearInterval(interval);
   }, []);
 
+  // Fetch unread message count on mount and periodically
+  const fetchUnreadMessageCount = async () => {
+    try {
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+      if (!token) return;
+      const count = await messagingService.getUnreadCount();
+      setUnreadMessageCount(count);
+    } catch (err) {
+      console.error('Error fetching unread message count:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadMessageCount();
+    const interval = setInterval(fetchUnreadMessageCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Cleanup search timeout on unmount
   useEffect(() => {
     return () => {
@@ -391,6 +411,11 @@ const NewsFeedHeader = ({
                   {name === "notifications" && notificationCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                       {notificationCount > 99 ? '99+' : notificationCount}
+                    </span>
+                  )}
+                  {name === "CHAT" && unreadMessageCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
+                      {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
                     </span>
                   )}
                 </div>
@@ -561,12 +586,17 @@ const NewsFeedHeader = ({
                        alt={name}
                        className="h-5"
                      />
-                     {name === "notifications" && notificationCount > 0 && (
-                       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                         {notificationCount > 9 ? '9+' : notificationCount}
-                       </span>
-                     )}
-                   </div>
+                      {name === "notifications" && notificationCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                          {notificationCount > 9 ? '9+' : notificationCount}
+                        </span>
+                      )}
+                      {name === "CHAT" && unreadMessageCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold animate-pulse">
+                          {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                        </span>
+                      )}
+                    </div>
                  )}
                  <span className="text-[#1A3E32] font-medium capitalize text-sm">
                    {name === "home-icon" ? "News Feed" : name.toLowerCase()}

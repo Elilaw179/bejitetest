@@ -307,29 +307,32 @@ const ProfileImage = ({ initials, name, online, image }) => (
 
 
 const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYears, onViewProfile, onInvite }) => (
-  <div className="ml-3 flex-1 space-y-1">
+  <div className="ml-3 flex-1 space-y-2">
     <div className="ml-0.5">
-      <p className="text-white text-[13px] font-medium">{name}</p>
-      <p className="text-[5px] text-white">{type}</p>
+      <p className="text-white text-[16px] font-medium"><strong>Name:</strong> {name}</p>
+      <p className="text-[12px] text-white"><strong>Type:</strong> {type}</p>
     </div>
     <div className="ml-0.5">
-      <p className="text-white text-[8px] font-medium">{jobTitle}</p>
-      <p className="text-white text-[5px]">{location}</p>
+      <p className="text-white text-[14px] font-medium"><strong>Job Title:</strong> {jobTitle}</p>
+      <p className="text-white text-[12px]"><strong>Location:</strong> {location}</p>
 
       {experienceYears > 0 && (
-        <p className="text-white text-[5px]">{experienceYears} years experience</p>
+        <p className="text-white text-[12px]"><strong>Experience:</strong> {experienceYears} years</p>
       )}
 
       {skills.length > 0 && (
-        <div className="flex flex-wrap gap-0.5 mt-1">
-          {skills.slice(0, 3).map((skill, index) => (
-            <span key={index} className="text-[4px] bg-[#556B1F] text-white px-1 py-0.5 rounded">
-              {skill}
-            </span>
-          ))}
-          {skills.length > 3 && (
-            <span className="text-[4px] text-white">+{skills.length - 3} more</span>
-          )}
+        <div className="mt-1">
+          <p className="text-white text-[12px] font-medium"><strong>Skills:</strong></p>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {skills.slice(0, 3).map((skill, index) => (
+              <span key={index} className="text-[10px] bg-[#556B1F] text-white px-2 py-1 rounded">
+                {skill}
+              </span>
+            ))}
+            {skills.length > 3 && (
+              <span className="text-[10px] text-white">+{skills.length - 3} more</span>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -341,13 +344,13 @@ const ProfileActions = ({ onViewProfile, onInvite }) => (
   <div className="space-y-1 mt-2">
     <button
       onClick={onViewProfile}
-      className="p-1 w-[100px] text-[5px] rounded-3xl bg-[#556B1F] hover:bg-[#6B8E23] text-white font-medium transition-colors"
+      className="p-1 w-[120px] text-[12px] rounded-3xl bg-[#556B1F] hover:bg-[#6B8E23] text-white font-medium transition-colors"
     >
       View Profile
     </button>
-    <button 
+    <button
       onClick={onInvite}
-      className="p-1 w-[100px] text-[5px] rounded-3xl border-2 border-[#6B8E23] hover:bg-[#6B8E23]/10 text-[#6B8E23] font-medium transition-colors"
+      className="p-1 w-[120px] text-[12px] rounded-3xl bg-[#6B8E23] hover:bg-[#556B1F] text-white font-medium transition-colors"
     >
       Invite for interview
     </button>
