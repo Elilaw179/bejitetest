@@ -31,7 +31,7 @@ function SignIn() {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
-  }, [dispatch]);
+
     const sessionExpired = sessionStorage.getItem("sessionExpired");
     if (sessionExpired) {
       sessionStorage.removeItem("sessionExpired");
