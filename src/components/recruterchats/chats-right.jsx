@@ -15,7 +15,7 @@ function ChatsRight({ onBack }) {
     if (reduxUser) {
       return {
         name: reduxUser.name || reduxUser.firstName || reduxUser.lastName ? `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim() : "Guest",
-        image: reduxUser.image || reduxUser.profilePhoto || reduxUser.profile_photo || "/assets/images/eli.jpg",
+        image: reduxUser.image || reduxUser.profilePhoto || reduxUser.profile_photo || "",
         role: reduxUser.role || "user",
         email: reduxUser.email || "Not provided",
         phone: reduxUser.phone || "Not provided",
@@ -28,7 +28,7 @@ function ChatsRight({ onBack }) {
     const localUser = getUser();
     return localUser || {
       name: "Guest",
-      image: "/assets/images/eli.jpg",
+      image: "",
       role: "user",
       email: "Not provided",
       phone: "Not provided",
@@ -65,6 +65,16 @@ function ChatsRight({ onBack }) {
     return `${API_URL || 'http://localhost:3001'}${imagePath}`;
   };
 
+  const getInitials = () => {
+    const first = (user?.firstName || '').trim().charAt(0).toUpperCase();
+    const last = (user?.lastName || '').trim().charAt(0).toUpperCase();
+    if (first || last) return `${first}${last}`;
+    const fromName = (user?.name || '').trim().split(/\s+/).filter(Boolean);
+    const firstFromName = (fromName[0] || '').charAt(0).toUpperCase();
+    const lastFromName = (fromName[1] || '').charAt(0).toUpperCase();
+    return `${firstFromName}${lastFromName}` || 'U';
+  };
+
   return (
     <div className="bg-[#F5F5F5] h-full p-2">
       <aside className="bg-[#1A3E32] rounded-2xl h-full overflow-hidden">
@@ -84,12 +94,18 @@ function ChatsRight({ onBack }) {
           {/* Profile Section */}
           <div className="flex flex-col items-center pb-6">
             <div className="relative -mt-10 rounded-full border-[5px] border-[#16730F]">
-              <img
-                className="w-20 h-20 rounded-full object-cover"
-                src={getProfileImageUrl(user.image)}
-                alt={getDisplayName()}
-                loading="lazy"
-              />
+              {getProfileImageUrl(user.image) ? (
+                <img
+                  className="w-20 h-20 rounded-full object-cover"
+                  src={getProfileImageUrl(user.image)}
+                  alt={getDisplayName()}
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-[#556B1F] text-white font-bold text-xl flex items-center justify-center">
+                  {getInitials()}
+                </div>
+              )}
             </div>
             <div className="text-white text-center mt-3">
               <h1 className="text-lg font-semibold">{getDisplayName()}</h1>
