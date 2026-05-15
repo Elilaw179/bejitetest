@@ -68,8 +68,15 @@ const authSlice = createSlice({
           const stored = JSON.parse(localStorage.getItem("user") || "{}");
           const merged = { ...stored, ...action.payload };
           localStorage.setItem("user", JSON.stringify(merged));
+          // Hydrate Redux so Nav / feed see avatar updates (recruiters often only had localStorage until sync).
+          if (merged?.id || merged?.email) {
+            state.user = merged;
+          }
         } catch {
           localStorage.setItem("user", JSON.stringify(action.payload));
+          if (action.payload?.id || action.payload?.email) {
+            state.user = action.payload;
+          }
         }
       }
     },
@@ -146,10 +153,33 @@ const authSlice = createSlice({
         // Build the merged user object with image and profileCompleted
         const userData = action.payload.confirmedUser || action.payload.user;
         if (userData) {
+          const rawPhoto =
+            action.payload.profilePhoto ??
+            userData.profile_photo ??
+            userData.profilePhoto ??
+            userData.image ??
+            null;
+          const normalizedPhoto =
+            typeof rawPhoto === 'string' && rawPhoto.trim()
+              ? rawPhoto.trim()
+              : null;
+
           const userWithProfileStatus = {
             ...userData,
             profileCompleted: action.payload.profileCompleted || false,
-            image: action.payload.profilePhoto || userData.image || null
+            ...(normalizedPhoto
+              ? {
+                  profile_photo: normalizedPhoto,
+                  profilePhoto: normalizedPhoto,
+                  image: normalizedPhoto,
+                }
+              : {
+                  image:
+                    userData.image ??
+                    userData.profile_photo ??
+                    userData.profilePhoto ??
+                    null,
+                }),
           };
           // Set Redux state with the merged user (includes image)
           state.user = userWithProfileStatus;

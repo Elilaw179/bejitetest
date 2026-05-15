@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import MemberCard from '../components/MemberCard';
 import { toast } from 'react-toastify';
 import Loader from '../components/ui/Loader';
 import axiosPublic from '../services/axiosPublic';
+import { updateUser } from '../features/auth/authSlice';
 
 const EmployerOpt = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const location = useLocation();
     const { email, firstName, lastName, password, role } = location.state || {};
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -109,6 +112,8 @@ const EmployerOpt = () => {
 
             localStorage.setItem('user', JSON.stringify(normalizedUser));
             console.log('[EmployerOpt] Stored normalized user after complete-signup:', normalizedUser);
+
+            dispatch(updateUser(normalizedUser));
 
             toast.success('Registration successful');
 
