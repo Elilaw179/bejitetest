@@ -26,11 +26,12 @@ function SignIn() {
   // Clear errors and any cached auth data when component mounts
   useEffect(() => {
     dispatch(clearErrors());
-    // Clear any existing auth data to ensure fresh login
+    // Clear cached auth so login/session state stays consistent (avatar sync uses Bearer token).
     localStorage.removeItem("authToken");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
-    
-    // Check if user was redirected due to session expiration
+  }, [dispatch]);
     const sessionExpired = sessionStorage.getItem("sessionExpired");
     if (sessionExpired) {
       sessionStorage.removeItem("sessionExpired");
