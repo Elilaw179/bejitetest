@@ -11,6 +11,7 @@ import {
 import { profileAvatarSrc } from '../../utils/profilePhotoUrl';
 import PostCreationModal from '../PostCreationModal';
 import ConfirmModal from '../ConfirmModal';
+import useSyncProfilePhoto from '../../hooks/useSyncProfilePhoto';
 
 const getProfileImageUrl = (imagePath) => profileAvatarSrc(imagePath);
 
@@ -66,6 +67,7 @@ const parseTextWithLinks = (text) => {
 };
 
 export default function RecruitmentMiddle() {
+  useSyncProfilePhoto();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

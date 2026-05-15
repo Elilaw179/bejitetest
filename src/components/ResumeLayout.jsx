@@ -2,6 +2,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import useAuth from "../hooks/useAuth";
 import axiosInstance from "../utils/axiosInstance";
+import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
 
 const stepMap = {
   "/bio": 1, 
@@ -24,6 +25,7 @@ const editStepMap = {
 };
 
 const ResumeLayout = () => {
+  useSyncProfilePhoto();
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();

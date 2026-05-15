@@ -12,10 +12,12 @@ import { profileAvatarSrc } from "../utils/profilePhotoUrl";
 import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
 import messagingService from "../services/messagingService";
+import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
 
 const NewsFeedHeader = ({
   user: propUser,
 }) => {
+  useSyncProfilePhoto();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();

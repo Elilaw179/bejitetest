@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from "react-router-dom";
+import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
 
 const stepMap = {
   "/individual/basic-details": 1,
@@ -7,8 +8,7 @@ const stepMap = {
 };
 
 const IndividualVerificationLayout = () => {
-
-
+  useSyncProfilePhoto();
   const location = useLocation();
   const currentStep = stepMap[location.pathname] || 1;
 

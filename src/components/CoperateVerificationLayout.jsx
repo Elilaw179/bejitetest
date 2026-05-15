@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import useAuth from "../hooks/useAuth";
 import axiosInstance from "../utils/axiosInstance";
+import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
 
 const stepMap = {
   "/corporate/basic-details": 1,
@@ -22,6 +23,7 @@ const editStepMap = {
 };
 
 const CoperateVerificationLayout = () => {
+  useSyncProfilePhoto();
   const location = useLocation();
   const { user } = useAuth();
   

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarker, FaBuilding, FaEdit, FaArrowLeft } from 'react-icons/fa';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import axiosInstance from '../utils/axiosInstance';
+import { fetchCurrentUserProfilePhoto } from '../services/profilePhotoService';
 import { getUser, pickProfilePhotoPath } from '../utils/tokenManager';
 import { profileAvatarSrc } from '../utils/profilePhotoUrl';
 
@@ -184,6 +185,28 @@ const Profile = () => {
           } catch (legacyError) {
             console.warn('Legacy profile fetch failed:', legacyError?.message || legacyError);
           }
+        }
+      }
+
+      if (viewingOwn) {
+        try {
+          const photoUrl = await fetchCurrentUserProfilePhoto();
+          if (photoUrl) {
+            setProfileData((prev) =>
+              prev && typeof prev === 'object'
+                ? { ...prev, profile_photo: photoUrl }
+                : normalizeProfileData({
+                    id: currentUser?.id,
+                    profile_photo: photoUrl,
+                    firstName: currentUser?.firstName,
+                    lastName: currentUser?.lastName,
+                    email: currentUser?.email,
+                  }) || { profile_photo: photoUrl },
+            );
+            profileFound = true;
+          }
+        } catch {
+          /* GET /auth/user/profile/photo unavailable */
         }
       }
 
