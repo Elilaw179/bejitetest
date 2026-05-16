@@ -415,7 +415,7 @@ const PostHeader = ({ candidate }) => {
           />
         ) : (
           <img
-            src="assets/images/eli.jpg"
+            src="/assets/images/photo_placeholder.png"
             alt="profile"
             className="rounded-full w-12 h-12 sm:w-[60px] sm:h-[60px]"
           />

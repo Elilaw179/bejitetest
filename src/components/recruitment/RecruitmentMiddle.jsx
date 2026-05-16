@@ -88,7 +88,7 @@ export default function RecruitmentMiddle() {
       pickProfilePhotoPath(merged) ||
       pickProfilePhotoPath(stored) ||
       pickProfilePhotoPath(reduxUser) ||
-      "/assets/images/eli.jpg";
+      "/assets/images/photo_placeholder.png";
     return profileAvatarSrc(raw);
   }, [reduxUser, location.pathname]);
 

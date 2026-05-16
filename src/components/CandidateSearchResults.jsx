@@ -9,7 +9,7 @@ const CandidateSearchResults = ({ onViewProfile }) => {
       type: "Jobseeker",
       jobTitle: "Graphics Designer",
       location: "Lagos, Nigeria",
-      image: "assets/images/eli.jpg",
+      image: "/assets/images/photo_placeholder.png",
       online: true
     },
    

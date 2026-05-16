@@ -7,7 +7,7 @@ const PeopleConnect = () => {
     name: "John Samuel",
     role: "Jobseeker",
     connections: "34",
-    image: "assets/images/eli.jpg"
+    image: "/assets/images/photo_placeholder.png"
   });
 
   return (

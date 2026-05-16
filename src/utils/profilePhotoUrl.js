@@ -7,7 +7,7 @@
 import { API_URL } from '../config';
 
 /** Default placeholder served from the Vite public folder */
-export const PROFILE_PHOTO_PLACEHOLDER = '/assets/images/eli.jpg';
+export const PROFILE_PHOTO_PLACEHOLDER = '/assets/images/photo_placeholder.png';
 
 /**
  * Returns an absolute URL for display, or `undefined` when there is nothing to show.

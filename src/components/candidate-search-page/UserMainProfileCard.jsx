@@ -379,7 +379,7 @@ const RecommendedProfile = ({ onConnect }) => (
   <div>
     <div className="px-4 sm:px-8 pb-8 text-[#FFFFFF]">
       <div className="flex flex-col sm:flex-row gap-3">
-        <img className="w-20 h-20 rounded-full" src="assets/images/eli.jpg" alt="Recommended profile" />
+        <img className="w-20 h-20 rounded-full" src="/assets/images/photo_placeholder.png" alt="Recommended profile" />
         <div>
           <p className="text-[10px] font-semibold">John Samuel</p>
           <div className="flex space-x-2 text-[5px]">

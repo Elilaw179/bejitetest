@@ -46,7 +46,7 @@ const NewsFeedHeader = ({
         pickProfilePhotoPath(merged) ||
         pickProfilePhotoPath(localUser) ||
         pickProfilePhotoPath(reduxUser) ||
-        "/assets/images/eli.jpg";
+        "/assets/images/photo_placeholder.png";
       const displayName =
         merged.name ||
         (`${merged.firstName || ""} ${merged.lastName || ""}`.trim() || null);
@@ -60,7 +60,7 @@ const NewsFeedHeader = ({
     const fallback = propUser || localUser;
     const resolvedPhoto =
       pickProfilePhotoPath(fallback) ||
-      "/assets/images/eli.jpg";
+      "/assets/images/photo_placeholder.png";
     return fallback && typeof fallback === "object"
       ? {
           ...fallback,
@@ -69,7 +69,7 @@ const NewsFeedHeader = ({
         }
       : {
           name: "Guest",
-          image: "/assets/images/eli.jpg",
+          image: "/assets/images/photo_placeholder.png",
           role: "user",
         };
   }, [propUser, reduxUser, location.pathname]);
