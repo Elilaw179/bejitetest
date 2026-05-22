@@ -54,11 +54,11 @@ export default function RecruitmentLeft() {
   return (
     <div className="hidden md:block bg-[#F5F5F5] p-2">
   <aside className="bg-[#16730F] rounded-2xl h-[calc(100vh-120px)]">
-      <div className="space-y-2 p-7">
+      {/* <div className="space-y-2 p-7">
         <FaArrowLeft className="text-[#1A3E32]" />
-        <h2 className="text-[20px] text-[#ffffff]">Dashboard</h2>
-      </div>
-      <nav className="m-auto space-y-4 max-w-48">
+        <h2 className="text-[20px] text-[#ffffff]">Dashboardss</h2>
+      </div> */}
+      <nav className="m-auto space-y-4 max-w-48 pt-2">
         {filteredNavItems.map(({ icon: Icon, label }, idx) => (
           <div
             key={idx}
@@ -70,7 +70,7 @@ export default function RecruitmentLeft() {
             ) : (
               <Icon className="text-[#F5F5F5]" />
             )}
-            <span className="text-[#F5F5F5]">{label}</span>
+            <span className="text-[#F5F5F5] font-bold">{label}</span>
           </div>
         ))}
       </nav>

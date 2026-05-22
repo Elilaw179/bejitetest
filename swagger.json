@@ -1,0 +1,1219 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API",
+    "version": "1.0.0",
+    "description": "API backend"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Connections",
+      "description": "Mutual connection requests and accepted connections (Bearer JWT from /auth/login)"
+    },
+    {
+      "name": "Posts",
+      "description": "Social posts with public or connections-only visibility (uses mutual connections)"
+    },
+    {
+      "name": "Metrics",
+      "description": "Impressions and basic activity counts (Bearer JWT)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/api/candidates": {
+      "post": {
+        "summary": "Create a new candidate profile",
+        "tags": [
+          "Candidates"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "first_name": {
+                    "type": "string"
+                  },
+                  "last_name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "bio": {
+                    "type": "string"
+                  },
+                  "experience_years": {
+                    "type": "number"
+                  },
+                  "skills": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "education": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "work_history": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "certifications": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "linkedin_url": {
+                    "type": "string"
+                  },
+                  "github_url": {
+                    "type": "string"
+                  },
+                  "portfolio_url": {
+                    "type": "string"
+                  },
+                  "availability": {
+                    "type": "string",
+                    "enum": [
+                      "Available",
+                      "Not Available",
+                      "Open to Offers"
+                    ]
+                  },
+                  "salary_expectation": {
+                    "type": "number"
+                  },
+                  "remote_preference": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all candidates with search and filtering",
+        "tags": [
+          "Candidates"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search term for name, title, or bio"
+          },
+          {
+            "in": "query",
+            "name": "location",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by location"
+          },
+          {
+            "in": "query",
+            "name": "skills",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated skills to filter by"
+          },
+          {
+            "in": "query",
+            "name": "experience_min",
+            "schema": {
+              "type": "number"
+            },
+            "description": "Minimum years of experience"
+          },
+          {
+            "in": "query",
+            "name": "experience_max",
+            "schema": {
+              "type": "number"
+            },
+            "description": "Maximum years of experience"
+          },
+          {
+            "in": "query",
+            "name": "availability",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by availability status"
+          },
+          {
+            "in": "query",
+            "name": "remote_preference",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter by remote work preference"
+          },
+          {
+            "in": "query",
+            "name": "salary_min",
+            "schema": {
+              "type": "number"
+            },
+            "description": "Minimum salary expectation"
+          },
+          {
+            "in": "query",
+            "name": "salary_max",
+            "schema": {
+              "type": "number"
+            },
+            "description": "Maximum salary expectation"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Page number for pagination"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Number of results per page"
+          }
+        ]
+      }
+    },
+    "/api/candidates/{id}": {
+      "get": {
+        "summary": "Get a specific candidate by ID",
+        "tags": [
+          "Candidates"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "put": {
+        "summary": "Update a candidate profile",
+        "tags": [
+          "Candidates"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete a candidate profile",
+        "tags": [
+          "Candidates"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/candidates/search": {
+      "get": {
+        "summary": "Advanced candidate search with fuzzy matching",
+        "tags": [
+          "Candidates"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search query for fuzzy matching"
+          },
+          {
+            "in": "query",
+            "name": "location",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skills",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "experience_min",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "experience_max",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "availability",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "remote_preference",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "salary_min",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "salary_max",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/cv-builder/bio": {
+      "post": {
+        "summary": "Create or update user bio information",
+        "tags": [
+          "CV Builder"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "objectF",
+                "properties": {
+                  "userId": {
+                    "type": "string"
+                  },
+                  "nickname": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "gender": {
+                    "type": "string"
+                  },
+                  "maritalStatus": {
+                    "type": "string"
+                  },
+                  "age": {
+                    "type": "string"
+                  },
+                  "country": {
+                    "type": "string"
+                  },
+                  "street": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "tribe": {
+                    "type": "string"
+                  },
+                  "zip": {
+                    "type": "string"
+                  },
+                  "bio": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cv-builder/education": {
+      "post": {
+        "summary": "Create education entry",
+        "tags": [
+          "CV Builder"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string"
+                  },
+                  "educationLevel": {
+                    "type": "string"
+                  },
+                  "institutionName": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "fieldOfStudy": {
+                    "type": "string"
+                  },
+                  "degree": {
+                    "type": "string"
+                  },
+                  "startDate": {
+                    "type": "string"
+                  },
+                  "endDate": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cv-builder/skills": {
+      "post": {
+        "summary": "Create skill entry",
+        "tags": [
+          "CV Builder"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string"
+                  },
+                  "skillSector": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "experience": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cv-builder/work-history": {
+      "post": {
+        "summary": "Create work history entry",
+        "tags": [
+          "CV Builder"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string"
+                  },
+                  "jobTitle": {
+                    "type": "string"
+                  },
+                  "companyName": {
+                    "type": "string"
+                  },
+                  "responsibilities": {
+                    "type": "string"
+                  },
+                  "startDate": {
+                    "type": "string"
+                  },
+                  "endDate": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cv-builder/certificates": {
+      "post": {
+        "summary": "Create certificate entry",
+        "tags": [
+          "CV Builder"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string"
+                  },
+                  "certName": {
+                    "type": "string"
+                  },
+                  "issuer": {
+                    "type": "string"
+                  },
+                  "issueDate": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cv-builder/links": {
+      "post": {
+        "summary": "Create or update user links",
+        "tags": [
+          "CV Builder"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string"
+                  },
+                  "linkedin": {
+                    "type": "string"
+                  },
+                  "twitter": {
+                    "type": "string"
+                  },
+                  "instagram": {
+                    "type": "string"
+                  },
+                  "portfolio": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/job-board/jobs": {
+      "post": {
+        "summary": "Create a new job posting (image payload)",
+        "tags": [
+          "JobBoard"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "job_title": {
+                    "type": "string",
+                    "description": "JOB TITLE (e.g. Graphics Design)"
+                  },
+                  "industry_sector": {
+                    "type": "string",
+                    "description": "INDUSTRY / SECTOR (e.g. Health Sector)"
+                  },
+                  "preferred_country": {
+                    "type": "string",
+                    "description": "PREFERRED COUNTRY (e.g. Nigeria)"
+                  },
+                  "preferred_state": {
+                    "type": "string",
+                    "description": "PREFERRED STATE (e.g. Anambra)"
+                  },
+                  "work_type": {
+                    "type": "string",
+                    "enum": [
+                      "Full-time",
+                      "Part-time",
+                      "Contract",
+                      "Internship"
+                    ]
+                  },
+                  "expected_salary": {
+                    "type": "string",
+                    "description": "e.g. N150,000"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "e.g. NGN"
+                  },
+                  "remote_preference": {
+                    "type": "string",
+                    "enum": [
+                      "Remote",
+                      "On-site",
+                      "Hybrid"
+                    ]
+                  },
+                  "availability": {
+                    "type": "string",
+                    "description": "e.g. Immediately"
+                  },
+                  "posted_by": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all jobs with search and filtering (image payload fields)",
+        "tags": [
+          "JobBoard"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search term for job title or industry/sector"
+          },
+          {
+            "in": "query",
+            "name": "preferred_country",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "preferred_state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "work_type",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Full-time, Part-time, Contract, Internship"
+          },
+          {
+            "in": "query",
+            "name": "industry_sector",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "remote_preference",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Remote, On-site, Hybrid"
+          },
+          {
+            "in": "query",
+            "name": "availability",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "currency",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/job-board/jobs/{id}": {
+      "get": {
+        "summary": "Get job by ID via Supabase",
+        "tags": [
+          "JobBoard"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Job ID"
+          }
+        ]
+      },
+      "put": {
+        "summary": "Update job by ID via Supabase",
+        "tags": [
+          "JobBoard"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Job ID"
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete job by ID via Supabase",
+        "tags": [
+          "JobBoard"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Job ID"
+          }
+        ]
+      }
+    },
+    "/api/job-board/jobs/search": {
+      "get": {
+        "summary": "Advanced job search (image payload fields)",
+        "tags": [
+          "JobBoard"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search query (title, industry_sector, preferred_country, preferred_state)"
+          },
+          {
+            "in": "query",
+            "name": "preferred_country",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "preferred_state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "work_type",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "industry_sector",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "remote_preference",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "availability",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "currency",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/job-board/candidates": {
+      "post": {
+        "summary": "Create a new candidate profile via Supabase",
+        "tags": [
+          "JobBoard"
+        ]
+      },
+      "get": {
+        "summary": "Get all candidates with filtering via Supabase",
+        "tags": [
+          "JobBoard"
+        ]
+      }
+    },
+    "/api/job-board/candidates/{id}": {
+      "get": {
+        "summary": "Get candidate by ID via Supabase",
+        "tags": [
+          "JobBoard"
+        ]
+      },
+      "put": {
+        "summary": "Update candidate by ID via Supabase",
+        "tags": [
+          "JobBoard"
+        ]
+      },
+      "delete": {
+        "summary": "Delete candidate by ID via Supabase",
+        "tags": [
+          "JobBoard"
+        ]
+      }
+    },
+    "/api/job-board/applications": {
+      "post": {
+        "summary": "Create a new job application via Supabase",
+        "tags": [
+          "JobBoard"
+        ]
+      },
+      "get": {
+        "summary": "Get applications with filtering via Supabase",
+        "tags": [
+          "JobBoard"
+        ]
+      }
+    },
+    "/api/job-board/applications/{id}": {
+      "put": {
+        "summary": "Update application status via Supabase",
+        "tags": [
+          "JobBoard"
+        ]
+      }
+    },
+    "/api/jobs": {
+      "post": {
+        "summary": "Create a new job posting (image payload)",
+        "tags": [
+          "Jobs"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "job_title": {
+                    "type": "string",
+                    "description": "JOB TITLE (e.g. Graphics Design)"
+                  },
+                  "industry_sector": {
+                    "type": "string",
+                    "description": "INDUSTRY / SECTOR (e.g. Health Sector)"
+                  },
+                  "preferred_country": {
+                    "type": "string",
+                    "description": "PREFERRED COUNTRY (e.g. Nigeria)"
+                  },
+                  "preferred_state": {
+                    "type": "string",
+                    "description": "PREFERRED STATE (e.g. Anambra)"
+                  },
+                  "work_type": {
+                    "type": "string",
+                    "enum": [
+                      "Full-time",
+                      "Part-time",
+                      "Contract",
+                      "Internship"
+                    ]
+                  },
+                  "expected_salary": {
+                    "type": "string",
+                    "description": "e.g. N150,000"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "e.g. NGN"
+                  },
+                  "remote_preference": {
+                    "type": "string",
+                    "enum": [
+                      "Remote",
+                      "On-site",
+                      "Hybrid"
+                    ]
+                  },
+                  "availability": {
+                    "type": "string",
+                    "description": "e.g. Immediately"
+                  },
+                  "posted_by": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all jobs with search and filtering (image payload fields)",
+        "tags": [
+          "Jobs"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search term for job title or industry/sector"
+          },
+          {
+            "in": "query",
+            "name": "preferred_country",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "preferred_state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "work_type",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Full-time, Part-time, Contract, Internship"
+          },
+          {
+            "in": "query",
+            "name": "industry_sector",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "remote_preference",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Remote, On-site, Hybrid"
+          },
+          {
+            "in": "query",
+            "name": "availability",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "currency",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/jobs/{id}": {
+      "get": {
+        "summary": "Get a specific job by ID",
+        "tags": [
+          "Jobs"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "put": {
+        "summary": "Update a job posting",
+        "tags": [
+          "Jobs"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete a job posting",
+        "tags": [
+          "Jobs"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/jobs/search": {
+      "get": {
+        "summary": "Advanced job search (image payload fields)",
+        "tags": [
+          "Jobs"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search query (title, industry_sector)"
+          },
+          {
+            "in": "query",
+            "name": "preferred_country",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "preferred_state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "work_type",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "industry_sector",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "remote_preference",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "availability",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "currency",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -18,6 +18,15 @@ const AdminDashboard = () => {
   const [advancedUserMetrics, setAdvancedUserMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Normalized top sectors (top 10, counts as numbers, clean data)
+  const topSectors = (userMetrics?.topSectors || [])
+    .map((item) => ({
+      industry: item.industry,
+      count: Number(item.count) || 0,
+    }))
+    .filter((item) => item.industry && item.industry !== "Not Available")
+    .slice(0, 10);
+
   const COLORS = ['#16730F', '#2563eb', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
 
   useEffect(() => {
@@ -201,38 +210,39 @@ const AdminDashboard = () => {
         {/* Bottom Section: Top Sectors & Jobs */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-          {/* Top Sectors */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-800 mb-6">Top Candidate Sectors</h3>
-            <div className="h-64 w-full">
-              {userMetrics?.topSectors?.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={userMetrics.topSectors} layout="vertical" margin={{ top: 0, right: 0, left: 40, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
-                    <XAxis type="number" hide />
-                    <YAxis 
-                      type="category" 
-                      dataKey="industry" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{fill: '#4b5563', fontSize: 12}}
-                    />
-                    <Tooltip 
-                      cursor={{fill: 'transparent'}}
-                      contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                    />
-                    <Bar dataKey="count" name="Candidates" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20}>
-                      {userMetrics.topSectors.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-400">No data available</div>
-              )}
-            </div>
-          </div>
+           {/* Top Sectors */}
+           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+             <h3 className="text-lg font-bold text-gray-800 mb-6">Top Candidate Sectors (by Jobseekers)</h3>
+             <div className="h-80 w-full">
+               {topSectors.length > 0 ? (
+                 <ResponsiveContainer width="100%" height="100%">
+                   <BarChart data={topSectors} layout="vertical" margin={{ top: 0, right: 0, left: 40, bottom: 0 }}>
+                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
+                     <XAxis type="number" hide />
+                     <YAxis 
+                       type="category" 
+                       dataKey="industry" 
+                       axisLine={false} 
+                       tickLine={false} 
+                       tick={{fill: '#4b5563', fontSize: 12}}
+                     />
+                     <Tooltip 
+                       cursor={{fill: 'transparent'}}
+                       contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                     />
+                     <Bar dataKey="count" name="Candidates" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={18}>
+                       {topSectors.map((entry, index) => (
+                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                       ))}
+                     </Bar>
+                   </BarChart>
+                 </ResponsiveContainer>
+               ) : (
+                 <div className="h-full flex items-center justify-center text-gray-400">No data available</div>
+               )}
+             </div>
+             <p className="text-xs text-gray-500 mt-2 text-center">Top 10 most sought-after sectors by jobseekers</p>
+           </div>
 
           {/* Job Types */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">

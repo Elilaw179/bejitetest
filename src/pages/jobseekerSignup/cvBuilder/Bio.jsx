@@ -87,8 +87,10 @@ const Bio = () => {
         }
     };
 
+    const requiredFields = ['nickname', 'phone', 'gender', 'maritalStatus', 'country', 'street', 'city', 'zip', 'bio'];
     const isFormComplete =
-        Object.values(formData).every((v) => {
+        requiredFields.every((key) => {
+            const v = formData[key];
             const str = typeof v === 'string' ? v : String(v || '');
             return str.trim() !== '';
         }) && (imageFile || imagePreview);
@@ -106,23 +108,23 @@ const Bio = () => {
     // function that chains both API calls
     const handleNextStep = async () => {
         if (!isFormComplete) {
-            toast.error('Please complete all fields and upload an image.');
+            toast.error('Please complete all required fields and upload an image.');
             return;
         }
 
         const bioPayload = {
             userId,
-            nickname: normalizeText(formData.nickname), // Normalize nickname
-            phone: normalizeText(formData.phone), // Normalize phone (though it's usually already clean)
-            gender: normalizeText(formData.gender), // Normalize gender
-            maritalStatus: normalizeText(formData.maritalStatus), // Normalize marital status
-            age: formData.age, // Age is numeric, no normalization needed
-            country: normalizeText(formData.country), // Normalize country
-            street: normalizeText(formData.street), // Normalize street
-            city: normalizeText(formData.city), // Normalize city
-            tribe: normalizeText(formData.tribe), // Normalize tribe
-            zip: normalizeText(formData.zip), // Normalize zip
-            bio: formData.bio, // Bio text can contain mixed case, keep as-is for readability
+            nickname: normalizeText(formData.nickname),
+            phone: normalizeText(formData.phone),
+            gender: normalizeText(formData.gender),
+            maritalStatus: normalizeText(formData.maritalStatus),
+            age: formData.age ? Number(formData.age) : null,
+            country: normalizeText(formData.country),
+            street: normalizeText(formData.street),
+            city: normalizeText(formData.city),
+            tribe: formData.tribe ? normalizeText(formData.tribe) : null,
+            zip: normalizeText(formData.zip),
+            bio: formData.bio,
         };
 
         //  sequential logic
