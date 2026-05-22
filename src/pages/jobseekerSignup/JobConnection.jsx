@@ -1,22 +1,94 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import usersData from "../../data/usersData";
 import UserList from "../../components/UserList";
+import { discoverRecruitersForSignup } from "../../services/signupApi";
+import axiosPublic from "../../services/axiosPublic";
+import * as connectionsApi from "../../services/connectionsApi";
+import { getProfileImageUrl } from "../../utils/profileImageUtils";
+
+const PAGE_SIZE = 20;
+
+const mapRecruiterForList = (user) => ({
+  id: user.id,
+  name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Unknown User",
+  role: user.companyName || user.jobTitle || "Recruiter",
+  img:
+    getProfileImageUrl(user.profilePhoto) || "/assets/images/photo_placeholder.png",
+});
 
 const JobConnection = () => {
+  const [users, setUsers] = useState([]);
   const [addedUsers, setAddedUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [offset, setOffset] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract query params
   const params = new URLSearchParams(location.search);
   const email = params.get("email");
   const role = params.get("role");
   const mode = params.get("mode");
 
-  console.log("JobConnection loaded:", { email, role, mode });
+  const fetchRecruitersPage = async (pageOffset, append = false) => {
+    const data = await discoverRecruitersForSignup(email, PAGE_SIZE, pageOffset);
+    const list = data?.users || [];
+    const mapped = Array.isArray(list) ? list.map(mapRecruiterForList) : [];
+
+    setUsers((prev) => {
+      if (!append) return mapped;
+      const seen = new Set(prev.map((u) => u.id));
+      return [...prev, ...mapped.filter((u) => !seen.has(u.id))];
+    });
+    setHasMore(mapped.length === PAGE_SIZE);
+    setOffset(pageOffset + mapped.length);
+  };
+
+  useEffect(() => {
+    if (!email) {
+      setLoadingUsers(false);
+      toast.error("Missing email. Please restart signup.");
+      return;
+    }
+
+    const loadInitial = async () => {
+      setLoadingUsers(true);
+      setOffset(0);
+      setHasMore(false);
+      try {
+        await fetchRecruitersPage(0, false);
+      } catch (error) {
+        console.error("Failed to load recruiters:", error);
+        const message =
+          error.response?.data?.error || "Failed to load recruiters. Try again later.";
+        toast.error(message);
+        setUsers([]);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    loadInitial();
+  }, [email]);
+
+  const handleLoadMore = async () => {
+    if (!email || loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    try {
+      await fetchRecruitersPage(offset, true);
+    } catch (error) {
+      console.error("Failed to load more recruiters:", error);
+      const message =
+        error.response?.data?.error || "Failed to load more recruiters.";
+      toast.error(message);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handleAdd = (id) => {
     if (!addedUsers.includes(id)) {
@@ -26,36 +98,63 @@ const JobConnection = () => {
 
   const handleContinue = async () => {
     if (addedUsers.length < 10) {
-      toast.error("Please connect with at least 10 users.");
+      toast.error("Please connect with at least 10 recruiters.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/complete-signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          role: role?.toLowerCase(),
-          mode: mode?.toLowerCase(),
-          followings: addedUsers, // ✅ Send as array
-        }),
+      const response = await axiosPublic.post("/auth/complete-signup", {
+        email,
+        role: role?.toLowerCase(),
+        mode: mode?.toLowerCase(),
+        followings: addedUsers,
       });
 
-      const data = await res.json();
-      console.log("Complete signup response:", data);
+      const data = response.data;
 
-      if (res.ok) {
-        toast.success(data.message || "Signup completed successfully!");
-        navigate("/"); // redirect to login
-      } else {
-        toast.error(data.error || "Failed to complete signup.");
+      const accessToken =
+        data?.accessToken || data?.token || data?.data?.accessToken;
+      const refreshToken = data?.refreshToken || data?.data?.refreshToken;
+
+      if (accessToken) {
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("authToken", accessToken);
       }
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+      }
+
+      const responseUser = data?.user || data?.confirmedUser;
+      if (responseUser) {
+        localStorage.setItem("user", JSON.stringify(responseUser));
+      }
+
+      const connectionResults = await Promise.allSettled(
+        addedUsers.map((userId) => connectionsApi.sendConnectionRequest(userId))
+      );
+
+      const failedCount = connectionResults.filter((r) => r.status === "rejected").length;
+      if (failedCount > 0) {
+        console.warn(
+          `${failedCount} connection request(s) failed after signup`,
+          connectionResults
+        );
+        toast.warn(
+          `Signup complete, but ${failedCount} connection request(s) could not be sent.`
+        );
+      }
+
+      toast.success(data.message || "Signup completed successfully!");
+      navigate("/");
     } catch (error) {
       console.error("CompleteSignup error:", error);
-      toast.error("Something went wrong. Try again later.");
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "Something went wrong. Try again later.";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -65,45 +164,68 @@ const JobConnection = () => {
 
   return (
     <div className="bg-white min-h-screen relative">
-      {/* Logo */}
       <div className="w-full px-4 py-6 flex justify-start items-center max-w-screen-xl mx-auto">
         <img src="/assets/images/logo.png" alt="logo" className="h-12 sm:h-16" />
       </div>
 
-      {/* Content */}
       <div className="flex flex-col items-center justify-start px-4 mx-auto w-full max-w-4xl pb-12">
         <div className="w-full max-w-3xl text-center mb-10 mt-12">
           <p className="text-3xl sm:text-4xl md:text-5xl font-sarina font-semibold text-[#16730F]">
-            Connect With Members
+            Connect With Recruiters
           </p>
           <p className="text-[#333] font-normal text-sm sm:text-base md:text-lg mt-2">
-            Connect with at least 10 members to continue the signup process
+            Follow at least 10 recruiters to continue the signup process
           </p>
         </div>
 
-        {/* User List */}
-        <UserList users={usersData} addedUsers={addedUsers} onAdd={handleAdd} />
+        {loadingUsers ? (
+          <div className="w-full max-w-3xl flex justify-center py-16">
+            <span className="w-8 h-8 border-2 border-[#16730F] border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : users.length === 0 ? (
+          <p className="text-[#333] text-center py-8">
+            No recruiters available right now. Please try again later.
+          </p>
+        ) : (
+          <div className="w-full max-w-3xl flex flex-col items-center">
+            <UserList users={users} addedUsers={addedUsers} onAdd={handleAdd} />
+            {hasMore && (
+              <button
+                type="button"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="mt-4 px-6 py-2 rounded-2xl border-2 border-[#16730F] text-[#16730F] font-semibold text-sm hover:bg-[#16730F] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {loadingMore ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-[#16730F] border-t-transparent rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  "Load more"
+                )}
+              </button>
+            )}
+          </div>
+        )}
 
-        {/* Counter + Button */}
         <div className="w-full flex flex-col sm:flex-row sm:justify-between items-center mt-10 px-4">
-          {/* Feedback Counter */}
           <p className="text-sm sm:text-base text-[#333] mb-4 sm:mb-0">
-            {addedUsers.length}/10 members selected
+            {addedUsers.length}/10 recruiters selected
           </p>
 
-          {/* Continue Button */}
           <button
             className={`w-52 h-12 rounded-2xl font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 ${
               isEnabled
                 ? "bg-[#16730F] hover:bg-[#0f4e0a]"
                 : "bg-[#1A3E32] opacity-25 cursor-not-allowed"
             }`}
-            disabled={!isEnabled || loading}
+            disabled={!isEnabled || loading || loadingUsers}
             onClick={handleContinue}
           >
             {loading ? (
               <>
-                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Processing...
               </>
             ) : (

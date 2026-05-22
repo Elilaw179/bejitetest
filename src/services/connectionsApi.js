@@ -149,10 +149,10 @@ export const discoverUsers = async (limit = 20, offset = 0) => {
  * Search for users to connect with
  * Note: This endpoint may need to be implemented in backend if not available
  */
-export const searchUsers = async (query, filters = {}) => {
+export const searchUsers = async (query, limit = 20, offset = 0) => {
   try {
-    const response = await axiosInstance.get('/api/users/search', {
-      params: { q: query, ...filters }
+    const response = await axiosInstance.get('/api/connections/search', {
+      params: { q: query, limit, offset }
     });
     return response.data;
   } catch (error) {

@@ -16,6 +16,16 @@ const shuffleArray = (arr) => {
   return shuffled;
 };
 
+const transformDiscoverableUser = (user) => ({
+  id: user.id,
+  name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User',
+  firstName: user.firstName,
+  lastName: user.lastName,
+  email: user.email,
+  image: user.profilePhoto,
+  role: user.jobTitle || 'Professional'
+});
+
 const Connections = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('network');
@@ -23,12 +33,43 @@ const Connections = () => {
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [outgoingRequests, setOutgoingRequests] = useState([]);
   const [discoverableUsers, setDiscoverableUsers] = useState([]);
+  const [peopleSearchResults, setPeopleSearchResults] = useState(null);
+  const [peopleSearchLoading, setPeopleSearchLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadConnectionsData();
   }, []);
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (!query) {
+      setPeopleSearchResults(null);
+      setPeopleSearchLoading(false);
+      return undefined;
+    }
+
+    const timer = setTimeout(async () => {
+      setPeopleSearchLoading(true);
+      try {
+        const searchRes = await connectionsApi.searchUsers(query);
+        const usersArray = searchRes?.users || searchRes || [];
+        const transformed = Array.isArray(usersArray)
+          ? usersArray.map(transformDiscoverableUser)
+          : [];
+        setPeopleSearchResults(transformed);
+      } catch (error) {
+        console.error('Error searching users:', error);
+        toast.error('Failed to search for people');
+        setPeopleSearchResults([]);
+      } finally {
+        setPeopleSearchLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const loadConnectionsData = async () => {
     setLoading(true);
@@ -87,15 +128,9 @@ const Connections = () => {
 
       // Transform discoverable users data
       const usersArray = discoverRes?.users || discoverRes || [];
-      const transformedUsers = Array.isArray(usersArray) ? usersArray.map(user => ({
-        id: user.id,
-        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User',
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        image: user.profilePhoto,
-        role: user.jobTitle || 'Professional'
-      })) : [];
+      const transformedUsers = Array.isArray(usersArray)
+        ? usersArray.map(transformDiscoverableUser)
+        : [];
 
       // Robust randomization to avoid deterministic/alphabetic order
       const randomizedUsers = shuffleArray(transformedUsers);
@@ -160,8 +195,11 @@ const Connections = () => {
       await connectionsApi.sendConnectionRequest(userId);
       toast.success(`Connection request sent to ${userName}!`);
 
-      // Update local state - remove from discoverable users
+      // Update local state - remove from discoverable users and search results
       setDiscoverableUsers(prev => prev.filter(user => user.id !== userId));
+      setPeopleSearchResults(prev =>
+        prev ? prev.filter(user => user.id !== userId) : prev
+      );
     } catch (error) {
       console.error('Error sending connection request:', error);
       toast.error('Failed to send connection request');
@@ -202,10 +240,12 @@ const Connections = () => {
       count: discoverableUsers.length,
       content: (
         <PeopleList
-          users={discoverableUsers}
+          users={peopleSearchResults ?? discoverableUsers}
           onSendRequest={handleSendRequest}
           onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
           searchQuery={searchQuery}
+          isSearching={Boolean(searchQuery.trim())}
+          searchLoading={peopleSearchLoading}
         />
       )
     },
@@ -268,7 +308,7 @@ const Connections = () => {
           <div className="relative max-w-md">
             <input
               type="text"
-              placeholder="Search connections..."
+              placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none"
@@ -321,24 +361,37 @@ const Connections = () => {
 
 
 // People List Component
-const PeopleList = ({ users, onSendRequest, onViewProfile, searchQuery }) => {
+const PeopleList = ({ users, onSendRequest, onViewProfile, searchQuery, isSearching, searchLoading }) => {
   const usersArray = Array.isArray(users) ? users : [];
-  const filteredUsers = usersArray.filter(user =>
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.role?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = isSearching
+    ? usersArray
+    : usersArray.filter(user =>
+        user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.role?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+  if (searchLoading) {
+    return (
+      <div className="text-center py-12">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#16730F] mx-auto"></div>
+        <p className="mt-4 text-gray-600">Searching...</p>
+      </div>
+    );
+  }
 
   if (filteredUsers.length === 0) {
     return (
       <div className="text-center py-12">
         <FaUserFriends className="h-16 w-16 text-gray-300 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-600 mb-2">
-          {usersArray.length === 0 ? 'No people to connect with' : 'No people found'}
+          {isSearching || usersArray.length === 0 ? 'No people found' : 'No people to connect with'}
         </h3>
         <p className="text-gray-500">
-          {usersArray.length === 0
-            ? 'All users are already connected or have pending requests'
-            : 'Try adjusting your search terms'
+          {isSearching
+            ? 'Try a different name or email'
+            : usersArray.length === 0
+              ? 'All users are already connected or have pending requests'
+              : 'Try adjusting your search terms'
           }
         </p>
       </div>
