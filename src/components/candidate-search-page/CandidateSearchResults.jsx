@@ -174,7 +174,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
 
   if (loading) {
     return (
-      <div className="bg-[#1A3E32] w-full max-w-[500px] px-10 py-8 rounded-2xl shadow-lg">
+      <div className="bg-[#1A3E32] w-full max-w-[500px] mx-auto px-6 md:px-10 py-8 rounded-2xl shadow-lg">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
           <p className="text-white mt-4">Loading candidates...</p>
@@ -185,7 +185,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
 
   if (error) {
     return (
-      <div className="bg-[#1A3E32] w-full max-w-[500px] px-10 py-8 rounded-2xl shadow-lg">
+      <div className="bg-[#1A3E32] w-full max-w-[500px] mx-auto px-6 md:px-10 py-8 rounded-2xl shadow-lg">
         <div className="text-center">
           {paymentRequired ? (
             <>
@@ -228,7 +228,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
   };
 
   return (
-    <div className="bg-[#1A3E32] w-full max-w-[500px] px-10 py-4 rounded-2xl shadow-lg">
+    <div className="bg-[#1A3E32] w-full max-w-[500px] mx-auto px-6 md:px-10 py-4 rounded-2xl shadow-lg">
       {inviteSuccess && (
         <div className="mb-4 p-3 bg-green-500/20 border border-green-500 rounded-lg text-green-400 text-sm text-center">
           Interview invitation sent successfully!

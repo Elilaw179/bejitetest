@@ -49,24 +49,7 @@ export const clearAuthData = () => {
 // Check if user is authenticated
 export const isAuthenticated = () => {
   const token = getAccessToken();
-  if (!token) return false;
-  
-  // Check if token is expired
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    
-    // If token has expiration, check it; otherwise consider valid
-    if (payload.exp) {
-      const expirationTime = payload.exp * 1000; // convert to milliseconds
-      return Date.now() < expirationTime;
-    }
-    
-    // No expiration claim in token, consider it valid
-    return true;
-  } catch (error) {
-    console.error('Error checking token expiration:', error);
-    return false;
-  }
+  return !!token;
 };
 
 // Decode JWT token

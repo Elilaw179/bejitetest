@@ -54,11 +54,9 @@ const AdminRecruitment = () => {
     return new Date(dateString).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
-  const funnelData = metrics?.funnel ? [
-    { name: 'Total Jobs', count: parseInt(metrics.funnel.total_jobs) || 0, fill: '#3b82f6' },
-    { name: 'Applications', count: parseInt(metrics.funnel.total_applications) || 0, fill: '#f59e0b' },
-    { name: 'Hires', count: parseInt(metrics.funnel.total_hires) || 0, fill: '#16730F' },
-  ] : [];
+  // New data structure expected from backend
+  const recruitmentTrendData = metrics?.recruitment_trend || [];
+  const aseUsageTrendData = metrics?.ase_usage_trend || [];
 
   return (
     <AdminLayout>
@@ -67,7 +65,7 @@ const AdminRecruitment = () => {
         {/* Header */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h1 className="text-2xl font-bold text-gray-800">Recruitment Analytics</h1>
-          <p className="text-gray-500 text-sm mt-1">Track job postings, applications, and successful hires across the platform.</p>
+          <p className="text-gray-500 text-sm mt-1">Track ASE search trends and recruiter activity on the platform.</p>
         </div>
 
         {/* KPI Cards */}
@@ -80,7 +78,7 @@ const AdminRecruitment = () => {
             subtitle="All time job listings"
           />
           <StatCard 
-            title="Total Applications" 
+            title="Total Number of ASE Searches" 
             value={metrics?.funnel?.total_applications || 0}
             icon={Users}
             colorClass="bg-purple-50 text-purple-600"
@@ -103,65 +101,82 @@ const AdminRecruitment = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recruitment Funnel Bar Chart */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-800 mb-6">Recruitment Funnel</h3>
-            <div className="h-64 w-full">
-              {funnelData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={funnelData} layout="vertical" margin={{ top: 0, right: 0, left: 40, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
-                    <XAxis type="number" hide />
-                    <YAxis 
-                      type="category" 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{fill: '#4b5563', fontSize: 12}}
-                    />
-                    <RechartsTooltip 
-                      cursor={{fill: 'transparent'}}
-                      contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                    />
-                    <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={30} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-400">No funnel data available</div>
-              )}
-            </div>
-          </div>
+           {/* Recruitment Trend - Top Job Types Searched on ASE */}
+           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+             <h3 className="text-lg font-bold text-gray-800 mb-6">Recruitment Chart</h3>
+             <p className="text-xs text-gray-500 -mt-4 mb-4">Top 10 job types most searched by recruiters on ASE</p>
+             <div className="h-64 w-full">
+               {recruitmentTrendData.length > 0 ? (
+                 <ResponsiveContainer width="100%" height="100%">
+                   <BarChart data={recruitmentTrendData} layout="vertical" margin={{ top: 0, right: 0, left: 40, bottom: 0 }}>
+                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
+                     <XAxis type="number" hide />
+                     <YAxis 
+                       type="category" 
+                       dataKey="job_type" 
+                       axisLine={false} 
+                       tickLine={false} 
+                       tick={{fill: '#4b5563', fontSize: 12}}
+                     />
+                     <RechartsTooltip 
+                       cursor={{fill: 'transparent'}}
+                       contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                     />
+                     <Bar dataKey="search_count" name="Searches" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={22} />
+                   </BarChart>
+                 </ResponsiveContainer>
+               ) : (
+                 <div className="h-full flex items-center justify-center text-gray-400">No recruitment trend data available</div>
+               )}
+             </div>
+           </div>
 
-          {/* Hiring Trend Line Chart */}
-          <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-800 mb-6">Hiring Trend (Last 30 Days)</h3>
-            <div className="h-64 w-full">
-              {metrics?.trend?.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={metrics.trend}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="date" 
-                      tickFormatter={formatDate}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{fill: '#9ca3af', fontSize: 12}}
-                    />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
-                    <RechartsTooltip 
-                      contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                      labelFormatter={(label) => new Date(label).toLocaleDateString()}
-                    />
-                    <Legend />
-                    <Line type="monotone" dataKey="successful_hires" name="Successful Hires" stroke="#16730F" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 6, strokeWidth: 0}} />
-                    <Line type="monotone" dataKey="total_job_posts" name="New Job Posts" stroke="#3b82f6" strokeWidth={3} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-400">No hiring trend data available</div>
-              )}
-            </div>
-          </div>
+           {/* ASE Usage Trend by Recruiters */}
+           <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+             <h3 className="text-lg font-bold text-gray-800 mb-6">ASE Usage Trend</h3>
+             <p className="text-xs text-gray-500 -mt-4 mb-4">Recruiter activity on Advanced Search (ASE)</p>
+             <div className="h-64 w-full">
+               {aseUsageTrendData.length > 0 ? (
+                 <ResponsiveContainer width="100%" height="100%">
+                   <LineChart data={aseUsageTrendData}>
+                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                     <XAxis 
+                       dataKey="date" 
+                       tickFormatter={formatDate}
+                       axisLine={false}
+                       tickLine={false}
+                       tick={{fill: '#9ca3af', fontSize: 12}}
+                     />
+                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
+                     <RechartsTooltip 
+                       contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                       labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                     />
+                     <Legend />
+                     <Line 
+                       type="monotone" 
+                       dataKey="total_ase_searches" 
+                       name="Total ASE Searches" 
+                       stroke="#16730F" 
+                       strokeWidth={3} 
+                       dot={{r: 4, strokeWidth: 2}} 
+                       activeDot={{r: 6, strokeWidth: 0}} 
+                     />
+                     <Line 
+                       type="monotone" 
+                       dataKey="unique_recruiters" 
+                       name="Unique Recruiters" 
+                       stroke="#3b82f6" 
+                       strokeWidth={3} 
+                       dot={false} 
+                     />
+                   </LineChart>
+                 </ResponsiveContainer>
+               ) : (
+                 <div className="h-full flex items-center justify-center text-gray-400">No ASE usage trend data available</div>
+               )}
+             </div>
+           </div>
         </div>
 
       </div>
