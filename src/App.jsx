@@ -58,6 +58,7 @@ import Teams from "./pages/misc/Teams.jsx";
 import SecurityAdvice from "./pages/misc/SecurityAdvice.jsx";
 import PrivacyPolicy from "./pages/misc/PrivacyPolicy.jsx";
 import Contact from "./pages/misc/Contact.jsx";
+import Help from "./pages/misc/Help.jsx";
 import AuthSuccess from "./pages/auth/AuthSuccess.jsx";
 import AuthFailure from "./pages/auth/AuthFailure.jsx";
 import CompleteSignup from "./pages/CompleteSignup.jsx";
@@ -277,8 +278,9 @@ function App() {
            <Route path="/teams" element={<Teams />} />
            <Route path="/security-advice" element={<SecurityAdvice />} />
            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-           <Route path="/contact" element={<Contact />} />
-           <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/ase/pricing" element={<ASEPricingPage />} />
           <Route path="/ase/payment-callback" element={<ASEPaymentCallback />} />
           <Route path="/ase/subscription-callback" element={<ASEPaymentCallback />} />

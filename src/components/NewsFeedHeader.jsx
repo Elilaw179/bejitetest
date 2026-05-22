@@ -337,7 +337,7 @@ const NewsFeedHeader = ({
           />
         </div>
 
-        <div ref={searchRef} className="relative w-full sm:w-[250px] md:max-w-[350px] lg:max-w-[400px]">
+        <div ref={searchRef} className="relative w-full sm:w-[300px] md:max-w-[400px] lg:max-w-[500px]">
           <input
             type="text"
             placeholder="Search people, jobs, posts..."
@@ -434,14 +434,11 @@ const NewsFeedHeader = ({
         </div>
 
         <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto justify-between sm:justify-normal">
-          <div className="relative">
-            <img
-              className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full object-cover"
-              src={avatarSrc(user.image)}
-              alt={getDisplayName()}
-            />
-            <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 bg-[#6B8E23] rounded-full border-2 border-white absolute right-0 sm:right-1 bottom-0 sm:bottom-1" />
-          </div>
+          <img
+            className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full object-cover"
+            src={avatarSrc(user.image)}
+            alt={getDisplayName()}
+          />
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3">
             <div ref={dropdownRef} className="relative">

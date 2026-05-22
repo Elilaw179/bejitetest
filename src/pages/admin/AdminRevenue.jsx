@@ -26,13 +26,19 @@ const AdminRevenue = () => {
     recentTransactions: [],
     monthlyRevenue: []
   });
+  const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchRevenue = async () => {
+    const fetchRevenueData = async () => {
       try {
-        const response = await axiosInstance.get('/api/admin/metrics/revenue');
-        setMetrics(response.data);
+        const [revenueRes, overviewRes] = await Promise.all([
+          axiosInstance.get('/api/admin/metrics/revenue'),
+          axiosInstance.get('/api/admin/metrics/overview')
+        ]);
+
+        setMetrics(revenueRes.data);
+        setTotalUsers(overviewRes.data?.totalUsers || 0);
       } catch (error) {
         console.error('Error fetching revenue metrics', error);
         toast.error('Failed to load revenue data');
@@ -41,7 +47,7 @@ const AdminRevenue = () => {
       }
     };
 
-    fetchRevenue();
+    fetchRevenueData();
   }, []);
 
   if (loading) {
@@ -85,56 +91,79 @@ const AdminRevenue = () => {
             colorClass="bg-blue-50 text-blue-600"
             subtitle="Successful payments"
           />
-          <StatCard 
-            title="Avg Revenue Per User" 
-            value={formatCurrency(metrics.advanced?.arpu || 0)}
-            icon={Activity}
-            colorClass="bg-purple-50 text-purple-600"
-            subtitle="ARPU across active users"
-          />
-          <StatCard 
-            title="Active Subscriptions" 
-            value={metrics.advanced?.active_subscriptions || 0}
-            icon={TrendingUp}
-            colorClass="bg-amber-50 text-amber-600"
-            subtitle="Currently paying employers"
-          />
+           <StatCard 
+             title="Avg Revenue Per User" 
+             value={formatCurrency(
+               metrics.advanced?.arpu || 
+               (totalUsers > 0 ? metrics.totalRevenue / totalUsers : 0)
+             )}
+             icon={Activity}
+             colorClass="bg-purple-50 text-purple-600"
+             subtitle="Total revenue ÷ Total users on platform"
+           />
+           <StatCard 
+             title="Active Subscriptions" 
+             value={
+               metrics.advanced?.active_recruiter_subscriptions || 
+               metrics.advanced?.active_subscriptions || 0
+             }
+             icon={TrendingUp}
+             colorClass="bg-amber-50 text-amber-600"
+             subtitle="Recruiters with active subscriptions"
+           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Revenue Breakdown */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
-            <h2 className="text-lg font-bold text-gray-800 mb-6">Revenue Breakdown</h2>
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-gray-700">ASE Searches</span>
-                  <span className="font-bold text-gray-900">{formatCurrency(metrics.advanced?.ase_revenue || 0)}</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div className="bg-blue-500 h-2 rounded-full" style={{ width: '45%' }}></div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-gray-700">Subscriptions</span>
-                  <span className="font-bold text-gray-900">{formatCurrency(metrics.advanced?.subscription_revenue || 0)}</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div className="bg-purple-500 h-2 rounded-full" style={{ width: '35%' }}></div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-gray-700">One-Time Payments</span>
-                  <span className="font-bold text-gray-900">{formatCurrency(metrics.advanced?.one_time_revenue || 0)}</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div className="bg-amber-500 h-2 rounded-full" style={{ width: '20%' }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+           {/* Revenue Breakdown */}
+           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
+             <h2 className="text-lg font-bold text-gray-800 mb-6">Revenue Breakdown</h2>
+             <div className="space-y-6">
+               {(() => {
+                 const aseRevenue = Number(metrics.advanced?.ase_revenue || 0);
+                 const subscriptionRevenue = Number(metrics.advanced?.subscription_revenue || 0);
+                 const oneTimeRevenue = Number(metrics.advanced?.one_time_revenue || 0);
+                 const total = aseRevenue + subscriptionRevenue + oneTimeRevenue;
+
+                 const asePercent = total > 0 ? Math.round((aseRevenue / total) * 100) : 0;
+                 const subPercent = total > 0 ? Math.round((subscriptionRevenue / total) * 100) : 0;
+                 const oneTimePercent = total > 0 ? Math.round((oneTimeRevenue / total) * 100) : 0;
+
+                 return (
+                   <>
+                     <div>
+                       <div className="flex justify-between text-sm mb-1">
+                         <span className="font-medium text-gray-700">ASE Searches</span>
+                         <span className="font-bold text-gray-900">{formatCurrency(aseRevenue)}</span>
+                       </div>
+                       <div className="w-full bg-gray-100 rounded-full h-2">
+                         <div className="bg-blue-500 h-2 rounded-full transition-all" style={{ width: `${asePercent}%` }}></div>
+                       </div>
+                     </div>
+
+                     <div>
+                       <div className="flex justify-between text-sm mb-1">
+                         <span className="font-medium text-gray-700">Subscriptions</span>
+                         <span className="font-bold text-gray-900">{formatCurrency(subscriptionRevenue)}</span>
+                       </div>
+                       <div className="w-full bg-gray-100 rounded-full h-2">
+                         <div className="bg-purple-500 h-2 rounded-full transition-all" style={{ width: `${subPercent}%` }}></div>
+                       </div>
+                     </div>
+
+                     <div>
+                       <div className="flex justify-between text-sm mb-1">
+                         <span className="font-medium text-gray-700">One-Time Payments</span>
+                         <span className="font-bold text-gray-900">{formatCurrency(oneTimeRevenue)}</span>
+                       </div>
+                       <div className="w-full bg-gray-100 rounded-full h-2">
+                         <div className="bg-amber-500 h-2 rounded-full transition-all" style={{ width: `${oneTimePercent}%` }}></div>
+                       </div>
+                     </div>
+                   </>
+                 );
+               })()}
+             </div>
+           </div>
           {/* Revenue Chart */}
           <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-lg font-bold text-gray-800 mb-6">Monthly Revenue (Last 6 Months)</h2>
