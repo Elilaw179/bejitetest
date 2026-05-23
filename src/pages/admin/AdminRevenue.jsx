@@ -28,6 +28,9 @@ const AdminRevenue = () => {
   });
   const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
     const fetchRevenueData = async () => {
@@ -39,6 +42,7 @@ const AdminRevenue = () => {
 
         setMetrics(revenueRes.data);
         setTotalUsers(overviewRes.data?.totalUsers || 0);
+        setCurrentPage(1);
       } catch (error) {
         console.error('Error fetching revenue metrics', error);
         toast.error('Failed to load revenue data');
@@ -64,6 +68,14 @@ const AdminRevenue = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
   };
+
+  // Pagination helpers for Recent Transactions
+  const recentTransactions = metrics.recentTransactions || [];
+  const totalTx = recentTransactions.length;
+  const totalPages = Math.ceil(totalTx / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, totalTx);
+  const paginatedTx = recentTransactions.slice(startIdx, endIdx);
 
   return (
     <AdminLayout>
@@ -91,26 +103,27 @@ const AdminRevenue = () => {
             colorClass="bg-blue-50 text-blue-600"
             subtitle="Successful payments"
           />
-           <StatCard 
-             title="Avg Revenue Per User" 
-             value={formatCurrency(
-               metrics.advanced?.arpu || 
-               (totalUsers > 0 ? metrics.totalRevenue / totalUsers : 0)
-             )}
-             icon={Activity}
-             colorClass="bg-purple-50 text-purple-600"
-             subtitle="Total revenue ÷ Total users on platform"
-           />
-           <StatCard 
-             title="Active Subscriptions" 
-             value={
-               metrics.advanced?.active_recruiter_subscriptions || 
-               metrics.advanced?.active_subscriptions || 0
-             }
-             icon={TrendingUp}
-             colorClass="bg-amber-50 text-amber-600"
-             subtitle="Recruiters with active subscriptions"
-           />
+            <StatCard 
+              title="Avg Revenue Per User" 
+              value={formatCurrency(
+                totalUsers > 0 
+                  ? Number(metrics.totalRevenue) / totalUsers 
+                  : 0
+              )}
+              icon={Activity}
+              colorClass="bg-purple-50 text-purple-600"
+              subtitle="Total revenue ÷ Total users on platform"
+            />
+            <StatCard 
+              title="Active Subscriptions" 
+              value={Number(
+                metrics.advanced?.active_recruiter_subscriptions ?? 
+                metrics.advanced?.active_subscriptions ?? 0
+              )}
+              icon={TrendingUp}
+              colorClass="bg-amber-50 text-amber-600"
+              subtitle="Recruiters with active subscriptions"
+            />
         </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -194,36 +207,64 @@ const AdminRevenue = () => {
             </div>
           </div>
 
-          {/* Recent Transactions */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">Recent Transactions</h2>
-            <div className="space-y-4">
-              {metrics.recentTransactions && metrics.recentTransactions.length > 0 ? (
-                metrics.recentTransactions.map((tx) => (
-                  <div key={tx.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
-                        <CreditCard size={18} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800 capitalize">{tx.plan_type || 'Custom Plan'}</p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(tx.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="font-bold text-gray-800">
-                      {formatCurrency(tx.amount)}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center text-gray-400 py-8">
-                  No recent transactions.
-                </div>
-              )}
-            </div>
-          </div>
+           {/* Recent Transactions */}
+           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+             <h2 className="text-lg font-bold text-gray-800 mb-4">Recent Transactions</h2>
+             <div className="space-y-4">
+               {totalTx > 0 ? (
+                 paginatedTx.map((tx) => (
+                   <div key={tx.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                     <div className="flex items-center gap-3">
+                       <div className="h-10 w-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                         <CreditCard size={18} />
+                       </div>
+                       <div>
+                         <p className="text-sm font-medium text-gray-800 capitalize">{tx.plan_type || 'Custom Plan'}</p>
+                         <p className="text-xs text-gray-500">
+                           {new Date(tx.created_at).toLocaleDateString()}
+                         </p>
+                       </div>
+                     </div>
+                     <div className="font-bold text-gray-800">
+                       {formatCurrency(tx.amount)}
+                     </div>
+                   </div>
+                 ))
+               ) : (
+                 <div className="text-center text-gray-400 py-8">
+                   No recent transactions.
+                 </div>
+               )}
+             </div>
+
+             {/* Pagination Controls */}
+             {totalPages > 1 && (
+               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t border-gray-100 text-sm">
+                 <div className="text-gray-500">
+                   Showing {startIdx + 1}–{endIdx} of {totalTx}
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <button
+                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                     disabled={currentPage === 1}
+                     className="px-3 py-1.5 rounded-lg border text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                   >
+                     Previous
+                   </button>
+                   <span className="px-2 text-gray-700 font-medium">
+                     Page {currentPage} of {totalPages}
+                   </span>
+                   <button
+                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                     disabled={currentPage === totalPages}
+                     className="px-3 py-1.5 rounded-lg border text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                   >
+                     Next
+                   </button>
+                 </div>
+               </div>
+             )}
+           </div>
         </div>
 
       </div>

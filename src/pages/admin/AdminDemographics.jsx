@@ -90,7 +90,7 @@ const AdminDemographics = () => {
             colorClass="bg-blue-50 text-blue-600"
           />
           <StatCard 
-            title="Total Employers" 
+            title="Total Recruiters" 
             value={metrics?.total_employers || 0}
             icon={Building}
             colorClass="bg-purple-50 text-purple-600"
@@ -111,33 +111,32 @@ const AdminDemographics = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Jobseekers by Country (Pie) */}
+          {/* Jobseekers by Country (Bar) */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-gray-800 mb-6">Jobseekers by Country</h3>
-            <div className="h-64 w-full">
+            <div className="h-72 w-full">
               {jobseekersByCountry.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={jobseekersByCountry}
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="count"
-                      nameKey="name"
-                    >
+                  <BarChart data={jobseekersByCountry} layout="vertical" margin={{ top: 0, right: 0, left: 60, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
+                    <XAxis type="number" hide />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{fill: '#4b5563', fontSize: 12}}
+                    />
+                    <RechartsTooltip 
+                      cursor={{fill: 'transparent'}}
+                      contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                    />
+                    <Bar dataKey="count" name="Jobseekers" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={18}>
                       {jobseekersByCountry.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
-                    </Pie>
-                    <RechartsTooltip 
-                      formatter={(value) => [value, 'Users']}
-                      contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                    />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                  </PieChart>
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-gray-400">No country data available</div>
@@ -145,33 +144,32 @@ const AdminDemographics = () => {
             </div>
           </div>
 
-          {/* Jobseekers by Age Group (Pie) */}
+          {/* Age Distribution (Bar) */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-gray-800 mb-6">Age Distribution</h3>
-            <div className="h-64 w-full">
+            <div className="h-72 w-full">
               {jobseekersByAge.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={jobseekersByAge}
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="count"
-                      nameKey="name"
-                    >
+                  <BarChart data={jobseekersByAge} layout="vertical" margin={{ top: 0, right: 0, left: 60, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
+                    <XAxis type="number" hide />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{fill: '#4b5563', fontSize: 12}}
+                    />
+                    <RechartsTooltip 
+                      cursor={{fill: 'transparent'}}
+                      contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                    />
+                    <Bar dataKey="count" name="Jobseekers" fill="#f59e0b" radius={[0, 4, 4, 0]} barSize={18}>
                       {jobseekersByAge.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
-                    </Pie>
-                    <RechartsTooltip 
-                      formatter={(value) => [value, 'Users']}
-                      contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                    />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                  </PieChart>
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-gray-400">No age data available</div>
