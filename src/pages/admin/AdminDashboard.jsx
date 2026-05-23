@@ -18,14 +18,42 @@ const AdminDashboard = () => {
   const [advancedUserMetrics, setAdvancedUserMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Normalized top sectors (top 10, counts as numbers, clean data)
+  // Canonical industry list (matches jobseekerSignup/JobType.jsx)
+  const industries = [
+    "Information Technology", "Healthcare", "Finance", "Education", "Construction",
+    "Manufacturing", "Retail", "Transportation and Logistics", "Hospitality", "Energy",
+    "Telecommunications", "Real Estate", "Legal", "Marketing and Advertising", "Media and Entertainment",
+    "Agriculture", "Aerospace", "Biotechnology", "Automotive", "Nonprofit",
+    "Government", "Insurance", "Pharmaceuticals", "Environmental Services", "Engineering",
+    "Consulting", "Human Resources", "Public Relations", "Utilities", "Mining", "Not Available"
+  ];
+
+  // Resolve numeric IDs (e.g. "8") to real names + normalize counts
   const topSectors = (userMetrics?.topSectors || [])
-    .map((item) => ({
-      industry: item.industry,
-      count: Number(item.count) || 0,
-    }))
+    .map((item) => {
+      const raw = item.industry;
+      const idx = parseInt(raw, 10);
+      const name = (idx >= 0 && idx < industries.length) ? industries[idx] : raw;
+      return {
+        industry: name,
+        count: Number(item.count) || 0,
+      };
+    })
     .filter((item) => item.industry && item.industry !== "Not Available")
     .slice(0, 10);
+
+  // Normalized top applied job titles (top 10 most common jobs jobseekers actually apply for)
+  const topJobTitles = (jobMetrics?.topJobTitles || [])
+    .map((item) => ({
+      title: item.title,
+      count: Number(item.count) || 0,
+    }))
+    .slice(0, 10);
+
+  const roleCounts = {
+    jobseeker: Number(userMetrics?.roles?.find(r => r.role?.toLowerCase() === 'jobseeker')?.count || 0),
+    recruiter: Number(userMetrics?.roles?.find(r => r.role?.toLowerCase() === 'recruiter')?.count || 0),
+  };
 
   const COLORS = ['#16730F', '#2563eb', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
 
@@ -200,12 +228,24 @@ const AdminDashboard = () => {
                     <Legend verticalAlign="bottom" height={36} iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-400">No data available</div>
-              )}
-            </div>
-          </div>
-        </div>
+               ) : (
+                 <div className="h-full flex items-center justify-center text-gray-400">No data available</div>
+               )}
+             </div>
+
+             {/* Explicit totals for Jobseekers and Recruiters from /api/admin/metrics/users */}
+             <div className="mt-2 flex justify-center gap-10 text-center">
+               <div>
+                 <div className="text-3xl font-bold text-[#2563eb]">{roleCounts.jobseeker.toLocaleString()}</div>
+                 <div className="text-xs text-gray-500">Jobseekers</div>
+               </div>
+               <div>
+                 <div className="text-3xl font-bold text-[#16730F]">{roleCounts.recruiter.toLocaleString()}</div>
+                 <div className="text-xs text-gray-500">Recruiters</div>
+               </div>
+             </div>
+           </div>
+         </div>
 
         {/* Bottom Section: Top Sectors & Jobs */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -244,34 +284,35 @@ const AdminDashboard = () => {
              <p className="text-xs text-gray-500 mt-2 text-center">Top 10 most sought-after sectors by jobseekers</p>
            </div>
 
-          {/* Job Types */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-800 mb-6">Job Types Distribution</h3>
-            <div className="h-64 w-full">
-              {jobMetrics?.jobTypes?.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={jobMetrics.jobTypes}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="work_type" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{fill: '#4b5563', fontSize: 12}}
-                      dy={10}
-                    />
-                    <YAxis hide />
-                    <Tooltip 
-                      cursor={{fill: '#f3f4f6'}}
-                      contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                    />
-                    <Bar dataKey="count" name="Jobs" fill="#16730F" radius={[4, 4, 0, 0]} barSize={40} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-400">No data available</div>
-              )}
-            </div>
-          </div>
+           {/* Top Job Titles Applied */}
+           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+             <h3 className="text-lg font-bold text-gray-800 mb-6">Top Job Titles Applied</h3>
+             <div className="h-64 w-full">
+               {topJobTitles.length > 0 ? (
+                 <ResponsiveContainer width="100%" height="100%">
+                   <BarChart data={topJobTitles}>
+                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                     <XAxis 
+                       dataKey="title" 
+                       axisLine={false} 
+                       tickLine={false} 
+                       tick={{fill: '#4b5563', fontSize: 12}}
+                       dy={10}
+                     />
+                     <YAxis hide />
+                     <Tooltip 
+                       cursor={{fill: '#f3f4f6'}}
+                       contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                     />
+                     <Bar dataKey="count" name="Applications" fill="#16730F" radius={[4, 4, 0, 0]} barSize={40} />
+                   </BarChart>
+                 </ResponsiveContainer>
+               ) : (
+                 <div className="h-full flex items-center justify-center text-gray-400">No data available</div>
+               )}
+             </div>
+             <p className="text-xs text-gray-500 mt-2 text-center">Top 10 most common jobs applied for by jobseekers</p>
+           </div>
 
         </div>
       </div>
