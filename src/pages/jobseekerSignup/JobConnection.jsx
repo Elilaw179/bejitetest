@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import UserList from "../../components/UserList";
@@ -33,7 +33,7 @@ const JobConnection = () => {
   const role = params.get("role");
   const mode = params.get("mode");
 
-  const fetchRecruitersPage = async (pageOffset, append = false) => {
+  const fetchRecruitersPage = useCallback(async (pageOffset, append = false) => {
     const data = await discoverRecruitersForSignup(email, PAGE_SIZE, pageOffset);
     const list = data?.users || [];
     const mapped = Array.isArray(list) ? list.map(mapRecruiterForList) : [];
@@ -45,7 +45,7 @@ const JobConnection = () => {
     });
     setHasMore(mapped.length === PAGE_SIZE);
     setOffset(pageOffset + mapped.length);
-  };
+  }, [email]);
 
   useEffect(() => {
     if (!email) {
@@ -72,7 +72,7 @@ const JobConnection = () => {
     };
 
     loadInitial();
-  }, [email]);
+  }, [email, fetchRecruitersPage]);
 
   const handleLoadMore = async () => {
     if (!email || loadingMore || !hasMore) return;

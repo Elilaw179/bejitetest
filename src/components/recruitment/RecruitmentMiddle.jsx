@@ -14,8 +14,6 @@ import PostCreationModal from '../PostCreationModal';
 import ConfirmModal from '../ConfirmModal';
 import useSyncProfilePhoto from '../../hooks/useSyncProfilePhoto';
 
-const getProfileImageUrl = (imagePath) => profileAvatarSrc(imagePath);
-
 // Helper function to get display name (same pattern as NewsFeedHeader)
 const getDisplayName = (user) => {
   if (!user) return 'Guest';
