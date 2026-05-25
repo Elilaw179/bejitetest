@@ -44,6 +44,27 @@ export function profilePayloadLooksUsable(row) {
   );
 }
 
+/** Merge CV user_bio row into profile display shape. */
+export function mergeCvBioIntoProfile(base, bioRow) {
+  if (!base) return null;
+  if (!bioRow || typeof bioRow !== 'object') return base;
+  const locationParts = [bioRow.street, bioRow.city, bioRow.country].filter(
+    (p) => p != null && String(p).trim() !== '',
+  );
+  return normalizeProfileData({
+    ...base,
+    nickname: bioRow.nickname ?? base.nickname,
+    phone: bioRow.phone ?? base.phone,
+    phone_number: bioRow.phone ?? base.phone_number,
+    bio: bioRow.bio ?? base.bio,
+    summary: bioRow.bio ?? base.summary,
+    profile_photo: bioRow.profile_photo ?? base.profile_photo,
+    location: locationParts.length > 0 ? locationParts.join(', ') : base.location,
+    country: bioRow.country ?? base.country,
+    city: bioRow.city ?? base.city,
+  });
+}
+
 /** Build profile row from search dropdown navigation state. */
 export function profileFromSearchPreview(preview, userId) {
   if (!preview || typeof preview !== 'object') return null;
