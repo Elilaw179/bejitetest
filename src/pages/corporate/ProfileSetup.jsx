@@ -10,11 +10,15 @@ import Header from "../../components/Header";
 import ImageUpload from "../../components/ImageUpload";
 import useRecruiterProfile from "../../services/recruiterProfile";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
+import { fetchCurrentUserProfilePhoto } from "../../services/profilePhotoService";
+import { getUser, pickProfilePhotoPath } from "../../utils/tokenManager";
+import useAuth from "../../hooks/useAuth";
 
 const CoperateProfileSetup = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
+  const { user: authUser } = useAuth();
 
   const handleStepClick = (path) => {
     navigate(path);
@@ -39,17 +43,61 @@ const CoperateProfileSetup = () => {
   const { updateProfileSetup, uploadProfilePhoto } = useRecruiterProfile();
 
   useEffect(() => {
-    if (isEditMode && recruiterData && !dataLoaded) {
-      setFormData({
-        nickname: recruiterData.nickname || "",
-        summary: recruiterData.summary || "",
-      });
-      if (recruiterData.profile_photo) {
-        setImagePreview(profilePhotoUrl(recruiterData.profile_photo) ?? null);
+    if (!isEditMode) return;
+    let cancelled = false;
+    (async () => {
+      const fromStorage =
+        pickProfilePhotoPath(authUser) || pickProfilePhotoPath(getUser());
+      if (!cancelled && fromStorage) {
+        setImagePreview(profilePhotoUrl(fromStorage) ?? null);
       }
+      try {
+        const fromApi = await fetchCurrentUserProfilePhoto();
+        if (!cancelled && fromApi) setImagePreview(profilePhotoUrl(fromApi) ?? null);
+      } catch {
+        /* optional */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditMode, authUser]);
+
+  useEffect(() => {
+    if (!isEditMode || dataLoaded) return;
+
+    const loadEditData = async () => {
+      if (recruiterData) {
+        setFormData({
+          nickname: recruiterData.nickname || "",
+          summary: recruiterData.summary || "",
+        });
+        const fromProfile = recruiterData.profile_photo || recruiterData.profilePhoto;
+        if (fromProfile) {
+          setImagePreview(profilePhotoUrl(fromProfile) ?? null);
+        }
+      }
+
+      const fromStorage =
+        pickProfilePhotoPath(authUser) || pickProfilePhotoPath(getUser());
+      if (fromStorage) {
+        setImagePreview(profilePhotoUrl(fromStorage) ?? null);
+      }
+
+      try {
+        const fromApi = await fetchCurrentUserProfilePhoto();
+        if (fromApi) setImagePreview(profilePhotoUrl(fromApi) ?? null);
+      } catch {
+        /* keep existing preview */
+      }
+
       setDataLoaded(true);
+    };
+
+    if (recruiterData !== null && recruiterData !== undefined) {
+      loadEditData();
     }
-  }, [isEditMode, recruiterData, dataLoaded]);
+  }, [isEditMode, recruiterData, dataLoaded, authUser]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

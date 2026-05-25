@@ -14,11 +14,15 @@ import { countries } from '../../../data/countries';
 import { steps } from '../../../data/bioSteps';
 import { profilePhotoUrl } from '../../../utils/profilePhotoUrl';
 import { updateUser } from '../../../features/auth/authSlice';
+import { fetchCurrentUserProfilePhoto } from '../../../services/profilePhotoService';
+import { getUser, pickProfilePhotoPath } from '../../../utils/tokenManager';
+import useAuth from '../../../hooks/useAuth';
 
 const Bio = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
+    const { user: authUser } = useAuth();
 
     const handleStepClick = (path) => {
         navigate(path);
@@ -47,29 +51,72 @@ const Bio = () => {
         return String(value);
     };
 
-    // Load existing bio data when in edit mode
+    const applyPhotoPreview = (stored) => {
+        if (!stored) return;
+        const url = profilePhotoUrl(stored);
+        if (url) setImagePreview(url);
+    };
+
+    // Restore photo immediately in edit mode (not only from user_bio row).
     useEffect(() => {
-        if (isEditMode && cvData?.bio && !dataLoaded) {
-            const bio = cvData.bio;
-            setFormData({
-                nickname: toString(bio.nickname),
-                phone: toString(bio.phone),
-                gender: toString(bio.gender),
-                maritalStatus: toString(bio.marital_status),
-                age: toString(bio.age),
-                country: toString(bio.country),
-                street: toString(bio.street),
-                city: toString(bio.city),
-                tribe: toString(bio.tribe),
-                zip: toString(bio.zip),
-                bio: toString(bio.bio),
-            });
-            if (bio.profile_photo) {
-                setImagePreview(profilePhotoUrl(bio.profile_photo) ?? null);
+        if (!isEditMode) return;
+        let cancelled = false;
+        (async () => {
+            const fromStorage =
+                pickProfilePhotoPath(authUser) || pickProfilePhotoPath(getUser());
+            if (!cancelled && fromStorage) applyPhotoPreview(fromStorage);
+            try {
+                const fromApi = await fetchCurrentUserProfilePhoto();
+                if (!cancelled && fromApi) applyPhotoPreview(fromApi);
+            } catch {
+                /* optional */
             }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [isEditMode, authUser]);
+
+    // Load existing bio + photo when in edit mode
+    useEffect(() => {
+        if (!isEditMode || dataLoaded) return;
+
+        const loadEditData = async () => {
+            const bio = cvData?.bio;
+            if (bio) {
+                setFormData({
+                    nickname: toString(bio.nickname),
+                    phone: toString(bio.phone),
+                    gender: toString(bio.gender),
+                    maritalStatus: toString(bio.marital_status),
+                    age: toString(bio.age),
+                    country: toString(bio.country),
+                    street: toString(bio.street),
+                    city: toString(bio.city),
+                    tribe: toString(bio.tribe),
+                    zip: toString(bio.zip),
+                    bio: toString(bio.bio),
+                });
+                applyPhotoPreview(bio.profile_photo);
+            }
+
+            const fromStorage = pickProfilePhotoPath(authUser) || pickProfilePhotoPath(getUser());
+            if (fromStorage) applyPhotoPreview(fromStorage);
+
+            try {
+                const fromApi = await fetchCurrentUserProfilePhoto();
+                if (fromApi) applyPhotoPreview(fromApi);
+            } catch {
+                /* keep existing preview */
+            }
+
             setDataLoaded(true);
+        };
+
+        if (cvData !== null && cvData !== undefined) {
+            loadEditData();
         }
-    }, [isEditMode, cvData, dataLoaded]);
+    }, [isEditMode, cvData, dataLoaded, authUser]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -133,11 +180,21 @@ const Bio = () => {
             let photoResponse = null;
             if (imageFile) {
                 photoResponse = await uploadProfileImage(imageFile);
-                // Update user data with new profile photo URL
-                if (photoResponse?.data?.profilePhoto) {
-                    dispatch(updateUser({ image: photoResponse.data.profilePhoto }));
+                const photoUrl =
+                    photoResponse?.data?.profilePhoto ??
+                    photoResponse?.data?.profile_photo ??
+                    photoResponse?.profilePhoto ??
+                    null;
+                if (photoUrl) {
+                    dispatch(
+                        updateUser({
+                            image: photoUrl,
+                            profile_photo: photoUrl,
+                            profilePhoto: photoUrl,
+                        }),
+                    );
                 }
-            } else {
+            } else if (!imagePreview) {
                 throw new Error('Image file is missing for upload.');
             }
 
