@@ -32,7 +32,7 @@ export default function RecruitmentLeft() {
   const handleNavClick = (label) => {
     switch (label) {
       case "News Feed":
-        navigate("/recruitment");
+        navigate("/news-feed");
         break;
       case "Connections":
         navigate("/connection");

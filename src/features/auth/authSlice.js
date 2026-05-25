@@ -58,6 +58,24 @@ const authSlice = createSlice({
       console.log("Clearing errors");
       state.errors = {};
     },
+    hydrateAuth: (state) => {
+      const token =
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("authToken") ||
+        null;
+      if (token) state.token = token;
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.id || parsed?.email) {
+            state.user = parsed;
+          }
+        }
+      } catch {
+        /* ignore corrupt user blob */
+      }
+    },
     updateUser: (state, action) => {
       if (state.user) {
         const updatedUser = { ...state.user, ...action.payload };
@@ -108,7 +126,7 @@ const authSlice = createSlice({
         state.user = null;
       }
     },
-    /** Session from POST /api/admin-auth/login (username/password) */
+    /** JWT from POST /api/admin-auth/login (username/password) */
     setAdminAuth: (state, action) => {
       const { accessToken, refreshToken, admin } = action.payload || {};
       state.loading = false;
@@ -204,5 +222,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearErrors, logout, setGoogleAuth, setAdminAuth, updateUser } = authSlice.actions;
+export const { clearErrors, logout, setGoogleAuth, setAdminAuth, updateUser, hydrateAuth } = authSlice.actions;
 export default authSlice.reducer;

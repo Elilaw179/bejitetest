@@ -5,7 +5,8 @@ import { ConnectionList, RequestList } from '../components/connections';
 import { FaUserFriends, FaUserPlus, FaClock, FaSearch } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import * as connectionsApi from '../services/connectionsApi';
-import { getProfileImageUrl } from '../utils/profileImageUtils';
+import { getAuthorProfileImageUrl } from '../utils/profileImageUtils';
+import useSyncProfilePhoto from '../hooks/useSyncProfilePhoto';
 
 const shuffleArray = (arr) => {
   const shuffled = [...arr];
@@ -27,6 +28,7 @@ const transformDiscoverableUser = (user) => ({
 });
 
 const Connections = () => {
+  useSyncProfilePhoto();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('network');
   const [connections, setConnections] = useState([]);
@@ -104,7 +106,7 @@ const Connections = () => {
           firstName: req.fromUser?.firstName,
           lastName: req.fromUser?.lastName,
           email: req.fromUser?.email,
-          image: null,
+          image: req.fromUser?.profilePhoto || null,
           role: req.fromUser?.jobTitle || 'Professional'
         },
         createdAt: req.createdAt
@@ -120,7 +122,7 @@ const Connections = () => {
           firstName: req.toUser?.firstName,
           lastName: req.toUser?.lastName,
           email: req.toUser?.email,
-          image: null,
+          image: req.toUser?.profilePhoto || null,
           role: req.toUser?.jobTitle || 'Professional'
         },
         createdAt: req.createdAt
@@ -404,7 +406,7 @@ const PeopleList = ({ users, onSendRequest, onViewProfile, searchQuery, isSearch
         <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
           <div className="flex items-center gap-4">
             <img
-              src={getProfileImageUrl(user.image)}
+              src={getAuthorProfileImageUrl(user)}
               alt={user.name}
               className="w-12 h-12 rounded-full object-cover"
             />

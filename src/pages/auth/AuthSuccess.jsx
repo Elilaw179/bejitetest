@@ -122,11 +122,11 @@ const AuthSuccess = () => {
         } else if (userRole === 'recruiter') {
           console.log('User is a recruiter, redirecting to recruitment dashboard');
           toast.success('Welcome back!');
-          setTimeout(() => navigate('/recruitment'), 1000);
+          setTimeout(() => navigate('/news-feed'), 1000);
         } else if (hasCompletedProfile) {
           console.log('User verified and profile complete, redirecting to recruitment dashboard');
           toast.success('Welcome back!');
-          setTimeout(() => navigate('/recruitment'), 1000);
+          setTimeout(() => navigate('/news-feed'), 1000);
         } else {
           console.log('User verified and signup complete, redirecting to resume');
           toast.success('Welcome back!');

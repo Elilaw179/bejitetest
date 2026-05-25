@@ -159,7 +159,7 @@ function JobType() {
         } else if (isEditMode) {
           navigate("/profile");
         } else {
-          navigate("/recruitment", { state: { email, firstName, lastName, role, mode, followings } });
+          navigate("/news-feed", { state: { email, firstName, lastName, role, mode, followings } });
         }
       } else {
         toast.error(res.data?.message || "Failed to save job preferences");

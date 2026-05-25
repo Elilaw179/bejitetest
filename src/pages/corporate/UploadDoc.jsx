@@ -129,7 +129,7 @@ const CoperateUploadDoc = () => {
         onNext={() => {
           if (isEditMode) {
             if (currentStep === 6) {
-              navigate("/recruitment");
+              navigate("/news-feed");
               toast.success("Profile updated successfully!");
             } else {
               navigate(getPath(currentStep + 1));

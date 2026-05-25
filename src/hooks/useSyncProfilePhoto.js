@@ -33,8 +33,10 @@ export default function useSyncProfilePhoto() {
             profilePhoto: url,
           }),
         );
-      } catch {
-        /* 401 / network */
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.warn('[useSyncProfilePhoto]', err?.response?.status || err?.message);
+        }
       }
     })();
 

@@ -107,10 +107,10 @@ function SignIn() {
             );
           } else if (userRole === 'recruiter') {
             // User is a recruiter, redirect to employer dashboard
-            navigate("/recruitment");
+            navigate("/news-feed");
           } else if (hasCompletedProfile) {
             // User is a jobseeker and has completed profile, redirect to dashboard
-            navigate("/recruitment");
+            navigate("/news-feed");
           } else {
             // User is a jobseeker who hasn't completed profile
             navigate("/resume");

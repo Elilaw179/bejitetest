@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_URL } from "../config";
+import { refreshAccessToken, clearAuthData } from "./tokenManager";
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -54,42 +55,17 @@ axiosInstance.interceptors.response.use(
         const refreshToken = localStorage.getItem("refreshToken");
 
         if (!refreshToken) {
-          // No refresh token available - this is likely a Google OAuth login
-          // Don't redirect, just reject the error so the UI can handle it
           return Promise.reject(error);
         }
 
-        // Call refresh token endpoint (backend expects GET)
-        const response = await axios.get(
-          `${API_URL}/auth/refresh`,
-          { 
-            params: { refreshToken },
-            withCredentials: true 
-          },
-        );
+        const { accessToken: newAccessToken } = await refreshAccessToken();
 
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
-
-        // Store new tokens
-        localStorage.setItem("accessToken", newAccessToken);
-        if (newRefreshToken) {
-          localStorage.setItem("refreshToken", newRefreshToken);
-        }
-
-        // Retry original request with new token
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, clear storage and redirect to login
         console.error("Token refresh failed:", refreshError);
-        
-        // Clear auth data
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
-        localStorage.removeItem("authToken");
-        
-        // Store message for login page
+
+        clearAuthData();
         sessionStorage.setItem("sessionExpired", "true");
         
         // Redirect to login

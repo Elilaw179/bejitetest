@@ -79,7 +79,7 @@ export default function ChatPageHeader({ config }) {
             <span className={spanCircles}>
               <GrSync
                 className={iconStyle}
-                onClick={() => handleClick('/recruitment')} />
+                onClick={() => handleClick('/news-feed')} />
             </span>
           </div>
           <div className="flex items-center gap-3 ">

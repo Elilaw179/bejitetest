@@ -30,7 +30,7 @@ const AdminLayout = ({ children }) => {
     { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Demographics', path: '/admin/demographics', icon: Users },
     { name: 'Engagement', path: '/admin/engagement', icon: Activity },
-    { name: 'Recruitment', path: '/admin/recruitment', icon: Briefcase },
+    { name: 'Recruitment', path: '/admin/recruitment ', icon: Briefcase },
     { name: 'Revenue', path: '/admin/revenue', icon: DollarSign },
     { name: 'Users List', path: '/admin/users', icon: Users },
     { name: 'Admins', path: '/admin/admins', icon: Shield },

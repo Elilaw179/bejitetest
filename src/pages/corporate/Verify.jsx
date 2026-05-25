@@ -26,7 +26,7 @@ const CoperateVerify = () => {
     if (agreed) {
       if (isEditMode) {
         if (currentStep === 5) {
-          navigate("/recruitment");
+          navigate("/news-feed");
           toast.success("Profile updated successfully!");
         } else {
           navigate(getPath(currentStep + 1));

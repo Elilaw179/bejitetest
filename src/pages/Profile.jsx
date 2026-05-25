@@ -1,58 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarker, FaBuilding, FaEdit, FaArrowLeft } from 'react-icons/fa';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import axiosInstance from '../utils/axiosInstance';
 import { fetchCurrentUserProfilePhoto } from '../services/profilePhotoService';
+import { fetchUserProfileById } from '../services/fetchUserProfileById';
 import { getUser, pickProfilePhotoPath } from '../utils/tokenManager';
 import { profileAvatarSrc } from '../utils/profilePhotoUrl';
-
-/** Normalize GET /auth/me or profile payloads into the shape this page renders. */
-function normalizeProfileData(raw) {
-  if (!raw || typeof raw !== 'object') return null;
-  return {
-    ...raw,
-    first_name: raw.first_name ?? raw.firstName ?? '',
-    last_name: raw.last_name ?? raw.lastName ?? '',
-    firstName: raw.firstName ?? raw.first_name,
-    lastName: raw.lastName ?? raw.last_name,
-    profile_photo: raw.profile_photo ?? raw.profilePhoto ?? raw.image ?? null,
-    email: raw.email,
-    title: raw.title ?? raw.jobTitle,
-    phone: raw.phone ?? raw.phone_number,
-    phone_number: raw.phone_number ?? raw.phone,
-    location: raw.location,
-    bio: raw.bio,
-    summary: raw.summary ?? raw.bio,
-    company_name: raw.company_name ?? raw.companyName,
-    nickname: raw.nickname,
-  };
-}
-
-function unwrapAuthProfileBody(data) {
-  if (!data || typeof data !== 'object') return null;
-  if (data.user && typeof data.user === 'object') return data.user;
-  if (Object.prototype.hasOwnProperty.call(data, 'success') && data.data != null) {
-    return data.data;
-  }
-  return data;
-}
-
-function profilePayloadLooksUsable(row) {
-  if (!row || typeof row !== 'object') return false;
-  return !!(
-    row.id ||
-    row.email ||
-    row.first_name ||
-    row.firstName ||
-    row.last_name ||
-    row.lastName ||
-    row.nickname
-  );
-}
+import { pickAuthorProfilePhoto } from '../utils/profileImageUtils';
+import {
+  normalizeProfileData,
+  unwrapAuthProfileBody,
+  profilePayloadLooksUsable,
+  profileFromSearchPreview,
+} from '../utils/profileUtils';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { userId } = useParams();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -141,49 +106,17 @@ const Profile = () => {
           }
         }
       } else if (userId) {
-        try {
-          const response = await axiosInstance.get(`/api/candidates/${userId}`);
-          if (response.data.success && response.data.data) {
-            const candidate = response.data.data;
-            const normalized = normalizeProfileData({
-              ...candidate,
-              first_name: candidate.first_name,
-              last_name: candidate.last_name,
-            });
-            if (profilePayloadLooksUsable(normalized)) {
-              setProfileData(normalized);
-              profileFound = true;
-            }
-          }
-        } catch (candidateError) {
-          console.warn('Direct candidate lookup failed:', candidateError?.message || candidateError);
+        const preview = profileFromSearchPreview(location.state?.profilePreview, userId);
+        if (preview && profilePayloadLooksUsable(preview)) {
+          setProfileData(preview);
+          profileFound = true;
         }
 
         if (!profileFound) {
-          try {
-            const response = await axiosInstance.get(`/job-board/candidates/by-user/${userId}`);
-            if (response.data.success && response.data.data) {
-              const normalized = normalizeProfileData(response.data.data);
-              if (profilePayloadLooksUsable(normalized)) {
-                setProfileData(normalized);
-                profileFound = true;
-              }
-            }
-          } catch (jobseekerError) {
-            console.warn('Jobseeker profile fetch failed:', jobseekerError?.message || jobseekerError);
-          }
-        }
-
-        if (!profileFound) {
-          try {
-            const response = await axiosInstance.get(`/api/profile/profile/${userId}`);
-            const normalized = normalizeProfileData(response.data);
-            if (profilePayloadLooksUsable(normalized)) {
-              setProfileData(normalized);
-              profileFound = true;
-            }
-          } catch (legacyError) {
-            console.warn('Legacy profile fetch failed:', legacyError?.message || legacyError);
+          const loaded = await fetchUserProfileById(userId);
+          if (loaded) {
+            setProfileData(loaded);
+            profileFound = true;
           }
         }
       }
@@ -227,8 +160,8 @@ const Profile = () => {
 
   const isViewingOwnProfile = !userId || userId === user?.id;
   const profileAvatarStored = isViewingOwnProfile
-    ? pickProfilePhotoPath(user) || profileData?.profile_photo
-    : profileData?.profile_photo;
+    ? pickProfilePhotoPath(user) || pickAuthorProfilePhoto(profileData)
+    : pickAuthorProfilePhoto(profileData);
 
   const handleEditProfile = () => {
     if (user?.role === 'jobseeker') {

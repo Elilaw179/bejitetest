@@ -46,7 +46,7 @@ export default function Help() {
         <div className="max-w-4xl mx-auto px-6 py-10">
           {/* Back to dashboard */}
           <Link
-            to="/recruitment"
+            to="/news-feed"
             className="inline-flex items-center gap-2 bg-[#16730F] text-white text-sm px-4 py-2 rounded-full hover:bg-[#145a0c] transition-colors mb-8"
           >
             ← Back to Dashboard

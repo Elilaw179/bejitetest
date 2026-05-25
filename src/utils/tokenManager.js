@@ -3,6 +3,8 @@
  * Provides helper functions to manage JWT tokens in localStorage
  */
 
+import axios from 'axios';
+import { API_URL } from '../config';
 import { profilePhotoUrl } from './profilePhotoUrl';
 
 // Store tokens after login/signup
@@ -46,10 +48,32 @@ export const clearAuthData = () => {
   localStorage.removeItem('authToken'); // legacy token
 };
 
-// Check if user is authenticated
+// Check if user is authenticated (access or refresh token present)
 export const isAuthenticated = () => {
-  const token = getAccessToken();
-  return !!token;
+  return !!(getAccessToken() || getRefreshToken());
+};
+
+/** Exchange refresh token for new access/refresh JWTs (regular users). */
+export const refreshAccessToken = async () => {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    throw new Error('No refresh token');
+  }
+
+  const { data } = await axios.get(`${API_URL}/auth/refresh`, {
+    params: { refreshToken },
+    withCredentials: true,
+  });
+
+  if (data.accessToken) {
+    localStorage.setItem('accessToken', data.accessToken);
+    localStorage.setItem('authToken', data.accessToken);
+  }
+  if (data.refreshToken) {
+    localStorage.setItem('refreshToken', data.refreshToken);
+  }
+
+  return data;
 };
 
 // Decode JWT token

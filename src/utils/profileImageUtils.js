@@ -13,4 +13,18 @@ export const getUserProfileImage = () => {
  */
 export const getProfileImageUrl = (imagePath) => profileAvatarSrc(imagePath);
 
+/** Author/connection payloads may use image, profile_photo, or profilePhoto. */
+export const pickAuthorProfilePhoto = (entity) => {
+  if (!entity || typeof entity !== 'object') return null;
+  const raw =
+    entity.image ??
+    entity.profile_photo ??
+    entity.profilePhoto ??
+    null;
+  return raw && String(raw).trim() ? String(raw).trim() : null;
+};
+
+export const getAuthorProfileImageUrl = (entity) =>
+  profileAvatarSrc(pickAuthorProfilePhoto(entity));
+
 export { profilePhotoUrl, profileAvatarSrc, PROFILE_PHOTO_PLACEHOLDER } from './profilePhotoUrl';

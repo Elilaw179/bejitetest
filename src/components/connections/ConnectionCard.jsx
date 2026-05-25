@@ -1,11 +1,11 @@
 import React from 'react';
-import { getProfileImageUrl } from '../../utils/profileImageUtils';
+import { getAuthorProfileImageUrl } from '../../utils/profileImageUtils';
 
 const ConnectionCard = ({ user, onRemove, showRemoveButton = false }) => (
   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
     <div className="flex items-center gap-4">
       <img
-        src={getProfileImageUrl(user.image)}
+        src={getAuthorProfileImageUrl(user)}
         alt={user.name}
         className="w-12 h-12 rounded-full object-cover"
       />

@@ -26,7 +26,7 @@ const AdminRecruitment = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get('/api/admin/metrics/recruitment');
+        const response = await axiosInstance.get('/api/admin/metrics/recruitment ');
         setMetrics(response.data);
       } catch (error) {
         console.error('Error fetching recruitment metrics', error);

@@ -82,6 +82,7 @@ import AdminRecruitment from "./pages/admin/AdminRecruitment.jsx";
 import AdminDemographics from "./pages/admin/AdminDemographics.jsx";
 import AdminList from "./pages/admin/AdminList.jsx";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute.jsx";
+import AuthBootstrap from "./components/AuthBootstrap.jsx";
 import { Navigate } from "react-router-dom";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
@@ -90,6 +91,7 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Router>
+        <AuthBootstrap>
         <Routes>
           {/* Admin Routes */}
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
@@ -135,7 +137,7 @@ function App() {
             } 
           />
           <Route 
-            path="/admin/recruitment" 
+            path="/admin/recruitment " 
             element={
               <AdminProtectedRoute>
                 <AdminRecruitment />
@@ -251,7 +253,7 @@ function App() {
           </Route>
           <Route path="/job-type" element={<JobType />} />
           <Route path="/post-page" element={<PostPage />} />
-          <Route path="/recruitment" element={<Recruitment />} />
+          <Route path="/news-feed" element={<Recruitment />} />
           <Route
             path="/candidate-search-page"
             element={<ProtectedRoute redirectMessage="Your session has expired. Please log in again."><CandidateSearchPage /></ProtectedRoute>}
@@ -298,6 +300,7 @@ function App() {
           pauseOnHover
           theme="light"
         />
+        </AuthBootstrap>
       </Router>
     </GoogleOAuthProvider>
   );

@@ -9,6 +9,7 @@ import {
   pickProfilePhotoPath,
 } from '../../utils/tokenManager';
 import { profileAvatarSrc } from '../../utils/profilePhotoUrl';
+import { getAuthorProfileImageUrl } from '../../utils/profileImageUtils';
 import PostCreationModal from '../PostCreationModal';
 import ConfirmModal from '../ConfirmModal';
 import useSyncProfilePhoto from '../../hooks/useSyncProfilePhoto';
@@ -238,6 +239,17 @@ const RecruitmentPostCard = ({
   currentUserId,
   currentUserPhotoUrl,
 }) => {
+  const reduxUser = useSelector((state) => state.auth?.user);
+  const syncedCurrentUserPhoto = useMemo(() => {
+    const stored = getUser() || {};
+    const merged = mergeAuthUsers(stored, reduxUser);
+    const raw =
+      pickProfilePhotoPath(merged) ||
+      pickProfilePhotoPath(stored) ||
+      pickProfilePhotoPath(reduxUser);
+    return raw ? profileAvatarSrc(raw) : currentUserPhotoUrl;
+  }, [reduxUser, currentUserPhotoUrl]);
+
   const isOwner = String(post.authorId) === String(currentUserId);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
@@ -264,8 +276,8 @@ const RecruitmentPostCard = ({
     setLinkModalOpen(false);
   };
 
-  const fetchComments = async () => {
-    if (comments.length > 0) return;
+  const fetchComments = async (force = false) => {
+    if (!force && comments.length > 0) return;
     try {
       setLoadingComments(true);
       const data = await getComments(post.id);
@@ -283,7 +295,7 @@ const RecruitmentPostCard = ({
     try {
       await addComment(post.id, newComment);
       setNewComment('');
-      fetchComments();
+      await fetchComments(true);
     } catch (err) {
       console.error('Error adding comment:', err);
     }
@@ -343,14 +355,13 @@ const RecruitmentPostCard = ({
   // For current user's posts, prioritize local image over API data
   const isCurrentUserPost = String(post.authorId) === String(currentUserId);
   const authorImage = isCurrentUserPost
-    ? currentUserPhotoUrl
-    : getProfileImageUrl(post.author?.image);
+    ? syncedCurrentUserPhoto
+    : getAuthorProfileImageUrl(post.author);
 
   const getCommentAuthorImage = (comment) => {
     const isCurrentUserComment = String(comment.authorId) === String(currentUserId);
-    return isCurrentUserComment
-      ? currentUserPhotoUrl
-      : getProfileImageUrl(comment.author?.image);
+    if (isCurrentUserComment) return syncedCurrentUserPhoto;
+    return getAuthorProfileImageUrl(comment.author);
   };
 
   return (
@@ -524,7 +535,12 @@ const RecruitmentPostCard = ({
       {/* Comments Section */}
       {showComments && (
         <div className="border-t pt-4 mt-4">
-          <form onSubmit={handleAddComment} className="flex gap-2 mb-4">
+          <form onSubmit={handleAddComment} className="flex gap-2 mb-4 items-center">
+            <img
+              src={syncedCurrentUserPhoto}
+              alt="Your profile"
+              className="w-8 h-8 rounded-full object-cover shrink-0"
+            />
             <input
               type="text"
               placeholder="Write a comment..."

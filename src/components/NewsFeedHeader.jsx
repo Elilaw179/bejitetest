@@ -9,6 +9,7 @@ import {
   pickProfilePhotoPath,
 } from "../utils/tokenManager";
 import { profileAvatarSrc } from "../utils/profilePhotoUrl";
+import { pickAuthorProfilePhoto } from "../utils/profileImageUtils";
 import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
 import messagingService from "../services/messagingService";
@@ -136,18 +137,37 @@ const NewsFeedHeader = ({
     try {
       const searchPromises = [];
 
-      // Search users/candidates
+      // Search users (connections — includes recruiters + resolved photos)
+      searchPromises.push(
+        axiosInstance.get(`/api/connections/search?q=${encodeURIComponent(query)}&limit=5`)
+          .then((response) => ({
+            type: 'people',
+            results: (response.data.users || []).map((u) => ({
+              id: u.id,
+              name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Unknown User',
+              subtitle: u.jobTitle || 'Professional',
+              image: pickAuthorProfilePhoto(u),
+              url: `/user-profile/${u.id}`,
+            })),
+          }))
+          .catch(() => ({ type: 'people', results: [] }))
+      );
+
+      // Search jobseeker candidates (CV / candidates table)
       searchPromises.push(
         axiosInstance.get(`/api/candidates/search?q=${encodeURIComponent(query)}&limit=5`)
           .then(response => ({
             type: 'people',
-            results: response.data.success ? response.data.data.map(candidate => ({
-              id: candidate.id,
-              name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Unknown User',
-              subtitle: candidate.title || 'Professional',
-              image: candidate.profile_photo,
-              url: `/user-profile/${candidate.id}`
-            })) : []
+            results: response.data.success ? response.data.data.map(candidate => {
+              const userId = candidate.user_id ?? candidate.userId ?? candidate.id;
+              return {
+                id: userId,
+                name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Unknown User',
+                subtitle: candidate.title || 'Professional',
+                image: pickAuthorProfilePhoto(candidate),
+                url: `/user-profile/${userId}`,
+              };
+            }) : []
           }))
           .catch(() => ({ type: 'people', results: [] }))
       );
@@ -173,7 +193,13 @@ const NewsFeedHeader = ({
 
       const results = await Promise.all(searchPromises);
       const combinedResults = results.flatMap(result => result.results);
-      setSearchResults(combinedResults.slice(0, 10)); // Limit to 10 total results
+      const seen = new Set();
+      const deduped = combinedResults.filter((item) => {
+        if (!item?.id || seen.has(String(item.id))) return false;
+        seen.add(String(item.id));
+        return true;
+      });
+      setSearchResults(deduped.slice(0, 10));
       if (combinedResults.length > 0) {
         setShowSearchResults(true);
       }
@@ -226,7 +252,19 @@ const NewsFeedHeader = ({
     setSearchQuery('');
     setSearchResults([]);
     setIsSearching(false);
-    navigate(result.url);
+    navigate(result.url, {
+      state: {
+        profilePreview: {
+          id: result.id,
+          name: result.name,
+          subtitle: result.subtitle,
+          image: result.image,
+          firstName: result.firstName,
+          lastName: result.lastName,
+          email: result.email,
+        },
+      },
+    });
   };
 
   // Close dropdowns when clicking outside
@@ -282,7 +320,7 @@ const NewsFeedHeader = ({
     "/chats": "CHAT",
     "/notification": "notifications",
     "/candidate-search-page": "recruitment",
-    "/recruitment": "connection",
+    "/news-feed": "connection",
     "/ase/pricing": "recruitment",
     "/ase/dashboard": "recruitment",
   };
@@ -292,7 +330,7 @@ const NewsFeedHeader = ({
   const handleIconClick = (name) => {
     switch (name) {
       case "home-icon":
-        navigate("/recruitment");
+        navigate("/news-feed");
         break;
       case "CHAT":
         navigate("/chats");
