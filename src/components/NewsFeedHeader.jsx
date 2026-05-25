@@ -145,6 +145,9 @@ const NewsFeedHeader = ({
             results: (response.data.users || []).map((u) => ({
               id: u.id,
               name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Unknown User',
+              firstName: u.firstName,
+              lastName: u.lastName,
+              email: u.email,
               subtitle: u.jobTitle || 'Professional',
               image: pickAuthorProfilePhoto(u),
               url: `/user-profile/${u.id}`,
@@ -163,6 +166,9 @@ const NewsFeedHeader = ({
               return {
                 id: userId,
                 name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Unknown User',
+                firstName: candidate.first_name,
+                lastName: candidate.last_name,
+                email: candidate.email,
                 subtitle: candidate.title || 'Professional',
                 image: pickAuthorProfilePhoto(candidate),
                 url: `/user-profile/${userId}`,

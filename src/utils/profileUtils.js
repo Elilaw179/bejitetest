@@ -17,6 +17,8 @@ export function normalizeProfileData(raw) {
     summary: raw.summary ?? raw.bio,
     company_name: raw.company_name ?? raw.companyName,
     nickname: raw.nickname,
+    role: raw.role,
+    website: raw.website,
   };
 }
 

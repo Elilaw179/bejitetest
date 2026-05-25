@@ -112,12 +112,11 @@ const Profile = () => {
           profileFound = true;
         }
 
-        if (!profileFound) {
-          const loaded = await fetchUserProfileById(userId);
-          if (loaded) {
-            setProfileData(loaded);
-            profileFound = true;
-          }
+        // Always load full profile from API (preview only has name/photo from search).
+        const loaded = await fetchUserProfileById(userId);
+        if (loaded) {
+          setProfileData((prev) => ({ ...(prev || {}), ...loaded }));
+          profileFound = true;
         }
       }
 
@@ -158,10 +157,21 @@ const Profile = () => {
     fetchProfileData();
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const isViewingOwnProfile = !userId || userId === user?.id;
+  const isViewingOwnProfile =
+    !userId || String(userId) === String(user?.id ?? '');
   const profileAvatarStored = isViewingOwnProfile
     ? pickProfilePhotoPath(user) || pickAuthorProfilePhoto(profileData)
     : pickAuthorProfilePhoto(profileData);
+
+  const viewedRole = isViewingOwnProfile
+    ? user?.role
+    : profileData?.role;
+  const isJobseekerProfile = viewedRole === 'jobseeker';
+  const isRecruiterProfile = viewedRole === 'recruiter';
+
+  const displayPhone =
+    profileData?.phone || profileData?.phone_number || null;
+  const displayLocation = profileData?.location || null;
 
   const handleEditProfile = () => {
     if (user?.role === 'jobseeker') {
@@ -226,8 +236,6 @@ const Profile = () => {
     );
   }
 
-  const isJobseeker = user?.role === 'jobseeker';
-
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
       <NewsFeedHeader />
@@ -269,7 +277,7 @@ const Profile = () => {
                 }
               </h1>
               <p className="text-[#16730F] font-medium capitalize">
-                {user?.role || 'User'}
+                {viewedRole || 'User'}
               </p>
               {profileData.title && (
                 <p className="text-gray-600 mt-1">{profileData.title}</p>
@@ -295,29 +303,28 @@ const Profile = () => {
               <FaPhone className="text-[#16730F]" />
               <div>
                 <p className="text-sm text-gray-500">Phone</p>
-                <p className="text-[#1A3E32]">
-                  {isJobseeker ? profileData.phone : profileData.phone_number || 'Not provided'}
-                </p>
+                <p className="text-[#1A3E32]">{displayPhone || 'Not provided'}</p>
               </div>
             </div>
-            {isJobseeker ? (
+            {isJobseekerProfile && (
               <div className="flex items-center gap-3">
                 <FaMapMarker className="text-[#16730F]" />
                 <div>
                   <p className="text-sm text-gray-500">Location</p>
-                  <p className="text-[#1A3E32]">{profileData.location || 'Not provided'}</p>
+                  <p className="text-[#1A3E32]">{displayLocation || 'Not provided'}</p>
                 </div>
               </div>
-            ) : (
-              profileData.company_name && (
-                <div className="flex items-center gap-3">
-                  <FaBuilding className="text-[#16730F]" />
-                  <div>
-                    <p className="text-sm text-gray-500">Company</p>
-                    <p className="text-[#1A3E32]">{profileData.company_name}</p>
-                  </div>
+            )}
+            {isRecruiterProfile && (
+              <div className="flex items-center gap-3">
+                <FaBuilding className="text-[#16730F]" />
+                <div>
+                  <p className="text-sm text-gray-500">Company</p>
+                  <p className="text-[#1A3E32]">
+                    {profileData.company_name || 'Not provided'}
+                  </p>
                 </div>
-              )
+              </div>
             )}
           </div>
         </div>
