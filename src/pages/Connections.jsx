@@ -17,14 +17,33 @@ const shuffleArray = (arr) => {
   return shuffled;
 };
 
+const formatUserName = (user) => {
+  if (!user) return 'Unknown User';
+  const first = user.firstName ?? user.first_name ?? '';
+  const last = user.lastName ?? user.last_name ?? '';
+  const full = `${first} ${last}`.trim();
+  return full || user.email || 'Unknown User';
+};
+
 const transformDiscoverableUser = (user) => ({
   id: user.id,
-  name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User',
-  firstName: user.firstName,
-  lastName: user.lastName,
+  name: formatUserName(user),
+  firstName: user.firstName ?? user.first_name,
+  lastName: user.lastName ?? user.last_name,
   email: user.email,
-  image: user.profilePhoto,
+  image: user.profilePhoto ?? user.profile_photo ?? user.image ?? null,
   role: user.jobTitle || 'Professional'
+});
+
+const transformConnectionUser = (user, connectedAt) => ({
+  id: user?.id,
+  name: formatUserName(user),
+  firstName: user?.firstName ?? user?.first_name,
+  lastName: user?.lastName ?? user?.last_name,
+  email: user?.email,
+  connectedAt,
+  image: user?.profilePhoto ?? user?.profile_photo ?? user?.image ?? null,
+  role: user?.jobTitle || 'Professional',
 });
 
 const Connections = () => {
@@ -85,16 +104,9 @@ const Connections = () => {
 
       // Transform connections data - handle both {connections: [...]} and direct array responses
       const connectionsArray = connectionsRes?.connections || connectionsRes || [];
-      const transformedConnections = Array.isArray(connectionsArray) ? connectionsArray.map(conn => ({
-        id: conn.user?.id,
-        name: `${conn.user?.firstName || ''} ${conn.user?.lastName || ''}`.trim() || 'Unknown User',
-        firstName: conn.user?.firstName,
-        lastName: conn.user?.lastName,
-        email: conn.user?.email,
-        connectedAt: conn.connectedAt,
-        image: conn.user?.profilePhoto || null,
-        role: conn.user?.jobTitle || 'Professional'
-      })) : [];
+      const transformedConnections = Array.isArray(connectionsArray)
+        ? connectionsArray.map((conn) => transformConnectionUser(conn.user, conn.connectedAt))
+        : [];
 
       // Transform incoming requests data - handle both {requests: [...]} and direct array responses
       const incomingArray = incomingRes?.requests || incomingRes || [];
@@ -102,11 +114,11 @@ const Connections = () => {
         id: req.id,
         requester: {
           id: req.fromUser?.id,
-          name: `${req.fromUser?.firstName || ''} ${req.fromUser?.lastName || ''}`.trim() || 'Unknown User',
-          firstName: req.fromUser?.firstName,
-          lastName: req.fromUser?.lastName,
+          name: formatUserName(req.fromUser),
+          firstName: req.fromUser?.firstName ?? req.fromUser?.first_name,
+          lastName: req.fromUser?.lastName ?? req.fromUser?.last_name,
           email: req.fromUser?.email,
-          image: req.fromUser?.profilePhoto || null,
+          image: req.fromUser?.profilePhoto ?? req.fromUser?.profile_photo ?? null,
           role: req.fromUser?.jobTitle || 'Professional'
         },
         createdAt: req.createdAt
@@ -118,11 +130,11 @@ const Connections = () => {
         id: req.id,
         recipient: {
           id: req.toUser?.id,
-          name: `${req.toUser?.firstName || ''} ${req.toUser?.lastName || ''}`.trim() || 'Unknown User',
-          firstName: req.toUser?.firstName,
-          lastName: req.toUser?.lastName,
+          name: formatUserName(req.toUser),
+          firstName: req.toUser?.firstName ?? req.toUser?.first_name,
+          lastName: req.toUser?.lastName ?? req.toUser?.last_name,
           email: req.toUser?.email,
-          image: req.toUser?.profilePhoto || null,
+          image: req.toUser?.profilePhoto ?? req.toUser?.profile_photo ?? null,
           role: req.toUser?.jobTitle || 'Professional'
         },
         createdAt: req.createdAt
