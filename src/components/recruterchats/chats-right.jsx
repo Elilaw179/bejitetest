@@ -1,84 +1,69 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
-import { useSelector } from 'react-redux';
-import { getUser } from '../../utils/tokenManager';
-import { API_URL } from '../../config'; 
+import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../../config';
 
+function ChatsRight({ selectedChat, onBack }) {
+  const navigate = useNavigate();
+  const otherUser = selectedChat?.other_user;
+  const otherUserId =
+    selectedChat?.other_user_id || otherUser?.id || null;
 
-function ChatsRight({ onBack }) {
-  // Get user from Redux store first (most up-to-date after login), fallback to localStorage
-  const reduxUser = useSelector((state) => state.auth?.user);
-
-  // Compute user - similar to NewsFeedHeader
-  const user = useMemo(() => {
-    // First priority: Redux store
-    if (reduxUser) {
-      return {
-        name: reduxUser.name || reduxUser.firstName || reduxUser.lastName ? `${reduxUser.firstName || ''} ${reduxUser.lastName || ''}`.trim() : "Guest",
-        image: reduxUser.image || reduxUser.profilePhoto || reduxUser.profile_photo || "",
-        role: reduxUser.role || "user",
-        email: reduxUser.email || "Not provided",
-        phone: reduxUser.phone || "Not provided",
-        website: reduxUser.website || "Not provided",
-        ...reduxUser
-      };
-    }
-
-    // Second priority: localStorage
-    const localUser = getUser();
-    return localUser || {
-      name: "Guest",
-      image: "",
-      role: "user",
-      email: "Not provided",
-      phone: "Not provided",
-      website: "Not provided",
-    };
-  }, [reduxUser]);
-
-  // Get display name
-  const getDisplayName = () => {
-    if (user?.name) return user.name;
-    if (user?.firstName || user?.lastName) {
-      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
-    }
-    return "Guest";
-  };
-
-  // Get display role (capitalize first letter)
-  const getDisplayRole = () => {
-    if (!user?.role) return "User";
-    return user.role.charAt(0).toUpperCase() + user.role.slice(1);
-  };
-
-  // Function to get full URL for profile photo
   const getProfileImageUrl = (imagePath) => {
-    if (!imagePath) return imagePath;
-    // If it's already a full URL, return as is
+    if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    // For local paths like /uploads/filename.jpg, use the config API_URL
     if (imagePath.startsWith('/uploads')) {
       const baseUrl = API_URL || 'http://localhost:3001';
       return `${baseUrl}${imagePath}`;
     }
-    // Otherwise, prepend the API URL
     return `${API_URL || 'http://localhost:3001'}${imagePath}`;
   };
 
-  const getInitials = () => {
-    const first = (user?.firstName || '').trim().charAt(0).toUpperCase();
-    const last = (user?.lastName || '').trim().charAt(0).toUpperCase();
-    if (first || last) return `${first}${last}`;
-    const fromName = (user?.name || '').trim().split(/\s+/).filter(Boolean);
-    const firstFromName = (fromName[0] || '').charAt(0).toUpperCase();
-    const lastFromName = (fromName[1] || '').charAt(0).toUpperCase();
-    return `${firstFromName}${lastFromName}` || 'U';
+  const getDisplayName = () => {
+    if (!otherUser) return 'Select a chat';
+    if (otherUser.name) return otherUser.name;
+    const first = otherUser.firstName || '';
+    const last = otherUser.lastName || '';
+    const full = `${first} ${last}`.trim();
+    return full || 'User';
   };
+
+  const getDisplayRole = () => {
+    if (!otherUser?.role) return 'User';
+    return otherUser.role.charAt(0).toUpperCase() + otherUser.role.slice(1);
+  };
+
+  const getInitials = () => {
+    const first = (otherUser?.firstName || '').trim().charAt(0).toUpperCase();
+    const last = (otherUser?.lastName || '').trim().charAt(0).toUpperCase();
+    return `${first}${last}` || 'U';
+  };
+
+  const profileImage = getProfileImageUrl(
+    otherUser?.profilePictureUrl ||
+      otherUser?.profilePhoto ||
+      otherUser?.profile_photo
+  );
+
+  const handleViewProfile = () => {
+    if (otherUserId) {
+      navigate(`/user-profile/${otherUserId}`);
+    }
+  };
+
+  if (!selectedChat || !otherUser) {
+    return (
+      <div className="bg-[#F5F5F5] h-full p-2 flex items-center justify-center">
+        <p className="text-[#16730F] text-sm text-center px-4">
+          Select a conversation to view profile details
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#F5F5F5] h-full p-2">
       <aside className="bg-[#1A3E32] rounded-2xl h-full overflow-hidden">
-        {/* Header */}
         <div className="bg-[#16730F] rounded-t-2xl">
           <div className="p-5">
             <button
@@ -91,13 +76,12 @@ function ChatsRight({ onBack }) {
             </button>
           </div>
 
-          {/* Profile Section */}
           <div className="flex flex-col items-center pb-6">
             <div className="relative -mt-10 rounded-full border-[5px] border-[#16730F]">
-              {getProfileImageUrl(user.image) ? (
+              {profileImage ? (
                 <img
                   className="w-20 h-20 rounded-full object-cover"
-                  src={getProfileImageUrl(user.image)}
+                  src={profileImage}
                   alt={getDisplayName()}
                   loading="lazy"
                 />
@@ -114,7 +98,9 @@ function ChatsRight({ onBack }) {
             <div className="w-36 mx-auto mt-4">
               <button
                 type="button"
-                className="bg-[#6B8E23] py-2 text-xs text-white w-full rounded-3xl hover:bg-[#5a7720] transition"
+                onClick={handleViewProfile}
+                disabled={!otherUserId}
+                className="bg-[#6B8E23] py-2 text-xs text-white w-full rounded-3xl hover:bg-[#5a7720] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="View Profile"
               >
                 View Profile
@@ -123,15 +109,15 @@ function ChatsRight({ onBack }) {
           </div>
         </div>
 
-        {/* Contact + Links */}
         <div className="bg-[#16730F] px-6 py-6 space-y-6 h-full">
           {[
-            { label: "Email", value: user.email },
-            { label: "Phone", value: user.phone },
-            { label: "Website", value: user.website },
-          ].map((item, idx) => (
-            <div key={idx}>
+            { label: 'Email', value: otherUser.email || 'Not provided' },
+            { label: 'Phone', value: otherUser.phone || otherUser.phone_number || 'Not provided' },
+            { label: 'Website', value: otherUser.website || 'Not provided' },
+          ].map((item) => (
+            <div key={item.label}>
               <hr className="border-[#6B8E23] mb-2" />
+              <p className="text-white/70 text-xs mb-1">{item.label}</p>
               <p className="text-white text-sm break-words">{item.value}</p>
             </div>
           ))}

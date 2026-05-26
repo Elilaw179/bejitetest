@@ -53,6 +53,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       await messagingService.sendMessage(selectedChat.id, message.trim());
       setMessage('');
       fetchMessages(selectedChat.id);
+      window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
@@ -68,6 +69,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       await messagingService.sendMessage(selectedChat.id, caption, url);
       setMessage('');
       fetchMessages(selectedChat.id);
+      window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
     } catch (error) {
       console.error('Error sending attachment:', error);
     } finally {

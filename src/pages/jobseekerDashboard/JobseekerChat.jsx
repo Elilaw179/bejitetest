@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState } from 'react'
 import NewsFeedHeader from '../../components/NewsFeedHeader'
-import ChatsRight from '../../components/jobseekerchats/chats-right'
+import ChatsRight from '../../components/recruterchats/chats-right'
 import ChatsLeft from '../../components/recruterchats/chats-left'
 import ChatsMiddle from '../../components/recruterchats/chats-middle'
 

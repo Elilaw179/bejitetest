@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { FaArrowLeft, FaSearch } from 'react-icons/fa';
 import messagingService from '../../services/messagingService';
 import { API_URL } from '../../config';
+import { formatConversationPreview } from '../../utils/conversationPreview';
+
+const CONVERSATION_UPDATED = 'chat:conversation-updated';
 
 function ChatsLeft({ onSelectChat }) {
   const [conversations, setConversations] = useState([]);
@@ -19,6 +22,16 @@ function ChatsLeft({ onSelectChat }) {
   }, []);
 
   useEffect(() => {
+    const onUpdate = () => fetchConversations(true);
+    window.addEventListener(CONVERSATION_UPDATED, onUpdate);
+    const interval = setInterval(() => fetchConversations(true), 12000);
+    return () => {
+      window.removeEventListener(CONVERSATION_UPDATED, onUpdate);
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
     if (searchTerm.trim()) {
       handleUserSearch(searchTerm);
       setIsSearching(true);
@@ -28,16 +41,17 @@ function ChatsLeft({ onSelectChat }) {
     }
   }, [searchTerm]);
 
-  const fetchConversations = async () => {
+  const fetchConversations = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = await messagingService.getConversations();
       setConversations(data || []);
+      if (!silent) setError(null);
     } catch (err) {
-      setError('Failed to load conversations');
+      if (!silent) setError('Failed to load conversations');
       console.error('Error fetching conversations:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -236,7 +250,9 @@ conversations.map((conversation) => {
                         <h3 className={`text-sm truncate ${unreadCount > 0 ? 'text-white font-bold' : 'text-white font-medium'}`}>{displayName}</h3>
                         <span className={`text-xs flex-shrink-0 ${unreadCount > 0 ? 'text-white font-semibold' : 'text-[#fff]'}`}>{lastMessageTime}</span>
                       </div>
-                      <p className={`text-xs truncate ${unreadCount > 0 ? 'text-white/80 font-semibold' : 'text-[#fff]'}`}>{conversation.lastMessage || 'No messages yet'}</p>
+                      <p className={`text-xs truncate ${unreadCount > 0 ? 'text-white/80 font-semibold' : 'text-[#fff]'}`}>
+                        {formatConversationPreview(conversation)}
+                      </p>
                     </div>
                   </div>
                 );
