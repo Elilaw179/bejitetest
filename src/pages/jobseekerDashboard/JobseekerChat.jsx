@@ -2,8 +2,8 @@ import React from 'react'
 import { useState } from 'react'
 import NewsFeedHeader from '../../components/NewsFeedHeader'
 import ChatsRight from '../../components/jobseekerchats/chats-right'
-import ChatsLeft from '../../components/jobseekerchats/chats-left'
-import ChatsMiddle from '../../components/jobseekerchats/chats-middle'
+import ChatsLeft from '../../components/recruterchats/chats-left'
+import ChatsMiddle from '../../components/recruterchats/chats-middle'
 
 function JobseekerChat() {
   const [selectedChat, setSelectedChat] = useState(null);

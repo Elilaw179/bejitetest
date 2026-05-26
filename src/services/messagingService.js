@@ -50,6 +50,20 @@ async startConversation(otherUserId) {
     }
   },
 
+  // Upload chat attachment (image, video, audio, document)
+  async uploadChatMedia(dataUrl, kind = 'image') {
+    try {
+      const response = await axiosInstance.post('/messages/upload', {
+        dataUrl,
+        kind,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading chat media:', error);
+      throw error;
+    }
+  },
+
   // Send a message
   async sendMessage(conversationId, content, imageUrl = null) {
     try {

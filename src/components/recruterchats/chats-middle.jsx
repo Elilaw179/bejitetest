@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux';
 import { FaArrowLeft, FaPhone, FaVideo, FaBars } from 'react-icons/fa';
 import messagingService from '../../services/messagingService';
 import { API_URL } from '../../config';
+import ChatMessageInput from '../chat/ChatMessageInput';
+import MessageAttachment from '../chat/MessageAttachment';
 
 function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   const [message, setMessage] = useState('');
@@ -50,10 +52,24 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       setSending(true);
       await messagingService.sendMessage(selectedChat.id, message.trim());
       setMessage('');
-      // Refresh messages to show the new one
       fetchMessages(selectedChat.id);
     } catch (error) {
       console.error('Error sending message:', error);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSendAttachment = async (url, caption = '') => {
+    if (!selectedChat?.id || sending) return;
+
+    try {
+      setSending(true);
+      await messagingService.sendMessage(selectedChat.id, caption, url);
+      setMessage('');
+      fetchMessages(selectedChat.id);
+    } catch (error) {
+      console.error('Error sending attachment:', error);
     } finally {
       setSending(false);
     }
@@ -80,6 +96,14 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   const selectedFullName = `${selectedFirstName} ${selectedLastName}`.trim() || 'Chat';
   const selectedProfileImageRaw = selectedChat?.other_user?.profilePictureUrl || selectedChat?.other_user?.profilePhoto || '';
   const selectedProfileImage = getProfileImageUrl(selectedProfileImageRaw);
+
+  if (!selectedChat) {
+    return (
+      <main className="w-full h-full min-h-0 flex flex-col overflow-hidden bg-gray-100 items-center justify-center">
+        <p className="text-[#16730F] text-sm md:text-base">Select a conversation to start chatting</p>
+      </main>
+    );
+  }
 
   return (
 <main className="w-full h-full min-h-0 flex flex-col overflow-hidden bg-gray-100">
@@ -187,11 +211,21 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
                 )}
                 <div className={`p-2 md:p-3 rounded-2xl shadow-sm ${isOwnMessage ? 'bg-green-500 text-white ml-8 md:ml-16 rounded-r-none' : 'bg-white text-gray-900 mr-8 md:mr-16 rounded-l-none border'}`}>
                   {msg.image_url && (
-                    <img src={msg.image_url} alt="attachment" className="mb-2 w-full max-w-xs rounded-lg max-h-32 md:max-h-48 object-cover" />
+                    <MessageAttachment url={msg.image_url} caption={msg.content} />
                   )}
-                  <p className={msg.is_deleted ? 'italic text-gray-400 line-through' : ''}>
-                    {msg.content}
-                  </p>
+                  {(() => {
+                    const attachmentLabel =
+                      msg.image_url &&
+                      (msg.content === '🎬 Video' ||
+                        msg.content === '🎤 Voice message' ||
+                        msg.content?.startsWith('📎'));
+                    if (!msg.content || attachmentLabel) return null;
+                    return (
+                      <p className={msg.is_deleted ? 'italic text-gray-400 line-through' : ''}>
+                        {msg.content}
+                      </p>
+                    );
+                  })()}
                 </div>
                 <div className={`text-xs mt-1 ${isOwnMessage ? 'text-gray-500 ml-auto' : 'text-gray-500'}`}>
                   {messageTime}
@@ -204,55 +238,20 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     )}
   </div>
 
-  {/* Message Input */}
-  <div className="shrink-0 p-2 md:p-4 bg-gray-100">
-    <div className="flex flex-col gap-1 md:gap-2 border border-gray-300 rounded-2xl px-3 md:px-4 py-2 md:py-3 bg-gray-100 shadow-sm">
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-          placeholder="Type a message"
-          className="flex-1 outline-none text-xs md:text-sm bg-transparent placeholder-gray-400"
-        />
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-1 md:space-x-2">
-          <button
-            type="button"
-            className="text-gray-500 hover:text-green-600 text-base md:text-lg"
-            aria-label="Add emoji"
-          >
-            😊
-          </button>
-          <button
-            type="button"
-            className="text-gray-500 hover:text-green-600 text-base md:text-lg"
-            aria-label="Attach file"
-          >
-            ＋
-          </button>
-        </div>
-        <div className="flex items-center space-x-1 md:space-x-2">
-          <button
-            type="button"
-            className="text-gray-500 hover:text-green-600 text-base md:text-lg"
-            aria-label="Record voice"
-          >
-            🎤
-          </button>
-          <button
-            type="button"
-            onClick={handleSendMessage}
-            disabled={sending || !message.trim()}
-            className="bg-gray-700 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-full p-1 md:p-2 transition"
-            aria-label="Send message"
-          >
-            {sending ? '...' : '➤'}
-          </button>
-        </div>
-      </div>
+  {selectedChat?.id ? (
+    <ChatMessageInput
+      message={message}
+      setMessage={setMessage}
+      onSend={handleSendMessage}
+      onSendAttachment={handleSendAttachment}
+      sending={sending}
+      disabled={!selectedChat?.id}
+    />
+  ) : (
+    <div className="shrink-0 p-4 text-center text-sm text-gray-500">
+      Select a conversation to send messages
     </div>
-  </div>
+  )}
 </main>
   );
 }
