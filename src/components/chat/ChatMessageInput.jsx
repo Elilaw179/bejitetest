@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import EmojiPicker from 'emoji-picker-react';
-import { fileToDataUrl, inferUploadKind } from '../../utils/chatAttachmentUtils';
+import { fileToDataUrl, inferUploadKind, simpleAudioMime } from '../../utils/chatAttachmentUtils';
 import messagingService from '../../services/messagingService';
 
 function ChatMessageInput({
@@ -83,19 +83,24 @@ function ChatMessageInput({
     setRecordError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      const audioMime = MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : '';
+      const recorder = audioMime
+        ? new MediaRecorder(stream, { mimeType: audioMime })
+        : new MediaRecorder(stream);
       recordChunksRef.current = [];
       recorder.ondataavailable = (ev) => {
         if (ev.data.size > 0) recordChunksRef.current.push(ev.data);
       };
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(recordChunksRef.current, {
-          type: recorder.mimeType || 'audio/webm',
-        });
-        const file = new File([blob], `voice-${Date.now()}.webm`, {
-          type: blob.type,
-        });
+        const mime = simpleAudioMime(recorder.mimeType);
+        const ext = mime.includes('mp4') ? 'm4a' : 'webm';
+        const blob = new Blob(recordChunksRef.current, { type: mime });
+        const file = new File([blob], `voice-${Date.now()}.${ext}`, { type: mime });
         await uploadAndSend(file, 'audio');
         setRecording(false);
       };
