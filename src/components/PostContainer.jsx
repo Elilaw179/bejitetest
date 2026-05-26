@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH, FaTimes } from 'react-icons/fa';
 import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment } from '../services/postsApi';
 import { getUser } from '../utils/tokenManager';
@@ -56,16 +57,17 @@ const PostContainer = () => {
     fetchFeed();
   }, []);
 
-  const fetchFeed = async () => {
+  const fetchFeed = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = await getFeed(20);
       setPosts(data.posts || []);
+      if (!silent) setError(null);
     } catch (err) {
       console.error('Error fetching feed:', err);
-      setError('Failed to load posts');
+      if (!silent) setError('Failed to load posts');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -76,7 +78,7 @@ const PostContainer = () => {
       } else {
         await likePost(postId);
       }
-      fetchFeed();
+      fetchFeed(true);
     } catch (err) {
       console.error('Error toggling like:', err);
     }
@@ -89,7 +91,7 @@ const PostContainer = () => {
       } else {
         await savePost(postId);
       }
-      fetchFeed();
+      fetchFeed(true);
     } catch (err) {
       console.error('Error toggling save:', err);
     }
@@ -326,8 +328,13 @@ const PostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId }) =
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [liked, setLiked] = useState(post.likedByMe === true);
+  const [saved, setSaved] = useState(post.savedByMe === true);
+
+  useEffect(() => {
+    setLiked(post.likedByMe === true);
+    setSaved(post.savedByMe === true);
+  }, [post.id, post.likedByMe, post.savedByMe]);
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(post.body || '');
@@ -412,6 +419,7 @@ const PostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId }) =
     <div className="bg-white p-6 max-w-3xl mx-auto rounded-2xl space-y-6 mb-6">
       <PostHeader 
         author={post.author}
+        authorId={post.authorId}
         createdAt={post.publishedAt}
         showMenu={showMenu}
         setShowMenu={setShowMenu}
@@ -476,20 +484,40 @@ const PostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId }) =
   );
 };
 
-const PostHeader = ({ author, createdAt, showMenu, setShowMenu, onEdit, onDelete, isOwner }) => {
+const PostHeader = ({ author, authorId, createdAt, showMenu, setShowMenu, onEdit, onDelete, isOwner }) => {
+  const navigate = useNavigate();
   const displayName = getDisplayName(author);
   const authorImage = getProfileImageUrl(author?.image || author?.profile_photo);
+
+  const goToAuthorProfile = () => {
+    if (authorId) navigate(`/user-profile/${authorId}`);
+  };
 
   return (
     <div className="flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
       <div className="flex items-center gap-4">
-        <img
-          src={authorImage}
-          alt="profile"
-          className="rounded-full w-12 h-12"
-        />
+        <button
+          type="button"
+          onClick={goToAuthorProfile}
+          disabled={!authorId}
+          className="rounded-full shrink-0 disabled:cursor-default"
+          aria-label={`View ${displayName}'s profile`}
+        >
+          <img
+            src={authorImage}
+            alt="profile"
+            className="rounded-full w-12 h-12 cursor-pointer hover:opacity-90"
+          />
+        </button>
         <div>
-          <p className="font-semibold text-lg text-[#16730F]">{displayName}</p>
+          <button
+            type="button"
+            onClick={goToAuthorProfile}
+            disabled={!authorId}
+            className="font-semibold text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
+          >
+            {displayName}
+          </button>
           <p className="text-[#1A3E32] text-sm">{formatDate(createdAt)}</p>
         </div>
       </div>
@@ -637,7 +665,7 @@ const PostActions = ({ liked, saved, onLike, onComment, onShare, onSave }) => {
           onClick={onLike}
           className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
         >
-          <FaHeart className={liked ? 'fill-current' : ''} />
+          <FaHeart className={liked ? 'fill-current text-red-500' : ''} />
           <span>{liked ? 'Liked' : 'Like'}</span>
         </button>
         <button 

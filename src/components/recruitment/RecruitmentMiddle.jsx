@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH } from "react-icons/fa";
 import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment } from '../../services/postsApi';
 import {
@@ -95,16 +95,17 @@ export default function RecruitmentMiddle() {
     fetchFeed();
   }, []);
 
-  const fetchFeed = async () => {
+  const fetchFeed = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = await getFeed(20);
       setPosts(data.posts || []);
+      if (!silent) setError(null);
     } catch (err) {
       console.error('Error fetching feed:', err);
-      setError('Failed to load posts');
+      if (!silent) setError('Failed to load posts');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -115,7 +116,7 @@ export default function RecruitmentMiddle() {
       } else {
         await likePost(postId);
       }
-      fetchFeed();
+      fetchFeed(true);
     } catch (err) {
       console.error('Error toggling like:', err);
     }
@@ -128,7 +129,7 @@ export default function RecruitmentMiddle() {
       } else {
         await savePost(postId);
       }
-      fetchFeed();
+      fetchFeed(true);
     } catch (err) {
       console.error('Error toggling save:', err);
     }
@@ -253,8 +254,14 @@ const RecruitmentPostCard = ({
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [liked, setLiked] = useState(post.likedByMe === true);
+  const [saved, setSaved] = useState(post.savedByMe === true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setLiked(post.likedByMe === true);
+    setSaved(post.savedByMe === true);
+  }, [post.id, post.likedByMe, post.savedByMe]);
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(post.body || '');
@@ -350,6 +357,9 @@ const RecruitmentPostCard = ({
   };
 
   const authorName = getDisplayName(post.author);
+  const goToAuthorProfile = () => {
+    if (post.authorId) navigate(`/user-profile/${post.authorId}`);
+  };
   // For current user's posts, prioritize local image over API data
   const isCurrentUserPost = String(post.authorId) === String(currentUserId);
   const authorImage = isCurrentUserPost
@@ -367,9 +377,28 @@ const RecruitmentPostCard = ({
       {/* Post Header */}
       <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
         <div className="flex items-center gap-4">
-          <img src={authorImage} alt="profile" className="rounded-full w-12 h-12" />
+          <button
+            type="button"
+            onClick={goToAuthorProfile}
+            disabled={!post.authorId}
+            className="rounded-full shrink-0 disabled:cursor-default"
+            aria-label={`View ${authorName}'s profile`}
+          >
+            <img
+              src={authorImage}
+              alt="profile"
+              className="rounded-full w-12 h-12 cursor-pointer hover:opacity-90"
+            />
+          </button>
           <div>
-            <p className="font-semibold text-lg text-[#16730F]">{authorName}</p>
+            <button
+              type="button"
+              onClick={goToAuthorProfile}
+              disabled={!post.authorId}
+              className="font-semibold text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
+            >
+              {authorName}
+            </button>
             <p className="text-[#1A3E32] text-sm">{formatDate(post.publishedAt)}</p>
           </div>
         </div>
@@ -506,7 +535,7 @@ const RecruitmentPostCard = ({
             onClick={handleLikeClick}
             className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
           >
-            <FaHeart className={liked ? 'fill-current' : ''} />
+            <FaHeart className={liked ? 'fill-current text-red-500' : ''} />
             <span>{liked ? 'Liked' : 'Like'}</span>
           </button>
           <button 
