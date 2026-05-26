@@ -41,8 +41,8 @@ function ChatsRight({ selectedChat, onBack }) {
 
   const profileImage = getProfileImageUrl(
     otherUser?.profilePictureUrl ||
-      otherUser?.profilePhoto ||
-      otherUser?.profile_photo
+      otherUser?.profile_photo ||
+      otherUser?.profilePhoto
   );
 
   const handleViewProfile = () => {
