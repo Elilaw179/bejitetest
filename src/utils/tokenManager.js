@@ -46,6 +46,7 @@ export const clearAuthData = () => {
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
   localStorage.removeItem('authToken'); // legacy token
+  localStorage.removeItem('token'); // legacy key checked by EmailSent
 };
 
 // Check if user is authenticated (access or refresh token present)

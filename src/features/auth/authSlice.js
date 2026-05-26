@@ -8,11 +8,13 @@ export const signupUser = createAsyncThunk(
   "auth/signupUser",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(
-        '/auth/signup',
-        userData
-      );
-      return response.data;
+      const response = await axiosInstance.post('/auth/signup', userData);
+      const data = response.data;
+      return {
+        success: data?.success ?? true,
+        message: data?.message,
+        email: userData?.email ?? data?.user?.email,
+      };
     } catch (err) {
       console.error("API error:", err);
       if (err.response?.data) {
@@ -107,6 +109,7 @@ const authSlice = createSlice({
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
+      localStorage.removeItem("token");
     },
     // ✅ New reducer for Google login
     setGoogleAuth: (state, action) => {
@@ -150,9 +153,11 @@ const authSlice = createSlice({
         state.loading = true;
         state.errors = {};
       })
-      .addCase(signupUser.fulfilled, (state, action) => {
+      .addCase(signupUser.fulfilled, (state) => {
         state.loading = false;
-        state.user = action.payload.user;
+        // Do not persist signup as a logged-in session (no tokens; avoid stale user on /signup).
+        state.user = null;
+        state.token = null;
         state.errors = {};
       })
       .addCase(signupUser.rejected, (state, action) => {

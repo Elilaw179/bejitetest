@@ -1,26 +1,20 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
 
 const EmailSent = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [resending, setResending] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      navigate('/');
-      return;
-    }
     const params = new URLSearchParams(location.search);
     const paramEmail = params.get('email');
     if (paramEmail) {
       setEmail(paramEmail);
     }
-  }, [location.search, navigate]);
+  }, [location.search]);
 
   const handleResendVerification = async () => {
     if (!email?.trim()) {
@@ -82,27 +76,17 @@ const EmailSent = () => {
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={handleResendVerification}
-        disabled={resending || !email}
-        className="bg-[#16730F] text-white px-6 py-2 rounded-xl hover:bg-[#125c0c] transition disabled:opacity-50 disabled:cursor-not-allowed"
-      >
+      <p className="text-sm text-gray-400 mt-4">
+        Didn&apos;t receive the email? Check your spam folder or use this Resend Email button.
+      </p>
+
+      <button type="button" onClick={handleResendVerification} disabled={resending || !email} className="mt-4 bg-[#16730F] text-white px-6 py-2 rounded-xl hover:bg-[#125c0c] transition disabled:opacity-50 disabled:cursor-not-allowed">
         {resending ? 'Sending...' : 'Resend verification email'}
       </button>
 
-      <p className="text-sm text-gray-400 mt-4">
-        Didn&apos;t receive the email? Check your spam folder or use the button
-        above.
-      </p>
-
-      <button
-        type="button"
-        onClick={() => navigate('/')}
-        className="mt-4 text-[#16730F] hover:underline"
-      >
-        Go back to Login
-      </button>
+      <Link to="/" className="mt-6 text-[#16730F] hover:underline text-sm">
+        Back to login
+      </Link>
     </div>
   );
 };
