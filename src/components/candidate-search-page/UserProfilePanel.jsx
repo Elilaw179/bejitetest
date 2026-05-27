@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { API_URL } from "../../config";
 import { getProfileImageUrl } from "../../utils/profileImageUtils";
-import { formatSalaryExpectation } from "../../utils/formatSalary";
-import { useCandidateConnect } from "./useCandidateConnect";
+import useCandidateConnect from "../../hooks/useCandidateConnect";
 
 const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
   const [candidate, setCandidate] = useState(null);
@@ -224,11 +224,21 @@ const ProfileHeader = ({ candidate }) => {
 };
 
 const ProfileStats = ({ candidate, onViewMainProfile }) => {
+  const navigate = useNavigate();
   const displayName = `${candidate.first_name || ""} ${candidate.last_name || ""}`.trim();
-  const { sendRequest, connectLabel, connectDisabled } = useCandidateConnect(
+  const { sendRequest, connectLabel, connectDisabled, status } = useCandidateConnect(
     candidate.user_id,
     displayName,
   );
+
+  // Handle connect button click - navigate to Connections page if there's pending incoming request
+  const handleConnectClick = () => {
+    if (status.pendingIncoming) {
+      navigate('/connection');
+    } else if (!status.isConnected && !status.pendingOutgoing && !status.loading) {
+      sendRequest();
+    }
+  };
 
   return (
   <div className="px-4 sm:px-8 mt-[-60px] sm:mt-[-40px]">
@@ -269,25 +279,25 @@ const ProfileStats = ({ candidate, onViewMainProfile }) => {
       )}
     </div>
 
-    <ActionButtons
+<ActionButtons
       onViewMainProfile={onViewMainProfile}
       connectLabel={connectLabel}
       connectDisabled={connectDisabled}
-      onConnect={sendRequest}
+      handleConnectClick={handleConnectClick}
     />
   </div>
   );
 };
 
-const ActionButtons = ({ onViewMainProfile, connectLabel, connectDisabled, onConnect }) => (
+const ActionButtons = ({ onViewMainProfile, connectLabel, connectDisabled, handleConnectClick }) => (
   <div className="flex flex-col sm:flex-row sm:justify-start items-center mt-6 gap-3 w-full">
     <Button
       icon="/assets/images/repeate-one.svg"
       text={connectLabel}
-      onClick={onConnect}
+      onClick={handleConnectClick}
       disabled={connectDisabled}
     />
-    <Button icon="/assets/images/Send_Submit.svg" text="Message" />
+    <Button icon="/assets/images/Send_Submit.svg" text="Reviews" />
     <button 
       className="text-[#6B8E23] text-[12px] hover:underline"
       onClick={onViewMainProfile}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH } from "react-icons/fa";
-import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment, getSavedPosts } from '../../services/postsApi';
+import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment, getSavedPosts, getPostLikes, getPostShares } from '../../services/postsApi';
 import { copyPostLink, getPostShareUrl, getSocialShareUrl, openShareWindow, recordPostShare } from '../../utils/postShare';
 import {
   getUser,
@@ -15,6 +15,7 @@ import PostCreationModal from '../PostCreationModal';
 import ConfirmModal from '../ConfirmModal';
 import useSyncProfilePhoto from '../../hooks/useSyncProfilePhoto';
 import SharePostModal from '../SharePostModal';
+import UsersListModal from '../UsersListModal';
 
 // Helper function to get display name (same pattern as NewsFeedHeader)
 const getDisplayName = (user) => {
@@ -329,8 +330,15 @@ const RecruitmentPostCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState('');
-  const [showShareModal, setShowShareModal] = useState(false);
+const [showShareModal, setShowShareModal] = useState(false);
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+
+  // Users list modal state
+  const [usersListModalOpen, setUsersListModalOpen] = useState(false);
+  const [usersListTitle, setUsersListTitle] = useState('');
+  const [usersListType, setUsersListType] = useState('likes');
+  const [usersListUsers, setUsersListUsers] = useState([]);
+  const [usersListLoading, setUsersListLoading] = useState(false);
 
   const handleLinkClick = (e, url) => {
     e.preventDefault();
@@ -445,9 +453,81 @@ const RecruitmentPostCard = ({
     }
   };
 
-  const handleCancelEdit = () => {
+const handleCancelEdit = () => {
     setIsEditing(false);
     setEditBody(post.body || '');
+  };
+
+// Function to show users who liked
+  const handleShowLikers = async () => {
+    try {
+      setUsersListTitle('People who liked');
+      setUsersListType('likes');
+      setUsersListLoading(true);
+      setUsersListModalOpen(true);
+      const data = await getPostLikes(post.id);
+      console.log('Likes response:', data);
+      // Handle response formats: { likers: [...] }, { users: [...] }, { likes: [...] }, { data: [...] }, or direct array
+      let usersList = [];
+      if (data?.likers) {
+        usersList = data.likers;
+      } else if (data?.users) {
+        usersList = data.users;
+      } else if (data?.likes) {
+        usersList = data.likes;
+      } else if (data?.data) {
+        usersList = data.data;
+      } else if (Array.isArray(data)) {
+        usersList = data;
+      }
+      // Normalize user objects to have id property (some APIs use userId)
+      usersList = usersList.map(user => ({
+        ...user,
+        id: user.id || user.userId
+      }));
+      setUsersListUsers(usersList);
+    } catch (err) {
+      console.error('Error fetching likes:', err);
+      setUsersListUsers([]);
+    } finally {
+      setUsersListLoading(false);
+    }
+  };
+
+  // Function to show users who shared
+  const handleShowSharers = async () => {
+    try {
+      setUsersListTitle('People who shared');
+      setUsersListType('shares');
+      setUsersListLoading(true);
+      setUsersListModalOpen(true);
+      const data = await getPostShares(post.id);
+      console.log('Shares response:', data);
+      // Handle response formats: { sharers: [...] }, { users: [...] }, { shares: [...] }, { data: [...] }, or direct array
+      let usersList = [];
+      if (data?.sharers) {
+        usersList = data.sharers;
+      } else if (data?.users) {
+        usersList = data.users;
+      } else if (data?.shares) {
+        usersList = data.shares;
+      } else if (data?.data) {
+        usersList = data.data;
+      } else if (Array.isArray(data)) {
+        usersList = data;
+      }
+      // Normalize user objects to have id property (some APIs use userId)
+      usersList = usersList.map(user => ({
+        ...user,
+        id: user.id || user.userId
+      }));
+      setUsersListUsers(usersList);
+    } catch (err) {
+      console.error('Error fetching shares:', err);
+      setUsersListUsers([]);
+    } finally {
+      setUsersListLoading(false);
+    }
   };
 
   const authorName = getDisplayName(post.author);
@@ -636,11 +716,23 @@ const RecruitmentPostCard = ({
         </div>
       )}
 
-      {/* Post Stats */}
+{/* Post Stats */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
-        {post.likesCount > 0 && <span>{post.likesCount} like{post.likesCount > 1 ? 's' : ''}</span>}
-        {post.commentsCount > 0 && <span>{post.commentsCount} comment{post.commentsCount > 1 ? 's' : ''}</span>}
-        {post.sharesCount > 0 && <span>{post.sharesCount} share{post.sharesCount > 1 ? 's' : ''}</span>}
+        {post.likesCount > 0 && (
+          <button onClick={handleShowLikers} className="hover:underline font-medium">
+            {post.likesCount} like{post.likesCount > 1 ? 's' : ''}
+          </button>
+        )}
+        {post.commentsCount > 0 && (
+          <button onClick={toggleComments} className="hover:underline font-medium">
+            {post.commentsCount} comment{post.commentsCount > 1 ? 's' : ''}
+          </button>
+        )}
+        {post.sharesCount > 0 && (
+          <button onClick={handleShowSharers} className="hover:underline font-medium">
+            {post.sharesCount} share{post.sharesCount > 1 ? 's' : ''}
+          </button>
+        )}
       </div>
 
       {/* Post Actions */}
@@ -685,7 +777,7 @@ const RecruitmentPostCard = ({
         onShare={handleShareOption}
       />
 
-      {/* Comments Section */}
+{/* Comments Section */}
       {showComments && (
         <div className="border-t pt-4 mt-4">
           <form onSubmit={handleAddComment} className="flex flex-wrap sm:flex-nowrap gap-2 mb-4 items-center">
@@ -734,6 +826,16 @@ const RecruitmentPostCard = ({
           )}
         </div>
       )}
+
+      {/* Users List Modal */}
+      <UsersListModal
+        isOpen={usersListModalOpen}
+        onClose={() => setUsersListModalOpen(false)}
+        title={usersListTitle}
+        users={usersListUsers}
+        loading={usersListLoading}
+        type={usersListType}
+      />
     </div>
   );
 }

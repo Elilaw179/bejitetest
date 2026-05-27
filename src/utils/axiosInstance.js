@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_URL } from "../config";
-import { refreshAccessToken, clearAuthData } from "./tokenManager";
+import { refreshAccessToken } from "./tokenManager";
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -63,12 +63,15 @@ axiosInstance.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        console.error("Token refresh failed:", refreshError);
-
-        clearAuthData();
+        // Token refresh failed - session may be expired but don't auto-destroy
+        // Preserve session data so user can manually re-authenticate
+        console.warn("Token refresh failed, preserving session for manual re-authentication:", refreshError?.message);
+        
+        // Mark session as expired but preserve data for potential recovery
         sessionStorage.setItem("sessionExpired", "true");
         
-        // Redirect to login
+        // Redirect to login without clearing auth data
+        // This allows the user to re-login without losing their session
         window.location.href = "/";
         return Promise.reject(refreshError);
       }

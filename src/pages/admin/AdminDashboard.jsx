@@ -197,36 +197,40 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* User Roles Pie Chart */}
+{/* User Roles Bar Chart */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center gap-2 mb-6">
-              <PieChartIcon className="text-gray-400" size={20} />
+              <BarChart2 className="text-gray-400" size={20} />
               <h3 className="text-lg font-bold text-gray-800">User Roles</h3>
             </div>
             <div className="h-64 w-full">
               {userMetrics?.roles?.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={userMetrics.roles}
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="count"
-                      nameKey="role"
-                    >
-                      {userMetrics.roles.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
+                  <BarChart data={userMetrics.roles}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                    <XAxis 
+                      dataKey="role" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{fill: '#4b5563', fontSize: 12}}
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{fill: '#9ca3af', fontSize: 12}}
+                      dx={-10}
+                    />
                     <Tooltip 
                       formatter={(value) => [value, 'Users']}
                       contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
                     />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                  </PieChart>
+                    <Bar dataKey="count" name="Users" radius={[4, 4, 0, 0]} barSize={60}>
+                      {userMetrics.roles.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
                ) : (
                  <div className="h-full flex items-center justify-center text-gray-400">No data available</div>
@@ -234,16 +238,7 @@ const AdminDashboard = () => {
              </div>
 
              {/* Explicit totals for Jobseekers and Recruiters from /api/admin/metrics/users */}
-             <div className="mt-2 flex justify-center gap-10 text-center">
-               <div>
-                 <div className="text-3xl font-bold text-[#2563eb]">{roleCounts.jobseeker.toLocaleString()}</div>
-                 <div className="text-xs text-gray-500">Jobseekers</div>
-               </div>
-               <div>
-                 <div className="text-3xl font-bold text-[#16730F]">{roleCounts.recruiter.toLocaleString()}</div>
-                 <div className="text-xs text-gray-500">Recruiters</div>
-               </div>
-             </div>
+            
            </div>
          </div>
 

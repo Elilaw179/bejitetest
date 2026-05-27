@@ -24,8 +24,9 @@ const NewsFeedHeader = ({
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
+const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [connectionRequestCount, setConnectionRequestCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -34,19 +35,25 @@ const NewsFeedHeader = ({
   const searchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
 
-  // Get user from Redux store first (most up-to-date after login), fallback to prop or localStorage
+// Get user from Redux store first (most up-to-date after login), fallback to prop or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
   
   // Merge Redux + localStorage without wiping photo fields when Redux has undefined/null.
+  // Always check localStorage directly as a reliable fallback to prevent "Guest" showing
   const user = useMemo(() => {
     void location.pathname;
-    const localUser = getUser() || {};
-    if (reduxUser) {
-      const merged = mergeAuthUsers(localUser, reduxUser);
+    
+    // Always get fresh localStorage user to ensure reliability
+    const localUser = getUser();
+    
+    // Priority: Redux user > propUser > localStorage user
+    const primaryUser = reduxUser || propUser || localUser;
+    
+    if (primaryUser && typeof primaryUser === "object") {
+      const merged = mergeAuthUsers(localUser || {}, primaryUser);
       const resolvedPhoto =
         pickProfilePhotoPath(merged) ||
-        pickProfilePhotoPath(localUser) ||
-        pickProfilePhotoPath(reduxUser) ||
+        pickProfilePhotoPath(primaryUser) ||
         "/assets/images/photo_placeholder.png";
       const displayName =
         merged.name ||
@@ -58,21 +65,25 @@ const NewsFeedHeader = ({
         role: merged.role || "user",
       };
     }
-    const fallback = propUser || localUser;
-    const resolvedPhoto =
-      pickProfilePhotoPath(fallback) ||
-      "/assets/images/photo_placeholder.png";
-    return fallback && typeof fallback === "object"
-      ? {
-          ...fallback,
-          image: resolvedPhoto,
-          role: fallback.role || "user",
-        }
-      : {
-          name: "Guest",
-          image: "/assets/images/photo_placeholder.png",
-          role: "user",
-        };
+    
+    // No user found - but still check localStorage one more time to avoid showing Guest
+    const freshLocalUser = getUser();
+    if (freshLocalUser && typeof freshLocalUser === "object") {
+      const resolvedPhoto =
+        pickProfilePhotoPath(freshLocalUser) ||
+        "/assets/images/photo_placeholder.png";
+      return {
+        ...freshLocalUser,
+        image: resolvedPhoto,
+        role: freshLocalUser.role || "user",
+      };
+    }
+    
+    return {
+      name: "Guest",
+      image: "/assets/images/photo_placeholder.png",
+      role: "user",
+    };
   }, [propUser, reduxUser, location.pathname]);
 
   // Get display name
@@ -309,9 +320,31 @@ const NewsFeedHeader = ({
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
     fetchUnreadMessageCount();
     const interval = setInterval(fetchUnreadMessageCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch connection request count on mount and periodically
+  const fetchConnectionRequestCount = async () => {
+    try {
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axiosInstance.get('/api/connections/requests/incoming');
+      const data = response.data;
+      // Handle both {requests: [...]} and direct array responses
+      const requestsArray = data?.requests || data || [];
+      setConnectionRequestCount(requestsArray.length);
+    } catch (err) {
+      console.error('Error fetching connection request count:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchConnectionRequestCount();
+    const interval = setInterval(fetchConnectionRequestCount, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -460,7 +493,7 @@ const NewsFeedHeader = ({
                     className="h-6 md:h-8 cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => handleIconClick(name)}
                   />
-                  {name === "notifications" && notificationCount > 0 && (
+{name === "notifications" && notificationCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                       {notificationCount > 99 ? '99+' : notificationCount}
                     </span>
@@ -468,6 +501,11 @@ const NewsFeedHeader = ({
                   {name === "CHAT" && unreadMessageCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
                       {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                    </span>
+                  )}
+                  {name === "connection" && connectionRequestCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                      {connectionRequestCount > 99 ? '99+' : connectionRequestCount}
                     </span>
                   )}
                 </div>
@@ -635,7 +673,7 @@ const NewsFeedHeader = ({
                        alt={name}
                        className="h-5"
                      />
-                      {name === "notifications" && notificationCount > 0 && (
+{name === "notifications" && notificationCount > 0 && (
                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
                           {notificationCount > 9 ? '9+' : notificationCount}
                         </span>
@@ -643,6 +681,11 @@ const NewsFeedHeader = ({
                       {name === "CHAT" && unreadMessageCount > 0 && (
                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold animate-pulse">
                           {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                        </span>
+                      )}
+                      {name === "connection" && connectionRequestCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                          {connectionRequestCount > 9 ? '9+' : connectionRequestCount}
                         </span>
                       )}
                     </div>

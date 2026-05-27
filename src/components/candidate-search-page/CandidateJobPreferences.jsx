@@ -27,6 +27,7 @@ const CandidateJobPreferences = ({ candidate }) => {
     { label: 'Work type', value: candidate.work_type },
     { label: 'Remote preference', value: candidate.remote_preference },
     { label: 'Availability', value: candidate.availability },
+    { label: 'Rate', value: candidate.rate || 'Not Set' },
     ...(salary
       ? [{ label: 'Salary expectation', value: salary }]
       : candidate.currency
