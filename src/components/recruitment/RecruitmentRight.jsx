@@ -33,9 +33,9 @@ function RecruitmentRight() {
   }, []);
 
   return (
-    <div className="bg-[#F5F5F5] py-2 hidden md:block pr-2">
-      <aside className="bg-[#1A3E32] rounded-2xl ">
-        <div className="bg-[#16730F] rounded-2xl p-2">
+    <div className="bg-[#F5F5F5] p-2 hidden md:block">
+      <aside className="bg-[#1A3E32] rounded-2xl h-[calc(100vh-120px)]">
+        <div className="bg-[#16730F] rounded-2xl p-3">
           <div className="p-5 space-y-2 bg-">
             {/* <FaArrowLeft className="text-[#1A3E32]" /> */}
           </div>
@@ -43,7 +43,7 @@ function RecruitmentRight() {
             {/* <img className="w-[90%]" src="/assets/images/post-ads.png" alt="" /> */}
             <div className="border-[#16730F] border-5 rounded-full relative bottom-10">
               <img
-                className="w-14 h-14 rounded-full object-cover"
+                className="w-16 h-16 rounded-full object-cover"
                 src={
                   userData ? getUserProfileImage() : "assets/images/prisca.jpg"
                 }
@@ -51,10 +51,10 @@ function RecruitmentRight() {
               />
             </div>
             <div className="text-[#FFFFFF] text-center mt-[-40px]">
-              <p className="text-[15px] font-bold">
+              <p className="text-[16px] font-bold">
                 {userData
                   ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
-                  : "N/A"}
+                  : "Osakwe Prisca"}
               </p>
               <p className="text-[11px] font-bold">@nd_creations</p>
             </div>
@@ -129,8 +129,16 @@ function RecruitmentRight() {
 
         <div className="bg-[#1A3E32] h-[calc(100%-180px)] mt-3 p-2">
           <div className="m-auto mt-10 ml-6 space-y-5 cursor-pointer max-w-60">
-            <div className="flex items-center space-x-3">
-              <img src="assets/images/setting.png" alt="df" />
+            <div
+              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+              onClick={() => navigate("/news-feed?feed=saved")}
+              onKeyDown={(e) =>
+                e.key === "Enter" && navigate("/news-feed?feed=saved")
+              }
+              role="button"
+              tabIndex={0}
+            >
+              <img src="assets/images/setting.png" alt="" />
               <p className="text-[#F5F5F5] font-bold">Saved Posts</p>
             </div>
             <div className="flex items-center space-x-3">

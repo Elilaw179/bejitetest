@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   FaImage,
   FaVideo,
@@ -22,7 +22,15 @@ import {
   unsavePost,
   getComments,
   addComment,
+  getSavedPosts,
 } from "../../services/postsApi";
+import {
+  copyPostLink,
+  getPostShareUrl,
+  getSocialShareUrl,
+  openShareWindow,
+  recordPostShare,
+} from "../../utils/postShare";
 import {
   getUser,
   mergeAuthUsers,
@@ -33,6 +41,7 @@ import { getAuthorProfileImageUrl } from "../../utils/profileImageUtils";
 import PostCreationModal from "../PostCreationModal";
 import ConfirmModal from "../ConfirmModal";
 import useSyncProfilePhoto from "../../hooks/useSyncProfilePhoto";
+import SharePostModal from "../SharePostModal";
 
 // Helper function to get display name (same pattern as NewsFeedHeader)
 const getDisplayName = (user) => {
@@ -92,6 +101,9 @@ export default function RecruitmentMiddle() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const feedMode = searchParams.get("feed") === "saved" ? "saved" : "home";
   const reduxUser = useSelector((state) => state.auth?.user);
 
   const mergedUser = useMemo(() => {
@@ -112,8 +124,33 @@ export default function RecruitmentMiddle() {
   }, [reduxUser, location.pathname]);
 
   useEffect(() => {
-    fetchFeed();
-  }, []);
+    if (feedMode === "saved") {
+      fetchSavedPosts();
+    } else {
+      fetchFeed();
+    }
+  }, [feedMode]);
+
+  const fetchSavedPosts = async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      const data = await getSavedPosts(20);
+      setPosts(data.posts || []);
+      if (!silent) setError(null);
+    } catch (err) {
+      console.error("Error fetching saved posts:", err);
+      if (!silent) setError("Failed to load saved posts");
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  };
+
+  const refreshPosts = (silent = false) => {
+    if (feedMode === "saved") {
+      return fetchSavedPosts(silent);
+    }
+    return fetchFeed(silent);
+  };
 
   const fetchFeed = async (silent = false) => {
     try {
@@ -136,9 +173,18 @@ export default function RecruitmentMiddle() {
       } else {
         await likePost(postId);
       }
-      fetchFeed(true);
+      refreshPosts(true);
     } catch (err) {
       console.error("Error toggling like:", err);
+    }
+  };
+
+  const handleShare = async (postId) => {
+    try {
+      await recordPostShare(postId);
+      refreshPosts(true);
+    } catch (err) {
+      console.error("Error sharing post:", err);
     }
   };
 
@@ -149,7 +195,7 @@ export default function RecruitmentMiddle() {
       } else {
         await savePost(postId);
       }
-      fetchFeed(true);
+      refreshPosts(true);
     } catch (err) {
       console.error("Error toggling save:", err);
     }
@@ -158,7 +204,7 @@ export default function RecruitmentMiddle() {
   const handleUpdatePost = async (postId, postData) => {
     try {
       await updatePost(postId, postData);
-      fetchFeed();
+      refreshPosts();
     } catch (err) {
       console.error("Error updating post:", err);
       throw err;
@@ -176,7 +222,7 @@ export default function RecruitmentMiddle() {
   };
 
   return (
-    <main className="w-full px-4 p-6 space-y-8 bg-[#F5F5F5]">
+    <main className="w-full px-4 py-6 space-y-8 bg-[#F5F5F5]">
       {/* Create Post Button */}
       <div className="max-w-3xl p-6 mx-auto bg-white shadow rounded-2xl">
         <div
@@ -231,14 +277,31 @@ export default function RecruitmentMiddle() {
 
       <hr className="border-t-2 border-[#16730F]" />
 
+      {feedMode === "saved" && (
+        <div className="max-w-3xl mx-auto flex items-center justify-between bg-white rounded-2xl px-4 py-3 shadow-sm">
+          <h2 className="text-lg font-semibold text-[#1A3E32]">Saved posts</h2>
+          <button
+            type="button"
+            onClick={() => navigate("/news-feed")}
+            className="text-sm text-[#16730F] hover:underline font-medium"
+          >
+            Back to feed
+          </button>
+        </div>
+      )}
+
       {/* Posts Feed */}
       {loading ? (
-        <div className="text-center py-8 text-gray-500">Loading posts...</div>
+        <div className="text-center py-8 text-gray-500">
+          {feedMode === "saved" ? "Loading saved posts..." : "Loading posts..."}
+        </div>
       ) : error ? (
         <div className="text-center py-8 text-red-500">{error}</div>
       ) : posts.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          No posts yet. Be the first to post!
+          {feedMode === "saved"
+            ? "No saved posts yet. Save posts from your feed to see them here."
+            : "No posts yet. Be the first to post!"}
         </div>
       ) : (
         posts.map((post) => (
@@ -249,6 +312,7 @@ export default function RecruitmentMiddle() {
             currentUserPhotoUrl={currentUserImage}
             onLike={handleLike}
             onSave={handleSave}
+            onShare={handleShare}
             onUpdate={handleUpdatePost}
             onDelete={handleDeletePost}
           />
@@ -259,7 +323,7 @@ export default function RecruitmentMiddle() {
         onClose={() => setShowModal(false)}
         onPost={async (postData) => {
           await createPost(postData);
-          fetchFeed();
+          refreshPosts();
         }}
       />
     </main>
@@ -270,6 +334,7 @@ const RecruitmentPostCard = ({
   post,
   onLike,
   onSave,
+  onShare,
   onUpdate,
   onDelete,
   currentUserId,
@@ -306,6 +371,8 @@ const RecruitmentPostCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState("");
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
   const handleLinkClick = (e, url) => {
     e.preventDefault();
@@ -317,6 +384,20 @@ const RecruitmentPostCard = ({
     window.open(pendingLink, "_blank");
     setLinkModalOpen(false);
   };
+
+  const handleMediaScroll = (e) => {
+    if (!post.media || post.media.length <= 1) return;
+    const container = e.currentTarget;
+    const itemWidth = container.clientWidth * 0.8;
+    if (!itemWidth) return;
+    const idx = Math.round(container.scrollLeft / itemWidth);
+    const bounded = Math.max(0, Math.min(idx, post.media.length - 1));
+    setActiveMediaIndex(bounded);
+  };
+
+  useEffect(() => {
+    setActiveMediaIndex(0);
+  }, [post.id, post.media?.length]);
 
   const fetchComments = async (force = false) => {
     if (!force && comments.length > 0) return;
@@ -358,6 +439,24 @@ const RecruitmentPostCard = ({
   const handleSaveClick = () => {
     setSaved(!saved);
     onSave(post.id, saved);
+  };
+
+  const handleShareClick = () => {
+    setShowShareModal(true);
+  };
+
+  const handleShareOption = async (platform) => {
+    try {
+      await onShare(post.id);
+      const postUrl = getPostShareUrl(post.id);
+      if (platform === "copy") {
+        await copyPostLink(post.id);
+      } else {
+        openShareWindow(getSocialShareUrl(platform, postUrl));
+      }
+    } finally {
+      setShowShareModal(false);
+    }
   };
 
   const handleEditClick = () => {
@@ -411,9 +510,9 @@ const RecruitmentPostCard = ({
   };
 
   return (
-    <div className="max-w-3xl p-6 mx-auto space-y-6 bg-white shadow rounded-2xl">
+    <div className="max-w-3xl p-4 sm:p-6 mx-auto space-y-4 sm:space-y-6 bg-white shadow rounded-2xl">
       {/* Post Header */}
-      <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+      <div className="flex flex-col items-start justify-between gap-3 sm:gap-4 sm:flex-row">
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -425,7 +524,7 @@ const RecruitmentPostCard = ({
             <img
               src={authorImage}
               alt="profile"
-              className="rounded-full w-12 h-12 cursor-pointer hover:opacity-90"
+              className="rounded-full w-10 h-10 sm:w-12 sm:h-12 cursor-pointer hover:opacity-90"
             />
           </button>
           <div>
@@ -433,11 +532,11 @@ const RecruitmentPostCard = ({
               type="button"
               onClick={goToAuthorProfile}
               disabled={!post.authorId}
-              className="font-semibold capitalize text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
+              className="font-semibold text-base sm:text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
             >
               {authorName}
             </button>
-            <p className="text-[#1A3E32] text-sm">
+            <p className="text-[#1A3E32] text-xs sm:text-sm">
               {formatDate(post.publishedAt)}
             </p>
           </div>
@@ -501,7 +600,7 @@ const RecruitmentPostCard = ({
         </div>
       ) : (
         <div>
-          <p className="text-black text-base whitespace-pre-wrap">
+          <p className="text-black text-sm sm:text-base whitespace-pre-wrap break-words">
             {(() => {
               const body = post.body || "";
               const shouldTruncate = body.length > 200;
@@ -547,31 +646,52 @@ const RecruitmentPostCard = ({
 
       {/* Post Media */}
       {post.media && post.media.length > 0 && (
-        <div
-          className={`grid gap-2 ${post.media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
-        >
-          {post.media.map((item, index) =>
-            item.kind === "video" ? (
-              <video
+        <div className="space-y-2">
+          <div
+            className={`${
+              post.media.length === 1
+                ? "grid grid-cols-1"
+                : "flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1"
+            }`}
+            onScroll={handleMediaScroll}
+          >
+            {post.media.map((item, index) => (
+              <div
                 key={index}
-                src={item.url}
-                controls
-                className="w-full rounded-xl max-h-96 object-contain bg-black"
-              />
-            ) : (
-              <img
-                key={index}
-                src={item.url}
-                alt={`Media ${index + 1}`}
-                className="w-full rounded-xl max-h-96 object-cover"
-              />
-            ),
+                className={`${
+                  post.media.length === 1
+                    ? "w-full"
+                    : "min-w-[80%] sm:min-w-[45%] snap-start"
+                }`}
+              >
+                {item.kind === "video" ? (
+                  <video
+                    src={item.url}
+                    controls
+                    className="w-full rounded-xl max-h-[55vh] sm:max-h-96 object-contain bg-black"
+                  />
+                ) : (
+                  <img
+                    src={item.url}
+                    alt={`Media ${index + 1}`}
+                    className="w-full rounded-xl max-h-[55vh] sm:max-h-96 object-cover"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+          {post.media.length > 1 && (
+            <div className="flex justify-center">
+              <span className="text-xs font-medium text-white bg-black/60 px-2 py-1 rounded-full">
+                {activeMediaIndex + 1}/{post.media.length}
+              </span>
+            </div>
           )}
         </div>
       )}
 
       {/* Post Stats */}
-      <div className="flex items-center gap-4 text-sm text-gray-500">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
         {post.likesCount > 0 && (
           <span>
             {post.likesCount} like{post.likesCount > 1 ? "s" : ""}
@@ -590,25 +710,31 @@ const RecruitmentPostCard = ({
       </div>
 
       {/* Post Actions */}
-      <div className="flex flex-wrap justify-between items-center gap-4 border-t pt-4">
-        <div className="flex gap-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 border-t pt-4">
+        <div className="grid grid-cols-3 w-full sm:w-auto gap-3 sm:flex sm:gap-6">
           <button
             onClick={handleLikeClick}
             className={`flex items-center gap-2 ${liked ? "text-red-500" : "text-gray-600 hover:text-red-500"}`}
           >
             <FaHeart className={liked ? "fill-current text-red-500" : ""} />
-            <span>{liked ? "Liked" : "Like"}</span>
+            <span className="text-xs sm:text-sm">
+              {liked ? "Liked" : "Like"}
+            </span>
           </button>
           <button
             onClick={toggleComments}
             className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]"
           >
             <FaComment />
-            <span>Comment</span>
+            <span className="text-xs sm:text-sm">Comment</span>
           </button>
-          <button className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]">
+          <button
+            type="button"
+            onClick={handleShareClick}
+            className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]"
+          >
             <FaShare />
-            <span>Share</span>
+            <span className="text-xs sm:text-sm">Share</span>
           </button>
         </div>
         <button
@@ -616,16 +742,23 @@ const RecruitmentPostCard = ({
           className={`flex items-center gap-2 ${saved ? "text-[#16730F]" : "text-gray-600 hover:text-[#16730F]"}`}
         >
           <FaBookmark className={saved ? "fill-current" : ""} />
-          <span>{saved ? "Saved" : "Save"}</span>
+          <span className="text-xs sm:text-sm">{saved ? "Saved" : "Save"}</span>
         </button>
       </div>
+
+      {/* Comments Section */}
+      <SharePostModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onShare={handleShareOption}
+      />
 
       {/* Comments Section */}
       {showComments && (
         <div className="border-t pt-4 mt-4">
           <form
             onSubmit={handleAddComment}
-            className="flex gap-2 mb-4 items-center"
+            className="flex flex-wrap sm:flex-nowrap gap-2 mb-4 items-center"
           >
             <img
               src={syncedCurrentUserPhoto}
@@ -637,7 +770,7 @@ const RecruitmentPostCard = ({
               placeholder="Write a comment..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="flex-1 border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#16730F]"
+              className="flex-1 min-w-[180px] border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#16730F]"
             />
             <button
               type="submit"
