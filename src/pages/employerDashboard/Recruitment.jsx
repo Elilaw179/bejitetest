@@ -27,20 +27,20 @@ export default function Recruitment() {
         <NewsFeedHeader />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_3fr_1fr] gap-4 p-4 max-w-screen-xl mx-auto flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_3fr_1fr] gap-4 p-3 sm:p-4 max-w-screen-xl mx-auto flex-1 w-full">
         {/* Fixed Left Sidebar - Not Scrollable */}
-        <div className="sticky top-20 self-start">
+        <div className="hidden lg:block sticky top-20 self-start">
           <RecruitmentLeft />
         </div>
 
         {/* Floating Middle Section - Only This Scrolls */}
-        <div className="overflow-y-auto max-h-[calc(100vh-120px)]">
+        <div className="overflow-y-auto max-h-[calc(100vh-120px)] min-w-0">
           <RecruitmentMiddle />
           <Hyperlinks />
         </div>
 
         {/* Fixed Right Sidebar - Not Scrollable */}
-        <div className="sticky top-20 self-start">
+        <div className="hidden lg:block sticky top-20 self-start">
           <RecruitmentRight />
         </div>
       </div>

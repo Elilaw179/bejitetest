@@ -22,8 +22,18 @@ const SharePostModal = ({ isOpen, onClose, onShare }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 px-0 sm:px-4">
-      <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-white shadow-xl">
+    <div
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 px-0 sm:px-4 share-backdrop-enter"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-white shadow-xl share-sheet-enter"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="pt-3 sm:hidden">
+          <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-300" />
+        </div>
         <div className="flex items-center justify-between border-b px-5 py-4">
           <h3 className="text-lg font-semibold text-[#1A3E32]">Share post</h3>
           <button

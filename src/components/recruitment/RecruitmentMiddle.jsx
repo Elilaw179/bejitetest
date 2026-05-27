@@ -330,6 +330,7 @@ const RecruitmentPostCard = ({
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
   const handleLinkClick = (e, url) => {
     e.preventDefault();
@@ -341,6 +342,20 @@ const RecruitmentPostCard = ({
     window.open(pendingLink, '_blank');
     setLinkModalOpen(false);
   };
+
+  const handleMediaScroll = (e) => {
+    if (!post.media || post.media.length <= 1) return;
+    const container = e.currentTarget;
+    const itemWidth = container.clientWidth * 0.8;
+    if (!itemWidth) return;
+    const idx = Math.round(container.scrollLeft / itemWidth);
+    const bounded = Math.max(0, Math.min(idx, post.media.length - 1));
+    setActiveMediaIndex(bounded);
+  };
+
+  useEffect(() => {
+    setActiveMediaIndex(0);
+  }, [post.id, post.media?.length]);
 
   const fetchComments = async (force = false) => {
     if (!force && comments.length > 0) return;
@@ -452,9 +467,9 @@ const RecruitmentPostCard = ({
   };
 
   return (
-    <div className="max-w-3xl p-6 mx-auto space-y-6 bg-white shadow rounded-2xl">
+    <div className="max-w-3xl p-4 sm:p-6 mx-auto space-y-4 sm:space-y-6 bg-white shadow rounded-2xl">
       {/* Post Header */}
-      <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+      <div className="flex flex-col items-start justify-between gap-3 sm:gap-4 sm:flex-row">
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -466,7 +481,7 @@ const RecruitmentPostCard = ({
             <img
               src={authorImage}
               alt="profile"
-              className="rounded-full w-12 h-12 cursor-pointer hover:opacity-90"
+              className="rounded-full w-10 h-10 sm:w-12 sm:h-12 cursor-pointer hover:opacity-90"
             />
           </button>
           <div>
@@ -474,11 +489,11 @@ const RecruitmentPostCard = ({
               type="button"
               onClick={goToAuthorProfile}
               disabled={!post.authorId}
-              className="font-semibold text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
+              className="font-semibold text-base sm:text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
             >
               {authorName}
             </button>
-            <p className="text-[#1A3E32] text-sm">{formatDate(post.publishedAt)}</p>
+            <p className="text-[#1A3E32] text-xs sm:text-sm">{formatDate(post.publishedAt)}</p>
           </div>
         </div>
         {isOwner && (
@@ -534,7 +549,7 @@ const RecruitmentPostCard = ({
         </div>
       ) : (
         <div>
-          <p className="text-black text-base whitespace-pre-wrap">
+          <p className="text-black text-sm sm:text-base whitespace-pre-wrap break-words">
             {(() => {
               const body = post.body || '';
               const shouldTruncate = body.length > 200;
@@ -579,50 +594,71 @@ const RecruitmentPostCard = ({
 
       {/* Post Media */}
       {post.media && post.media.length > 0 && (
-        <div className={`grid gap-2 ${post.media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-          {post.media.map((item, index) => (
-            item.kind === 'video' ? (
-              <video
+        <div className="space-y-2">
+          <div
+            className={`${
+              post.media.length === 1
+                ? 'grid grid-cols-1'
+                : 'flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1'
+            }`}
+            onScroll={handleMediaScroll}
+          >
+            {post.media.map((item, index) => (
+              <div
                 key={index}
-                src={item.url}
-                controls
-                className="w-full rounded-xl max-h-96 object-contain bg-black"
-              />
-            ) : (
-              <img
-                key={index}
-                src={item.url}
-                alt={`Media ${index + 1}`}
-                className="w-full rounded-xl max-h-96 object-cover"
-              />
-            )
-          ))}
+                className={`${
+                  post.media.length === 1 ? 'w-full' : 'min-w-[80%] sm:min-w-[45%] snap-start'
+                }`}
+              >
+                {item.kind === 'video' ? (
+                  <video
+                    src={item.url}
+                    controls
+                    className="w-full rounded-xl max-h-[55vh] sm:max-h-96 object-contain bg-black"
+                  />
+                ) : (
+                  <img
+                    src={item.url}
+                    alt={`Media ${index + 1}`}
+                    className="w-full rounded-xl max-h-[55vh] sm:max-h-96 object-cover"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+          {post.media.length > 1 && (
+            <div className="flex justify-center">
+              <span className="text-xs font-medium text-white bg-black/60 px-2 py-1 rounded-full">
+                {activeMediaIndex + 1}/{post.media.length}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
       {/* Post Stats */}
-      <div className="flex items-center gap-4 text-sm text-gray-500">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
         {post.likesCount > 0 && <span>{post.likesCount} like{post.likesCount > 1 ? 's' : ''}</span>}
         {post.commentsCount > 0 && <span>{post.commentsCount} comment{post.commentsCount > 1 ? 's' : ''}</span>}
         {post.sharesCount > 0 && <span>{post.sharesCount} share{post.sharesCount > 1 ? 's' : ''}</span>}
       </div>
 
       {/* Post Actions */}
-      <div className="flex flex-wrap justify-between items-center gap-4 border-t pt-4">
-        <div className="flex gap-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 border-t pt-4">
+        <div className="grid grid-cols-3 w-full sm:w-auto gap-3 sm:flex sm:gap-6">
           <button 
             onClick={handleLikeClick}
             className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
           >
             <FaHeart className={liked ? 'fill-current text-red-500' : ''} />
-            <span>{liked ? 'Liked' : 'Like'}</span>
+            <span className="text-xs sm:text-sm">{liked ? 'Liked' : 'Like'}</span>
           </button>
           <button 
             onClick={toggleComments}
             className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]"
           >
             <FaComment />
-            <span>Comment</span>
+            <span className="text-xs sm:text-sm">Comment</span>
           </button>
           <button
             type="button"
@@ -630,7 +666,7 @@ const RecruitmentPostCard = ({
             className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]"
           >
             <FaShare />
-            <span>Share</span>
+            <span className="text-xs sm:text-sm">Share</span>
           </button>
         </div>
         <button 
@@ -638,7 +674,7 @@ const RecruitmentPostCard = ({
           className={`flex items-center gap-2 ${saved ? 'text-[#16730F]' : 'text-gray-600 hover:text-[#16730F]'}`}
         >
           <FaBookmark className={saved ? 'fill-current' : ''} />
-          <span>{saved ? 'Saved' : 'Save'}</span>
+          <span className="text-xs sm:text-sm">{saved ? 'Saved' : 'Save'}</span>
         </button>
       </div>
 
@@ -652,7 +688,7 @@ const RecruitmentPostCard = ({
       {/* Comments Section */}
       {showComments && (
         <div className="border-t pt-4 mt-4">
-          <form onSubmit={handleAddComment} className="flex gap-2 mb-4 items-center">
+          <form onSubmit={handleAddComment} className="flex flex-wrap sm:flex-nowrap gap-2 mb-4 items-center">
             <img
               src={syncedCurrentUserPhoto}
               alt="Your profile"
@@ -663,7 +699,7 @@ const RecruitmentPostCard = ({
               placeholder="Write a comment..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="flex-1 border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#16730F]"
+              className="flex-1 min-w-[180px] border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#16730F]"
             />
             <button 
               type="submit"
