@@ -17,24 +17,10 @@ import { FaDeleteLeft } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import Loader from "../../../components/ui/Loader";
 import axiosInstance from "../../../utils/axiosInstance";
+import OnboardingLayout from "../../../components/layout/onboardingLayout";
+import FormLabel from "../../../components/forms/FormLabel";
+import { InputWithIcon } from "../../../components/forms/InputIcon";
 // Education dropdown options removed - now using text inputs
-
-const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
-  <div className="relative w-full">
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      } ${type === "date" && value ? "hide-calendar-icon" : ""}`}
-    />
-    {value && (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    )}
-  </div>
-);
 
 function Education() {
   const navigate = useNavigate();
@@ -67,9 +53,14 @@ function Education() {
 
   // Load existing education data when in edit mode
   useEffect(() => {
-    if (isEditMode && cvData?.education && cvData.education.length > 0 && !dataLoaded) {
+    if (
+      isEditMode &&
+      cvData?.education &&
+      cvData.education.length > 0 &&
+      !dataLoaded
+    ) {
       console.log("Loading education data:", cvData.education);
-      const existingEducation = cvData.education.map(edu => ({
+      const existingEducation = cvData.education.map((edu) => ({
         id: edu.id, // Store the database ID for deletion
         userId: user?.id,
         educationLevel: edu.education_level,
@@ -94,7 +85,7 @@ function Education() {
         fieldOfStudy &&
         degree.trim() &&
         startDate &&
-        endDate
+        endDate,
     );
   }, [
     educationLevel,
@@ -149,7 +140,7 @@ function Education() {
         item.fieldOfStudy === newEntry.fieldOfStudy &&
         item.degree === newEntry.degree &&
         item.startDate === newEntry.startDate &&
-        item.endDate === newEntry.endDate
+        item.endDate === newEntry.endDate,
     );
 
     if (isDuplicate) {
@@ -163,78 +154,86 @@ function Education() {
   };
 
   return (
-    <div className=" min-h-screen py-4">
-      <Header />
-      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
-      <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
+    <OnboardingLayout
+      steps={steps}
+      currentStep={currentStep}
+      handleStepClick={handleStepClick}
+      getPath={getPath}
+      isEditMode={isEditMode}
+    >
+      <div className=" pb-10">
+        <section className="max-w-3xl text-center md:text-left mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
+          Education
+        </section>
+        <p className="max-w-3xl text-center md:text-left mx-auto px-4 text-[#333] text-[15px] mb-6">
+          Your academic background shows your foundation.
+        </p>
 
-      <div className="max-w-3xl mx-auto mt-6 px-4 text-[#1A3E32] text-2xl font-semibold">
-        Education
-      </div>
-      <p className="max-w-3xl mx-auto px-4 text-[#333] text-sm mb-6">
-        Your academic background shows your foundation.
-      </p>
-
-      <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4 ">
-        <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-1">
-            <div className="bg-[#82828280] rounded-2xl p-4">
-              <p className="font-semibold text-xs mb-1">EDUCATIONAL LEVEL</p>
+        <div className="max-w-4xl mx-auto mt-8 bg-white md:border border-gray-200 rounded-2xl md:shadow-sm flex flex-col gap-6 p-4 md:p-8">
+          <div className="flex flex-col sm:flex-row gap-6">
+            <div className="flex-1">
+              <FormLabel
+                className="text-[#000]"
+                label="EDUCATIONAL LEVEL"
+                required={false}
+              />
               <InputWithIcon
                 value={educationLevel}
                 onChange={(e) => setEducationLevel(e.target.value)}
                 placeholder="Enter education level"
               />
             </div>
-
-          <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <p className="font-semibold text-xs mb-1">INSTITUTION NAME</p>
+              <FormLabel label="INSTITUTION NAME" />
               <InputWithIcon
                 value={institutionName}
                 onChange={(e) => setInstitutionName(e.target.value)}
                 placeholder="Enter institution name"
               />
             </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-1">
-              <p className="font-semibold text-xs mb-1">LOCATION</p>
+              <FormLabel label="LOCATION" />
               <InputWithIcon
                 value={userLocation}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Enter location"
               />
             </div>
-          </div>
-
-          <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <p className="font-semibold text-xs mb-1">FIELD OF STUDY</p>
+              <FormLabel label="FIELD OF STUDY" />
               <InputWithIcon
                 value={fieldOfStudy}
                 onChange={(e) => setFieldOfStudy(e.target.value)}
                 placeholder="Enter field of study"
               />
             </div>
+          </div>
 
+          <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-1">
-              <p className="font-semibold text-xs mb-1">DEGREE</p>
+              <FormLabel label="DEGREE" />
               <InputWithIcon
                 value={degree}
                 onChange={(e) => setDegree(e.target.value)}
                 placeholder="Enter degree"
               />
             </div>
-          </div>
-          <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <p className="font-semibold text-xs mb-1">START DATE</p>
+              <FormLabel label="START DATE" />
               <InputWithIcon
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-1">
-              <p className="font-semibold text-xs mb-1">END DATE</p>
+              <FormLabel label="END DATE" />
               <InputWithIcon
                 type="date"
                 value={endDate}
@@ -245,10 +244,10 @@ function Education() {
               <button
                 onClick={addMore}
                 disabled={!allFilled}
-                className={`w-full h-16 cursor-pointer flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
+                className={`w-full h-11 cursor-pointer flex items-center justify-center gap-2 text-white font-semibold rounded-xl text-sm transition-all shadow-sm ${
                   allFilled
-                    ? "bg-black border-black"
-                    : "bg-transparent border-[#F5F5F5]"
+                    ? "bg-[#1A3E32] hover:bg-[#143026]"
+                    : "bg-gray-300 cursor-not-allowed"
                 }`}
               >
                 ADD MORE <FaPlus />
@@ -256,25 +255,33 @@ function Education() {
             </div>
           </div>
         </div>
-      </div>
 
-      {allEducation.length > 0 &&
-        allEducation.map((item, idx) => {
-          return (
-            <div key={idx} className="max-w-4xl px-4 mt-6   m-auto ">
-              <div className="max-w-2xs  bg-[#1A3E32] text-white rounded-lg flex flex-col m-auto sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
+        {allEducation.length > 0 && (
+          <div className="max-w-4xl mx-auto mt-8 space-y-4 px-2 md:px-0">
+            {allEducation.map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col sm:flex-row justify-between sm:items-center shadow-sm hover:shadow-md transition-shadow gap-4"
+              >
                 <div>
-                  <p className="font-semibold">{item.fieldOfStudy}</p>
-                  <p className="text-sm">
-                    {item.degree} @ {item.institutionName}
+                  <h3 className="font-bold text-[#1A3E32] text-lg">
+                    {item.fieldOfStudy}
+                  </h3>
+                  <p className="text-gray-600 font-medium">
+                    {item.degree} <span className="text-gray-400 mx-1">•</span>{" "}
+                    {item.institutionName}
+                  </p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    {item.startDate} — {item.endDate}
                   </p>
                 </div>
                 <button
                   onClick={async () => {
-                    // If the item has an ID, delete from database
                     if (item.id) {
                       try {
-                        await axiosInstance.delete(`/api/cv-builder/education/${user?.id}/${item.id}`);
+                        await axiosInstance.delete(
+                          `/api/cv-builder/education/${user?.id}/${item.id}`,
+                        );
                         toast.success("Education deleted successfully!");
                       } catch (error) {
                         console.error("Error deleting education:", error);
@@ -284,71 +291,87 @@ function Education() {
                     }
                     setAllEducation((prev) => prev.filter((_, i) => i !== idx));
                   }}
-                  className="text-white text-xl  "
+                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  aria-label="Delete education"
                 >
                   <FaTrash />
                 </button>
               </div>
-            </div>
-          );
-        })}
+            ))}
+          </div>
+        )}
 
-      <NavigationButtons
-        isFormComplete={true} // Always allow proceeding since it's optional
-        onBack={() => {
-          if (isEditMode) {
-            navigate(getPath(currentStep - 1));
-          } else {
-            navigate(-1);
-          }
-        }}
-        onNext={async () => {
-          // Collect all education saved in state
-          let educationToSave = [...allEducation];
-
-          // If current form is filled but not added yet, include it
-          if (allFilled) {
-            const currentEducation = {
-              userId: user?.id,
-              educationLevel,
-              institutionName,
-              location: userLocation,
-              fieldOfStudy,
-              degree,
-              startDate,
-              endDate,
-            };
-
-            // Check for duplicates
-            const exists = educationToSave.some(
-              (item) =>
-                item.educationLevel === currentEducation.educationLevel &&
-                item.institutionName === currentEducation.institutionName &&
-                item.fieldOfStudy === currentEducation.fieldOfStudy &&
-                item.degree === currentEducation.degree &&
-                item.startDate === currentEducation.startDate &&
-                item.endDate === currentEducation.endDate
-            );
-
-            if (!exists) {
-              educationToSave.push(currentEducation);
+        <NavigationButtons
+          isFormComplete={true} // Always allow proceeding since it's optional
+          onBack={() => {
+            if (isEditMode) {
+              navigate(getPath(currentStep - 1));
+            } else {
+              navigate(-1);
             }
-          }
+          }}
+          onNext={async () => {
+            // Collect all education saved in state
+            let educationToSave = [...allEducation];
 
-          // No validation required - education is optional
+            // If current form is filled but not added yet, include it
+            if (allFilled) {
+              const currentEducation = {
+                userId: user?.id,
+                educationLevel,
+                institutionName,
+                location: userLocation,
+                fieldOfStudy,
+                degree,
+                startDate,
+                endDate,
+              };
 
-          setIsLoading(true);
+              // Check for duplicates
+              const exists = educationToSave.some(
+                (item) =>
+                  item.educationLevel === currentEducation.educationLevel &&
+                  item.institutionName === currentEducation.institutionName &&
+                  item.fieldOfStudy === currentEducation.fieldOfStudy &&
+                  item.degree === currentEducation.degree &&
+                  item.startDate === currentEducation.startDate &&
+                  item.endDate === currentEducation.endDate,
+              );
 
-          try {
-            // Save all education entries
-            for (const edu of educationToSave) {
-              await axiosInstance.post(`/api/cv-builder/education`, edu);
+              if (!exists) {
+                educationToSave.push(currentEducation);
+              }
             }
 
-            setIsLoading(false);
-            toast.success("Education saved successfully!");
+            // No validation required - education is optional
 
-            // Navigate to next step
+            setIsLoading(true);
+
+            try {
+              // Save all education entries
+              for (const edu of educationToSave) {
+                await axiosInstance.post(`/api/cv-builder/education`, edu);
+              }
+
+              setIsLoading(false);
+              toast.success("Education saved successfully!");
+
+              // Navigate to next step
+              if (isEditMode) {
+                navigate(getPath(currentStep + 1));
+              } else {
+                navigate("/skills", {
+                  state: { email, firstName, lastName, role, mode, followings },
+                });
+              }
+            } catch (error) {
+              setIsLoading(false);
+              console.error("Error:", error);
+              toast.error("Failed to save education. Try again.");
+            }
+          }}
+          showSkip={true}
+          onSkip={() => {
             if (isEditMode) {
               navigate(getPath(currentStep + 1));
             } else {
@@ -356,26 +379,12 @@ function Education() {
                 state: { email, firstName, lastName, role, mode, followings },
               });
             }
-          } catch (error) {
-            setIsLoading(false);
-            console.error("Error:", error);
-            toast.error("Failed to save education. Try again.");
-          }
-        }}
-        showSkip={true}
-        onSkip={() => {
-          if (isEditMode) {
-            navigate(getPath(currentStep + 1));
-          } else {
-            navigate("/skills", {
-              state: { email, firstName, lastName, role, mode, followings },
-            });
-          }
-        }}
-      />
+          }}
+        />
 
-      <Loader show={isLoading} />
-    </div>
+        <Loader show={isLoading} />
+      </div>
+    </OnboardingLayout>
   );
 }
 

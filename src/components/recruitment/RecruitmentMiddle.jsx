@@ -1,55 +1,75 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH } from "react-icons/fa";
-import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment } from '../../services/postsApi';
+import {
+  FaImage,
+  FaVideo,
+  FaPoll,
+  FaComment,
+  FaShare,
+  FaBookmark,
+  FaHeart,
+  FaEllipsisH,
+} from "react-icons/fa";
+import {
+  getFeed,
+  createPost,
+  updatePost,
+  deletePost,
+  likePost,
+  unlikePost,
+  savePost,
+  unsavePost,
+  getComments,
+  addComment,
+} from "../../services/postsApi";
 import {
   getUser,
   mergeAuthUsers,
   pickProfilePhotoPath,
-} from '../../utils/tokenManager';
-import { profileAvatarSrc } from '../../utils/profilePhotoUrl';
-import { getAuthorProfileImageUrl } from '../../utils/profileImageUtils';
-import PostCreationModal from '../PostCreationModal';
-import ConfirmModal from '../ConfirmModal';
-import useSyncProfilePhoto from '../../hooks/useSyncProfilePhoto';
+} from "../../utils/tokenManager";
+import { profileAvatarSrc } from "../../utils/profilePhotoUrl";
+import { getAuthorProfileImageUrl } from "../../utils/profileImageUtils";
+import PostCreationModal from "../PostCreationModal";
+import ConfirmModal from "../ConfirmModal";
+import useSyncProfilePhoto from "../../hooks/useSyncProfilePhoto";
 
 // Helper function to get display name (same pattern as NewsFeedHeader)
 const getDisplayName = (user) => {
-  if (!user) return 'Guest';
+  if (!user) return "Guest";
   if (user.name) return user.name;
   // Check both camelCase and snake_case
-  const firstName = user.firstName || user.first_name || '';
-  const lastName = user.lastName || user.last_name || '';
+  const firstName = user.firstName || user.first_name || "";
+  const lastName = user.lastName || user.last_name || "";
   if (firstName || lastName) {
     return `${firstName} ${lastName}`.trim();
   }
-  return 'Guest';
+  return "Guest";
 };
 
 // Helper function to format date (LinkedIn-style)
 const formatDate = (dateString) => {
-  if (!dateString) return 'Just now';
+  if (!dateString) return "Just now";
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'Just now';
-  
+  if (isNaN(date.getTime())) return "Just now";
+
   const now = new Date();
   const diffMs = now - date;
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
-  
-  if (diffMins < 1) return 'Just now';
+
+  if (diffMins < 1) return "Just now";
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 2) return 'Yesterday';
+  if (diffDays < 2) return "Yesterday";
   if (diffDays < 7) return `${diffDays}d ago`;
-  
+
   const isThisYear = date.getFullYear() === now.getFullYear();
-  const options = isThisYear 
-    ? { month: 'short', day: 'numeric' }
-    : { month: 'short', day: 'numeric', year: 'numeric' };
-  return date.toLocaleDateString('en-US', options);
+  const options = isThisYear
+    ? { month: "short", day: "numeric" }
+    : { month: "short", day: "numeric", year: "numeric" };
+  return date.toLocaleDateString("en-US", options);
 };
 
 // Helper function to parse text with links
@@ -57,11 +77,11 @@ const parseTextWithLinks = (text) => {
   if (!text) return [];
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const parts = text.split(urlRegex);
-  return parts.map(part => {
+  return parts.map((part) => {
     if (part.match(urlRegex)) {
-      return { type: 'link', content: part };
+      return { type: "link", content: part };
     }
-    return { type: 'text', content: part };
+    return { type: "text", content: part };
   });
 };
 
@@ -102,8 +122,8 @@ export default function RecruitmentMiddle() {
       setPosts(data.posts || []);
       if (!silent) setError(null);
     } catch (err) {
-      console.error('Error fetching feed:', err);
-      if (!silent) setError('Failed to load posts');
+      console.error("Error fetching feed:", err);
+      if (!silent) setError("Failed to load posts");
     } finally {
       if (!silent) setLoading(false);
     }
@@ -118,7 +138,7 @@ export default function RecruitmentMiddle() {
       }
       fetchFeed(true);
     } catch (err) {
-      console.error('Error toggling like:', err);
+      console.error("Error toggling like:", err);
     }
   };
 
@@ -131,7 +151,7 @@ export default function RecruitmentMiddle() {
       }
       fetchFeed(true);
     } catch (err) {
-      console.error('Error toggling save:', err);
+      console.error("Error toggling save:", err);
     }
   };
 
@@ -140,7 +160,7 @@ export default function RecruitmentMiddle() {
       await updatePost(postId, postData);
       fetchFeed();
     } catch (err) {
-      console.error('Error updating post:', err);
+      console.error("Error updating post:", err);
       throw err;
     }
   };
@@ -148,22 +168,25 @@ export default function RecruitmentMiddle() {
   const handleDeletePost = async (postId) => {
     try {
       await deletePost(postId);
-      setPosts(posts.filter(p => p.id !== postId));
+      setPosts(posts.filter((p) => p.id !== postId));
     } catch (err) {
-      console.error('Error deleting post:', err);
+      console.error("Error deleting post:", err);
       throw err;
     }
   };
 
   return (
-    <main className="w-full px-4 py-6 space-y-8 bg-[#F5F5F5]">
+    <main className="w-full px-4 p-6 space-y-8 bg-[#F5F5F5]">
       {/* Create Post Button */}
       <div className="max-w-3xl p-6 mx-auto bg-white shadow rounded-2xl">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setShowModal(true)}>
-          <img 
-            src={currentUserImage} 
-            alt="profile" 
-            className="rounded-full w-12 h-12" 
+        <div
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => setShowModal(true)}
+        >
+          <img
+            src={currentUserImage}
+            alt="profile"
+            className="rounded-full w-12 h-12"
           />
           <div className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-gray-500 hover:bg-gray-200 transition-colors">
             Start a post
@@ -174,21 +197,33 @@ export default function RecruitmentMiddle() {
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
-            <img src="/assets/images/gallery.svg" alt="Image" className="w-5 h-5" />
+            <img
+              src="/assets/images/gallery.svg"
+              alt="Image"
+              className="w-5 h-5"
+            />
             <span className="text-sm">Image</span>
           </button>
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
-            <img src="/assets/images/video-square.png" alt="Video" className="w-5 h-5" />
+            <img
+              src="/assets/images/video-square.png"
+              alt="Video"
+              className="w-5 h-5"
+            />
             <span className="text-sm">Video</span>
           </button>
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
-            <img src="/assets/images/Amount_Icon_UIA.svg" alt="Poll" className="w-5 h-5" />
+            <img
+              src="/assets/images/Amount_Icon_UIA.svg"
+              alt="Poll"
+              className="w-5 h-5"
+            />
             <span className="text-sm">Poll</span>
           </button>
         </div>
@@ -202,9 +237,11 @@ export default function RecruitmentMiddle() {
       ) : error ? (
         <div className="text-center py-8 text-red-500">{error}</div>
       ) : posts.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">No posts yet. Be the first to post!</div>
+        <div className="text-center py-8 text-gray-500">
+          No posts yet. Be the first to post!
+        </div>
       ) : (
-        posts.map(post => (
+        posts.map((post) => (
           <RecruitmentPostCard
             key={post.id}
             post={post}
@@ -252,7 +289,7 @@ const RecruitmentPostCard = ({
   const isOwner = String(post.authorId) === String(currentUserId);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const [liked, setLiked] = useState(post.likedByMe === true);
   const [saved, setSaved] = useState(post.savedByMe === true);
@@ -264,11 +301,11 @@ const RecruitmentPostCard = ({
   }, [post.id, post.likedByMe, post.savedByMe]);
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editBody, setEditBody] = useState(post.body || '');
+  const [editBody, setEditBody] = useState(post.body || "");
   const [savingEdit, setSavingEdit] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
-  const [pendingLink, setPendingLink] = useState('');
+  const [pendingLink, setPendingLink] = useState("");
 
   const handleLinkClick = (e, url) => {
     e.preventDefault();
@@ -277,7 +314,7 @@ const RecruitmentPostCard = ({
   };
 
   const handleConfirmLink = () => {
-    window.open(pendingLink, '_blank');
+    window.open(pendingLink, "_blank");
     setLinkModalOpen(false);
   };
 
@@ -288,7 +325,7 @@ const RecruitmentPostCard = ({
       const data = await getComments(post.id);
       setComments(data.comments || []);
     } catch (err) {
-      console.error('Error fetching comments:', err);
+      console.error("Error fetching comments:", err);
     } finally {
       setLoadingComments(false);
     }
@@ -299,10 +336,10 @@ const RecruitmentPostCard = ({
     if (!newComment.trim()) return;
     try {
       await addComment(post.id, newComment);
-      setNewComment('');
+      setNewComment("");
       await fetchComments(true);
     } catch (err) {
-      console.error('Error adding comment:', err);
+      console.error("Error adding comment:", err);
     }
   };
 
@@ -324,7 +361,7 @@ const RecruitmentPostCard = ({
   };
 
   const handleEditClick = () => {
-    setEditBody(post.body || '');
+    setEditBody(post.body || "");
     setIsEditing(true);
   };
 
@@ -335,25 +372,25 @@ const RecruitmentPostCard = ({
       await onUpdate(post.id, { body: editBody });
       setIsEditing(false);
     } catch (err) {
-      console.error('Error updating post:', err);
+      console.error("Error updating post:", err);
     } finally {
       setSavingEdit(false);
     }
   };
 
   const handleDeleteClick = async () => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
+    if (window.confirm("Are you sure you want to delete this post?")) {
       try {
         await onDelete(post.id);
       } catch (err) {
-        console.error('Error deleting post:', err);
+        console.error("Error deleting post:", err);
       }
     }
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setEditBody(post.body || '');
+    setEditBody(post.body || "");
   };
 
   const authorName = getDisplayName(post.author);
@@ -367,7 +404,8 @@ const RecruitmentPostCard = ({
     : getAuthorProfileImageUrl(post.author);
 
   const getCommentAuthorImage = (comment) => {
-    const isCurrentUserComment = String(comment.authorId) === String(currentUserId);
+    const isCurrentUserComment =
+      String(comment.authorId) === String(currentUserId);
     if (isCurrentUserComment) return syncedCurrentUserPhoto;
     return getAuthorProfileImageUrl(comment.author);
   };
@@ -395,29 +433,37 @@ const RecruitmentPostCard = ({
               type="button"
               onClick={goToAuthorProfile}
               disabled={!post.authorId}
-              className="font-semibold text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
+              className="font-semibold capitalize text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
             >
               {authorName}
             </button>
-            <p className="text-[#1A3E32] text-sm">{formatDate(post.publishedAt)}</p>
+            <p className="text-[#1A3E32] text-sm">
+              {formatDate(post.publishedAt)}
+            </p>
           </div>
         </div>
         {isOwner && (
           <div className="relative">
-            <FaEllipsisH 
-              className="text-gray-500 cursor-pointer" 
+            <FaEllipsisH
+              className="text-gray-500 cursor-pointer"
               onClick={() => setShowMenu(!showMenu)}
             />
             {showMenu && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg py-2 w-32 border z-10">
-                <button 
-                  onClick={() => { setShowMenu(false); handleEditClick(); }}
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    handleEditClick();
+                  }}
                   className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                 >
                   Edit
                 </button>
-                <button 
-                  onClick={() => { setShowMenu(false); handleDeleteClick(); }}
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    handleDeleteClick();
+                  }}
                   className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
                   Delete
@@ -443,7 +489,7 @@ const RecruitmentPostCard = ({
               disabled={savingEdit}
               className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c] disabled:opacity-50"
             >
-              {savingEdit ? 'Saving...' : 'Save'}
+              {savingEdit ? "Saving..." : "Save"}
             </button>
             <button
               onClick={handleCancelEdit}
@@ -457,14 +503,15 @@ const RecruitmentPostCard = ({
         <div>
           <p className="text-black text-base whitespace-pre-wrap">
             {(() => {
-              const body = post.body || '';
+              const body = post.body || "";
               const shouldTruncate = body.length > 200;
-              const displayText = shouldTruncate && !isExpanded 
-                ? body.substring(0, 200) + '...' 
-                : body;
+              const displayText =
+                shouldTruncate && !isExpanded
+                  ? body.substring(0, 200) + "..."
+                  : body;
               const textParts = parseTextWithLinks(displayText);
-              return textParts.map((part, index) => 
-                part.type === 'link' ? (
+              return textParts.map((part, index) =>
+                part.type === "link" ? (
                   <a
                     key={index}
                     href={part.content}
@@ -475,16 +522,16 @@ const RecruitmentPostCard = ({
                   </a>
                 ) : (
                   <span key={index}>{part.content}</span>
-                )
+                ),
               );
             })()}
           </p>
           {post.body && post.body.length > 200 && (
-            <button 
+            <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-[#16730F] font-medium text-sm mt-1 hover:underline"
             >
-              {isExpanded ? 'See less' : 'See more'}
+              {isExpanded ? "See less" : "See more"}
             </button>
           )}
         </div>
@@ -500,9 +547,11 @@ const RecruitmentPostCard = ({
 
       {/* Post Media */}
       {post.media && post.media.length > 0 && (
-        <div className={`grid gap-2 ${post.media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-          {post.media.map((item, index) => (
-            item.kind === 'video' ? (
+        <div
+          className={`grid gap-2 ${post.media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
+        >
+          {post.media.map((item, index) =>
+            item.kind === "video" ? (
               <video
                 key={index}
                 src={item.url}
@@ -516,29 +565,41 @@ const RecruitmentPostCard = ({
                 alt={`Media ${index + 1}`}
                 className="w-full rounded-xl max-h-96 object-cover"
               />
-            )
-          ))}
+            ),
+          )}
         </div>
       )}
 
       {/* Post Stats */}
       <div className="flex items-center gap-4 text-sm text-gray-500">
-        {post.likesCount > 0 && <span>{post.likesCount} like{post.likesCount > 1 ? 's' : ''}</span>}
-        {post.commentsCount > 0 && <span>{post.commentsCount} comment{post.commentsCount > 1 ? 's' : ''}</span>}
-        {post.sharesCount > 0 && <span>{post.sharesCount} share{post.sharesCount > 1 ? 's' : ''}</span>}
+        {post.likesCount > 0 && (
+          <span>
+            {post.likesCount} like{post.likesCount > 1 ? "s" : ""}
+          </span>
+        )}
+        {post.commentsCount > 0 && (
+          <span>
+            {post.commentsCount} comment{post.commentsCount > 1 ? "s" : ""}
+          </span>
+        )}
+        {post.sharesCount > 0 && (
+          <span>
+            {post.sharesCount} share{post.sharesCount > 1 ? "s" : ""}
+          </span>
+        )}
       </div>
 
       {/* Post Actions */}
       <div className="flex flex-wrap justify-between items-center gap-4 border-t pt-4">
         <div className="flex gap-6">
-          <button 
+          <button
             onClick={handleLikeClick}
-            className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
+            className={`flex items-center gap-2 ${liked ? "text-red-500" : "text-gray-600 hover:text-red-500"}`}
           >
-            <FaHeart className={liked ? 'fill-current text-red-500' : ''} />
-            <span>{liked ? 'Liked' : 'Like'}</span>
+            <FaHeart className={liked ? "fill-current text-red-500" : ""} />
+            <span>{liked ? "Liked" : "Like"}</span>
           </button>
-          <button 
+          <button
             onClick={toggleComments}
             className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]"
           >
@@ -550,19 +611,22 @@ const RecruitmentPostCard = ({
             <span>Share</span>
           </button>
         </div>
-        <button 
+        <button
           onClick={handleSaveClick}
-          className={`flex items-center gap-2 ${saved ? 'text-[#16730F]' : 'text-gray-600 hover:text-[#16730F]'}`}
+          className={`flex items-center gap-2 ${saved ? "text-[#16730F]" : "text-gray-600 hover:text-[#16730F]"}`}
         >
-          <FaBookmark className={saved ? 'fill-current' : ''} />
-          <span>{saved ? 'Saved' : 'Save'}</span>
+          <FaBookmark className={saved ? "fill-current" : ""} />
+          <span>{saved ? "Saved" : "Save"}</span>
         </button>
       </div>
 
       {/* Comments Section */}
       {showComments && (
         <div className="border-t pt-4 mt-4">
-          <form onSubmit={handleAddComment} className="flex gap-2 mb-4 items-center">
+          <form
+            onSubmit={handleAddComment}
+            className="flex gap-2 mb-4 items-center"
+          >
             <img
               src={syncedCurrentUserPhoto}
               alt="Your profile"
@@ -575,7 +639,7 @@ const RecruitmentPostCard = ({
               onChange={(e) => setNewComment(e.target.value)}
               className="flex-1 border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#16730F]"
             />
-            <button 
+            <button
               type="submit"
               className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c]"
             >
@@ -589,7 +653,7 @@ const RecruitmentPostCard = ({
             <p className="text-gray-500 text-sm">No comments yet</p>
           ) : (
             <div className="space-y-4">
-              {comments.map(comment => (
+              {comments.map((comment) => (
                 <div key={comment.id} className="flex gap-2">
                   <img
                     src={getCommentAuthorImage(comment)}
@@ -610,4 +674,4 @@ const RecruitmentPostCard = ({
       )}
     </div>
   );
-}
+};

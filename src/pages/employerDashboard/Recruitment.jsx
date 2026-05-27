@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import NewsFeedHeader from "../../components/NewsFeedHeader";
 import RecruitmentLeft from "../../components/recruitment/RecruitmentLeft";
@@ -10,7 +9,7 @@ import { toast } from "react-toastify";
 
 export default function Recruitment() {
   const location = useLocation();
-  
+
   useEffect(() => {
     // Check if user just completed profile update
     if (location.state?.profileUpdateComplete) {
@@ -27,20 +26,26 @@ export default function Recruitment() {
         <NewsFeedHeader />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_3fr_1fr] gap-4 p-4 max-w-screen-xl mx-auto flex-1">
+      <div className=" grid grid-cols-1 md:grid-cols-[1fr_3fr_1fr] gap-2  max-w-screen-xl mx-auto flex-1">
         {/* Fixed Left Sidebar - Not Scrollable */}
-        <div className="sticky top-20 self-start">
+        <div
+          style={{ scrollbarWidth: "none" }}
+          className=" sticky top-20 left-0 self-start "
+        >
           <RecruitmentLeft />
         </div>
 
         {/* Floating Middle Section - Only This Scrolls */}
-        <div className="overflow-y-auto max-h-[calc(100vh-120px)]">
+        <div className="overflow-y-auto ">
           <RecruitmentMiddle />
           <Hyperlinks />
         </div>
 
         {/* Fixed Right Sidebar - Not Scrollable */}
-        <div className="sticky top-20 self-start">
+        <div
+          // style={{ scrollbarWidth: "none" }}
+          className=" overflow-y-auto overflow-x-hidden  max-h-[calc(107vh-120px)]  sticky top-20 self-start"
+        >
           <RecruitmentRight />
         </div>
       </div>

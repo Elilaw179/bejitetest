@@ -20,7 +20,7 @@ export default function Hyperlinks() {
         <div className={borderStyle}></div>
         <Link to="/contact">Contact</Link>
       </div>
-      <p>All rights reserved Bejite © 2025</p>
+      <p>All rights reserved Bejite © {new Date().getFullYear()}</p>
     </div>
   )
 }
