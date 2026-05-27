@@ -3,15 +3,6 @@ import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import { toast } from "react-toastify";
 import * as connectionsApi from "../services/connectionsApi";
-import { getAuthorProfileImageUrl } from "../utils/profileImageUtils";
-
-const formatUserName = (user) => {
-  if (!user) return 'Unknown User';
-  const first = user.firstName ?? user.first_name ?? '';
-  const last = user.lastName ?? user.last_name ?? '';
-  const full = `${first} ${last}`.trim();
-  return full || user.email || 'Unknown User';
-};
 
 const PeopleConnect = () => {
   const [users, setUsers] = useState(() => 

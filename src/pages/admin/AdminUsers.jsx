@@ -14,17 +14,42 @@ const AdminUsers = () => {
   const [dateFilter, setDateFilter] = useState('all'); // all | today | week | month | year
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  // Pagination states
+  // Server-side pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   const filterMenuRef = useRef(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axiosInstance.get('/api/admin/data/users');
+        setLoading(true);
+        // Build query params
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: itemsPerPage.toString(),
+        });
+        
+        // Add search param if present
+        if (searchTerm) {
+          params.append('search', searchTerm);
+        }
+        
+        // Add role filter if not 'all'
+        if (roleFilter !== 'all') {
+          params.append('role', roleFilter);
+        }
+        
+        const response = await axiosInstance.get(`/api/admin/data/users?${params.toString()}`);
         setUsers(response.data.users);
+        
+        // Update pagination from server response
+        if (response.data.pagination) {
+          setTotalUsers(response.data.pagination.total);
+          setTotalPages(response.data.pagination.pages);
+        }
       } catch (error) {
         console.error('Error fetching users', error);
         toast.error('Failed to load users data');
@@ -34,7 +59,7 @@ const AdminUsers = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, [currentPage, itemsPerPage, searchTerm, roleFilter]);
 
   // Close filter menu when clicking outside
   useEffect(() => {
@@ -53,65 +78,14 @@ const AdminUsers = () => {
     };
   }, [showFilterMenu]);
 
-  // Reset to first page whenever filters or search change
+// Reset to first page whenever filters or search change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, roleFilter, dateFilter]);
 
-  const filteredUsers = users.filter(user => {
-    // Search filter
-    const matchesSearch = 
-      (user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-      (user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-      (user.email?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
-
-    // Role filter
-    let matchesRole = true;
-    if (roleFilter === 'jobseeker') {
-      matchesRole = user.role === 'jobseeker';
-    } else if (roleFilter === 'recruiter') {
-      matchesRole = user.role === 'recruiter';
-    } else if (roleFilter === 'unassigned') {
-      matchesRole = !user.role;
-    }
-
-    // Joined Date filter
-    let matchesDate = true;
-    if (dateFilter !== 'all' && user.created_at) {
-      const userDate = new Date(user.created_at);
-      const now = new Date();
-
-      if (dateFilter === 'today') {
-        matchesDate = userDate.toDateString() === now.toDateString();
-      } else if (dateFilter === 'week') {
-        const weekAgo = new Date(now);
-        weekAgo.setDate(now.getDate() - 7);
-        matchesDate = userDate >= weekAgo;
-      } else if (dateFilter === 'month') {
-        matchesDate = 
-          userDate.getMonth() === now.getMonth() && 
-          userDate.getFullYear() === now.getFullYear();
-      } else if (dateFilter === 'year') {
-        matchesDate = userDate.getFullYear() === now.getFullYear();
-      }
-    }
-
-    return matchesSearch && matchesRole && matchesDate;
-  });
-
-  // Pagination calculations
-  const totalItems = filteredUsers.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-
-  // Safety: if current page is beyond available pages (e.g. after heavy filtering)
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+  // Calculate display range for "Showing X-Y of Z users"
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalUsers);
 
   return (
     <AdminLayout>
@@ -301,8 +275,8 @@ const AdminUsers = () => {
                       <p className="text-gray-500 mt-2">Loading users...</p>
                     </td>
                   </tr>
-                ) : filteredUsers.length > 0 ? (
-                   paginatedUsers.map((user) => (
+) : users.length > 0 ? (
+                   users.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -357,7 +331,7 @@ const AdminUsers = () => {
            </div>
 
            {/* Pagination */}
-           {!loading && filteredUsers.length > 0 && (
+{!loading && users.length > 0 && (
              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gray-50 border-t border-gray-100 text-sm">
                {/* Items per page + Showing info */}
                <div className="flex items-center gap-4 text-gray-600">
@@ -380,8 +354,8 @@ const AdminUsers = () => {
 
                  <span className="text-gray-400">|</span>
 
-                 <span>
-                   Showing <span className="font-medium text-gray-800">{startIndex + 1}</span>–<span className="font-medium text-gray-800">{endIndex}</span> of <span className="font-medium text-gray-800">{totalItems}</span> users
+<span>
+                   Showing <span className="font-medium text-gray-800">{startIndex + 1}</span>–<span className="font-medium text-gray-800">{endIndex}</span> of <span className="font-medium text-gray-800">{totalUsers}</span> users
                  </span>
                </div>
 

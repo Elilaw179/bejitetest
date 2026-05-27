@@ -50,12 +50,7 @@ const AdminDashboard = () => {
     }))
     .slice(0, 10);
 
-  const roleCounts = {
-    jobseeker: Number(userMetrics?.roles?.find(r => r.role?.toLowerCase() === 'jobseeker')?.count || 0),
-    recruiter: Number(userMetrics?.roles?.find(r => r.role?.toLowerCase() === 'recruiter')?.count || 0),
-  };
-
-  const COLORS = ['#16730F', '#2563eb', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
+const COLORS = ['#16730F', '#2563eb', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
 
   useEffect(() => {
     const fetchMetrics = async () => {
