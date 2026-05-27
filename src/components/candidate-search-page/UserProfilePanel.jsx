@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { API_URL } from "../../config";
 import { getProfileImageUrl } from "../../utils/profileImageUtils";
+import { useCandidateConnect } from "./useCandidateConnect";
 
-const UserProfilePanel = ({ candidateId, onViewMainProfile, onConnect }) => {
+const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -142,7 +143,6 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile, onConnect }) => {
         <ProfileStats
           candidate={candidate}
           onViewMainProfile={onViewMainProfile}
-          onConnect={onConnect}
         />
         <Divider />
 
@@ -223,7 +223,14 @@ const ProfileHeader = ({ candidate }) => {
   );
 };
 
-const ProfileStats = ({ candidate, onViewMainProfile, onConnect }) => (
+const ProfileStats = ({ candidate, onViewMainProfile }) => {
+  const displayName = `${candidate.first_name || ""} ${candidate.last_name || ""}`.trim();
+  const { sendRequest, connectLabel, connectDisabled } = useCandidateConnect(
+    candidate.user_id,
+    displayName,
+  );
+
+  return (
   <div className="px-4 sm:px-8 mt-[-60px] sm:mt-[-40px]">
     <div className="flex gap-2 items-center">
       <p className="text-[#6B8E23] font-semibold text-[16px]">
@@ -258,16 +265,23 @@ const ProfileStats = ({ candidate, onViewMainProfile, onConnect }) => (
       )}
     </div>
 
-    <ActionButtons onViewMainProfile={onViewMainProfile} onConnect={onConnect} />
+    <ActionButtons
+      onViewMainProfile={onViewMainProfile}
+      connectLabel={connectLabel}
+      connectDisabled={connectDisabled}
+      onConnect={sendRequest}
+    />
   </div>
-);
+  );
+};
 
-const ActionButtons = ({ onViewMainProfile, onConnect }) => (
+const ActionButtons = ({ onViewMainProfile, connectLabel, connectDisabled, onConnect }) => (
   <div className="flex flex-col sm:flex-row sm:justify-start items-center mt-6 gap-3 w-full">
     <Button
       icon="/assets/images/repeate-one.svg"
-      text="Connect"
+      text={connectLabel}
       onClick={onConnect}
+      disabled={connectDisabled}
     />
     <Button icon="/assets/images/Send_Submit.svg" text="Message" />
     <button 
@@ -279,10 +293,16 @@ const ActionButtons = ({ onViewMainProfile, onConnect }) => (
   </div>
 );
 
-const Button = ({ icon, text, onClick }) => (
+const Button = ({ icon, text, onClick, disabled = false }) => (
   <button
+    type="button"
     onClick={onClick}
-    className="bg-[#556B1F] hover:bg-[#6B8E23] w-full sm:w-[180px] text-center text-[12px] text-[#FFFFFF] flex p-2 rounded-3xl gap-2 justify-center items-center transition-colors"
+    disabled={disabled}
+    className={`w-full sm:w-[180px] text-center text-[12px] text-[#FFFFFF] flex p-2 rounded-3xl gap-2 justify-center items-center transition-colors ${
+      disabled
+        ? "bg-[#828282] cursor-not-allowed opacity-80"
+        : "bg-[#556B1F] hover:bg-[#6B8E23]"
+    }`}
   >
     <img className="w-4 h-4" src={icon} alt={text} />
     {text}

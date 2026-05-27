@@ -5,7 +5,6 @@ import NewsFeedHeader from "../../components/NewsFeedHeader";
 import UserProfilePanel from "../../components/candidate-search-page/UserProfilePanel";
 import JobSearchFormGreen from "../../components/candidate-search-page/JobSearchFormGreen";
 import UserMainProfileCard from "../../components/candidate-search-page/UserMainProfileCard";
-import PeopleConnect from "../../components/candidate-search-page/PeopleConnect";
 
 const CandidateSearchPage = () => {
   const [formData, setFormData] = useState({
@@ -29,7 +28,6 @@ const CandidateSearchPage = () => {
   const [showResults, setShowResults] = useState(false);
   const [viewProfile, setViewProfile] = useState(false);
   const [showMainProfile, setShowMainProfile] = useState(false);
-  const [showPeopleConnect, setShowPeopleConnect] = useState(false);
 
   // Add state for selected candidate ID
   const [selectedCandidateId, setSelectedCandidateId] = useState(null);
@@ -70,25 +68,17 @@ const CandidateSearchPage = () => {
       );
     } else if (!viewProfile) {
       return <CandidateSearchResults searchCriteria={formData} onViewProfile={handleViewProfile} />;
-    } else if (showPeopleConnect) {
-      return <PeopleConnect />;
     } else if (!showMainProfile) {
       return (
         <UserProfilePanel
           candidateId={selectedCandidateId}
           onViewMainProfile={() => setShowMainProfile(true)}
-          onConnect={() => setShowPeopleConnect(true)}
-        />
-      );
-    } else if (!showPeopleConnect) {
-      return (
-        <UserMainProfileCard 
-          candidateId={selectedCandidateId} 
-          onConnect={() => setShowPeopleConnect(true)} 
         />
       );
     } else {
-      return <PeopleConnect />;
+      return (
+        <UserMainProfileCard candidateId={selectedCandidateId} />
+      );
     }
   };
 
@@ -124,21 +114,13 @@ const CandidateSearchPage = () => {
                   isFormComplete={hasAtLeastOneField}
                   onSearch={handleSearch}
                 />
-              ) : showPeopleConnect ? (
-                <PeopleConnect />
               ) : !showMainProfile ? (
                 <UserProfilePanel
                   candidateId={selectedCandidateId}
                   onViewMainProfile={() => setShowMainProfile(true)}
-                  onConnect={() => setShowPeopleConnect(true)}
-                />
-              ) : !showPeopleConnect ? (
-                <UserMainProfileCard
-                  candidateId={selectedCandidateId}
-                  onConnect={() => setShowPeopleConnect(true)}
                 />
               ) : (
-                <PeopleConnect />
+                <UserMainProfileCard candidateId={selectedCandidateId} />
               )}
             </div>
 

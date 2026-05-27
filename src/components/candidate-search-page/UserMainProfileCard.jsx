@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { API_URL } from "../../config";
 import { getProfileImageUrl } from "../../utils/profileImageUtils";
+import { useCandidateConnect } from "./useCandidateConnect";
 
-const UserMainProfileCard = ({ candidateId, onConnect }) => {
+const UserMainProfileCard = ({ candidateId }) => {
   const [candidate, setCandidate] = useState(null);
   const [cvData, setCvData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -84,7 +85,7 @@ const UserMainProfileCard = ({ candidateId, onConnect }) => {
     <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F5F5F5] mt-1">
       <div className="max-w-4xl mx-auto">
         <ProfileHeader candidate={candidate} profileImage={profileImage} initials={initials} />
-        <ProfileStats candidate={candidate} onConnect={onConnect} />
+        <ProfileStats candidate={candidate} />
         <Divider />
 
         {/* Bio Section */}
@@ -193,29 +194,41 @@ const ProfileHeader = ({ profileImage, initials }) => (
   </div>
 );
 
-const ProfileStats = ({ candidate, onConnect }) => (
-  <div className="px-4 sm:px-8 mt-[-60px] sm:mt-[-80px]">
-    <div className="flex gap-2">
-      <p className="text-[#6B8E23] font-semibold text-[13px]">
-        {candidate?.first_name} {candidate?.last_name}
-      </p>
-      <p className="text-[#E09A36] font-semibold text-[10px]">. Jobseeker</p>
+const ProfileStats = ({ candidate }) => {
+  const displayName = `${candidate?.first_name || ""} ${candidate?.last_name || ""}`.trim();
+  const { sendRequest, connectLabel, connectDisabled } = useCandidateConnect(
+    candidate?.user_id,
+    displayName,
+  );
+
+  return (
+    <div className="px-4 sm:px-8 mt-[-60px] sm:mt-[-80px]">
+      <div className="flex gap-2">
+        <p className="text-[#6B8E23] font-semibold text-[13px]">
+          {candidate?.first_name} {candidate?.last_name}
+        </p>
+        <p className="text-[#E09A36] font-semibold text-[10px]">. Jobseeker</p>
+      </div>
+      <div className='text-[10px]'>
+        <p className="text-[#6B8E23] font-semibold">{candidate?.title || "No title"}</p>
+      </div>
+      <div className="mt-4">
+        <p className="text-[#E09A36] text-[14px] font-semibold">{candidate?.title || "Jobseeker"}</p>
+        <p className="text-[#6B8E23] text-[5px]">
+          📍 {candidate?.location || candidate?.preferred_country || "Location not set"}
+        </p>
+        {candidate?.experience_years > 0 && (
+          <p className="text-[#6B8E23] text-[5px]">💼 {candidate.experience_years} years experience</p>
+        )}
+      </div>
+      <ActionButtons
+        connectLabel={connectLabel}
+        connectDisabled={connectDisabled}
+        onConnect={sendRequest}
+      />
     </div>
-    <div className='text-[10px]'>
-      <p className="text-[#6B8E23] font-semibold">{candidate?.title || "No title"}</p>
-    </div>
-    <div className="mt-4">
-      <p className="text-[#E09A36] text-[14px] font-semibold">{candidate?.title || "Jobseeker"}</p>
-      <p className="text-[#6B8E23] text-[5px]">
-        📍 {candidate?.location || candidate?.preferred_country || "Location not set"}
-      </p>
-      {candidate?.experience_years > 0 && (
-        <p className="text-[#6B8E23] text-[5px]">💼 {candidate.experience_years} years experience</p>
-      )}
-    </div>
-    <ActionButtons onConnect={onConnect} />
-  </div>
-);
+  );
+};
 
 const StatsGrid = () => (
   <div className="flex flex-wrap gap-4 mt-3">
@@ -233,18 +246,27 @@ const StatItem = ({ value, label }) => (
   </div>
 );
 
-const ActionButtons = ({ onConnect }) => (
+const ActionButtons = ({ connectLabel, connectDisabled, onConnect }) => (
   <div className="flex flex-col sm:flex-row sm:justify-between items-center mt-4 gap-4 w-full">
-    <Button icon="/assets/images/repeate-one.svg" text="Connect" onClick={onConnect} />
+    <Button
+      icon="/assets/images/repeate-one.svg"
+      text={connectLabel}
+      onClick={onConnect}
+      disabled={connectDisabled}
+    />
     <Button icon="/assets/images/Send_Submit.svg" text="Message" />
     <img src="assets/images/more.svg" alt="more options" className="w-4 h-4" />
   </div>
 );
 
-const Button = ({ icon, text, onClick }) => (
+const Button = ({ icon, text, onClick, disabled = false }) => (
   <button
+    type="button"
     onClick={onClick}
-    className="bg-[#556B1F] w-full sm:w-[200px] text-center text-[8px] text-[#FFFFFF] flex p-1.5 rounded-3xl gap-2 justify-center items-center"
+    disabled={disabled}
+    className={`w-full sm:w-[200px] text-center text-[8px] text-[#FFFFFF] flex p-1.5 rounded-3xl gap-2 justify-center items-center ${
+      disabled ? "bg-[#828282] cursor-not-allowed opacity-80" : "bg-[#556B1F]"
+    }`}
   >
     <img className="w-5" src={icon} alt={text} />
     {text}
