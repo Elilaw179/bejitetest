@@ -8,7 +8,7 @@ import {
   mergeAuthUsers,
   pickProfilePhotoPath,
 } from "../utils/tokenManager";
-import { profileAvatarSrc } from "../utils/profilePhotoUrl";
+import { profileAvatarSrc, PROFILE_PHOTO_PLACEHOLDER } from "../utils/profilePhotoUrl";
 import { pickAuthorProfilePhoto } from "../utils/profileImageUtils";
 import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
@@ -407,8 +407,18 @@ const NewsFeedHeader = ({
                   onClick={() => handleSearchResultClick(result)}
                   className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                 >
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                    {result.image ? (
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {result.type === 'people' ? (
+                      <img
+                        src={avatarSrc(result.image)}
+                        alt={result.name}
+                        className="w-full h-full rounded-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = PROFILE_PHOTO_PLACEHOLDER;
+                        }}
+                      />
+                    ) : result.image ? (
                       <img
                         src={avatarSrc(result.image)}
                         alt={result.name}
@@ -416,7 +426,6 @@ const NewsFeedHeader = ({
                       />
                     ) : (
                       <div className="text-gray-500">
-                        {result.type === 'people' && <FaUserFriends />}
                         {result.type === 'jobs' && <FaBriefcase />}
                         {result.type === 'posts' && <FaNewspaper />}
                       </div>
