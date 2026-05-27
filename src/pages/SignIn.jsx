@@ -23,18 +23,18 @@ function SignIn() {
   const { loading, errors } = useSelector((state) => state.auth);
   const isDisabled = !email || !password || loading;
 
-  // Clear errors and any cached auth data when component mounts
+// Clear errors when component mounts - but preserve session data to prevent auto-logout
   useEffect(() => {
     dispatch(clearErrors());
-    // Clear cached auth so login/session state stays consistent (avatar sync uses Bearer token).
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
-
+    
+    // Only clear session if explicitly indicated (from expired session redirect)
+    // Don't auto-clear user session - preserve it until user explicitly logs out
     const sessionExpired = sessionStorage.getItem("sessionExpired");
     if (sessionExpired) {
       sessionStorage.removeItem("sessionExpired");
+      
+      // Preserve user session data - only show message, don't destroy session
+      // User can re-login to restore their session
       toast.error("Your session is expired, please login to continue");
     }
   }, [dispatch]);
