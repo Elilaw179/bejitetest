@@ -10,12 +10,12 @@ import {
 } from 'react-icons/fa';
 
 const OPTIONS = [
-  { id: 'whatsapp', label: 'WhatsApp', Icon: FaWhatsapp, bg: 'bg-green-100', color: 'text-green-600' },
-  { id: 'facebook', label: 'Facebook', Icon: FaFacebookF, bg: 'bg-blue-100', color: 'text-blue-600' },
-  { id: 'x', label: 'X', Icon: FaTwitter, bg: 'bg-gray-200', color: 'text-black' },
-  { id: 'linkedin', label: 'LinkedIn', Icon: FaLinkedinIn, bg: 'bg-blue-100', color: 'text-blue-700' },
-  { id: 'telegram', label: 'Telegram', Icon: FaTelegramPlane, bg: 'bg-sky-100', color: 'text-sky-500' },
-  { id: 'copy', label: 'Copy link', Icon: FaLink, bg: 'bg-[#E8F5E6]', color: 'text-[#16730F]' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: FaWhatsapp, bg: 'bg-green-100', color: 'text-green-600' },
+  { id: 'facebook', label: 'Facebook', icon: FaFacebookF, bg: 'bg-blue-100', color: 'text-blue-600' },
+  { id: 'x', label: 'X', icon: FaTwitter, bg: 'bg-gray-200', color: 'text-black' },
+  { id: 'linkedin', label: 'LinkedIn', icon: FaLinkedinIn, bg: 'bg-blue-100', color: 'text-blue-700' },
+  { id: 'telegram', label: 'Telegram', icon: FaTelegramPlane, bg: 'bg-sky-100', color: 'text-sky-500' },
+  { id: 'copy', label: 'Copy link', icon: FaLink, bg: 'bg-[#E8F5E6]', color: 'text-[#16730F]' },
 ];
 
 const SharePostModal = ({ isOpen, onClose, onShare }) => {
@@ -41,7 +41,7 @@ const SharePostModal = ({ isOpen, onClose, onShare }) => {
         </div>
 
         <div className="grid grid-cols-3 gap-4 p-5 pt-3 pb-7 sm:pb-5">
-          {OPTIONS.map(({ id, label, Icon, color, bg }) => (
+          {OPTIONS.map(({ id, label, icon, color, bg }) => (
             <button
               key={id}
               type="button"
@@ -49,7 +49,7 @@ const SharePostModal = ({ isOpen, onClose, onShare }) => {
               className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#16730F] hover:bg-[#F5F9F4]"
             >
               <span className={`flex h-11 w-11 items-center justify-center rounded-full ${bg}`}>
-                <Icon className={`text-xl ${color}`} />
+                {React.createElement(icon, { className: `text-xl ${color}` })}
               </span>
               <span className="text-xs font-medium text-[#1A3E32]">{label}</span>
             </button>
