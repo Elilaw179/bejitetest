@@ -73,7 +73,7 @@ const SearchCriteria = ({ formData, setFormData, onSearch }) => {
 
   return (
     <div>
-      <div className="max-w-3xl m-auto px-6 py-6 mt-2">
+      <div className="w-full max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
         <div className="max-w-3xl mx-auto rounded-2xl p-4 sm:p-6 bg-white shadow-sm">
           <p className="text-xl sm:text-2xl font-medium text-[#16730F] text-center">
            Advanced Search Engine  

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { API_URL } from "../../config";
 import { getProfileImageUrl } from "../../utils/profileImageUtils";
+import { formatSalaryExpectation } from "../../utils/formatSalary";
 import { useCandidateConnect } from "./useCandidateConnect";
 
 const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
@@ -179,7 +180,6 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
         <ProfileSection title="Contact Info">
           <ContactInfoList candidate={candidate} />
         </ProfileSection>
-        <PostCard candidate={candidate} />
       </div>
     </div>
   );
@@ -258,9 +258,13 @@ const ProfileStats = ({ candidate, onViewMainProfile }) => {
       {candidate.remote_preference && (
         <p className="text-[#6B8E23] text-[10px]">🏠 Open to remote work</p>
       )}
-      {candidate.salary_expectation && (
+      {candidate.salary_expectation != null && (
         <p className="text-[#6B8E23] text-[10px]">
-          💰 Expected: ₦{candidate.salary_expectation.toLocaleString()}
+          💰 Expected:{' '}
+          {formatSalaryExpectation(
+            candidate.salary_expectation,
+            candidate.currency,
+          ) || candidate.salary_expectation}
         </p>
       )}
     </div>
@@ -421,87 +425,5 @@ const ContactInfoList = ({ candidate }) => {
     </div>
   );
 };
-
-const PostCard = ({ candidate }) => (
-  <div className="bg-white p-4 sm:p-6 rounded-2xl space-y-4">
-    <PostHeader candidate={candidate} />
-    <PostContent />
-    <PostImage />
-    <PostActions />
-  </div>
-);
-
-const PostHeader = ({ candidate }) => {
-  // Get profile image URL
-  const profileImage = candidate.profile_photo 
-    ? getProfileImageUrl(candidate.profile_photo) 
-    : null;
-    
-  return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <div className="flex items-center gap-4">
-        {profileImage ? (
-          <img
-            src={profileImage}
-            alt="profile"
-            className="rounded-full w-12 h-12 sm:w-[60px] sm:h-[60px] object-cover"
-          />
-        ) : (
-          <img
-            src="/assets/images/photo_placeholder.png"
-            alt="profile"
-            className="rounded-full w-12 h-12 sm:w-[60px] sm:h-[60px]"
-          />
-        )}
-        <div>
-          <p className="text-[#16730F] font-semibold text-sm">
-            {candidate.first_name} {candidate.last_name}
-          </p>
-          <p className="text-[#1A3E32] text-[10px] sm:text-xs">
-            Posted 12 minutes ago
-          </p>
-        </div>
-      </div>
-      <img src="assets/images/more.svg" alt="more" className="w-4 h-4" />
-    </div>
-  );
-};
-
-const PostContent = () => (
-  <div>
-    <p className="text-black text-sm">
-      🚀 HIRING JUST GOT SMARTER | WELCOME TO BEJITE.COM....
-    </p>
-    <p className="text-[#16730F80] text-xs sm:text-sm mt-1 cursor-pointer">
-      See more
-    </p>
-  </div>
-);
-
-const PostImage = () => (
-  <img
-    src="assets/images/bejiteAdvert.png"
-    alt="Advert"
-    className="w-full rounded-xl"
-  />
-);
-
-const PostActions = () => (
-  <div className="flex flex-wrap justify-between items-center gap-4">
-    <div className="flex gap-4">
-      <PostAction icon="assets/images/heart.svg" text="Like" />
-      <PostAction icon="assets/images/message-text.svg" text="Comment" />
-      <PostAction icon="/assets/images/frame-saved.svg" text="Saved" />
-    </div>
-    <PostAction icon="/assets/images/send.svg" text="Share" />
-  </div>
-);
-
-const PostAction = ({ icon, text }) => (
-  <div className="flex flex-col items-center text-xs text-[#1A3E32]">
-    <img src={icon} alt={text} className="w-4 h-4 sm:w-5 sm:h-5" />
-    <p>{text}</p>
-  </div>
-);
 
 export default UserProfilePanel;
