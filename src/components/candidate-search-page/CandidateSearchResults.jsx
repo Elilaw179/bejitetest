@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { API_URL } from "../../config";
+import { pickAuthorProfilePhoto } from "../../utils/profileImageUtils";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import InterviewInviteModal from "./InterviewInviteModal";
 import { useNavigate } from "react-router-dom";
@@ -121,19 +122,30 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
         // Validate & format - handle different response formats
         const candidatesData = data.data || data.candidates || [];
         if (Array.isArray(candidatesData)) {
-          const formatted = candidatesData.map((candidate) => ({
-            id: candidate.id,
-            name: `${candidate.first_name} ${candidate.last_name}`,
-            type: "Jobseeker",
-            jobTitle: candidate.title || "N/A",
-            location: candidate.location || candidate.preferred_country || "Unknown",
-            skills: candidate.skills || [],
-            availability: candidate.availability || "Unknown",
-            experienceYears: candidate.experience_years || 0,
-            initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
-            online: candidate.availability === "Available",
-            image: profilePhotoUrl(candidate.profile_photo) ?? null,
-          }));
+          const formatted = candidatesData.map((candidate) => {
+            const bioRow = Array.isArray(candidate.user_bio)
+              ? candidate.user_bio[0]
+              : candidate.user_bio;
+            const photoPath = pickAuthorProfilePhoto({
+              profile_photo: candidate.profile_photo,
+              profilePhoto: candidate.profilePhoto,
+              image: bioRow?.profile_photo,
+            });
+
+            return {
+              id: candidate.id,
+              name: `${candidate.first_name} ${candidate.last_name}`,
+              type: "Jobseeker",
+              jobTitle: candidate.title || "N/A",
+              location: candidate.location || candidate.preferred_country || "Unknown",
+              skills: candidate.skills || [],
+              availability: candidate.availability || "Unknown",
+              experienceYears: candidate.experience_years || 0,
+              initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
+              online: candidate.availability === "Available",
+              image: profilePhotoUrl(photoPath) ?? null,
+            };
+          });
 
           setCandidates(formatted);
         } else {

@@ -95,12 +95,6 @@ const UserMainProfileCard = ({ candidateId, onConnect }) => {
               {cvData.bio.nickname && (
                 <p className="text-[12px] mt-2">Nickname: {cvData.bio.nickname}</p>
               )}
-              {cvData.bio.phone && (
-                <p className="text-[12px]">Phone: {cvData.bio.phone}</p>
-              )}
-              {cvData.bio.country && (
-                <p className="text-[12px]">Location: {cvData.bio.country}, {cvData.bio.city}</p>
-              )}
             </div>
           </ProfileSection>
         )}
@@ -176,7 +170,7 @@ const UserMainProfileCard = ({ candidateId, onConnect }) => {
 
         {/* Contact Info Section */}
         <ProfileSection title="Contact Info">
-          <ContactInfoList candidate={candidate} />
+          <ContactInfoList candidate={candidate} bio={cvData?.bio} />
         </ProfileSection>
       </div>
     </div>
@@ -347,12 +341,32 @@ const CertificationItem = ({ certification }) => (
   </div>
 );
 
-const ContactInfoList = ({ candidate }) => {
+const formatCandidateAddress = (candidate, bio) => {
+  const bioParts = [bio?.street, bio?.city, bio?.country].filter(
+    (part) => part != null && String(part).trim() !== "",
+  );
+  if (bioParts.length > 0) return bioParts.join(", ");
+
+  if (!candidate) return null;
+  const candidateParts = [candidate.address, candidate.street, candidate.city, candidate.country].filter(
+    (part) => part != null && String(part).trim() !== "",
+  );
+  if (candidateParts.length > 0) return candidateParts.join(", ");
+  return candidate.location || candidate.preferred_country || null;
+};
+
+const ContactInfoList = ({ candidate, bio }) => {
+  const phone = candidate?.phone || candidate?.phone_number || bio?.phone;
+  const address = formatCandidateAddress(candidate, bio);
+
   const contacts = [
-    { type: "Mobile", value: candidate?.phone, icon: "📱" },
+    { type: "Phone", value: phone, icon: "📱" },
+    { type: "Address", value: address, icon: "📍" },
     { type: "Email", value: candidate?.email, icon: "📧" },
-    { type: "Location", value: candidate?.location || candidate?.preferred_country, icon: "📍" },
-  ].filter(contact => contact.value);
+    { type: "LinkedIn", value: candidate?.linkedin_url, icon: "💼" },
+    { type: "GitHub", value: candidate?.github_url, icon: "💻" },
+    { type: "Portfolio", value: candidate?.portfolio_url, icon: "🌐" },
+  ].filter((contact) => contact.value);
 
   return (
     <div className="px-4 sm:px-8 pb-8 text-[#FFFFFF] space-y-4">

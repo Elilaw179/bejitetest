@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { API_URL } from "../../config";
 import { getProfileImageUrl } from "../../utils/profileImageUtils";
 
-const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
+const UserProfilePanel = ({ candidateId, onViewMainProfile, onConnect }) => {
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -142,6 +142,7 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
         <ProfileStats
           candidate={candidate}
           onViewMainProfile={onViewMainProfile}
+          onConnect={onConnect}
         />
         <Divider />
 
@@ -222,7 +223,7 @@ const ProfileHeader = ({ candidate }) => {
   );
 };
 
-const ProfileStats = ({ candidate, onViewMainProfile }) => (
+const ProfileStats = ({ candidate, onViewMainProfile, onConnect }) => (
   <div className="px-4 sm:px-8 mt-[-60px] sm:mt-[-40px]">
     <div className="flex gap-2 items-center">
       <p className="text-[#6B8E23] font-semibold text-[16px]">
@@ -257,16 +258,16 @@ const ProfileStats = ({ candidate, onViewMainProfile }) => (
       )}
     </div>
 
-    <ActionButtons onViewMainProfile={onViewMainProfile} />
+    <ActionButtons onViewMainProfile={onViewMainProfile} onConnect={onConnect} />
   </div>
 );
 
-const ActionButtons = ({ onViewMainProfile }) => (
+const ActionButtons = ({ onViewMainProfile, onConnect }) => (
   <div className="flex flex-col sm:flex-row sm:justify-start items-center mt-6 gap-3 w-full">
     <Button
       icon="/assets/images/repeate-one.svg"
       text="Connect"
-      onClick={onViewMainProfile}
+      onClick={onConnect}
     />
     <Button icon="/assets/images/Send_Submit.svg" text="Message" />
     <button 
@@ -359,9 +360,21 @@ const CertificationItem = ({ certification }) => (
   </div>
 );
 
+const formatCandidateAddress = (candidate) => {
+  if (!candidate) return null;
+  const parts = [candidate.address, candidate.street, candidate.city, candidate.country]
+    .filter((part) => part != null && String(part).trim() !== "");
+  if (parts.length > 0) return parts.join(", ");
+  return candidate.location || null;
+};
+
 const ContactInfoList = ({ candidate }) => {
+  const phone = candidate?.phone || candidate?.phone_number;
+  const address = formatCandidateAddress(candidate);
+
   const contacts = [
-    { type: "Mobile", value: candidate.phone, icon: "📱" },
+    { type: "Phone", value: phone, icon: "📱" },
+    { type: "Address", value: address, icon: "📍" },
     { type: "Email", value: candidate.email, icon: "📧" },
     { type: "LinkedIn", value: candidate.linkedin_url, icon: "💼" },
     { type: "GitHub", value: candidate.github_url, icon: "💻" },

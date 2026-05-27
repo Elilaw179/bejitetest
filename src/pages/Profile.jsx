@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { FaUser, FaEnvelope, FaPhone, FaMapMarker, FaBuilding, FaEdit, FaArrowLeft } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaBuilding, FaEdit, FaArrowLeft } from 'react-icons/fa';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import ProfileCvSections from '../components/ProfileCvSections';
 import axiosInstance from '../utils/axiosInstance';
@@ -137,10 +137,6 @@ const Profile = () => {
   const isJobseekerProfile = viewedRole === 'jobseeker';
   const isRecruiterProfile = viewedRole === 'recruiter';
 
-  const displayPhone =
-    profileData?.phone || profileData?.phone_number || null;
-  const displayLocation = profileData?.location || null;
-
   const handleEditProfile = () => {
     if (user?.role === 'jobseeker') {
       navigate('/edit-profile/bio');
@@ -275,26 +271,6 @@ const Profile = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <FaPhone className="text-[#16730F]" />
-              <div>
-                <p className="text-sm text-gray-500">Phone</p>
-                <p className="text-[#1A3E32]">
-                  {displayPhone || 'Not provided'}
-                </p>
-              </div>
-            </div>
-            {isJobseekerProfile && (
-              <div className="flex items-center gap-3">
-                <FaMapMarker className="text-[#16730F]" />
-                <div>
-                  <p className="text-sm text-gray-500">Location</p>
-                  <p className="text-[#1A3E32]">
-                    {displayLocation || 'Not provided'}
-                  </p>
-                </div>
-              </div>
-            )}
             {isRecruiterProfile && (
               <div className="flex items-center gap-3">
                 <FaBuilding className="text-[#16730F]" />

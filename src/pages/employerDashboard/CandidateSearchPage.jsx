@@ -70,11 +70,14 @@ const CandidateSearchPage = () => {
       );
     } else if (!viewProfile) {
       return <CandidateSearchResults searchCriteria={formData} onViewProfile={handleViewProfile} />;
+    } else if (showPeopleConnect) {
+      return <PeopleConnect />;
     } else if (!showMainProfile) {
       return (
         <UserProfilePanel
           candidateId={selectedCandidateId}
           onViewMainProfile={() => setShowMainProfile(true)}
+          onConnect={() => setShowPeopleConnect(true)}
         />
       );
     } else if (!showPeopleConnect) {
@@ -121,10 +124,13 @@ const CandidateSearchPage = () => {
                   isFormComplete={hasAtLeastOneField}
                   onSearch={handleSearch}
                 />
+              ) : showPeopleConnect ? (
+                <PeopleConnect />
               ) : !showMainProfile ? (
                 <UserProfilePanel
                   candidateId={selectedCandidateId}
                   onViewMainProfile={() => setShowMainProfile(true)}
+                  onConnect={() => setShowPeopleConnect(true)}
                 />
               ) : !showPeopleConnect ? (
                 <UserMainProfileCard
