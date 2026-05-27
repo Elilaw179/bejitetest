@@ -34,7 +34,7 @@ function RecruitmentRight() {
 
   return (
     <div className="bg-[#F5F5F5] p-2 hidden md:block">
-      <aside className="bg-[#1A3E32] rounded-2xl h-[calc(100vh-120px)]">
+      <aside className="bg-[#1A3E32] rounded-2xl h-[calc(107vh-120px)]">
         <div className="bg-[#16730F] rounded-2xl p-3">
           <div className="p-5 space-y-2 bg-">
             {/* <FaArrowLeft className="text-[#1A3E32]" /> */}
@@ -59,7 +59,7 @@ function RecruitmentRight() {
               <p className="text-[11px] font-bold">@nd_creations</p>
             </div>
           </div>
-          <div className="mt-6 px-4">
+          <div className="mt-6 px-1">
             <div className="grid grid-cols-2 gap-3">
               {/* Post Count Card */}
               <div className="bg-gradient-to-br from-white/10 to-white/5 rounded-xl py-3 px-2 text-center border border-white/10">

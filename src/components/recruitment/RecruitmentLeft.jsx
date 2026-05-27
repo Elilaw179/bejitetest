@@ -51,8 +51,8 @@ export default function RecruitmentLeft() {
   };
 
   return (
-    <div className="hidden md:block bg-[#F5F5F5] p-2">
-      <aside className="bg-[#16730F] rounded-2xl pb-4 pt-2 overflow-y-auto overflow-x-hidden max-h-[calc(107vh-120px)] ">
+    <div className="hidden md:block bg-[#F5F5F5] px-2">
+      <aside className="bg-[#16730F] rounded-[0px] pb-2 pt-2 overflow-y-auto overflow-x-hidden max-h-[calc(107vh-120px)] ">
         {/* <div className="space-y-2 p-7">
         <FaArrowLeft className="text-[#1A3E32]" />
         <h2 className="text-[20px] text-[#ffffff]">Dashboardss</h2>
