@@ -78,8 +78,14 @@ function RecruitmentRight() {
 
       <div className="bg-[#1A3E32] h-[calc(100%-180px)] mt-3 p-2">
         <div className="m-auto mt-10 ml-6 space-y-5 cursor-pointer max-w-60">
-          <div className="flex items-center space-x-3">
-            <img src="assets/images/setting.png" alt="df" />
+          <div
+            className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+            onClick={() => navigate('/news-feed?feed=saved')}
+            onKeyDown={(e) => e.key === 'Enter' && navigate('/news-feed?feed=saved')}
+            role="button"
+            tabIndex={0}
+          >
+            <img src="assets/images/setting.png" alt="" />
             <p className="text-[#F5F5F5] font-bold">Saved Posts</p>
           </div>
           <div className="flex items-center space-x-3">

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH } from "react-icons/fa";
-import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment } from '../../services/postsApi';
+import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment, getSavedPosts } from '../../services/postsApi';
+import { sharePostWithLink } from '../../utils/postShare';
 import {
   getUser,
   mergeAuthUsers,
@@ -72,6 +73,9 @@ export default function RecruitmentMiddle() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const feedMode = searchParams.get('feed') === 'saved' ? 'saved' : 'home';
   const reduxUser = useSelector((state) => state.auth?.user);
 
   const mergedUser = useMemo(() => {
@@ -92,8 +96,33 @@ export default function RecruitmentMiddle() {
   }, [reduxUser, location.pathname]);
 
   useEffect(() => {
-    fetchFeed();
-  }, []);
+    if (feedMode === 'saved') {
+      fetchSavedPosts();
+    } else {
+      fetchFeed();
+    }
+  }, [feedMode]);
+
+  const fetchSavedPosts = async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      const data = await getSavedPosts(20);
+      setPosts(data.posts || []);
+      if (!silent) setError(null);
+    } catch (err) {
+      console.error('Error fetching saved posts:', err);
+      if (!silent) setError('Failed to load saved posts');
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  };
+
+  const refreshPosts = (silent = false) => {
+    if (feedMode === 'saved') {
+      return fetchSavedPosts(silent);
+    }
+    return fetchFeed(silent);
+  };
 
   const fetchFeed = async (silent = false) => {
     try {
@@ -116,9 +145,18 @@ export default function RecruitmentMiddle() {
       } else {
         await likePost(postId);
       }
-      fetchFeed(true);
+      refreshPosts(true);
     } catch (err) {
       console.error('Error toggling like:', err);
+    }
+  };
+
+  const handleShare = async (postId) => {
+    try {
+      await sharePostWithLink(postId);
+      refreshPosts(true);
+    } catch (err) {
+      console.error('Error sharing post:', err);
     }
   };
 
@@ -129,7 +167,7 @@ export default function RecruitmentMiddle() {
       } else {
         await savePost(postId);
       }
-      fetchFeed(true);
+      refreshPosts(true);
     } catch (err) {
       console.error('Error toggling save:', err);
     }
@@ -138,7 +176,7 @@ export default function RecruitmentMiddle() {
   const handleUpdatePost = async (postId, postData) => {
     try {
       await updatePost(postId, postData);
-      fetchFeed();
+      refreshPosts();
     } catch (err) {
       console.error('Error updating post:', err);
       throw err;
@@ -196,13 +234,32 @@ export default function RecruitmentMiddle() {
 
       <hr className="border-t-2 border-[#16730F]" />
 
+      {feedMode === 'saved' && (
+        <div className="max-w-3xl mx-auto flex items-center justify-between bg-white rounded-2xl px-4 py-3 shadow-sm">
+          <h2 className="text-lg font-semibold text-[#1A3E32]">Saved posts</h2>
+          <button
+            type="button"
+            onClick={() => navigate('/news-feed')}
+            className="text-sm text-[#16730F] hover:underline font-medium"
+          >
+            Back to feed
+          </button>
+        </div>
+      )}
+
       {/* Posts Feed */}
       {loading ? (
-        <div className="text-center py-8 text-gray-500">Loading posts...</div>
+        <div className="text-center py-8 text-gray-500">
+          {feedMode === 'saved' ? 'Loading saved posts...' : 'Loading posts...'}
+        </div>
       ) : error ? (
         <div className="text-center py-8 text-red-500">{error}</div>
       ) : posts.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">No posts yet. Be the first to post!</div>
+        <div className="text-center py-8 text-gray-500">
+          {feedMode === 'saved'
+            ? 'No saved posts yet. Save posts from your feed to see them here.'
+            : 'No posts yet. Be the first to post!'}
+        </div>
       ) : (
         posts.map(post => (
           <RecruitmentPostCard
@@ -212,6 +269,7 @@ export default function RecruitmentMiddle() {
             currentUserPhotoUrl={currentUserImage}
             onLike={handleLike}
             onSave={handleSave}
+            onShare={handleShare}
             onUpdate={handleUpdatePost}
             onDelete={handleDeletePost}
           />
@@ -222,7 +280,7 @@ export default function RecruitmentMiddle() {
         onClose={() => setShowModal(false)}
         onPost={async (postData) => {
           await createPost(postData);
-          fetchFeed();
+          refreshPosts();
         }}
       />
     </main>
@@ -233,6 +291,7 @@ const RecruitmentPostCard = ({
   post,
   onLike,
   onSave,
+  onShare,
   onUpdate,
   onDelete,
   currentUserId,
@@ -321,6 +380,10 @@ const RecruitmentPostCard = ({
   const handleSaveClick = () => {
     setSaved(!saved);
     onSave(post.id, saved);
+  };
+
+  const handleShareClick = () => {
+    onShare(post.id);
   };
 
   const handleEditClick = () => {
@@ -545,7 +608,11 @@ const RecruitmentPostCard = ({
             <FaComment />
             <span>Comment</span>
           </button>
-          <button className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]">
+          <button
+            type="button"
+            onClick={handleShareClick}
+            className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]"
+          >
             <FaShare />
             <span>Share</span>
           </button>

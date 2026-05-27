@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH, FaTimes } from 'react-icons/fa';
 import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment } from '../services/postsApi';
+import { sharePostWithLink } from '../utils/postShare';
 import { getUser } from '../utils/tokenManager';
 import { getUserProfileImage, getProfileImageUrl } from '../utils/profileImageUtils';
 import PostCreationModal from './PostCreationModal';
@@ -97,6 +98,15 @@ const PostContainer = () => {
     }
   };
 
+  const handleShare = async (postId) => {
+    try {
+      await sharePostWithLink(postId);
+      fetchFeed(true);
+    } catch (err) {
+      console.error('Error sharing post:', err);
+    }
+  };
+
   const handleUpdatePost = async (postId, postData) => {
     try {
       await updatePost(postId, postData);
@@ -171,6 +181,7 @@ const PostContainer = () => {
             currentUserId={user?.id}
             onLike={handleLike}
             onSave={handleSave}
+            onShare={handleShare}
             onUpdate={handleUpdatePost}
             onDelete={handleDeletePost}
           />
@@ -322,7 +333,7 @@ const Divider = () => {
   return <div className="max-w-3xl mx-auto my-8 border-t-2 border-[#16730F]" />;
 };
 
-const PostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId }) => {
+const PostCard = ({ post, onLike, onSave, onShare, onUpdate, onDelete, currentUserId }) => {
   const isOwner = String(post.authorId) === String(currentUserId);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
@@ -380,6 +391,10 @@ const PostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId }) =
   const handleSaveClick = () => {
     setSaved(!saved);
     onSave(post.id, saved);
+  };
+
+  const handleShareClick = () => {
+    onShare(post.id);
   };
 
   const handleEditClick = () => {
@@ -467,7 +482,7 @@ const PostCard = ({ post, onLike, onSave, onUpdate, onDelete, currentUserId }) =
         saved={saved}
         onLike={handleLikeClick}
         onComment={toggleComments}
-        onShare={() => {}}
+        onShare={handleShareClick}
         onSave={handleSaveClick}
       />
 
