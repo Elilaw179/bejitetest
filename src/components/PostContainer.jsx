@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH, FaTimes } from 'react-icons/fa';
 import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment } from '../services/postsApi';
-import { sharePostWithLink } from '../utils/postShare';
+import { copyPostLink, getPostShareUrl, getSocialShareUrl, openShareWindow, recordPostShare } from '../utils/postShare';
 import { getUser } from '../utils/tokenManager';
 import { getUserProfileImage, getProfileImageUrl } from '../utils/profileImageUtils';
 import PostCreationModal from './PostCreationModal';
 import ConfirmModal from './ConfirmModal';
+import SharePostModal from './SharePostModal';
 
 // Helper function to get display name (same pattern as NewsFeedHeader)
 const getDisplayName = (user) => {
@@ -100,7 +101,7 @@ const PostContainer = () => {
 
   const handleShare = async (postId) => {
     try {
-      await sharePostWithLink(postId);
+      await recordPostShare(postId);
       fetchFeed(true);
     } catch (err) {
       console.error('Error sharing post:', err);
@@ -350,6 +351,7 @@ const PostCard = ({ post, onLike, onSave, onShare, onUpdate, onDelete, currentUs
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(post.body || '');
   const [savingEdit, setSavingEdit] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const fetchComments = async () => {
     if (comments.length > 0) return;
@@ -394,7 +396,21 @@ const PostCard = ({ post, onLike, onSave, onShare, onUpdate, onDelete, currentUs
   };
 
   const handleShareClick = () => {
-    onShare(post.id);
+    setShowShareModal(true);
+  };
+
+  const handleShareOption = async (platform) => {
+    try {
+      await onShare(post.id);
+      const postUrl = getPostShareUrl(post.id);
+      if (platform === 'copy') {
+        await copyPostLink(post.id);
+      } else {
+        openShareWindow(getSocialShareUrl(platform, postUrl));
+      }
+    } finally {
+      setShowShareModal(false);
+    }
   };
 
   const handleEditClick = () => {
@@ -484,6 +500,11 @@ const PostCard = ({ post, onLike, onSave, onShare, onUpdate, onDelete, currentUs
         onComment={toggleComments}
         onShare={handleShareClick}
         onSave={handleSaveClick}
+      />
+      <SharePostModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onShare={handleShareOption}
       />
 
       {showComments && (

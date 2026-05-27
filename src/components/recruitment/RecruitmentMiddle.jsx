@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH } from "react-icons/fa";
 import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment, getSavedPosts } from '../../services/postsApi';
-import { sharePostWithLink } from '../../utils/postShare';
+import { copyPostLink, getPostShareUrl, getSocialShareUrl, openShareWindow, recordPostShare } from '../../utils/postShare';
 import {
   getUser,
   mergeAuthUsers,
@@ -14,6 +14,7 @@ import { getAuthorProfileImageUrl } from '../../utils/profileImageUtils';
 import PostCreationModal from '../PostCreationModal';
 import ConfirmModal from '../ConfirmModal';
 import useSyncProfilePhoto from '../../hooks/useSyncProfilePhoto';
+import SharePostModal from '../SharePostModal';
 
 // Helper function to get display name (same pattern as NewsFeedHeader)
 const getDisplayName = (user) => {
@@ -153,7 +154,7 @@ export default function RecruitmentMiddle() {
 
   const handleShare = async (postId) => {
     try {
-      await sharePostWithLink(postId);
+      await recordPostShare(postId);
       refreshPosts(true);
     } catch (err) {
       console.error('Error sharing post:', err);
@@ -328,6 +329,7 @@ const RecruitmentPostCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState('');
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const handleLinkClick = (e, url) => {
     e.preventDefault();
@@ -383,7 +385,21 @@ const RecruitmentPostCard = ({
   };
 
   const handleShareClick = () => {
-    onShare(post.id);
+    setShowShareModal(true);
+  };
+
+  const handleShareOption = async (platform) => {
+    try {
+      await onShare(post.id);
+      const postUrl = getPostShareUrl(post.id);
+      if (platform === 'copy') {
+        await copyPostLink(post.id);
+      } else {
+        openShareWindow(getSocialShareUrl(platform, postUrl));
+      }
+    } finally {
+      setShowShareModal(false);
+    }
   };
 
   const handleEditClick = () => {
@@ -625,6 +641,13 @@ const RecruitmentPostCard = ({
           <span>{saved ? 'Saved' : 'Save'}</span>
         </button>
       </div>
+
+      {/* Comments Section */}
+      <SharePostModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onShare={handleShareOption}
+      />
 
       {/* Comments Section */}
       {showComments && (
