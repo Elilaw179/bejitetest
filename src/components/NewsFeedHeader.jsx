@@ -143,6 +143,7 @@ const NewsFeedHeader = ({
           .then((response) => ({
             type: 'people',
             results: (response.data.users || []).map((u) => ({
+              type: 'people',
               id: u.id,
               name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Unknown User',
               firstName: u.firstName,
@@ -164,6 +165,7 @@ const NewsFeedHeader = ({
             results: response.data.success ? response.data.data.map(candidate => {
               const userId = candidate.user_id ?? candidate.userId ?? candidate.id;
               return {
+                type: 'people',
                 id: userId,
                 name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Unknown User',
                 firstName: candidate.first_name,
@@ -184,6 +186,7 @@ const NewsFeedHeader = ({
           .then(response => ({
             type: 'jobs',
             results: response.data.success ? response.data.data.map(job => ({
+              type: 'jobs',
               id: job.id,
               name: job.job_title || job.title,
               subtitle: job.company_name || job.industry_sector,
@@ -408,7 +411,12 @@ const NewsFeedHeader = ({
                   className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                 >
                   <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {result.type === 'people' ? (
+                    {result.type === 'jobs' || result.type === 'posts' ? (
+                      <div className="text-gray-500">
+                        {result.type === 'jobs' && <FaBriefcase />}
+                        {result.type === 'posts' && <FaNewspaper />}
+                      </div>
+                    ) : (
                       <img
                         src={avatarSrc(result.image)}
                         alt={result.name}
@@ -418,17 +426,6 @@ const NewsFeedHeader = ({
                           e.currentTarget.src = PROFILE_PHOTO_PLACEHOLDER;
                         }}
                       />
-                    ) : result.image ? (
-                      <img
-                        src={avatarSrc(result.image)}
-                        alt={result.name}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="text-gray-500">
-                        {result.type === 'jobs' && <FaBriefcase />}
-                        {result.type === 'posts' && <FaNewspaper />}
-                      </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">

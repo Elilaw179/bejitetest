@@ -20,6 +20,7 @@ export const pickAuthorProfilePhoto = (entity) => {
     entity.image ??
     entity.profile_photo ??
     entity.profilePhoto ??
+    entity.author_profile_photo ??
     null;
   return raw && String(raw).trim() ? String(raw).trim() : null;
 };
