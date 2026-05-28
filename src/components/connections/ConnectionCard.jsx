@@ -1,19 +1,23 @@
 import React from 'react';
 import { getAuthorProfileImageUrl } from '../../utils/profileImageUtils';
 
-const ConnectionCard = ({ user, onRemove, showRemoveButton = false }) => (
+const ConnectionCard = ({ user, onRemove, onViewProfile, showRemoveButton = false }) => (
   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-    <div className="flex items-center gap-4">
+    <button
+      type="button"
+      onClick={() => onViewProfile?.(user?.id)}
+      className="flex items-center gap-4 text-left hover:opacity-90"
+    >
       <img
         src={getAuthorProfileImageUrl(user)}
         alt={user.name}
         className="w-12 h-12 rounded-full object-cover"
       />
       <div>
-        <h3 className="font-semibold text-[#1A3E32]">{user.name}</h3>
+        <h3 className="font-semibold text-[#1A3E32] hover:text-[#16730F]">{user.name}</h3>
         <p className="text-sm text-gray-600">{user.jobTitle || user.role || 'Professional'}</p>
       </div>
-    </div>
+    </button>
     {showRemoveButton && (
       <button
         onClick={onRemove}

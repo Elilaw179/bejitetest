@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../../config";
 import { getProfileImageUrl } from "../../utils/profileImageUtils";
+import { formatSalaryExpectation } from "../../utils/formatSalary";
 import useCandidateConnect from "../../hooks/useCandidateConnect";
 
 const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {

@@ -84,7 +84,6 @@ import AdminList from "./pages/admin/AdminList.jsx";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute.jsx";
 import AuthBootstrap from "./components/AuthBootstrap.jsx";
 import ProfileCompletionReminder from "./components/ProfileCompletionReminder.jsx";
-import Hyperlinks from "./components/Hyperlinks.jsx";
 import { Navigate } from "react-router-dom";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
@@ -291,7 +290,6 @@ function App() {
           <Route path="/ase/dashboard" element={<ASESubscriptionDashboard />} />
         </Routes>
 <ProfileCompletionReminder />
-        <Hyperlinks />
         <ToastContainer
           position="top-right"
           autoClose={3000}

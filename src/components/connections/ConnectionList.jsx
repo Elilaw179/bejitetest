@@ -2,7 +2,7 @@ import React from 'react';
 import { FaUserFriends } from 'react-icons/fa';
 import ConnectionCard from './ConnectionCard';
 
-const ConnectionList = ({ connections, onRemoveConnection, searchQuery }) => {
+const ConnectionList = ({ connections, onRemoveConnection, searchQuery, onViewProfile }) => {
   // Ensure connections is an array
   const connectionsArray = Array.isArray(connections) ? connections : [];
   const filteredConnections = connectionsArray.filter(conn =>
@@ -33,6 +33,7 @@ const ConnectionList = ({ connections, onRemoveConnection, searchQuery }) => {
         <ConnectionCard
           key={connection.id}
           user={connection}
+          onViewProfile={onViewProfile}
           onRemove={() => onRemoveConnection(connection.id, connection.name)}
           showRemoveButton={true}
         />

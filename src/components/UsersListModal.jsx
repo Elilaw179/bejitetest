@@ -22,11 +22,11 @@ const UsersListModal = ({ isOpen, onClose, title, users, type, loading }) => {
   const currentUser = getUser();
   const currentUserId = currentUser?.id;
 
-  useEffect(() => {
+useEffect(() => {
     if (isOpen && type === 'likes') {
       fetchConnections();
     }
-  }, [isOpen]);
+  }, [isOpen, type]);
 
   const fetchConnections = async () => {
     try {
