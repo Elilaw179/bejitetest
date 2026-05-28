@@ -544,8 +544,28 @@ const PeopleList = ({ users, onSendRequest, onViewProfile, searchQuery, isSearch
 const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
 
+  const buildPageItems = () => {
+    const items = [];
+    const add = (value) => items.push(value);
+
+    add(1);
+
+    const windowStart = Math.max(2, currentPage - 1);
+    const windowEnd = Math.min(totalPages - 1, currentPage + 1);
+
+    if (windowStart > 2) add('left-ellipsis');
+    for (let page = windowStart; page <= windowEnd; page += 1) add(page);
+    if (windowEnd < totalPages - 1) add('right-ellipsis');
+
+    if (totalPages > 1) add(totalPages);
+
+    return items;
+  };
+
+  const pageItems = buildPageItems();
+
   return (
-    <div className="flex items-center justify-center gap-3 mt-6">
+    <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
       <button
         type="button"
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
@@ -557,6 +577,34 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
       <span className="text-sm text-gray-600">
         Page {currentPage} of {totalPages}
       </span>
+      <div className="flex items-center gap-1">
+        {pageItems.map((item, index) => {
+          if (typeof item !== 'number') {
+            return (
+              <span key={`${item}-${index}`} className="px-2 text-gray-500 select-none">
+                …
+              </span>
+            );
+          }
+
+          const isActive = item === currentPage;
+          return (
+            <button
+              key={item}
+              type="button"
+              onClick={() => onPageChange(item)}
+              className={`min-w-8 h-8 px-2 rounded-md text-sm border transition-colors ${
+                isActive
+                  ? 'bg-[#16730F] border-[#16730F] text-white'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              {item}
+            </button>
+          );
+        })}
+      </div>
       <button
         type="button"
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
