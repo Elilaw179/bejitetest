@@ -4,28 +4,13 @@ import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
-<<<<<<< HEAD
-import { FaPlus, FaTrash, FaCheck } from "react-icons/fa";
-import { optionsDegree, optionsEdu, optionsField, optionsInst, optionsLoc } from "../../../data/educationData";
-import SelectWithIcon from "../../../components/education/SelectWithIcon";
-import InputWithIcon from "../../../components/education/InputWithIcon";
-import axiosInstance from "../../../utils/axiosInstance";
-import { toast } from "react-toastify";
-import useLocalStorage from "../../../hooks/useLocalStorage";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
-export default function Education() {
-=======
 import useAuth from "../../../hooks/useAuth";
 
 import {
   FaPlus,
-  FaCheckCircle,
-  FaChevronDown,
   FaTrash,
   FaCheck,
 } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import Loader from "../../../components/ui/Loader";
 import axiosInstance from "../../../utils/axiosInstance";
@@ -49,7 +34,6 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 );
 
 function Education() {
->>>>>>> origin/main
   const navigate = useNavigate();
   const { user } = useAuth();
   const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
@@ -67,9 +51,6 @@ function Education() {
     "Job Type",
   ];
 
-<<<<<<< HEAD
-  const { id: userId } = useLocalStorage('user'); 
-=======
   const [educationLevel, setEducationLevel] = useState("");
   const [institutionName, setInstitutionName] = useState("");
   const [userLocation, setLocation] = useState("");
@@ -101,81 +82,38 @@ function Education() {
       setDataLoaded(true);
     }
   }, [isEditMode, cvData, user?.id, dataLoaded]);
->>>>>>> origin/main
 
-  const [educationData, setEducationData] = useState({
-    userId: userId,
-    educationLevel: "",
-    institutionName: "",
-    userLocation: "",
-    fieldOfStudy: "",
-    degree: "",
-    startDate: "",
-    endDate: "",
-  })
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEducationData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
-  };
-<<<<<<< HEAD
-  
-  const handleSubmit = async () => {
-    try {
-      const response = await axiosInstance.post(`${BASE_URL}/api/cv-builder/education`, educationData);
-      console.log(response)
-      toast.success(response.data.message ?? "Edication Added")
-      
-       navigate("/skills", {
-        state: { email, firstName, lastName, role, mode, followings },
-      });
-      
-    } catch (error) {
-      toast.error("Error Posting Data", error.message)
-    }
-    
-  }
-
-  const [allFilled, setAllFilled] = useState(false);
-
-    useEffect(() => {
+  useEffect(() => {
     setAllFilled(
-      educationData.educationLevel.trim() !== "" &&
-      educationData.institutionName.trim() !== "" &&
-      educationData.userLocation.trim() !== "" &&
-      educationData.fieldOfStudy.trim() !== "" &&
-      educationData.degree.trim() !== "" &&
-      educationData.startDate.trim() !== "" &&
-      educationData.endDate.trim() !== ""
+      Boolean(
+        educationLevel &&
+          institutionName &&
+          userLocation &&
+          fieldOfStudy &&
+          degree &&
+          startDate &&
+          endDate,
+      ),
     );
   }, [
-    educationData.educationLevel,
-    educationData.institutionName,
-    educationData.userLocation,
-    educationData.fieldOfStudy,
-    educationData.degree,
-    educationData.startDate,
-    educationData.endDate,
+    educationLevel,
+    institutionName,
+    userLocation,
+    fieldOfStudy,
+    degree,
+    startDate,
+    endDate,
   ]);
 
-
   const clearForm = () => {
-    setEducationData({
-      educationLevel: "",
-      institutionName: "",
-      userLocation: "",
-      fieldOfStudy: "",
-      degree: "",
-      startDate: "",
-      endDate: ""
-    })
+    setEducationLevel("");
+    setInstitutionName("");
+    setLocation("");
+    setFieldOfStudy("");
+    setDegree("");
+    setStartDate("");
+    setEndDate("");
   };
-  
-  const location = useLocation();
-  const { email, firstName, lastName, role, mode, followings } = location.state || {};
-=======
 
   const location = useLocation();
 
@@ -222,7 +160,6 @@ function Education() {
     clearForm();
     toast.success("Education added!");
   };
->>>>>>> origin/main
 
   return (
     <div className=" min-h-screen py-4">
@@ -239,18 +176,6 @@ function Education() {
 
       <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4 ">
         <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-1">
-<<<<<<< HEAD
-          <div className="bg-[#82828280] rounded-2xl p-4 ">
-            <p className="font-semibold text-xs mb-1">EDUCATIONAL LEVEL</p>
-            <SelectWithIcon
-              value={educationData.educationLevel}
-              name="educationLevel"
-              onChange={handleChange}
-              options={optionsEdu}
-              placeholder="Select..."
-            />
-          </div>
-=======
             <div className="bg-[#82828280] rounded-2xl p-4">
               <p className="font-semibold text-xs mb-1">EDUCATIONAL LEVEL</p>
               <InputWithIcon
@@ -259,41 +184,22 @@ function Education() {
                 placeholder="Enter education level"
               />
             </div>
->>>>>>> origin/main
 
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">INSTITUTION NAME</p>
-<<<<<<< HEAD
-              <SelectWithIcon
-                value={educationData.institutionName}
-                name="institutionName"
-                onChange={handleChange}
-                options={optionsInst}
-                placeholder="Select institution..."
-=======
               <InputWithIcon
                 value={institutionName}
                 onChange={(e) => setInstitutionName(e.target.value)}
                 placeholder="Enter institution name"
->>>>>>> origin/main
               />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">LOCATION</p>
-<<<<<<< HEAD
-              <SelectWithIcon
-                value={educationData.userLocation}
-                name="userLocation"
-                onChange={handleChange}
-                options={optionsLoc}
-                placeholder="Select location..."
-=======
               <InputWithIcon
                 value={userLocation}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Enter location"
->>>>>>> origin/main
               />
             </div>
           </div>
@@ -301,49 +207,15 @@ function Education() {
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">FIELD OF STUDY</p>
-<<<<<<< HEAD
-              <SelectWithIcon
-                value={educationData.fieldOfStudy}
-                name="fieldOfStudy"
-                onChange={handleChange}
-                options={optionsField}
-                placeholder="Select field..."
-=======
               <InputWithIcon
                 value={fieldOfStudy}
                 onChange={(e) => setFieldOfStudy(e.target.value)}
                 placeholder="Enter field of study"
->>>>>>> origin/main
               />
             </div>
 
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">DEGREE</p>
-<<<<<<< HEAD
-              <div className="relative w-full">
-                <input
-                  list="degree-list"
-                  name="degree"
-                  value={educationData.degree}
-                  onChange={handleChange}
-                  placeholder="e.g. B.Sc or select"
-                  className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
-                    educationData.degree ? "border-[#828282]" : "border-[#F5F5F5]"
-                  }`}
-                />
-                <datalist id="degree-list">
-                  {optionsDegree.map((opt) => (
-                    <option key={opt} value={opt} />
-                  ))}
-                </datalist>
-                {educationData.degree && (
-                  <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-                )}
-              </div>
-            </div>
-          </div>
-
-=======
               <InputWithIcon
                 value={degree}
                 onChange={(e) => setDegree(e.target.value)}
@@ -351,24 +223,21 @@ function Education() {
               />
             </div>
           </div>
->>>>>>> origin/main
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">START DATE</p>
               <InputWithIcon
                 type="date"
-                name="startDate"
-                value={educationData.startDate}
-                onChange={handleChange}
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
               />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">END DATE</p>
               <InputWithIcon
                 type="date"
-                name="endDate" 
-                value={educationData.endDate}
-                onChange={handleChange}
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
             <div className="flex-1 flex items-end">
@@ -388,16 +257,6 @@ function Education() {
         </div>
       </div>
 
-<<<<<<< HEAD
-      {allFilled && (
-        <div className="max-w-4xl px-4 mt-6   m-auto ">
-          <div className="max-w-2xs  bg-[#1A3E32] text-white rounded-lg flex flex-col m-auto sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
-            <div>
-              <p className="font-semibold">{educationData.fieldOfStudy}</p>
-              <p className="text-sm">
-                {educationData.degree} @ {educationData.institutionName}
-              </p>
-=======
       {allEducation.length > 0 &&
         allEducation.map((item, idx) => {
           return (
@@ -429,17 +288,11 @@ function Education() {
                   <FaTrash />
                 </button>
               </div>
->>>>>>> origin/main
             </div>
           );
         })}
 
       <NavigationButtons
-<<<<<<< HEAD
-        isFormComplete={allFilled}
-        onBack={() => navigate(-1)}
-        onNext={() => handleSubmit()}
-=======
         isFormComplete={true} // Always allow proceeding since it's optional
         onBack={() => {
           if (isEditMode) {
@@ -518,11 +371,12 @@ function Education() {
             });
           }
         }}
->>>>>>> origin/main
       />
 
       <Loader show={isLoading} />
     </div>
   );
 }
+
+export default Education;
 
