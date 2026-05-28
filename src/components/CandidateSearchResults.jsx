@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { getAuthorProfileImageUrl } from '../../utils/profileImageUtils';
 
 const CandidateSearchResults = ({ onViewProfile }) => {
   const candidates = [
@@ -9,7 +10,7 @@ const CandidateSearchResults = ({ onViewProfile }) => {
       type: "Jobseeker",
       jobTitle: "Graphics Designer",
       location: "Lagos, Nigeria",
-      image: "assets/images/eli.jpg",
+      image: "/assets/images/photo_placeholder.png",
       online: true
     },
    
@@ -78,16 +79,19 @@ const CandidateProfile = ({ candidate, onViewProfile }) => (
   </div>
 );
 
-const ProfileImage = ({ image, name, online }) => (
-  <div className="relative">
-    <div className="rounded-full w-[100px] h-[100px] overflow-hidden">
-      <img src={image} alt={`${name} profile`} className="w-full h-full object-cover" />
+const ProfileImage = ({ image, name, online }) => {
+  const resolvedImage = getAuthorProfileImageUrl({ image });
+  return (
+    <div className="relative">
+      <div className="rounded-full w-[100px] h-[100px] overflow-hidden">
+        <img src={resolvedImage} alt={`${name} profile`} className="w-full h-full object-cover" />
+      </div>
+      <span className={`absolute w-4 h-4 rounded-full border-2 border-white top-18 left-20 ${
+        online ? 'bg-[#6B8E23]' : 'bg-[#828282]'
+      }`} />
     </div>
-    <span className={`absolute w-4 h-4 rounded-full border-2 border-white top-18 left-20 ${
-      online ? 'bg-[#6B8E23]' : 'bg-[#828282]'
-    }`} />
-  </div>
-);
+  );
+};
 
 const ProfileDetails = ({ name, type, jobTitle, location, onViewProfile }) => (
   <div className="ml-3 flex-1 space-y-0">

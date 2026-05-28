@@ -29,7 +29,7 @@ const ProfileImageSection = () => {
       <div className="relative p-4">
         <div className="rounded-full w-[100px] h-[100px] overflow-hidden">
           <img
-            src="assets/images/eli.jpg"
+            src="/assets/images/photo_placeholder.png"
             alt="Osakwe Prisca profile"
             className="w-full h-full object-cover"
           />
@@ -137,7 +137,7 @@ const PostHeader = () => {
     <div className="flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
       <div className="flex items-center gap-4">
         <img
-          src="assets/images/eli.jpg"
+          src="/assets/images/photo_placeholder.png"
           alt="profile"
           className="rounded-full w-[60px] h-[60px]"
         />

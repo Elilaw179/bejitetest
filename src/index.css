@@ -23,3 +23,48 @@ input[type="date"].hide-calendar-icon::-webkit-calendar-picker-indicator {
 body{
   overflow-x: hidden;
 }
+
+/* Consistent affordance for clickable UI/text across the app */
+a,
+button,
+[role="button"],
+summary,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+@keyframes shareSheetEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shareBackdropEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.share-sheet-enter {
+  animation: shareSheetEnter 220ms ease-out;
+}
+
+.share-backdrop-enter {
+  animation: shareBackdropEnter 180ms ease-out;
+}

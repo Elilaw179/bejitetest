@@ -1,9 +1,14 @@
 const useLocalStorage = (key) => {
     const stringData = localStorage.getItem(key);
-    if (!stringData) return null;
+    if (!stringData) return {};
 
-    const jsonData = JSON.parse(stringData);
-    return { ...jsonData };
+    try {
+        const jsonData = JSON.parse(stringData);
+        return jsonData && typeof jsonData === "object" ? { ...jsonData } : {};
+    } catch (error) {
+        console.warn(`Invalid JSON found in localStorage for key: ${key}`, error);
+        return {};
+    }
 };
 
 export default useLocalStorage;

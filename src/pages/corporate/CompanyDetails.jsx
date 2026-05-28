@@ -1,15 +1,15 @@
-
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import { toast } from "react-toastify";
 import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
+import useRecruiterProfile from "../../services/recruiterProfile";
 
 const CompanyDetails = () => {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
 
   const steps = [
     "Basic Details",
@@ -18,12 +18,23 @@ const CompanyDetails = () => {
     "Location",
   ];
 
-
-  
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
     website: "",
   });
+
+  const { updateCompanyDetails } = useRecruiterProfile();
+
+  useEffect(() => {
+    if (isEditMode && recruiterData && !dataLoaded) {
+      setFormData({
+        full_name: recruiterData.company_name || "",
+        website: recruiterData.website || "",
+      });
+      setDataLoaded(true);
+    }
+  }, [isEditMode, recruiterData, dataLoaded]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -32,6 +43,41 @@ const CompanyDetails = () => {
   const isFormComplete = Object.values(formData).every(
     (v) => v.trim() !== ""
   );
+
+  const handleNextStep = async () => {
+    if (!isFormComplete) {
+      toast.error("Please complete all fields.");
+      return;
+    }
+
+    const submitData = async () => {
+      await updateCompanyDetails({
+        company_name: formData.full_name,
+        website: formData.website,
+      });
+      return "Company details saved successfully!";
+    };
+
+    try {
+      await toast.promise(submitData(), {
+        pending: "Saving company details...",
+        success: "Company details saved successfully!",
+        error: {
+          render({ data }) {
+            return `Save failed: ${data}`;
+          },
+        },
+      });
+
+      if (isEditMode) {
+        navigate(getPath(currentStep + 1));
+      } else {
+        navigate("/corporate/location");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="bg-white min-h-screen">
@@ -44,7 +90,7 @@ const CompanyDetails = () => {
         Business Details
       </section>
       <p className="max-w-3xl mx-auto px-4 text-[#333] text-[15px]">
-        Let’s get to know you
+        Let's get to know you
       </p>
 
       <div className="max-w-4xl mx-auto mt-6 lg:border-2 border-[#E0E0E0] flex flex-col lg:flex-row gap-8 lg:p-4">
@@ -83,8 +129,14 @@ const CompanyDetails = () => {
 
       <NavigationButtons
         isFormComplete={isFormComplete}
-        onBack={() => navigate(-1)}
-        onNext={() => isFormComplete && navigate("/coperate/location")}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
+        onNext={handleNextStep}
       />
     </div>
   );

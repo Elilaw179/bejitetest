@@ -45,7 +45,7 @@ const ProfileHeader = () => (
     <div className="relative left-20 bottom-24">
       <div className="rounded-full w-[120px] h-[120px] overflow-hidden">
         <img
-          src="assets/images/eli.jpg"
+          src="/assets/images/photo_placeholder.png"
           alt="Osakwe Prisca profile"
           className="w-full h-full object-cover"
         />
@@ -211,7 +211,7 @@ const RecommendedProfile = ({ onConnect }) => (
   <>
     <div className="px-8 pb-8 rounded-2xl text-[#FFFFFF] space-y-4 items-center">
       <div className="flex gap-3">
-        <img className="w-20 h-20 rounded-full" src="assets/images/eli.jpg" alt="Recommended profile" />
+        <img className="w-20 h-20 rounded-full" src="/assets/images/photo_placeholder.png" alt="Recommended profile" />
         <div>
           <p className="text-[10px] font-semibold">John Samuel</p>
           <div className="flex space-x-2 text-[5px]">

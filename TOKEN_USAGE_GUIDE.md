@@ -222,7 +222,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 ```javascript
 <Route 
-  path="/recruitment" 
+  path="/recruitment " 
   element={
     <ProtectedRoute requiredRole="recruiter">
       <Recruitment />

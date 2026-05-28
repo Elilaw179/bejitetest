@@ -1,14 +1,35 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
+import { toast } from "react-toastify";
+import * as connectionsApi from "../../services/connectionsApi";
 
 const PeopleConnect = () => {
-  const users = Array(8).fill({
-    name: "John Samuel",
-    role: "Jobseeker",
-    connections: "34",
-    image: "assets/images/eli.jpg"
-  });
+  const [users, setUsers] = useState(() => 
+    Array(8).fill({
+      id: null,
+      name: "John Samuel",
+      role: "Jobseeker",
+      connections: "34",
+      image: "/assets/images/photo_placeholder.png",
+      connectionStatus: "none" // none, pending, connected
+    })
+  );
+
+  const handleSendRequest = async (userId, userName) => {
+    try {
+      await connectionsApi.sendConnectionRequest(userId);
+      toast.success(`Connection request sent to ${userName}!`);
+      
+      // Update local state - mark as pending
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, connectionStatus: "pending" } : user
+      ));
+    } catch (error) {
+      console.error('Error sending connection request:', error);
+      toast.error('Failed to send connection request');
+    }
+  };
 
   return (
     <div className="w-full px-4 sm:px-6 py-6 bg-[#F5F5F5] mt-2">
@@ -27,10 +48,8 @@ const PeopleConnect = () => {
         {users.map((user, index) => (
           <React.Fragment key={index}>
             <UserCard
-              name={user.name}
-              role={user.role}
-              connections={user.connections}
-              image={user.image}
+              user={user}
+              onConnect={() => handleSendRequest(user.id || index, user.name)}
             />
             <Divider small />
           </React.Fragment>
@@ -63,26 +82,36 @@ const ConnectionHeader = () => (
   </>
 );
 
-const UserCard = ({ name, role, connections, image }) => (
-  <div className="flex flex-wrap sm:flex-nowrap gap-4 items-start">
-    <img className="w-20 h-20 rounded-full" src={image} alt={name} />
-    <div className="flex flex-col flex-1">
-      <p className="text-[14px] font-semibold">{name}</p>
-      <div className="flex flex-wrap items-center gap-x-2 text-sm text-gray-700">
-        <p>{role}</p>
-        <p className="text-[#FFB547]">• {connections} connections</p>
-      </div>
-      <div className="mt-2">
-        <Button variant="connectUser">
-          <img src="/assets/images/repeate-one.svg" alt="Connect icon" className="w-4 h-4" />
-          <span>Connect</span>
-        </Button>
+const UserCard = ({ user, onConnect }) => {
+  const { name, role, connections, image, connectionStatus } = user;
+  const isPending = connectionStatus === "pending";
+  const isConnected = connectionStatus === "connected";
+
+  return (
+    <div className="flex flex-wrap sm:flex-nowrap gap-4 items-start">
+      <img className="w-20 h-20 rounded-full" src={image} alt={name} />
+      <div className="flex flex-col flex-1">
+        <p className="text-[14px] font-semibold">{name}</p>
+        <div className="flex flex-wrap items-center gap-x-2 text-sm text-gray-700">
+          <p>{role}</p>
+          <p className="text-[#FFB547]">• {connections} connections</p>
+        </div>
+        <div className="mt-2">
+          <Button 
+            variant="connectUser" 
+            onClick={onConnect}
+            disabled={isPending || isConnected}
+          >
+            <img src="/assets/images/repeate-one.svg" alt="Connect icon" className="w-4 h-4" />
+            <span>{isPending ? "Pending" : isConnected ? "Connected" : "Connect"}</span>
+          </Button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-const Button = ({ variant, children }) => {
+const Button = ({ variant, children, onClick, disabled }) => {
   const baseClasses = "rounded-2xl px-4 py-2 text-[13px] flex items-center gap-2";
   const variants = {
     suggestions: "bg-[#1A3E32] text-[#FFB547]",
@@ -90,8 +119,14 @@ const Button = ({ variant, children }) => {
     connectUser: "bg-[#16730F] text-white rounded-3xl"
   };
 
+  const disabledClasses = "opacity-50 cursor-not-allowed";
+
   return (
-    <button className={`${baseClasses} ${variants[variant]}`}>
+    <button 
+      className={`${baseClasses} ${variants[variant]} ${disabled ? disabledClasses : ""}`}
+      onClick={onClick}
+      disabled={disabled}
+    >
       {children}
     </button>
   );

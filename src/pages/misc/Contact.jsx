@@ -12,7 +12,7 @@ export default function Contact() {
       <AboutPageHeader headerText="CONTACT US" />
       <main className="bg-white">
         <div className="bg-[#1A3E32] w-[300px] sm:w-[450px] h-[350px] m-auto p-7 font-normal rounded-2xl mt-6">
-          <p className="text-[#6B8E23]">Send a Message</p>
+          <p className="text-white">Send a Message</p>
           <form action="">
             <input
               type="text"

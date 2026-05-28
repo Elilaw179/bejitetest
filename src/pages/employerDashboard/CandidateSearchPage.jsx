@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { FaList, FaSlidersH, FaTimes, FaArrowLeft } from "react-icons/fa";
 import SearchCriteria from "../../components/candidate-search-page/SearchCriteria";
 import CandidateSearchResults from "../../components/candidate-search-page/CandidateSearchResults";
 import NewsFeedHeader from "../../components/NewsFeedHeader";
 import UserProfilePanel from "../../components/candidate-search-page/UserProfilePanel";
 import JobSearchFormGreen from "../../components/candidate-search-page/JobSearchFormGreen";
 import UserMainProfileCard from "../../components/candidate-search-page/UserMainProfileCard";
-import PeopleConnect from "../../components/candidate-search-page/PeopleConnect";
 
 const CandidateSearchPage = () => {
   const [formData, setFormData] = useState({
@@ -29,108 +29,205 @@ const CandidateSearchPage = () => {
   const [showResults, setShowResults] = useState(false);
   const [viewProfile, setViewProfile] = useState(false);
   const [showMainProfile, setShowMainProfile] = useState(false);
-  const [showPeopleConnect, setShowPeopleConnect] = useState(false);
-
-  // Add state for selected candidate ID
   const [selectedCandidateId, setSelectedCandidateId] = useState(null);
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
 
-  const [isMobile, setIsMobile] = useState(false);
+  const hasAtLeastOneField = Object.values(formData).some((val) => val.trim() !== "");
 
-  useEffect(() => {
-    const checkScreen = () => setIsMobile(window.innerWidth < 1024);
-    checkScreen();
-    window.addEventListener("resize", checkScreen);
-    return () => window.removeEventListener("resize", checkScreen);
-  }, []);
-
-  const isFormComplete = Object.values(formData).every(
-    (val) => val.trim() !== ""
-  );
-
-  // Handler for viewing a profile
-  const handleViewProfile = (candidateId) => {
+  const handleViewProfile = useCallback((candidateId) => {
     setSelectedCandidateId(candidateId);
     setViewProfile(true);
+    setShowMainProfile(false);
+    setLeftPanelOpen(false);
+  }, []);
+
+  const handleSearch = () => {
+    setShowResults(true);
+    setLeftPanelOpen(false);
   };
 
-  // Handle mobile rendering: only one component at a time
-  const renderMobileComponent = () => {
-    if (!showResults) {
+  const handleBackToSearch = () => {
+    setViewProfile(false);
+    setShowMainProfile(false);
+    setRightPanelOpen(false);
+  };
+
+  const handleBackToResults = () => {
+    setShowMainProfile(false);
+  };
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setLeftPanelOpen(false);
+        setRightPanelOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  const renderMainContent = () => {
+    if (!viewProfile) {
       return (
         <SearchCriteria
           formData={formData}
           setFormData={setFormData}
-          isFormComplete={isFormComplete}
-          onSearch={() => setShowResults(true)}
+          isFormComplete={hasAtLeastOneField}
+          onSearch={handleSearch}
         />
       );
-    } else if (!viewProfile) {
-      return <CandidateSearchResults onViewProfile={handleViewProfile} />;
-    } else if (!showMainProfile) {
+    }
+    if (!showMainProfile) {
       return (
         <UserProfilePanel
           candidateId={selectedCandidateId}
           onViewMainProfile={() => setShowMainProfile(true)}
         />
       );
-    } else if (!showPeopleConnect) {
-      return (
-        <UserMainProfileCard onConnect={() => setShowPeopleConnect(true)} />
-      );
-    } else {
-      return <PeopleConnect />;
     }
+    return <UserMainProfileCard candidateId={selectedCandidateId} />;
   };
 
+  const showMobileToolbar = showResults || viewProfile;
+
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <NewsFeedHeader />
 
-      <div className="bg-[#FFFFFF] w-full lg:max-w-[1440px] mx-auto flex-1 overflow-hidden">
-        {isMobile ? (
-          // Mobile view: one component at a time
-          <div className="overflow-y-auto h-full p-4 bg-[#F5F5F5]">
-            {renderMobileComponent()}
-          </div>
-        ) : (
-          // Desktop view: keep your original design
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr_1fr] h-full">
-            {/* Left Column */}
-            <div className="overflow-y-auto h-full p-4 border-gray-300">
-              {showResults && (
-                <CandidateSearchResults onViewProfile={handleViewProfile} />
+      {showMobileToolbar && (
+        <div className="lg:hidden shrink-0 flex flex-wrap items-center gap-2 px-3 py-2 bg-white border-b border-gray-200">
+          {showResults && (
+            <button
+              type="button"
+              onClick={() => setLeftPanelOpen(true)}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full bg-[#1A3E32] text-white"
+            >
+              <FaList className="w-3.5 h-3.5" />
+              Results
+            </button>
+          )}
+          {viewProfile && (
+            <>
+              <button
+                type="button"
+                onClick={handleBackToSearch}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border border-[#16730F] text-[#16730F]"
+              >
+                <FaArrowLeft className="w-3 h-3" />
+                Search
+              </button>
+              {showMainProfile && (
+                <button
+                  type="button"
+                  onClick={handleBackToResults}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border border-[#6B8E23] text-[#6B8E23]"
+                >
+                  <FaArrowLeft className="w-3 h-3" />
+                  Profile
+                </button>
               )}
-            </div>
+              <button
+                type="button"
+                onClick={() => setRightPanelOpen(true)}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full bg-[#6B8E23] text-white"
+              >
+                <FaSlidersH className="w-3.5 h-3.5" />
+                Filters
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
-            {/* Middle Column */}
-            <div className="overflow-y-auto h-full bg-[#F5F5F5] p-4 overflow-x-hidden">
-              {!viewProfile ? (
-                <SearchCriteria
-                  formData={formData}
-                  setFormData={setFormData}
-                  isFormComplete={isFormComplete}
-                  onSearch={() => setShowResults(true)}
-                />
-              ) : !showMainProfile ? (
-                <UserProfilePanel
-                  candidateId={selectedCandidateId}
-                  onViewMainProfile={() => setShowMainProfile(true)}
-                />
-              ) : !showPeopleConnect ? (
-                <UserMainProfileCard
-                  onConnect={() => setShowPeopleConnect(true)}
-                />
-              ) : (
-                <PeopleConnect />
-              )}
-            </div>
-
-            {/* Right Column */}
-            <div className="overflow-y-auto h-full p-4">
-              {viewProfile && <JobSearchFormGreen />}
-            </div>
-          </div>
+      <div className="relative flex-1 min-h-0 bg-[#FFFFFF] w-full max-w-[1440px] mx-auto">
+        {(leftPanelOpen || rightPanelOpen) && (
+          <button
+            type="button"
+            aria-label="Close panel"
+            className="lg:hidden fixed inset-0 z-30 bg-black/40"
+            onClick={() => {
+              setLeftPanelOpen(false);
+              setRightPanelOpen(false);
+            }}
+          />
         )}
+
+        <div className="h-full flex min-h-0">
+          {/* Left sidebar — search results */}
+          <aside
+            className={`
+              shrink-0 flex flex-col bg-[#F5F5F5] border-r border-gray-200
+              w-[min(100vw,360px)] sm:w-[min(90vw,380px)]
+              lg:w-[min(360px,28vw)] lg:max-w-[400px]
+              overflow-hidden
+              fixed lg:static inset-y-0 left-0 z-40 lg:z-auto
+              transition-transform duration-300 ease-in-out
+              ${showResults ? "" : "hidden"}
+              ${leftPanelOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+            `}
+          >
+            <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white shrink-0">
+              <span className="text-sm font-semibold text-[#1A3E32]">Search results</span>
+              <button
+                type="button"
+                onClick={() => setLeftPanelOpen(false)}
+                className="p-1.5 rounded-full text-[#1A3E32] hover:bg-gray-100"
+                aria-label="Close results"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 min-h-0">
+              <CandidateSearchResults
+                searchCriteria={formData}
+                onViewProfile={handleViewProfile}
+              />
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-[#F5F5F5] p-3 sm:p-4 md:p-6">
+            {renderMainContent()}
+          </main>
+
+          {/* Right sidebar — refine search */}
+          <aside
+            className={`
+              shrink-0 flex flex-col bg-[#F5F5F5] border-l border-gray-200
+              w-[min(100vw,400px)] sm:w-[min(92vw,420px)]
+              lg:w-[min(400px,30vw)] lg:max-w-[440px]
+              overflow-hidden
+              fixed lg:static inset-y-0 right-0 z-40 lg:z-auto
+              transition-transform duration-300 ease-in-out
+              ${viewProfile ? "" : "hidden"}
+              ${rightPanelOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
+            `}
+          >
+            <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-[#1A3E32] shrink-0">
+              <span className="text-sm font-semibold text-white">Refine search</span>
+              <button
+                type="button"
+                onClick={() => setRightPanelOpen(false)}
+                className="p-1.5 rounded-full text-white hover:bg-white/10"
+                aria-label="Close filters"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 min-h-0">
+              <JobSearchFormGreen
+                formData={formData}
+                setFormData={setFormData}
+                onSearch={() => {
+                  handleSearch();
+                  setRightPanelOpen(false);
+                }}
+              />
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );

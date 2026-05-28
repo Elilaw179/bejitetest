@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { API_URL } from "../../config";
+import { getProfileImageUrl } from "../../utils/profileImageUtils";
+import { formatSalaryExpectation } from "../../utils/formatSalary";
+import useCandidateConnect from "../../hooks/useCandidateConnect";
 
 const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
   const [candidate, setCandidate] = useState(null);
@@ -177,7 +181,6 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
         <ProfileSection title="Contact Info">
           <ContactInfoList candidate={candidate} />
         </ProfileSection>
-        <PostCard candidate={candidate} />
       </div>
     </div>
   );
@@ -188,6 +191,11 @@ const ProfileHeader = ({ candidate }) => {
     candidate.last_name?.[0] || ""
   }`;
   const isAvailable = candidate.availability === "Available";
+  
+  // Get profile image URL
+  const profileImage = candidate.profile_photo 
+    ? getProfileImageUrl(candidate.profile_photo) 
+    : null;
 
   return (
     <div>
@@ -195,25 +203,45 @@ const ProfileHeader = ({ candidate }) => {
         <div className="h-32"></div>
       </div>
       <div className="relative left-8 sm:left-20 bottom-15 sm:bottom-16">
-        <div className="relative rounded-full w-[80px] sm:w-[100px] h-[80px] sm:h-[100px]  bg-[#6B8E23] flex items-center justify-center border-4 border-white">
-          <span className="text-white text-3xl font-bold">{initials}</span>
+        <div className="relative rounded-full w-[80px] sm:w-[100px] h-[80px] sm:h-[100px] bg-[#6B8E23] flex items-center justify-center border-4 border-white overflow-hidden">
+          {profileImage ? (
+            <img 
+              src={profileImage} 
+              alt={`${candidate.first_name} ${candidate.last_name}`}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-white text-3xl font-bold">{initials}</span>
+          )}
           <span
             className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-0 right-0 z-99 ${
               isAvailable ? "bg-[#6B8E23]" : "bg-[#828282]"
             }`}
           ></span>
         </div>
-        {/* <span
-          className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-0 right-2 ${
-            isAvailable ? "bg-[#6B8E23]" : "bg-[#828282]"
-          }`}
-        ></span> */}
       </div>
     </div>
   );
 };
 
-const ProfileStats = ({ candidate, onViewMainProfile }) => (
+const ProfileStats = ({ candidate, onViewMainProfile }) => {
+  const navigate = useNavigate();
+  const displayName = `${candidate.first_name || ""} ${candidate.last_name || ""}`.trim();
+  const { sendRequest, connectLabel, connectDisabled, status } = useCandidateConnect(
+    candidate.user_id,
+    displayName,
+  );
+
+  // Handle connect button click - navigate to Connections page if there's pending incoming request
+  const handleConnectClick = () => {
+    if (status.pendingIncoming) {
+      navigate('/connection');
+    } else if (!status.isConnected && !status.pendingOutgoing && !status.loading) {
+      sendRequest();
+    }
+  };
+
+  return (
   <div className="px-4 sm:px-8 mt-[-60px] sm:mt-[-40px]">
     <div className="flex gap-2 items-center">
       <p className="text-[#6B8E23] font-semibold text-[16px]">
@@ -241,35 +269,55 @@ const ProfileStats = ({ candidate, onViewMainProfile }) => (
       {candidate.remote_preference && (
         <p className="text-[#6B8E23] text-[10px]">🏠 Open to remote work</p>
       )}
-      {candidate.salary_expectation && (
+      {candidate.salary_expectation != null && (
         <p className="text-[#6B8E23] text-[10px]">
-          💰 Expected: ₦{candidate.salary_expectation.toLocaleString()}
+          💰 Expected:{' '}
+          {formatSalaryExpectation(
+            candidate.salary_expectation,
+            candidate.currency,
+          ) || candidate.salary_expectation}
         </p>
       )}
     </div>
 
-    <ActionButtons onViewMainProfile={onViewMainProfile} />
+<ActionButtons
+      onViewMainProfile={onViewMainProfile}
+      connectLabel={connectLabel}
+      connectDisabled={connectDisabled}
+      handleConnectClick={handleConnectClick}
+    />
   </div>
-);
+  );
+};
 
-const ActionButtons = ({ onViewMainProfile }) => (
+const ActionButtons = ({ onViewMainProfile, connectLabel, connectDisabled, handleConnectClick }) => (
   <div className="flex flex-col sm:flex-row sm:justify-start items-center mt-6 gap-3 w-full">
     <Button
       icon="/assets/images/repeate-one.svg"
-      text="Connect"
-      onClick={onViewMainProfile}
+      text={connectLabel}
+      onClick={handleConnectClick}
+      disabled={connectDisabled}
     />
-    <Button icon="/assets/images/Send_Submit.svg" text="Message" />
-    <button className="text-[#6B8E23] text-[12px] hover:underline">
+    <Button icon="/assets/images/Send_Submit.svg" text="Reviews" />
+    <button 
+      className="text-[#6B8E23] text-[12px] hover:underline"
+      onClick={onViewMainProfile}
+    >
       View Full Profile
     </button>
   </div>
 );
 
-const Button = ({ icon, text, onClick }) => (
+const Button = ({ icon, text, onClick, disabled = false }) => (
   <button
+    type="button"
     onClick={onClick}
-    className="bg-[#556B1F] hover:bg-[#6B8E23] w-full sm:w-[180px] text-center text-[12px] text-[#FFFFFF] flex p-2 rounded-3xl gap-2 justify-center items-center transition-colors"
+    disabled={disabled}
+    className={`w-full sm:w-[180px] text-center text-[12px] text-[#FFFFFF] flex p-2 rounded-3xl gap-2 justify-center items-center transition-colors ${
+      disabled
+        ? "bg-[#828282] cursor-not-allowed opacity-80"
+        : "bg-[#556B1F] hover:bg-[#6B8E23]"
+    }`}
   >
     <img className="w-4 h-4" src={icon} alt={text} />
     {text}
@@ -347,9 +395,21 @@ const CertificationItem = ({ certification }) => (
   </div>
 );
 
+const formatCandidateAddress = (candidate) => {
+  if (!candidate) return null;
+  const parts = [candidate.address, candidate.street, candidate.city, candidate.country]
+    .filter((part) => part != null && String(part).trim() !== "");
+  if (parts.length > 0) return parts.join(", ");
+  return candidate.location || null;
+};
+
 const ContactInfoList = ({ candidate }) => {
+  const phone = candidate?.phone || candidate?.phone_number;
+  const address = formatCandidateAddress(candidate);
+
   const contacts = [
-    { type: "Mobile", value: candidate.phone, icon: "📱" },
+    { type: "Phone", value: phone, icon: "📱" },
+    { type: "Address", value: address, icon: "📍" },
     { type: "Email", value: candidate.email, icon: "📧" },
     { type: "LinkedIn", value: candidate.linkedin_url, icon: "💼" },
     { type: "GitHub", value: candidate.github_url, icon: "💻" },
@@ -376,72 +436,5 @@ const ContactInfoList = ({ candidate }) => {
     </div>
   );
 };
-
-const PostCard = ({ candidate }) => (
-  <div className="bg-white p-4 sm:p-6 rounded-2xl space-y-4">
-    <PostHeader candidate={candidate} />
-    <PostContent />
-    <PostImage />
-    <PostActions />
-  </div>
-);
-
-const PostHeader = ({ candidate }) => (
-  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div className="flex items-center gap-4">
-      <img
-        src="assets/images/eli.jpg"
-        alt="profile"
-        className="rounded-full w-12 h-12 sm:w-[60px] sm:h-[60px]"
-      />
-      <div>
-        <p className="text-[#16730F] font-semibold text-sm">
-          {candidate.first_name} {candidate.last_name}
-        </p>
-        <p className="text-[#1A3E32] text-[10px] sm:text-xs">
-          Posted 12 minutes ago
-        </p>
-      </div>
-    </div>
-    <img src="assets/images/more.svg" alt="more" className="w-4 h-4" />
-  </div>
-);
-
-const PostContent = () => (
-  <div>
-    <p className="text-black text-sm">
-      🚀 HIRING JUST GOT SMARTER | WELCOME TO BEJITE.COM....
-    </p>
-    <p className="text-[#16730F80] text-xs sm:text-sm mt-1 cursor-pointer">
-      See more
-    </p>
-  </div>
-);
-
-const PostImage = () => (
-  <img
-    src="assets/images/bejiteAdvert.png"
-    alt="Advert"
-    className="w-full rounded-xl"
-  />
-);
-
-const PostActions = () => (
-  <div className="flex flex-wrap justify-between items-center gap-4">
-    <div className="flex gap-4">
-      <PostAction icon="assets/images/heart.svg" text="Like" />
-      <PostAction icon="assets/images/message-text.svg" text="Comment" />
-      <PostAction icon="/assets/images/frame-saved.svg" text="Saved" />
-    </div>
-    <PostAction icon="/assets/images/send.svg" text="Share" />
-  </div>
-);
-
-const PostAction = ({ icon, text }) => (
-  <div className="flex flex-col items-center text-xs text-[#1A3E32]">
-    <img src={icon} alt={text} className="w-4 h-4 sm:w-5 sm:h-5" />
-    <p>{text}</p>
-  </div>
-);
 
 export default UserProfilePanel;

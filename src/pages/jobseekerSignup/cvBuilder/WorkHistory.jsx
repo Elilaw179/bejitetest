@@ -7,60 +7,53 @@ import NavigationButtons from "../../../components/NavigationButtons";
 import useAuth from "../../../hooks/useAuth";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../utils/axiosInstance";
-import {
-  FaPlus,
-  FaCheckCircle,
-  FaChevronDown,
-  FaTrash,
-  FaCheck,
-} from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
+import { FaPlus, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
 import Loader from "../../../components/ui/Loader";
 
-const optionsJob = [
-  "Software Developer",
-  "Frontend Developer",
-  "Backend Developer",
-  "Full Stack Developer",
-  "UI/UX Designer",
-  "Data Analyst",
-  "Data Scientist",
-  "DevOps Engineer",
-  "Product Manager",
-  "QA Tester",
-  "Cybersecurity Analyst",
-  "Administrative Assistant",
-  "Project Manager",
-  "Operations Manager",
-  "Business Analyst",
-  "Customer Support Representative",
-  "Sales Executive",
-  "Human Resources Manager",
-  "Digital Marketer",
-  "SEO Specialist",
-  "Content Writer",
-  "Social Media Manager",
-  "Copywriter",
-  "Brand Manager",
-  "Accountant",
-  "Financial Analyst",
-  "Auditor",
-  "Bank Teller",
-  "Teacher",
-  "Lecturer",
-  "Academic Advisor",
-  "School Administrator",
-  "Nurse",
-  "Medical Doctor",
-  "Pharmacist",
-  "Laboratory Technician",
-  "Electrician",
-  "Plumber",
-  "Driver",
-  "Chef",
-  "Security Guard",
-  "Not Available",
-];
+// const optionsJob = [
+//   "Software Developer",
+//   "Frontend Developer",
+//   "Backend Developer",
+//   "Full Stack Developer",
+//   "UI/UX Designer",
+//   "Data Analyst",
+//   "Data Scientist",
+//   "DevOps Engineer",
+//   "Product Manager",
+//   "QA Tester",
+//   "Cybersecurity Analyst",
+//   "Administrative Assistant",
+//   "Project Manager",
+//   "Operations Manager",
+//   "Business Analyst",
+//   "Customer Support Representative",
+//   "Sales Executive",
+//   "Human Resources Manager",
+//   "Digital Marketer",
+//   "SEO Specialist",
+//   "Content Writer",
+//   "Social Media Manager",
+//   "Copywriter",
+//   "Brand Manager",
+//   "Accountant",
+//   "Financial Analyst",
+//   "Auditor",
+//   "Bank Teller",
+//   "Teacher",
+//   "Lecturer",
+//   "Academic Advisor",
+//   "School Administrator",
+//   "Nurse",
+//   "Medical Doctor",
+//   "Pharmacist",
+//   "Laboratory Technician",
+//   "Electrician",
+//   "Plumber",
+//   "Driver",
+//   "Chef",
+//   "Security Guard",
+//   "Not Available",
+// ];
 
 const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
   <div className="relative w-full">
@@ -105,7 +98,11 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 
 function WorkHistory() {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
+
+  const handleStepClick = (path) => {
+    navigate(path);
+  };
   const steps = [
     "Bio",
     "Education",
@@ -113,6 +110,7 @@ function WorkHistory() {
     "Work history",
     "Certificate",
     "Links",
+    "Job Type",
   ];
 
   const [isLoading, setIsLoading] = useState(false);
@@ -124,6 +122,24 @@ function WorkHistory() {
   const [allFilled, setAllFilled] = useState(false);
   const { user } = useAuth();
   const [allWorkHistory, setAllWorkHistory] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Load existing work history data when in edit mode
+  useEffect(() => {
+    if (isEditMode && cvData?.workHistory && cvData.workHistory.length > 0 && !dataLoaded) {
+      const existingWork = cvData.workHistory.map(work => ({
+        id: work.id, // Store the database ID for deletion
+        userId: user?.id,
+        jobTitle: work.job_title,
+        companyName: work.company_name,
+        responsibilities: work.responsibilities,
+        startDate: work.start_date,
+        endDate: work.end_date,
+      }));
+      setAllWorkHistory(existingWork);
+      setDataLoaded(true);
+    }
+  }, [isEditMode, cvData, user?.id, dataLoaded]);
 
   // Update allFilled whenever form fields change
   useEffect(() => {
@@ -186,7 +202,7 @@ function WorkHistory() {
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">
       <Header />
-      <StepTabs steps={steps} currentStep={currentStep} />
+      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <div className="max-w-3xl mx-auto mt-6 text-[#1A3E32] text-2xl font-semibold">
@@ -201,11 +217,10 @@ function WorkHistory() {
           <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">JOB TITLE</p>
-              <SelectWithIcon
+              <InputWithIcon
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
-                options={optionsJob}
-                placeholder="Select "
+                placeholder="Enter job title"
               />
             </div>
             <div className="flex-1">
@@ -277,11 +292,22 @@ function WorkHistory() {
 
                 <button
                   className="text-white text-xl hover:text-red-400 transition-colors"
-                  onClick={() =>
+                  onClick={async () => {
+                    // If the item has an ID, delete from database
+                    if (item.id) {
+                      try {
+                        await axiosInstance.delete(`/api/cv-builder/work-history/${user?.id}/${item.id}`);
+                        toast.success("Work history deleted successfully!");
+                      } catch (err) {
+                        console.error("Error deleting work history:", err);
+                        toast.error("Failed to delete work history");
+                        return;
+                      }
+                    }
                     setAllWorkHistory((prev) =>
                       prev.filter((_, i) => i !== idx)
-                    )
-                  }
+                    );
+                  }}
                 >
                   <FaTrash />
                 </button>
@@ -291,7 +317,14 @@ function WorkHistory() {
       </div>
 
       <NavigationButtons
-        isFormComplete={allWorkHistory.length > 0 || allFilled}
+        isFormComplete={true} // Always allow proceeding since it's optional
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
         onNext={async () => {
           // Collect all work history to save
           let historyToSave = [...allWorkHistory];
@@ -321,34 +354,37 @@ function WorkHistory() {
             }
           }
 
-          if (historyToSave.length === 0) {
-            toast.error(
-              "Please add at least one work history before continuing."
-            );
-            return;
-          }
+          // No validation required - work history is optional
 
           setIsLoading(true);
-          // console.log("historyTosave:", historyToSave);
-
-          // console.log("allworkhistory:", allWorkHistory);
-
           try {
             // Save all work history entries
             for (const item of historyToSave) {
               await axiosInstance.post(`/api/cv-builder/work-history/`, item);
             }
-
             setIsLoading(false);
             toast.success("Work history saved successfully!");
-
-            navigate("/certificate", {
-              state: { email, firstName, lastName, role, mode, followings },
-            });
+            if (isEditMode) {
+              navigate(getPath(currentStep + 1));
+            } else {
+              navigate("/certificate", {
+                state: { email, firstName, lastName, role, mode, followings },
+              });
+            }
           } catch (err) {
             setIsLoading(false);
             console.error("Error:", err);
             toast.error("Failed to save work history. Try again.");
+          }
+        }}
+        showSkip={true}
+        onSkip={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep + 1));
+          } else {
+            navigate("/certificate", {
+              state: { email, firstName, lastName, role, mode, followings },
+            });
           }
         }}
       />
