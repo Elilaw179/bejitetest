@@ -20,15 +20,23 @@ import UsersListModal from '../UsersListModal';
 // Helper function to get display name (same pattern as NewsFeedHeader)
 const getDisplayName = (user) => {
   if (!user) return 'Guest';
-  if (user.name) return user.name;
+  const toTitleCase = (value) =>
+    String(value || '')
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+      .trim();
+  if (user.name) return toTitleCase(user.name);
   // Check both camelCase and snake_case
   const firstName = user.firstName || user.first_name || '';
   const lastName = user.lastName || user.last_name || '';
   if (firstName || lastName) {
-    return `${firstName} ${lastName}`.trim();
+    return toTitleCase(`${firstName} ${lastName}`);
   }
   return 'Guest';
 };
+
+const getDisplayJobTitle = (user) =>
+  user?.jobTitle || user?.title || user?.role || 'Professional';
 
 // Helper function to format date (LinkedIn-style)
 const formatDate = (dateString) => {
@@ -531,6 +539,7 @@ const handleCancelEdit = () => {
   };
 
   const authorName = getDisplayName(post.author);
+  const authorJobTitle = getDisplayJobTitle(post.author);
   const goToAuthorProfile = () => {
     if (post.authorId) navigate(`/user-profile/${post.authorId}`);
   };
@@ -573,6 +582,7 @@ const handleCancelEdit = () => {
             >
               {authorName}
             </button>
+            <p className="text-[#1A3E32] text-xs sm:text-sm">{authorJobTitle}</p>
             <p className="text-[#1A3E32] text-xs sm:text-sm">{formatDate(post.publishedAt)}</p>
           </div>
         </div>

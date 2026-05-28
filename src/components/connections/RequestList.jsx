@@ -2,7 +2,7 @@ import React from 'react';
 import { FaUserPlus } from 'react-icons/fa';
 import RequestCard from './RequestCard';
 
-const RequestList = ({ requests, type, onAccept, onReject, onCancel }) => {
+const RequestList = ({ requests, type, onAccept, onReject, onCancel, onViewProfile }) => {
   const requestsArray = Array.isArray(requests) ? requests : [];
 
   if (requestsArray.length === 0) {
@@ -32,6 +32,7 @@ const RequestList = ({ requests, type, onAccept, onReject, onCancel }) => {
           onAccept={onAccept}
           onReject={onReject}
           onCancel={onCancel}
+          onViewProfile={onViewProfile}
         />
       ))}
     </div>

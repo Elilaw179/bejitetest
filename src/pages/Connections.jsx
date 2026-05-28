@@ -19,10 +19,17 @@ const shuffleArray = (arr) => {
 
 const formatUserName = (user) => {
   if (!user) return 'Unknown User';
+  const toTitleCase = (value) =>
+    String(value || '')
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+      .trim();
   const first = user.firstName ?? user.first_name ?? '';
   const last = user.lastName ?? user.last_name ?? '';
   const full = `${first} ${last}`.trim();
-  return full || user.email || 'Unknown User';
+  if (full) return toTitleCase(full);
+  if (user.name) return toTitleCase(user.name);
+  return user.email || 'Unknown User';
 };
 
 const transformDiscoverableUser = (user) => ({
@@ -244,6 +251,7 @@ const Connections = () => {
           connections={connections}
           onRemoveConnection={handleRemoveConnection}
           searchQuery={searchQuery}
+          onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
         />
       )
     },
@@ -274,6 +282,7 @@ const Connections = () => {
           type="incoming"
           onAccept={handleAcceptRequest}
           onReject={handleRejectRequest}
+          onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
         />
       )
     },
@@ -287,6 +296,7 @@ const Connections = () => {
           requests={outgoingRequests}
           type="outgoing"
           onCancel={handleCancelRequest}
+          onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
         />
       )
     }

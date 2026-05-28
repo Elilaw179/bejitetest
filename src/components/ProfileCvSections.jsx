@@ -31,47 +31,39 @@ const ProfileCvSections = ({ cv }) => {
       bio.tribe ||
       bio.zip);
 
+  const personalDetails = [
+    { label: 'Gender', value: bio?.gender, capitalize: true },
+    { label: 'Marital status', value: bio?.marital_status, capitalize: true },
+    { label: 'Age', value: bio?.age },
+    { label: 'Country', value: bio?.country, capitalize: true },
+    { label: 'City', value: bio?.city, capitalize: true },
+    { label: 'Tribe', value: bio?.tribe, capitalize: true },
+  ].filter(
+    (detail) => detail.value != null && String(detail.value).trim() !== '',
+  );
+
   return (
     <>
       {hasBioDetails && (
         <Section title="Personal details">
-          <dl className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            {bio.gender && (
-              <>
-                <dt className="text-gray-500">Gender</dt>
-                <dd className="text-[#1A3E32] capitalize">{bio.gender}</dd>
-              </>
-            )}
-            {bio.marital_status && (
-              <>
-                <dt className="text-gray-500">Marital status</dt>
-                <dd className="text-[#1A3E32] capitalize">{bio.marital_status}</dd>
-              </>
-            )}
-            {bio.age != null && bio.age !== '' && (
-              <>
-                <dt className="text-gray-500">Age</dt>
-                <dd className="text-[#1A3E32]">{bio.age}</dd>
-              </>
-            )}
-            {bio.country && (
-              <>
-                <dt className="text-gray-500">Country</dt>
-                <dd className="text-[#1A3E32] capitalize">{bio.country}</dd>
-              </>
-            )}
-            {bio.city && (
-              <>
-                <dt className="text-gray-500">City</dt>
-                <dd className="text-[#1A3E32] capitalize">{bio.city}</dd>
-              </>
-            )}
-            {bio.tribe && (
-              <>
-                <dt className="text-gray-500">Tribe</dt>
-                <dd className="text-[#1A3E32] capitalize">{bio.tribe}</dd>
-              </>
-            )}
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            {personalDetails.map((detail) => (
+              <div
+                key={detail.label}
+                className="rounded-lg border border-gray-100 bg-[#F9FAF8] px-4 py-3"
+              >
+                <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  {detail.label}
+                </dt>
+                <dd
+                  className={`mt-1 text-sm font-semibold text-[#1A3E32] ${
+                    detail.capitalize ? 'capitalize' : ''
+                  }`}
+                >
+                  {String(detail.value)}
+                </dd>
+              </div>
+            ))}
           </dl>
         </Section>
       )}
