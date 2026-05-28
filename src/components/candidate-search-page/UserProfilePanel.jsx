@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../../config";
 import { pickAuthorProfilePhoto } from "../../utils/profileImageUtils";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { formatSalaryExpectation } from "../../utils/formatSalary";

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import { ConnectionList, RequestList } from '../components/connections';
@@ -73,44 +73,7 @@ const Connections = () => {
   const [incomingMeta, setIncomingMeta] = useState({ total: 0, pages: 1, page: 1, limit: PAGE_SIZE });
   const [outgoingMeta, setOutgoingMeta] = useState({ total: 0, pages: 1, page: 1, limit: PAGE_SIZE });
 
-  useEffect(() => {
-    loadConnectionsData();
-  }, [networkPage, invitationsPage, sentPage]);
-
-  useEffect(() => {
-    const query = searchQuery.trim();
-    if (!query) {
-      setPeopleSearchResults(null);
-      setPeopleSearchLoading(false);
-      return undefined;
-    }
-
-    const timer = setTimeout(async () => {
-      setPeopleSearchLoading(true);
-      try {
-        const searchRes = await connectionsApi.searchUsers(query);
-        const usersArray = searchRes?.users || searchRes || [];
-        const transformed = Array.isArray(usersArray)
-          ? usersArray.map(transformDiscoverableUser)
-          : [];
-        setPeopleSearchResults(transformed);
-      } catch (error) {
-        console.error('Error searching users:', error);
-        toast.error('Failed to search for people');
-        setPeopleSearchResults([]);
-      } finally {
-        setPeopleSearchLoading(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    setNetworkPage(1);
-  }, [searchQuery]);
-
-  const loadConnectionsData = async () => {
+  const loadConnectionsData = useCallback(async () => {
     setLoading(true);
     try {
       const [connectionsRes, incomingRes, outgoingRes, discoverRes] = await Promise.all([
@@ -201,7 +164,44 @@ const Connections = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [networkPage, invitationsPage, sentPage, PAGE_SIZE]);
+
+  useEffect(() => {
+    loadConnectionsData();
+  }, [loadConnectionsData]);
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (!query) {
+      setPeopleSearchResults(null);
+      setPeopleSearchLoading(false);
+      return undefined;
+    }
+
+    const timer = setTimeout(async () => {
+      setPeopleSearchLoading(true);
+      try {
+        const searchRes = await connectionsApi.searchUsers(query);
+        const usersArray = searchRes?.users || searchRes || [];
+        const transformed = Array.isArray(usersArray)
+          ? usersArray.map(transformDiscoverableUser)
+          : [];
+        setPeopleSearchResults(transformed);
+      } catch (error) {
+        console.error('Error searching users:', error);
+        toast.error('Failed to search for people');
+        setPeopleSearchResults([]);
+      } finally {
+        setPeopleSearchLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setNetworkPage(1);
+  }, [searchQuery]);
 
   const handleAcceptRequest = async (requestId, requesterName) => {
     try {
