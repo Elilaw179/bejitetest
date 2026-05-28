@@ -56,7 +56,7 @@ const transformConnectionUser = (user, connectedAt) => ({
 const Connections = () => {
   useSyncProfilePhoto();
   const navigate = useNavigate();
-  const PAGE_SIZE = 8;
+  const DEFAULT_PAGE_SIZE = 10;
   const [activeTab, setActiveTab] = useState('network');
   const [connections, setConnections] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
@@ -66,20 +66,21 @@ const Connections = () => {
   const [peopleSearchLoading, setPeopleSearchLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [networkPage, setNetworkPage] = useState(1);
   const [invitationsPage, setInvitationsPage] = useState(1);
   const [sentPage, setSentPage] = useState(1);
-  const [networkMeta, setNetworkMeta] = useState({ total: 0, pages: 1, page: 1, limit: PAGE_SIZE });
-  const [incomingMeta, setIncomingMeta] = useState({ total: 0, pages: 1, page: 1, limit: PAGE_SIZE });
-  const [outgoingMeta, setOutgoingMeta] = useState({ total: 0, pages: 1, page: 1, limit: PAGE_SIZE });
+  const [networkMeta, setNetworkMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
+  const [incomingMeta, setIncomingMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
+  const [outgoingMeta, setOutgoingMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
 
   const loadConnectionsData = useCallback(async () => {
     setLoading(true);
     try {
       const [connectionsRes, incomingRes, outgoingRes, discoverRes] = await Promise.all([
-        connectionsApi.getConnections(networkPage, PAGE_SIZE),
-        connectionsApi.getIncomingRequests(invitationsPage, PAGE_SIZE),
-        connectionsApi.getOutgoingRequests(sentPage, PAGE_SIZE),
+        connectionsApi.getConnections(networkPage, pageSize),
+        connectionsApi.getIncomingRequests(invitationsPage, pageSize),
+        connectionsApi.getOutgoingRequests(sentPage, pageSize),
         connectionsApi.discoverUsers()
       ]);
 
@@ -139,7 +140,7 @@ const Connections = () => {
           total: transformedConnections.length,
           pages: 1,
           page: networkPage,
-          limit: PAGE_SIZE,
+          limit: pageSize,
         },
       );
       setIncomingMeta(
@@ -147,7 +148,7 @@ const Connections = () => {
           total: transformedIncoming.length,
           pages: 1,
           page: invitationsPage,
-          limit: PAGE_SIZE,
+          limit: pageSize,
         },
       );
       setOutgoingMeta(
@@ -155,7 +156,7 @@ const Connections = () => {
           total: transformedOutgoing.length,
           pages: 1,
           page: sentPage,
-          limit: PAGE_SIZE,
+          limit: pageSize,
         },
       );
     } catch (error) {
@@ -164,7 +165,7 @@ const Connections = () => {
     } finally {
       setLoading(false);
     }
-  }, [networkPage, invitationsPage, sentPage, PAGE_SIZE]);
+  }, [networkPage, invitationsPage, sentPage, pageSize]);
 
   useEffect(() => {
     loadConnectionsData();
@@ -202,6 +203,12 @@ const Connections = () => {
   useEffect(() => {
     setNetworkPage(1);
   }, [searchQuery]);
+
+  useEffect(() => {
+    setNetworkPage(1);
+    setInvitationsPage(1);
+    setSentPage(1);
+  }, [pageSize]);
 
   const handleAcceptRequest = async (requestId, requesterName) => {
     try {
@@ -393,15 +400,31 @@ const Connections = () => {
 
         {/* Search Bar */}
         <div className="mb-6">
-          <div className="relative max-w-md">
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none"
-            />
-            <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1A3E32] h-5 w-5" />
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <div className="relative max-w-md w-full">
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none"
+              />
+              <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1A3E32] h-5 w-5" />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="connections-page-size" className="text-sm text-gray-600 whitespace-nowrap">
+                Page size
+              </label>
+              <select
+                id="connections-page-size"
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A3E32] focus:outline-none focus:ring-2 focus:ring-[#16730F]/30"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+              </select>
+            </div>
           </div>
         </div>
 
