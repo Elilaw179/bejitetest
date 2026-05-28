@@ -551,7 +551,7 @@ useEffect(() => {
                 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden">
+                  <div className="absolute right-0 left-auto mt-2 w-[min(18rem,calc(100vw-1rem))] bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden max-h-[70vh] overflow-y-auto">
                     {/* User Info Header */}
                     <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                       <div className="flex items-center gap-3">
