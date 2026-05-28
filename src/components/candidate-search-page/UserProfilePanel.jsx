@@ -497,20 +497,51 @@ const EducationItem = ({ education }) => (
   </div>
 );
 
-const SkillsList = ({ skills }) => (
-  <div className="px-4 sm:px-8 pb-6">
-    <div className="flex flex-wrap gap-2">
-      {skills.map((skill, index) => (
-        <span
-          key={index}
-          className="bg-[#1A3E32] text-[#FFFFFF] px-3 py-1.5 rounded-full text-[12px] font-medium"
-        >
-          {skill}
-        </span>
-      ))}
+const normalizeSkills = (skills) => {
+  if (Array.isArray(skills)) {
+    return skills
+      .map((skill) => (typeof skill === "string" ? skill : skill?.name || skill?.skill || ""))
+      .map((skill) => String(skill || "").trim())
+      .filter(Boolean);
+  }
+
+  if (typeof skills === "string") {
+    return skills
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
+const SkillsList = ({ skills }) => {
+  const normalizedSkills = normalizeSkills(skills);
+
+  if (normalizedSkills.length === 0) {
+    return (
+      <div className="px-4 sm:px-8 pb-6">
+        <p className="text-[#E0E0E0] text-sm">No skills added yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-4 sm:px-8 pb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+        {normalizedSkills.map((skill, index) => (
+          <div
+            key={`${skill}-${index}`}
+            className="bg-[#1A3E32] text-[#FFFFFF] px-3 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium leading-snug break-words min-h-[42px] flex items-center"
+            title={skill}
+          >
+            {skill}
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const WorkHistoryItem = ({ work }) => (
   <>
