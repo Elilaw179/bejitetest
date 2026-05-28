@@ -4,7 +4,6 @@ import NewsFeedHeader from "../../components/NewsFeedHeader";
 import RecruitmentLeft from "../../components/recruitment/RecruitmentLeft";
 import RecruitmentMiddle from "../../components/recruitment/RecruitmentMiddle";
 import RecruitmentRight from "../../components/recruitment/RecruitmentRight";
-import Hyperlinks from "../../components/Hyperlinks";
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -36,7 +35,6 @@ export default function Recruitment() {
         {/* Floating Middle Section - Only This Scrolls */}
         <div className="overflow-y-auto max-h-[calc(100vh-120px)] min-w-0">
           <RecruitmentMiddle />
-          <Hyperlinks />
         </div>
 
         {/* Fixed Right Sidebar - Not Scrollable */}
