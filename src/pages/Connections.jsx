@@ -56,6 +56,7 @@ const transformConnectionUser = (user, connectedAt) => ({
 const Connections = () => {
   useSyncProfilePhoto();
   const navigate = useNavigate();
+  const PAGE_SIZE = 8;
   const [activeTab, setActiveTab] = useState('network');
   const [connections, setConnections] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
@@ -65,10 +66,16 @@ const Connections = () => {
   const [peopleSearchLoading, setPeopleSearchLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [networkPage, setNetworkPage] = useState(1);
+  const [invitationsPage, setInvitationsPage] = useState(1);
+  const [sentPage, setSentPage] = useState(1);
+  const [networkMeta, setNetworkMeta] = useState({ total: 0, pages: 1, page: 1, limit: PAGE_SIZE });
+  const [incomingMeta, setIncomingMeta] = useState({ total: 0, pages: 1, page: 1, limit: PAGE_SIZE });
+  const [outgoingMeta, setOutgoingMeta] = useState({ total: 0, pages: 1, page: 1, limit: PAGE_SIZE });
 
   useEffect(() => {
     loadConnectionsData();
-  }, []);
+  }, [networkPage, invitationsPage, sentPage]);
 
   useEffect(() => {
     const query = searchQuery.trim();
@@ -99,13 +106,17 @@ const Connections = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  useEffect(() => {
+    setNetworkPage(1);
+  }, [searchQuery]);
+
   const loadConnectionsData = async () => {
     setLoading(true);
     try {
       const [connectionsRes, incomingRes, outgoingRes, discoverRes] = await Promise.all([
-        connectionsApi.getConnections(),
-        connectionsApi.getIncomingRequests(),
-        connectionsApi.getOutgoingRequests(),
+        connectionsApi.getConnections(networkPage, PAGE_SIZE),
+        connectionsApi.getIncomingRequests(invitationsPage, PAGE_SIZE),
+        connectionsApi.getOutgoingRequests(sentPage, PAGE_SIZE),
         connectionsApi.discoverUsers()
       ]);
 
@@ -160,6 +171,30 @@ const Connections = () => {
       setIncomingRequests(transformedIncoming);
       setOutgoingRequests(transformedOutgoing);
       setDiscoverableUsers(randomizedUsers);
+      setNetworkMeta(
+        connectionsRes?.pagination || {
+          total: transformedConnections.length,
+          pages: 1,
+          page: networkPage,
+          limit: PAGE_SIZE,
+        },
+      );
+      setIncomingMeta(
+        incomingRes?.pagination || {
+          total: transformedIncoming.length,
+          pages: 1,
+          page: invitationsPage,
+          limit: PAGE_SIZE,
+        },
+      );
+      setOutgoingMeta(
+        outgoingRes?.pagination || {
+          total: transformedOutgoing.length,
+          pages: 1,
+          page: sentPage,
+          limit: PAGE_SIZE,
+        },
+      );
     } catch (error) {
       console.error('Error loading connections data:', error);
       toast.error('Failed to load connections data');
@@ -240,19 +275,32 @@ const Connections = () => {
     }
   };
 
+  const filteredConnections = connections.filter(conn =>
+    conn.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    conn.role?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const tabs = [
     {
       id: 'network',
       label: 'My Network',
       icon: FaUserFriends,
-      count: connections.length,
+      count: networkMeta.total,
       content: (
-        <ConnectionList
-          connections={connections}
-          onRemoveConnection={handleRemoveConnection}
-          searchQuery={searchQuery}
-          onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
-        />
+        <>
+          <ConnectionList
+            connections={filteredConnections}
+            totalCount={networkMeta.total}
+            onRemoveConnection={handleRemoveConnection}
+            searchQuery=""
+            onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
+          />
+          <PaginationControls
+            currentPage={networkPage}
+            totalPages={Math.max(networkMeta.pages || 1, 1)}
+            onPageChange={setNetworkPage}
+          />
+        </>
       )
     },
     {
@@ -275,29 +323,45 @@ const Connections = () => {
       id: 'invitations',
       label: 'Invitations',
       icon: FaUserPlus,
-      count: incomingRequests.length,
+      count: incomingMeta.total,
       content: (
-        <RequestList
-          requests={incomingRequests}
-          type="incoming"
-          onAccept={handleAcceptRequest}
-          onReject={handleRejectRequest}
-          onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
-        />
+        <>
+          <RequestList
+            requests={incomingRequests}
+            totalCount={incomingMeta.total}
+            type="incoming"
+            onAccept={handleAcceptRequest}
+            onReject={handleRejectRequest}
+            onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
+          />
+          <PaginationControls
+            currentPage={invitationsPage}
+            totalPages={Math.max(incomingMeta.pages || 1, 1)}
+            onPageChange={setInvitationsPage}
+          />
+        </>
       )
     },
     {
       id: 'sent',
       label: 'Sent',
       icon: FaClock,
-      count: outgoingRequests.length,
+      count: outgoingMeta.total,
       content: (
-        <RequestList
-          requests={outgoingRequests}
-          type="outgoing"
-          onCancel={handleCancelRequest}
-          onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
-        />
+        <>
+          <RequestList
+            requests={outgoingRequests}
+            totalCount={outgoingMeta.total}
+            type="outgoing"
+            onCancel={handleCancelRequest}
+            onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
+          />
+          <PaginationControls
+            currentPage={sentPage}
+            totalPages={Math.max(outgoingMeta.pages || 1, 1)}
+            onPageChange={setSentPage}
+          />
+        </>
       )
     }
   ];
@@ -450,6 +514,34 @@ const PeopleList = ({ users, onSendRequest, onViewProfile, searchQuery, isSearch
           </button>
         </div>
       ))}
+    </div>
+  );
+};
+
+const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-center gap-3 mt-6">
+      <button
+        type="button"
+        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+        disabled={currentPage <= 1}
+        className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+      >
+        Previous
+      </button>
+      <span className="text-sm text-gray-600">
+        Page {currentPage} of {totalPages}
+      </span>
+      <button
+        type="button"
+        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage >= totalPages}
+        className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+      >
+        Next
+      </button>
     </div>
   );
 };
