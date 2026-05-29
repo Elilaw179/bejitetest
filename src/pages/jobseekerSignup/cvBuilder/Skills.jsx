@@ -6,12 +6,9 @@ import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
 import {
   FaPlus,
-  FaCheckCircle,
-  FaChevronDown,
   FaTrash,
   FaCheck,
 } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
 import useAuth from "../../../hooks/useAuth";
 import Loader from "../../../components/ui/Loader";
 import { toast } from "react-toastify";
@@ -22,29 +19,6 @@ import axiosInstance from "../../../utils/axiosInstance";
 // const categoryOptions = [...];
 // const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);
 
-const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
-  <div className="relative w-full">
-    <select
-      value={value}
-      onChange={onChange}
-      className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 appearance-none focus:outline-1 focus:outline-[#1A3E32] ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      }`}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-    {value ? (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    ) : (
-      <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
-    )}
-  </div>
-);
 
 const InputWithIcon = ({ value, onChange, placeholder }) => (
   <div className="relative w-full">
@@ -79,9 +53,13 @@ function Skills() {
     "Job Type",
   ];
 
-  const [skillSector, setSkillSector] = useState("");
-  const [category, setCategory] = useState("");
-  const [experience, setExperience] = useState("");
+  const [skillsData, setSkillsData] = useState({
+    userId: "",
+    skillSector: "",
+    category: "",
+    experience: "",
+  });
+
   const [allFilled, setAllFilled] = useState(false);
   const { user } = useAuth();
   const [allSkill, setAllSkill] = useState([]);
@@ -106,13 +84,20 @@ function Skills() {
   }, [isEditMode, cvData, user?.id, dataLoaded]);
 
   useEffect(() => {
-    setAllFilled(skillSector && category && experience);
-  }, [skillSector, category, experience]);
+    setSkillsData((prev) => ({ ...prev, userId: user?.id || "" }));
+  }, [user?.id]);
+
+  useEffect(() => {
+    setAllFilled(skillsData.skillSector && skillsData.category && skillsData.experience);
+  }, [skillsData.skillSector, skillsData.category, skillsData.experience]);
 
   const clearForm = () => {
-    setSkillSector("");
-    setCategory("");
-    setExperience("");
+    setSkillsData((prev) => ({
+      ...prev,
+      skillSector: "",
+      category: "",
+      experience: "",
+    }));
   };
 
   const location = useLocation();
@@ -128,9 +113,9 @@ function Skills() {
 
     const newEntry = {
       userId: user?.id,
-      skillSector,
-      category,
-      experience,
+      skillSector: skillsData.skillSector,
+      category: skillsData.category,
+      experience: skillsData.experience,
     };
 
     // Check for duplicates
@@ -170,8 +155,10 @@ function Skills() {
           <div className="bg-[#82828280] rounded-2xl p-4">
             <p className="font-semibold text-xs mb-1">SKILL</p>
             <InputWithIcon
-              value={skillSector}
-              onChange={(e) => setSkillSector(e.target.value)}
+              value={skillsData.skillSector}
+              onChange={(e) =>
+                setSkillsData((prev) => ({ ...prev, skillSector: e.target.value }))
+              }
               placeholder="Enter skill name"
             />
           </div>
@@ -180,16 +167,20 @@ function Skills() {
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">CATEGORY</p>
               <InputWithIcon
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={skillsData.category}
+                onChange={(e) =>
+                  setSkillsData((prev) => ({ ...prev, category: e.target.value }))
+                }
                 placeholder="Enter category"
               />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">YEARS OF EXPERIENCE</p>
               <InputWithIcon
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
+                value={skillsData.experience}
+                onChange={(e) =>
+                  setSkillsData((prev) => ({ ...prev, experience: e.target.value }))
+                }
                 placeholder="Enter years of experience"
               />
             </div>
@@ -259,9 +250,9 @@ function Skills() {
           if (allFilled) {
             const currentEntry = {
               userId: user?.id,
-              skillSector,
-              category,
-              experience,
+              skillSector: skillsData.skillSector,
+              category: skillsData.category,
+              experience: skillsData.experience,
             };
 
             const exists = skillsToSave.some(

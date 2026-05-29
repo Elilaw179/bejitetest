@@ -65,33 +65,22 @@ const useApi = () => {
   }, []);
 
 
-    const postDataPromise = useCallback(async ( data ) => {
-        const fullUrl = `${API_BASE}/cv-builder/bio`;
-        
-        try {
-            const response = await axiosInstance.post(`${fullUrl}`,
-                
-                {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-
-            const result = await response.json();
-            console.log(result)
-            if (!response.ok) {
-                throw new Error(result.error || result.message || 'Unknown error');
-            }
-            return result;
-        } catch (err) {
-            console.error('[useApi] POST (Promise) error:', err.message);
-            setError(err.message);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+  const postDataPromise = useCallback(async (payload) => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.post(`/api/cv-builder/bio`, payload);
+      const result = response?.data ?? null;
+      setData(result);
+      return result;
+    } catch (err) {
+      const message = err?.response?.data?.error || err?.message || "Unknown error";
+      console.error("[useApi] POST (Promise) error:", message);
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return { loading, data, error, postData, getData, postDataPromise };
 };

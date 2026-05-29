@@ -8,12 +8,9 @@ import useAuth from "../../../hooks/useAuth";
 
 import {
   FaPlus,
-  FaCheckCircle,
-  FaChevronDown,
   FaTrash,
   FaCheck,
 } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import Loader from "../../../components/ui/Loader";
 import axiosInstance from "../../../utils/axiosInstance";
@@ -88,13 +85,15 @@ function Education() {
 
   useEffect(() => {
     setAllFilled(
-      educationLevel &&
-        institutionName &&
-        userLocation &&
-        fieldOfStudy &&
-        degree.trim() &&
-        startDate &&
-        endDate
+      Boolean(
+        educationLevel &&
+          institutionName &&
+          userLocation &&
+          fieldOfStudy &&
+          degree &&
+          startDate &&
+          endDate,
+      ),
     );
   }, [
     educationLevel,
@@ -380,3 +379,4 @@ function Education() {
 }
 
 export default Education;
+
