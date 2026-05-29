@@ -1,18 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import RoleCard from "../components/RoleCard"; 
+import RoleCard from "../components/RoleCard";
+import { hydrateAuth } from "../features/auth/authSlice";
+import {
+  captureOAuthSessionFromUrl,
+} from "../utils/tokenManager";
 
 export default function CompleteSignup() {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const params = new URLSearchParams(location.search);
   const email = params.get("email");
   const status = params.get("status");
 
   const [_, setRole] = useState("");
-  // const [loading, setLoading] = useState(false);
+
+  // OAuth redirects include tokens in the URL — persist before role selection.
+  useEffect(() => {
+    captureOAuthSessionFromUrl(location.search);
+    dispatch(hydrateAuth());
+  }, [location.search, dispatch]);
 
   const handleRoleSelect = (selectedRole) => {
     if (!email || status !== "verified") {
