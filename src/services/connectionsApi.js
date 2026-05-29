@@ -8,9 +8,11 @@ import axiosInstance from '../utils/axiosInstance';
 /**
  * Get user's accepted connections
  */
-export const getConnections = async () => {
+export const getConnections = async (page = 1, limit = 10) => {
   try {
-    const response = await axiosInstance.get('/api/connections');
+    const response = await axiosInstance.get('/api/connections', {
+      params: { page, limit },
+    });
     console.log('getConnections response:', response.data);
     return response.data;
   } catch (error) {
@@ -49,9 +51,11 @@ export const sendConnectionRequest = async (toUserId) => {
 /**
  * Get incoming connection requests
  */
-export const getIncomingRequests = async () => {
+export const getIncomingRequests = async (page = 1, limit = 10) => {
   try {
-    const response = await axiosInstance.get('/api/connections/requests/incoming');
+    const response = await axiosInstance.get('/api/connections/requests/incoming', {
+      params: { page, limit },
+    });
     console.log('getIncomingRequests response:', response.data);
     return response.data;
   } catch (error) {
@@ -64,9 +68,11 @@ export const getIncomingRequests = async () => {
 /**
  * Get outgoing connection requests
  */
-export const getOutgoingRequests = async () => {
+export const getOutgoingRequests = async (page = 1, limit = 10) => {
   try {
-    const response = await axiosInstance.get('/api/connections/requests/outgoing');
+    const response = await axiosInstance.get('/api/connections/requests/outgoing', {
+      params: { page, limit },
+    });
     console.log('getOutgoingRequests response:', response.data);
     return response.data;
   } catch (error) {

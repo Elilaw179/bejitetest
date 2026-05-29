@@ -2,10 +2,10 @@ import React from 'react';
 import { FaUserPlus } from 'react-icons/fa';
 import RequestCard from './RequestCard';
 
-const RequestList = ({ requests, type, onAccept, onReject, onCancel, onViewProfile }) => {
+const RequestList = ({ requests, type, onAccept, onReject, onCancel, onViewProfile, totalCount }) => {
   const requestsArray = Array.isArray(requests) ? requests : [];
 
-  if (requestsArray.length === 0) {
+  if ((totalCount ?? requestsArray.length) === 0) {
     return (
       <div className="text-center py-12">
         <FaUserPlus className="h-16 w-16 text-gray-300 mx-auto mb-4" />

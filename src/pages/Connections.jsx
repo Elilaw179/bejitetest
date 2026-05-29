@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import { ConnectionList, RequestList } from '../components/connections';
@@ -56,6 +56,7 @@ const transformConnectionUser = (user, connectedAt) => ({
 const Connections = () => {
   useSyncProfilePhoto();
   const navigate = useNavigate();
+  const DEFAULT_PAGE_SIZE = 10;
   const [activeTab, setActiveTab] = useState('network');
   const [connections, setConnections] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
@@ -65,47 +66,21 @@ const Connections = () => {
   const [peopleSearchLoading, setPeopleSearchLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [networkPage, setNetworkPage] = useState(1);
+  const [invitationsPage, setInvitationsPage] = useState(1);
+  const [sentPage, setSentPage] = useState(1);
+  const [networkMeta, setNetworkMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
+  const [incomingMeta, setIncomingMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
+  const [outgoingMeta, setOutgoingMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
 
-  useEffect(() => {
-    loadConnectionsData();
-  }, []);
-
-  useEffect(() => {
-    const query = searchQuery.trim();
-    if (!query) {
-      setPeopleSearchResults(null);
-      setPeopleSearchLoading(false);
-      return undefined;
-    }
-
-    const timer = setTimeout(async () => {
-      setPeopleSearchLoading(true);
-      try {
-        const searchRes = await connectionsApi.searchUsers(query);
-        const usersArray = searchRes?.users || searchRes || [];
-        const transformed = Array.isArray(usersArray)
-          ? usersArray.map(transformDiscoverableUser)
-          : [];
-        setPeopleSearchResults(transformed);
-      } catch (error) {
-        console.error('Error searching users:', error);
-        toast.error('Failed to search for people');
-        setPeopleSearchResults([]);
-      } finally {
-        setPeopleSearchLoading(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const loadConnectionsData = async () => {
+  const loadConnectionsData = useCallback(async () => {
     setLoading(true);
     try {
       const [connectionsRes, incomingRes, outgoingRes, discoverRes] = await Promise.all([
-        connectionsApi.getConnections(),
-        connectionsApi.getIncomingRequests(),
-        connectionsApi.getOutgoingRequests(),
+        connectionsApi.getConnections(networkPage, pageSize),
+        connectionsApi.getIncomingRequests(invitationsPage, pageSize),
+        connectionsApi.getOutgoingRequests(sentPage, pageSize),
         connectionsApi.discoverUsers()
       ]);
 
@@ -160,13 +135,80 @@ const Connections = () => {
       setIncomingRequests(transformedIncoming);
       setOutgoingRequests(transformedOutgoing);
       setDiscoverableUsers(randomizedUsers);
+      setNetworkMeta(
+        connectionsRes?.pagination || {
+          total: transformedConnections.length,
+          pages: 1,
+          page: networkPage,
+          limit: pageSize,
+        },
+      );
+      setIncomingMeta(
+        incomingRes?.pagination || {
+          total: transformedIncoming.length,
+          pages: 1,
+          page: invitationsPage,
+          limit: pageSize,
+        },
+      );
+      setOutgoingMeta(
+        outgoingRes?.pagination || {
+          total: transformedOutgoing.length,
+          pages: 1,
+          page: sentPage,
+          limit: pageSize,
+        },
+      );
     } catch (error) {
       console.error('Error loading connections data:', error);
       toast.error('Failed to load connections data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [networkPage, invitationsPage, sentPage, pageSize]);
+
+  useEffect(() => {
+    loadConnectionsData();
+  }, [loadConnectionsData]);
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (!query) {
+      setPeopleSearchResults(null);
+      setPeopleSearchLoading(false);
+      return undefined;
+    }
+
+    const timer = setTimeout(async () => {
+      setPeopleSearchLoading(true);
+      try {
+        const searchRes = await connectionsApi.searchUsers(query);
+        const usersArray = searchRes?.users || searchRes || [];
+        const transformed = Array.isArray(usersArray)
+          ? usersArray.map(transformDiscoverableUser)
+          : [];
+        setPeopleSearchResults(transformed);
+      } catch (error) {
+        console.error('Error searching users:', error);
+        toast.error('Failed to search for people');
+        setPeopleSearchResults([]);
+      } finally {
+        setPeopleSearchLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setNetworkPage(1);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setNetworkPage(1);
+    setInvitationsPage(1);
+    setSentPage(1);
+  }, [pageSize]);
 
   const handleAcceptRequest = async (requestId, requesterName) => {
     try {
@@ -240,19 +282,32 @@ const Connections = () => {
     }
   };
 
+  const filteredConnections = connections.filter(conn =>
+    conn.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    conn.role?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const tabs = [
     {
       id: 'network',
       label: 'My Network',
       icon: FaUserFriends,
-      count: connections.length,
+      count: networkMeta.total,
       content: (
-        <ConnectionList
-          connections={connections}
-          onRemoveConnection={handleRemoveConnection}
-          searchQuery={searchQuery}
-          onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
-        />
+        <>
+          <ConnectionList
+            connections={filteredConnections}
+            totalCount={networkMeta.total}
+            onRemoveConnection={handleRemoveConnection}
+            searchQuery=""
+            onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
+          />
+          <PaginationControls
+            currentPage={networkPage}
+            totalPages={Math.max(networkMeta.pages || 1, 1)}
+            onPageChange={setNetworkPage}
+          />
+        </>
       )
     },
     {
@@ -275,29 +330,45 @@ const Connections = () => {
       id: 'invitations',
       label: 'Invitations',
       icon: FaUserPlus,
-      count: incomingRequests.length,
+      count: incomingMeta.total,
       content: (
-        <RequestList
-          requests={incomingRequests}
-          type="incoming"
-          onAccept={handleAcceptRequest}
-          onReject={handleRejectRequest}
-          onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
-        />
+        <>
+          <RequestList
+            requests={incomingRequests}
+            totalCount={incomingMeta.total}
+            type="incoming"
+            onAccept={handleAcceptRequest}
+            onReject={handleRejectRequest}
+            onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
+          />
+          <PaginationControls
+            currentPage={invitationsPage}
+            totalPages={Math.max(incomingMeta.pages || 1, 1)}
+            onPageChange={setInvitationsPage}
+          />
+        </>
       )
     },
     {
       id: 'sent',
       label: 'Sent',
       icon: FaClock,
-      count: outgoingRequests.length,
+      count: outgoingMeta.total,
       content: (
-        <RequestList
-          requests={outgoingRequests}
-          type="outgoing"
-          onCancel={handleCancelRequest}
-          onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
-        />
+        <>
+          <RequestList
+            requests={outgoingRequests}
+            totalCount={outgoingMeta.total}
+            type="outgoing"
+            onCancel={handleCancelRequest}
+            onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
+          />
+          <PaginationControls
+            currentPage={sentPage}
+            totalPages={Math.max(outgoingMeta.pages || 1, 1)}
+            onPageChange={setSentPage}
+          />
+        </>
       )
     }
   ];
@@ -329,15 +400,31 @@ const Connections = () => {
 
         {/* Search Bar */}
         <div className="mb-6">
-          <div className="relative max-w-md">
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none"
-            />
-            <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1A3E32] h-5 w-5" />
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <div className="relative max-w-md w-full">
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none"
+              />
+              <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1A3E32] h-5 w-5" />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="connections-page-size" className="text-sm text-gray-600 whitespace-nowrap">
+                Page size
+              </label>
+              <select
+                id="connections-page-size"
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A3E32] focus:outline-none focus:ring-2 focus:ring-[#16730F]/30"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -450,6 +537,82 @@ const PeopleList = ({ users, onSendRequest, onViewProfile, searchQuery, isSearch
           </button>
         </div>
       ))}
+    </div>
+  );
+};
+
+const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
+  if (totalPages <= 1) return null;
+
+  const buildPageItems = () => {
+    const items = [];
+    const add = (value) => items.push(value);
+
+    add(1);
+
+    const windowStart = Math.max(2, currentPage - 1);
+    const windowEnd = Math.min(totalPages - 1, currentPage + 1);
+
+    if (windowStart > 2) add('left-ellipsis');
+    for (let page = windowStart; page <= windowEnd; page += 1) add(page);
+    if (windowEnd < totalPages - 1) add('right-ellipsis');
+
+    if (totalPages > 1) add(totalPages);
+
+    return items;
+  };
+
+  const pageItems = buildPageItems();
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+      <button
+        type="button"
+        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+        disabled={currentPage <= 1}
+        className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+      >
+        Previous
+      </button>
+      <span className="text-sm text-gray-600">
+        Page {currentPage} of {totalPages}
+      </span>
+      <div className="flex items-center gap-1">
+        {pageItems.map((item, index) => {
+          if (typeof item !== 'number') {
+            return (
+              <span key={`${item}-${index}`} className="px-2 text-gray-500 select-none">
+                …
+              </span>
+            );
+          }
+
+          const isActive = item === currentPage;
+          return (
+            <button
+              key={item}
+              type="button"
+              onClick={() => onPageChange(item)}
+              className={`min-w-8 h-8 px-2 rounded-md text-sm border transition-colors ${
+                isActive
+                  ? 'bg-[#16730F] border-[#16730F] text-white'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              {item}
+            </button>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage >= totalPages}
+        className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+      >
+        Next
+      </button>
     </div>
   );
 };
