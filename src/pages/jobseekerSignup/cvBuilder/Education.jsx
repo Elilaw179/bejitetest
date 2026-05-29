@@ -8,12 +8,9 @@ import useAuth from "../../../hooks/useAuth";
 
 import {
   FaPlus,
-  FaCheckCircle,
-  FaChevronDown,
   FaTrash,
   FaCheck,
 } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import Loader from "../../../components/ui/Loader";
 import axiosInstance from "../../../utils/axiosInstance";
@@ -86,22 +83,36 @@ function Education() {
     }
   }, [isEditMode, cvData, user?.id, dataLoaded]);
 
-  const [educationData, setEducationData] = useState({
-    userId: userId,
-    educationLevel: "",
-    institutionName: "",
-    userLocation: "",
-    fieldOfStudy: "",
-    degree: "",
-    startDate: "",
-    endDate: "",
-  })
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEducationData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
+  useEffect(() => {
+    setAllFilled(
+      Boolean(
+        educationLevel &&
+          institutionName &&
+          userLocation &&
+          fieldOfStudy &&
+          degree &&
+          startDate &&
+          endDate,
+      ),
+    );
+  }, [
+    educationLevel,
+    institutionName,
+    userLocation,
+    fieldOfStudy,
+    degree,
+    startDate,
+    endDate,
+  ]);
+
+  const clearForm = () => {
+    setEducationLevel("");
+    setInstitutionName("");
+    setLocation("");
+    setFieldOfStudy("");
+    setDegree("");
+    setStartDate("");
+    setEndDate("");
   };
 
   const location = useLocation();
@@ -217,18 +228,16 @@ function Education() {
               <p className="font-semibold text-xs mb-1">START DATE</p>
               <InputWithIcon
                 type="date"
-                name="startDate"
-                value={educationData.startDate}
-                onChange={handleChange}
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
               />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-xs mb-1">END DATE</p>
               <InputWithIcon
                 type="date"
-                name="endDate" 
-                value={educationData.endDate}
-                onChange={handleChange}
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
             <div className="flex-1 flex items-end">
@@ -368,4 +377,6 @@ function Education() {
     </div>
   );
 }
+
+export default Education;
 
