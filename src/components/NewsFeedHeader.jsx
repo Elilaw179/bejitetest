@@ -357,17 +357,18 @@ useEffect(() => {
     };
   }, []);
 
-  const pathToIconMap = {
-    "/post-page": "home-icon",
-    "/chats": "CHAT",
-    "/notification": "notifications",
-    "/candidate-search-page": "recruitment",
-    "/news-feed": "connection",
-    "/ase/pricing": "recruitment",
-    "/ase/dashboard": "recruitment",
+  const iconToPathsMap = {
+    "home-icon": ["/news-feed", "/post-page"],
+    CHAT: ["/chats"],
+    notifications: ["/notification"],
+    connection: ["/connection"],
+    recruitment: ["/candidate-search-page", "/ase/pricing", "/ase/dashboard"],
   };
 
-  const currentIcon = pathToIconMap[location.pathname] || "";
+  const isIconActive = (name) =>
+    (iconToPathsMap[name] || []).some((basePath) =>
+      location.pathname === basePath || location.pathname.startsWith(`${basePath}/`),
+    );
 
   const handleIconClick = (name) => {
     switch (name) {
@@ -482,15 +483,19 @@ useEffect(() => {
             <div key={i} className="relative flex items-center">
               {name === "home-icon" ? (
                 <FaHome
-                  className="text-2xl md:text-3xl text-[#16730F] cursor-pointer hover:opacity-80 transition-opacity"
+                  className={`text-2xl md:text-3xl cursor-pointer transition-opacity ${
+                    isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F] hover:opacity-80"
+                  }`}
                   onClick={() => handleIconClick(name)}
                 />
               ) : (
-                <div className="relative">
+                <div className={`relative rounded-full p-1 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}>
                   <img
                     src={`/assets/images/${name}.svg`}
                     alt={name}
-                    className="h-6 md:h-8 cursor-pointer hover:opacity-80 transition-opacity"
+                    className={`h-6 md:h-8 cursor-pointer transition-opacity ${
+                      isIconActive(name) ? "opacity-100" : "hover:opacity-80"
+                    }`}
                     onClick={() => handleIconClick(name)}
                   />
 {name === "notifications" && notificationCount > 0 && (
@@ -510,7 +515,7 @@ useEffect(() => {
                   )}
                 </div>
               )}
-              {currentIcon === name && (
+              {isIconActive(name) && (
                 <span className="px-2 py-1 text-xs bg-[#1A3E32] rounded-r-2xl text-white rounded">
                   {name === "home-icon"
                     ? "News Feed"
@@ -546,7 +551,7 @@ useEffect(() => {
                 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden">
+                  <div className="absolute right-0 left-auto mt-2 w-[min(18rem,calc(100vw-1rem))] bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden max-h-[70vh] overflow-y-auto">
                     {/* User Info Header */}
                     <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                       <div className="flex items-center gap-3">
@@ -665,9 +670,9 @@ useEffect(() => {
                  }}
                >
                  {name === "home-icon" ? (
-                   <FaHome className="text-[#16730F]" />
+                   <FaHome className={isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F]"} />
                  ) : (
-                   <div className="relative">
+                   <div className={`relative rounded-full p-1 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}>
                      <img
                        src={`/assets/images/${name}.svg`}
                        alt={name}
@@ -690,7 +695,7 @@ useEffect(() => {
                       )}
                     </div>
                  )}
-                 <span className="text-[#1A3E32] font-medium capitalize text-sm">
+                 <span className={`font-medium capitalize text-sm ${isIconActive(name) ? "text-[#0f4e0a]" : "text-[#1A3E32]"}`}>
                    {name === "home-icon" ? "News Feed" : name.toLowerCase()}
                  </span>
                </div>

@@ -6,12 +6,9 @@ import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
 import {
   FaPlus,
-  FaCheckCircle,
-  FaChevronDown,
   FaTrash,
   FaCheck,
 } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
 import useAuth from "../../../hooks/useAuth";
 import Loader from "../../../components/ui/Loader";
 import { toast } from "react-toastify";
@@ -24,29 +21,6 @@ import OnboardingLayout from "../../../components/layout/onboardingLayout";
 // const categoryOptions = [...];
 // const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);
 
-const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
-  <div className="relative w-full">
-    <select
-      value={value}
-      onChange={onChange}
-      className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 appearance-none focus:outline-1 focus:outline-[#1A3E32] ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      }`}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-    {value ? (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    ) : (
-      <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
-    )}
-  </div>
-);
 
 // const InputWithIcon = ({ value, onChange, placeholder }) => (
 //   <div className="relative w-full">
@@ -81,9 +55,13 @@ function Skills() {
     "Job Type",
   ];
 
-  const [skillSector, setSkillSector] = useState("");
-  const [category, setCategory] = useState("");
-  const [experience, setExperience] = useState("");
+  const [skillsData, setSkillsData] = useState({
+    userId: "",
+    skillSector: "",
+    category: "",
+    experience: "",
+  });
+
   const [allFilled, setAllFilled] = useState(false);
   const { user } = useAuth();
   const [allSkill, setAllSkill] = useState([]);
@@ -113,13 +91,20 @@ function Skills() {
   }, [isEditMode, cvData, user?.id, dataLoaded]);
 
   useEffect(() => {
-    setAllFilled(skillSector && category && experience);
-  }, [skillSector, category, experience]);
+    setSkillsData((prev) => ({ ...prev, userId: user?.id || "" }));
+  }, [user?.id]);
+
+  useEffect(() => {
+    setAllFilled(skillsData.skillSector && skillsData.category && skillsData.experience);
+  }, [skillsData.skillSector, skillsData.category, skillsData.experience]);
 
   const clearForm = () => {
-    setSkillSector("");
-    setCategory("");
-    setExperience("");
+    setSkillsData((prev) => ({
+      ...prev,
+      skillSector: "",
+      category: "",
+      experience: "",
+    }));
   };
 
   const location = useLocation();
@@ -135,9 +120,9 @@ function Skills() {
 
     const newEntry = {
       userId: user?.id,
-      skillSector,
-      category,
-      experience,
+      skillSector: skillsData.skillSector,
+      category: skillsData.category,
+      experience: skillsData.experience,
     };
 
     // Check for duplicates
@@ -159,25 +144,31 @@ function Skills() {
   };
 
   return (
-    <OnboardingLayout
-      steps={steps}
-      currentStep={currentStep}
-      handleStepClick={handleStepClick}
-      getPath={getPath}
-      isEditMode={isEditMode}
-    >
-      <div
-      // className="min-h-screen py-4"
-      >
-        {/* <Header />
-      <StepTabs
-        steps={steps}
-        currentStep={currentStep}
-        onStepClick={handleStepClick}
-        getPath={getPath}
-        isEditMode={isEditMode}
-      />
-      <ProgressBar currentStep={currentStep} totalSteps={steps.length} /> */}
+    <div className="min-h-screen py-4">
+      <Header />
+      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
+      <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
+
+      <div className="max-w-3xl mx-auto mt-6 px-4 text-[#1A3E32] text-2xl font-semibold">
+        Skill
+      </div>
+      <p className="max-w-3xl mx-auto px-4 text-[#333] text-sm mb-6">
+        Highlight what you're great at. This helps employers match you to the
+        right role
+      </p>
+
+      <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4">
+        <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-1">
+          <div className="bg-[#82828280] rounded-2xl p-4">
+            <p className="font-semibold text-xs mb-1">SKILL</p>
+            <InputWithIcon
+              value={skillsData.skillSector}
+              onChange={(e) =>
+                setSkillsData((prev) => ({ ...prev, skillSector: e.target.value }))
+              }
+              placeholder="Enter skill name"
+            />
+          </div>
 
         <div className="max-w-3xl mx-auto mt-6 px-4 text-[#1A3E32] text-2xl font-semibold">
           Skill
@@ -192,31 +183,22 @@ function Skills() {
             <div className="bg-[#fff] rounded-2xl p-4">
               <p className="font-semibold text-xs mb-1">SKILL</p>
               <InputWithIcon
-                value={skillSector}
-                onChange={(e) => setSkillSector(e.target.value)}
-                placeholder="Enter skill name"
+                value={skillsData.category}
+                onChange={(e) =>
+                  setSkillsData((prev) => ({ ...prev, category: e.target.value }))
+                }
+                placeholder="Enter category"
               />
             </div>
-
-            <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <p className="font-semibold text-xs mb-1">CATEGORY</p>
-                <InputWithIcon
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="Enter category"
-                />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-xs mb-1">
-                  YEARS OF EXPERIENCE
-                </p>
-                <InputWithIcon
-                  value={experience}
-                  onChange={(e) => setExperience(e.target.value)}
-                  placeholder="Enter years of experience"
-                />
-              </div>
+            <div className="flex-1">
+              <p className="font-semibold text-xs mb-1">YEARS OF EXPERIENCE</p>
+              <InputWithIcon
+                value={skillsData.experience}
+                onChange={(e) =>
+                  setSkillsData((prev) => ({ ...prev, experience: e.target.value }))
+                }
+                placeholder="Enter years of experience"
+              />
             </div>
 
             <div className=" max-w-full md:max-w-2xs mx-2 bg-[#00000040] mt-3 rounded-2xl   flex flex-col sm:flex-row gap-4   ">
@@ -268,7 +250,40 @@ function Skills() {
                 </button>
               </div>
             </div>
-          ))}
+          </div>
+        ))}
+
+      <NavigationButtons
+        isFormComplete={true} // Always allow proceeding since it's optional
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
+        onNext={async () => {
+          let skillsToSave = [...allSkill];
+
+          if (allFilled) {
+            const currentEntry = {
+              userId: user?.id,
+              skillSector: skillsData.skillSector,
+              category: skillsData.category,
+              experience: skillsData.experience,
+            };
+
+            const exists = skillsToSave.some(
+              (item) =>
+                item.skillSector === currentEntry.skillSector &&
+                item.category === currentEntry.category &&
+                item.experience === currentEntry.experience
+            );
+
+            if (!exists) {
+              skillsToSave.push(currentEntry);
+            }
+          }
 
         <NavigationButtons
           isFormComplete={true} // Always allow proceeding since it's optional
