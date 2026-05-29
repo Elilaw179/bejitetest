@@ -38,7 +38,11 @@ const validatePortfolio = (url) => {
 
 function Link() {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
+
+  const handleStepClick = (path) => {
+    navigate(path);
+  };
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
@@ -49,6 +53,7 @@ function Link() {
     "Work history",
     "Certificate",
     "Links",
+    "Job Type",
   ];
 
   const [formLinks, setFormLinks] = useState({
@@ -65,7 +70,21 @@ function Link() {
     portfolio: "",
   });
 
-  const [allFilled, setAllFilled] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Load existing links data when in edit mode
+  useEffect(() => {
+    if (isEditMode && cvData?.links && !dataLoaded) {
+      const links = cvData.links;
+      setFormLinks({
+        linkedin: links.linkedin || "",
+        twitter: links.twitter || "",
+        instagram: links.instagram || "",
+        portfolio: links.portfolio || "",
+      });
+      setDataLoaded(true);
+    }
+  }, [isEditMode, cvData, dataLoaded]);
 
   const handleChange = (e, key) => {
     setFormLinks({ ...formLinks, [key]: e.target.value });
@@ -107,26 +126,11 @@ function Link() {
     setErrors({ ...errors, [key]: error });
   };
 
-  useEffect(() => {
-    // Check if at least one field is filled
-    const hasAtLeastOne = Object.values(formLinks).some(
-      (val) => val.trim() !== ""
-    );
-
-    // Check if all filled fields are valid
-    const allValid = Object.entries(formLinks).every(([key, value]) => {
-      if (!value.trim()) return true; // Empty fields are OK
-      return validateField(key, value) === "";
-    });
-
-    setAllFilled(hasAtLeastOne && allValid);
-  }, [formLinks]);
-
   const linkFields = [
     {
       name: "linkedin",
       label: "LinkedIn",
-      textColor: "text-[#D9D9D9]",
+      textColor: "text-white",
       placeholder: "linkedin.com/in/username",
     },
     {
@@ -138,13 +142,13 @@ function Link() {
     {
       name: "instagram",
       label: "Instagram",
-      textColor: "text-[#D9D9D9]",
+      textColor: "text-white",
       placeholder: "instagram.com/username",
     },
     {
       name: "portfolio",
       label: "Portfolio website",
-      textColor: "text-[#D9D9D9]",
+      textColor: "text-white",
       placeholder: "yourwebsite.com",
     },
   ];
@@ -156,15 +160,14 @@ function Link() {
   return (
     <div className="min-h-screen py-4 px-2 sm:px-4">
       <Header />
-      <StepTabs steps={steps} currentStep={currentStep} />
+      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <div className="max-w-3xl mx-auto mt-6 text-[#1A3E32] text-2xl font-semibold">
-        Links
+        Links (Optional)
       </div>
       <p className="max-w-3xl mx-auto text-[#333] text-sm mb-6">
-        Add at least one link to your online presence. Employers love to see
-        your work, projects, or portfolio.
+        Add your social media links and portfolio. You can skip this step and add links later.
       </p>
 
       <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4">
@@ -195,15 +198,15 @@ function Link() {
       </div>
 
       <NavigationButtons
-        isFormComplete={allFilled}
-        onBack={() => navigate(-1)}
-        onNext={async () => {
-          // Check if at least one link is provided
-          if (!allFilled) {
-            toast.error("Please add at least one valid link");
-            return;
+        isFormComplete={true}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
           }
-
+        }}
+        onNext={async () => {
           // Filter out empty links before sending
           const linksToSend = Object.entries(formLinks)
             .filter(([, value]) => value.trim() !== "")
@@ -211,6 +214,21 @@ function Link() {
               acc[key] = value.trim();
               return acc;
             }, {});
+
+          // If no links provided, skip to next step
+          if (Object.keys(linksToSend).length === 0) {
+            if (isEditMode) {
+              // Navigate to recruitment page with success message
+              navigate("/job-type", {
+                state: { profileUpdateComplete: true }
+              });
+            } else {
+              navigate("/job-type", {
+                state: { email, firstName, lastName, role, mode, followings },
+              });
+            }
+            return;
+          }
 
           const data = { userId: user.id, ...linksToSend };
           console.log("data: ", data);
@@ -227,9 +245,16 @@ function Link() {
             if (response.status === 200 || response.status === 201) {
               console.log("Links saved:", response.data);
               toast.success("Links saved successfully!");
-              navigate("/job-type", {
-                state: { email, firstName, lastName, role, mode, followings },
-              });
+              if (isEditMode) {
+                // Navigate to recruitment page with success message
+                navigate("/job-type", {
+                  state: { profileUpdateComplete: true }
+                });
+              } else {
+                navigate("/job-type", {
+                  state: { email, firstName, lastName, role, mode, followings },
+                });
+              }
             } else {
               toast.error("Failed to save Links");
               console.error("Failed to save Links", response);
@@ -238,6 +263,18 @@ function Link() {
             setIsLoading(false);
             console.error("Error:", err);
             toast.error(err.response?.data?.message || "Error saving links");
+          }
+        }}
+        showSkip={true}
+        onSkip={() => {
+          if (isEditMode) {
+            navigate("/job-type", {
+              state: { profileUpdateComplete: true }
+            });
+          } else {
+            navigate("/job-type", {
+              state: { email, firstName, lastName, role, mode, followings },
+            });
           }
         }}
       />

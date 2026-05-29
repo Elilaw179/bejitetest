@@ -1,7 +1,7 @@
   // <div className="relative left-20 bottom-24">
   //           <div className=" rounded-full w-[120px] h-[120px] overflow-hidden">
   //             <img
-  //               src="assets/images/eli.jpg"
+  //               src="/assets/images/photo_placeholder.png"
   //               alt="Osakwe Prisca profile"
   //               className="w-full h-full object-cover"
   //             />

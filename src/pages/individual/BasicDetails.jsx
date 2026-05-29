@@ -1,13 +1,16 @@
-import React, { useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
+import useAuth from "../../hooks/useAuth";
 
 const BasicDetails = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentStep } = useOutletContext();
+  const { user } = useAuth();
 
   const steps = ["Basic Details", "Profile Setup", "Location"];
 
@@ -16,6 +19,78 @@ const BasicDetails = () => {
     email: "",
     phone_number: "",
   });
+
+  useEffect(() => {
+    console.log("[IndividualBasicDetails] Page mounted");
+    console.log("[IndividualBasicDetails] Raw location.state on mount:", location.state);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- mount log only
+
+  useEffect(() => {
+    let storedUser = {};
+    try {
+      storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    } catch (error) {
+      console.warn("[IndividualBasicDetails] Failed to parse localStorage user:", error);
+      storedUser = {};
+    }
+
+    const stateUser = location.state || {};
+    const resolvedEmail =
+      stateUser?.email ||
+      user?.email ||
+      storedUser?.email ||
+      "";
+    const resolvedName =
+      `${stateUser?.firstName || user?.firstName || storedUser?.firstName || ""} ${stateUser?.lastName || user?.lastName || storedUser?.lastName || ""}`.trim();
+    const resolvedPhone =
+      user?.phone_number ||
+      user?.phone ||
+      storedUser?.phone_number ||
+      storedUser?.phone ||
+      "";
+
+    console.log("[IndividualBasicDetails] Prefill source route state:", stateUser);
+    console.log("[IndividualBasicDetails] Prefill source auth user:", user);
+    console.log("[IndividualBasicDetails] Prefill source localStorage user:", storedUser);
+    console.log("[IndividualBasicDetails] Prefill resolved:", {
+      resolvedEmail,
+      resolvedName,
+      resolvedPhone,
+    });
+
+    setFormData((prev) => {
+      const next = {
+        full_name: prev.full_name || resolvedName,
+        email: prev.email || resolvedEmail,
+        phone_number: prev.phone_number || resolvedPhone,
+      };
+
+      // Avoid rerender loop/log spam when values are unchanged.
+      if (
+        prev.full_name === next.full_name &&
+        prev.email === next.email &&
+        prev.phone_number === next.phone_number
+      ) {
+        return prev;
+      }
+
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- primitive deps only; full location.state/user ref churn causes loops
+  }, [
+    location.state?.email,
+    location.state?.firstName,
+    location.state?.lastName,
+    user?.email,
+    user?.firstName,
+    user?.lastName,
+    user?.phone_number,
+    user?.phone,
+  ]);
+
+  useEffect(() => {
+    console.log("[IndividualBasicDetails] formData updated:", formData);
+  }, [formData]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -64,7 +139,7 @@ const BasicDetails = () => {
               name="email"
               placeholder="Enter your email"
               value={formData.email}
-              onChange={handleChange}
+              disabled
               className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
             />
           </div>

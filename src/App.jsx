@@ -20,7 +20,7 @@ import Link from "./pages/jobseekerSignup/cvBuilder/Link.jsx";
 import JobType from "./pages/jobseekerSignup/JobType.jsx";
 import SaveProgress from "./pages/jobseekerSignup/SaveProgress.jsx";
 import EmployerOpt from "./pages/EmployerOpt";
-import BasicDetails from "./pages/coperate/BasicDetails.jsx";
+import BasicDetails from "./pages/corporate/BasicDetails.jsx";
 import ProfileSetup from "./pages/individual/ProfileSetup";
 import Location from "./pages/individual/Location";
 import Verify from "./pages/individual/Verify";
@@ -29,17 +29,17 @@ import UploadDoc from "./pages/individual/UploadDoc";
 import InReview from "./pages/individual/InReview";
 import IndividualVerificationLayout from "./components/IndividualVerificationLayout";
 import CoperateVerificationLayout from "./components/CoperateVerificationLayout";
-import CoperateBasicDetails from "./pages/coperate/BasicDetails.jsx";
-import CoperateProfileSetup from "./pages/coperate/ProfileSetup";
-import CompanyDetails from "./pages/coperate/CompanyDetails.jsx";
-import CoperateLocation from "./pages/coperate/Location.jsx";
-import CoperateVerify from "./pages/coperate/Verify.jsx";
-import CoperateUploadDoc from "./pages/coperate/UploadDoc.jsx";
-import CoperateInReview from "./pages/coperate/InReview.jsx";
+import CoperateBasicDetails from "./pages/corporate/BasicDetails.jsx";
+import CoperateProfileSetup from "./pages/corporate/ProfileSetup.jsx";
+import CompanyDetails from "./pages/corporate/CompanyDetails.jsx";
+import CoperateLocation from "./pages/corporate/Location.jsx";
+import CoperateVerify from "./pages/corporate/Verify.jsx";
+import CoperateUploadDoc from "./pages/corporate/UploadDoc.jsx";
+import CoperateInReview from "./pages/corporate/InReview.jsx";
 import Recruitment from "./pages/employerDashboard/Recruitment.jsx";
 import CandidateSearchPage from "./pages/employerDashboard/CandidateSearchPage.jsx";
 import Chat from "./pages/employerDashboard/Chat.jsx";
-import Connection from "./pages/employerDashboard/Connection.jsx";
+import Connections from "./pages/Connections.jsx";
 import PostPage from "./pages/employerDashboard/PostPage.jsx";
 import Notifications from "./pages/employerDashboard/Notifications.jsx";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -51,16 +51,40 @@ import PaymentSuccess from "./pages/paymentMethod/PaymentSuccessPage.jsx";
 import SentInvite from "./pages/individual/SentInvite.jsx";
 import EmployeeSentInvite from "./pages/employerDashboard/EmployeeSentInvite.jsx";
 import InterviewInvite from "./components/InterviewInvite.jsx";
+import InterviewNotifications from "./pages/individual/InterviewNotifications.jsx";
+import SentInvitations from "./pages/employerDashboard/SentInvitations.jsx";
 import About from "./pages/misc/About.jsx";
 import Teams from "./pages/misc/Teams.jsx";
 import SecurityAdvice from "./pages/misc/SecurityAdvice.jsx";
 import PrivacyPolicy from "./pages/misc/PrivacyPolicy.jsx";
 import Contact from "./pages/misc/Contact.jsx";
+import Help from "./pages/misc/Help.jsx";
 import AuthSuccess from "./pages/auth/AuthSuccess.jsx";
 import AuthFailure from "./pages/auth/AuthFailure.jsx";
 import CompleteSignup from "./pages/CompleteSignup.jsx";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import Profile from "./pages/Profile.jsx";
+import { ToastContainer } from 'react-toastify';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+import ResetPassword from "./pages/ResetPassword.jsx";
+import ASEPricingPage from "./pages/employerDashboard/ASEPricingPage.jsx";
+import ASEPaymentCallback from "./pages/employerDashboard/ASEPaymentCallback.jsx";
+import ASESubscriptionDashboard from "./pages/employerDashboard/ASESubscriptionDashboard.jsx";
+import 'react-toastify/dist/ReactToastify.css';
+
+// Admin imports
+import AdminLogin from "./pages/admin/AdminLogin.jsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminUsers from "./pages/admin/AdminUsers.jsx";
+import AdminJobs from "./pages/admin/AdminJobs.jsx";
+import AdminRevenue from "./pages/admin/AdminRevenue.jsx";
+import AdminEngagement from "./pages/admin/AdminEngagement.jsx";
+import AdminRecruitment from "./pages/admin/AdminRecruitment.jsx";
+import AdminDemographics from "./pages/admin/AdminDemographics.jsx";
+import AdminList from "./pages/admin/AdminList.jsx";
+import AdminProtectedRoute from "./components/admin/AdminProtectedRoute.jsx";
+import AuthBootstrap from "./components/AuthBootstrap.jsx";
+import ProfileCompletionReminder from "./components/ProfileCompletionReminder.jsx";
+import { Navigate } from "react-router-dom";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
@@ -68,7 +92,76 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Router>
+        <AuthBootstrap>
         <Routes>
+          {/* Admin Routes */}
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <AdminProtectedRoute>
+                <AdminDashboard />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/users" 
+            element={
+              <AdminProtectedRoute>
+                <AdminUsers />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/jobs" 
+            element={
+              <AdminProtectedRoute>
+                <AdminJobs />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/revenue" 
+            element={
+              <AdminProtectedRoute>
+                <AdminRevenue />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/engagement" 
+            element={
+              <AdminProtectedRoute>
+                <AdminEngagement />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/recruitment " 
+            element={
+              <AdminProtectedRoute>
+                <AdminRecruitment />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/demographics" 
+            element={
+              <AdminProtectedRoute>
+                <AdminDemographics />
+              </AdminProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/admins" 
+            element={
+              <AdminProtectedRoute>
+                <AdminList />
+              </AdminProtectedRoute>
+            } 
+          />
+
           <Route path="/auth/email-sent" element={<EmailSent />} />
           <Route path="/auth/success" element={<AuthSuccess />} />
           <Route path="/auth/failure" element={<AuthFailure />} />
@@ -84,13 +177,23 @@ function App() {
           <Route path="/jobconnection" element={<JobConnection />} />
           <Route path="/resume" element={<Resume />} />
           <Route path="/save-progress" element={<SaveProgress />} />
-          <Route element={<ResumeLayout />}>
+          <Route element={<ProtectedRoute><ResumeLayout /></ProtectedRoute>}>
             <Route path="/bio" element={<Bio />} />
             <Route path="/education" element={<Education />} />
             <Route path="/skills" element={<Skills />} />
+            <Route path="/job-type" element={<JobType />} />
             <Route path="/work-history" element={<WorkHistory />} />
             <Route path="/certificate" element={<Certificate />} />
             <Route path="/links" element={<Link />} />
+          </Route>
+          <Route element={<ProtectedRoute><ResumeLayout /></ProtectedRoute>}>
+            <Route path="/edit-profile/bio" element={<Bio />} />
+            <Route path="/edit-profile/education" element={<Education />} />
+            <Route path="/edit-profile/skills" element={<Skills />} />
+            <Route path="/edit-profile/work-history" element={<WorkHistory />} />
+            <Route path="/edit-profile/certificate" element={<Certificate />} />
+            <Route path="/edit-profile/links" element={<Link />} />
+            <Route path="/edit-profile/job-type" element={<JobType />} />
           </Route>
           <Route element={<IndividualVerificationLayout />}>
             <Route
@@ -109,31 +212,55 @@ function App() {
           </Route>
           <Route element={<CoperateVerificationLayout />}>
             <Route
-              path="/coperate/basic-details"
+              path="/corporate/basic-details"
               element={<CoperateBasicDetails />}
             />{" "}
             <Route
-              path="/coperate/profile-setup"
+              path="/corporate/profile-setup"
               element={<CoperateProfileSetup />}
             />{" "}
             <Route
-              path="/coperate/company-details"
+              path="/corporate/company-details"
               element={<CompanyDetails />}
             />
-            <Route path="/coperate/location" element={<CoperateLocation />} />
-            <Route path="/coperate/verify" element={<CoperateVerify />} />
-            <Route path="/coperate/upload" element={<CoperateUploadDoc />} />
-            <Route path="/coperate/inreview" element={<CoperateInReview />} />
+            <Route path="/corporate/location" element={<CoperateLocation />} />
+            <Route path="/corporate/verify" element={<CoperateVerify />} />
+            <Route path="/corporate/upload" element={<CoperateUploadDoc />} />
+            <Route path="/corporate/inreview" element={<CoperateInReview />} />
+            <Route
+              path="/edit-profile/recruiter/basic-details"
+              element={<CoperateBasicDetails />}
+            />
+            <Route
+              path="/edit-profile/recruiter/profile-setup"
+              element={<CoperateProfileSetup />}
+            />
+            <Route
+              path="/edit-profile/recruiter/company-details"
+              element={<CompanyDetails />}
+            />
+            <Route
+              path="/edit-profile/recruiter/location"
+              element={<CoperateLocation />}
+            />
+            <Route
+              path="/edit-profile/recruiter/verify"
+              element={<CoperateVerify />}
+            />
+            <Route
+              path="/edit-profile/recruiter/upload-doc"
+              element={<CoperateUploadDoc />}
+            />
           </Route>
           <Route path="/job-type" element={<JobType />} />
           <Route path="/post-page" element={<PostPage />} />
-          <Route path="/recruitment" element={<Recruitment />} />
+          <Route path="/news-feed" element={<Recruitment />} />
           <Route
             path="/candidate-search-page"
-            element={<CandidateSearchPage />}
+            element={<ProtectedRoute redirectMessage="Your session has expired. Please log in again."><CandidateSearchPage /></ProtectedRoute>}
           />
           <Route path="/chats" element={<Chat />} />
-          <Route path="/connection" element={<Connection />} />
+           <Route path="/connection" element={<Connections />} />
           <Route path="/notification" element={<Notifications />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/payment-type" element={<PaymentType />} />
@@ -146,12 +273,23 @@ function App() {
             element={<EmployeeSentInvite />}
           />
           <Route path="/interview-invite" element={<InterviewInvite />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/teams" element={<Teams />} />
-          <Route path="/security-advice" element={<SecurityAdvice />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/contact" element={<Contact />} />
+          <Route path="/my-invitations" element={<InterviewNotifications />} />
+          <Route path="/sent-invitations" element={<SentInvitations />} />
+           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+           <Route path="/user-profile/:userId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+           <Route path="/about" element={<About />} />
+           <Route path="/teams" element={<Teams />} />
+           <Route path="/security-advice" element={<SecurityAdvice />} />
+           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/ase/pricing" element={<ASEPricingPage />} />
+          <Route path="/ase/payment-callback" element={<ASEPaymentCallback />} />
+          <Route path="/ase/subscription-callback" element={<ASEPaymentCallback />} />
+          <Route path="/ase/dashboard" element={<ASESubscriptionDashboard />} />
         </Routes>
+<ProfileCompletionReminder />
         <ToastContainer
           position="top-right"
           autoClose={3000}
@@ -164,6 +302,7 @@ function App() {
           pauseOnHover
           theme="light"
         />
+        </AuthBootstrap>
       </Router>
     </GoogleOAuthProvider>
   );

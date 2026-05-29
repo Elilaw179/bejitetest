@@ -20,5 +20,16 @@ This ensures that unused variables, undefined functions, and other potential iss
 To check your code for linting errors:
 ```bash
 npm run lint
+```
 
+## Environment variables
+
+Copy `.env.example` to `.env` for local development. Vite exposes only variables prefixed with `VITE_`.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_API_URL` | Yes | Backend origin **without** a trailing slash (for example `https://bejite-backend-9mg2.onrender.com`). Used as the Axios/fetch base URL and to resolve relative profile media paths such as `/uploads/profilePhoto-….png`. |
+| `VITE_API_KEY` | No | Optional API key if your deployment uses one. |
+
+Profile photos may be stored as full `https://` URLs (for example Cloudinary) or as paths like `/uploads/…`; the shared helpers `profilePhotoUrl` / `profileAvatarSrc` in `src/utils/profilePhotoUrl.js` resolve the latter against `VITE_API_URL`.
 

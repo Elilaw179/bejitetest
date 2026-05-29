@@ -1,13 +1,22 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import { toast } from "react-toastify";
 import Header from "../../components/Header";
 import { FaArrowLeft } from "react-icons/fa";
 
 const CoperateVerify = () => {
   const navigate = useNavigate();
+  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
 
   const [showConsent, setShowConsent] = useState(false);
   const [agreed, setAgreed] = useState(false);
+
+  useEffect(() => {
+    if (isEditMode && recruiterData?.verification_consent) {
+      setAgreed(true);
+      setShowConsent(true);
+    }
+  }, [isEditMode, recruiterData]);
 
   const handleStartVerification = () => {
     setShowConsent(true);
@@ -15,7 +24,16 @@ const CoperateVerify = () => {
 
   const handleContinue = () => {
     if (agreed) {
-      navigate("/coperate/upload");
+      if (isEditMode) {
+        if (currentStep === 5) {
+          navigate("/news-feed");
+          toast.success("Profile updated successfully!");
+        } else {
+          navigate(getPath(currentStep + 1));
+        }
+      } else {
+        navigate("/corporate/upload");
+      }
     }
   };
 
@@ -50,7 +68,13 @@ const CoperateVerify = () => {
 
             <div
               className="flex justify-center w-full sm:w-auto bg-white items-center px-2 py-1 rounded cursor-pointer"
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                if (isEditMode) {
+                  navigate(getPath(currentStep - 1));
+                } else {
+                  navigate(-1);
+                }
+              }}
             >
               <FaArrowLeft />
               <button className="ml-1 underline">Go back</button>

@@ -15,9 +15,9 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
       { name: "phone", label: "PHONE NUMBER", type: "Number", placeholder: "e.g +234 706 004 0000", width: "sm:w-[226px]" },
     ],
     [
-      { name: "gender", label: "GENDER", type: "select", options: ["Male", "Female", "Other"], width: "sm:w-44" },
+      { name: "gender", label: "GENDER", type: "select", options: ["Male", "Female"], width: "sm:w-44" },
       { name: "maritalStatus", label: "MARITAL STATUS", type: "select", options: ["Single", "Married", "Divorced", "Widowed"], width: "sm:w-44" },
-      { name: "age", label: "AGE", type: "select", options: bioAges, width: "sm:w-32" },
+      { name: "age", label: "AGE (optional)", type: "select", options: bioAges, width: "sm:w-32" },
     ],
     [
       { name: "country", label: "COUNTRY OF ORIGIN", type: "select", options: countries, width: "sm:w-[179px]" },
@@ -27,7 +27,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
       { name: "city", label: "CITY/TOWN", placeholder: "e.g Calabar", width: "sm:w-[179px]" },
       {
         name: "tribe",
-        label: "TRIBE",
+        label: "TRIBE (optional)",
         type: "datalist",
         options: ["Yoruba", "Hausa", "Igbo", "Ibibio"],
         placeholder: "Enter or select your tribe",

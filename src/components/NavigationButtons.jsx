@@ -1,7 +1,16 @@
-import React from 'react';
-import { FaArrowLeft } from 'react-icons/fa';
+import React from "react";
+import { FaArrowLeft } from "react-icons/fa";
+import { FaSpinner } from "react-icons/fa";
 
-const NavigationButtons = ({ isFormComplete, onBack, onNext }) => (
+const NavigationButtons = ({ 
+  isFormComplete, 
+  onBack, 
+  onNext,
+  showSkip = false,
+  onSkip,
+  nextLabel = "Next",
+  isLoading = false
+}) => (
   <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center mt-[5%] px-4 gap-4 mb-[7%]">
     <div
       className="flex justify-center w-full sm:w-auto bg-white items-center px-2 py-1 rounded cursor-pointer"
@@ -11,22 +20,34 @@ const NavigationButtons = ({ isFormComplete, onBack, onNext }) => (
       <button className="ml-1 ">Go back</button>
     </div>
 
+    {showSkip && onSkip && (
+      <button
+        className="w-full shadow-md sm:w-[107px] bg-gray-500 cursor-pointer rounded-2xl h-9 text-center text-white text-[14px]"
+        onClick={onSkip}
+      >
+        Skip
+      </button>
+    )}
+
     <button
       className={`w-full shadow-md sm:w-[107px] ${
-        isFormComplete ? "bg-[#16730F] cursor-pointer" : "bg-[#16730F40] cursor-not-allowed"
-      } rounded-2xl h-9 text-center text-white text-[14px]`}
-      disabled={!isFormComplete}
+        isFormComplete && !isLoading
+          ? "bg-[#16730F] cursor-pointer"
+          : "bg-[#16730F40] cursor-not-allowed"
+      } rounded-2xl h-9 text-center text-white text-[14px] flex items-center justify-center gap-2`}
+      disabled={!isFormComplete || isLoading}
       onClick={onNext}
     >
-      Next
+      {isLoading ? (
+        <>
+          <FaSpinner className="animate-spin" />
+          Saving...
+        </>
+      ) : (
+        nextLabel
+      )}
     </button>
   </div>
 );
 
 export default NavigationButtons;
-
-
-
-
-
-

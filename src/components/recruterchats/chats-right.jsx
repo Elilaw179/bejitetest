@@ -1,15 +1,69 @@
 import React from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
-import image from '../../assets/Ellipse.png'; 
+import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../../config';
 
+function ChatsRight({ selectedChat, onBack }) {
+  const navigate = useNavigate();
+  const otherUser = selectedChat?.other_user;
+  const otherUserId =
+    selectedChat?.other_user_id || otherUser?.id || null;
 
-function ChatsRight({ onBack }) {
-  
+  const getProfileImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    if (imagePath.startsWith('/uploads')) {
+      const baseUrl = API_URL || 'http://localhost:3001';
+      return `${baseUrl}${imagePath}`;
+    }
+    return `${API_URL || 'http://localhost:3001'}${imagePath}`;
+  };
+
+  const getDisplayName = () => {
+    if (!otherUser) return 'Select a chat';
+    if (otherUser.name) return otherUser.name;
+    const first = otherUser.firstName || '';
+    const last = otherUser.lastName || '';
+    const full = `${first} ${last}`.trim();
+    return full || 'User';
+  };
+
+  const getDisplayRole = () => {
+    if (!otherUser?.role) return 'User';
+    return otherUser.role.charAt(0).toUpperCase() + otherUser.role.slice(1);
+  };
+
+  const getInitials = () => {
+    const first = (otherUser?.firstName || '').trim().charAt(0).toUpperCase();
+    const last = (otherUser?.lastName || '').trim().charAt(0).toUpperCase();
+    return `${first}${last}` || 'U';
+  };
+
+  const profileImage = getProfileImageUrl(
+    otherUser?.profilePictureUrl ||
+      otherUser?.profile_photo ||
+      otherUser?.profilePhoto
+  );
+
+  const handleViewProfile = () => {
+    if (otherUserId) {
+      navigate(`/user-profile/${otherUserId}`);
+    }
+  };
+
+  if (!selectedChat || !otherUser) {
+    return (
+      <div className="bg-[#F5F5F5] h-full p-2 flex items-center justify-center">
+        <p className="text-[#16730F] text-sm text-center px-4">
+          Select a conversation to view profile details
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#F5F5F5] h-full p-2">
       <aside className="bg-[#1A3E32] rounded-2xl h-full overflow-hidden">
-        {/* Header */}
         <div className="bg-[#16730F] rounded-t-2xl">
           <div className="p-5">
             <button
@@ -22,24 +76,31 @@ function ChatsRight({ onBack }) {
             </button>
           </div>
 
-          {/* Profile Section */}
           <div className="flex flex-col items-center pb-6">
             <div className="relative -mt-10 rounded-full border-[5px] border-[#16730F]">
-              <img
-                className="w-20 h-20 rounded-full object-cover"
-                src={image}
-               
-                loading="lazy"
-              />
+              {profileImage ? (
+                <img
+                  className="w-20 h-20 rounded-full object-cover"
+                  src={profileImage}
+                  alt={getDisplayName()}
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-[#556B1F] text-white font-bold text-xl flex items-center justify-center">
+                  {getInitials()}
+                </div>
+              )}
             </div>
             <div className="text-white text-center mt-3">
-              <h1 className="text-lg font-semibold">Okpata favour</h1>
-              <p className="text-sm opacity-80">Employer</p>
+              <h1 className="text-lg font-semibold">{getDisplayName()}</h1>
+              <p className="text-sm opacity-80">{getDisplayRole()}</p>
             </div>
             <div className="w-36 mx-auto mt-4">
               <button
                 type="button"
-                className="bg-[#6B8E23] py-2 text-xs text-white w-full rounded-3xl hover:bg-[#5a7720] transition"
+                onClick={handleViewProfile}
+                disabled={!otherUserId}
+                className="bg-[#6B8E23] py-2 text-xs text-white w-full rounded-3xl hover:bg-[#5a7720] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="View Profile"
               >
                 View Profile
@@ -48,15 +109,15 @@ function ChatsRight({ onBack }) {
           </div>
         </div>
 
-        {/* Contact + Links */}
         <div className="bg-[#16730F] px-6 py-6 space-y-6 h-full">
           {[
-            { label: "Email", value: "osakweprsca@gmail.com" },
-            { label: "Phone", value: "+234 7061410614" },
-            { label: "Website", value: "https://linktree.com" },
-          ].map((item, idx) => (
-            <div key={idx}>
+            { label: 'Email', value: otherUser.email || 'Not provided' },
+            { label: 'Phone', value: otherUser.phone || otherUser.phone_number || 'Not provided' },
+            { label: 'Website', value: otherUser.website || 'Not provided' },
+          ].map((item) => (
+            <div key={item.label}>
               <hr className="border-[#6B8E23] mb-2" />
+              <p className="text-white/70 text-xs mb-1">{item.label}</p>
               <p className="text-white text-sm break-words">{item.value}</p>
             </div>
           ))}

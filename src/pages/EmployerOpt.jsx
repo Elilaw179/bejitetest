@@ -1,15 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import MemberCard from '../components/MemberCard';
-import fakePdfFile from '../utils/fake-pdf';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import Loader from '../components/ui/Loader';
-import axiosInstance from '../services/axios';
+import axiosPublic from '../services/axiosPublic';
+import { updateUser } from '../features/auth/authSlice';
 
 const EmployerOpt = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const location = useLocation();
     const { email, firstName, lastName, password, role } = location.state || {};
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const resolvedEmail = email || storedUser?.email || '';
+    const resolvedFirstName = firstName || storedUser?.firstName || '';
+    const resolvedLastName = lastName || storedUser?.lastName || '';
+    const resolvedRole = role || storedUser?.role || 'recruiter';
 
     const [showIndividualInfo, setShowIndividualInfo] = useState(false);
     const [showCoperateInfo, setShowCoperateInfo] = useState(false);
@@ -20,42 +27,130 @@ const EmployerOpt = () => {
     const coperateRef = useRef(null);
 
     const handleClick = async (mode) => {
+        console.log('[EmployerOpt] Selection clicked:', { mode });
+        console.log('[EmployerOpt] Current resolved values before validation:', {
+            resolvedEmail,
+            resolvedFirstName,
+            resolvedLastName,
+            resolvedRole,
+        });
+
+        if (!resolvedEmail) {
+            console.warn('[EmployerOpt] Missing resolvedEmail, cannot continue', {
+                routeState: location.state,
+                storedUser,
+            });
+            toast.error('Missing account email. Please sign in and try again.');
+            return;
+        }
+
         const payload = {
-            email,
-            firstName,
-            lastName,
-            password,
-            role,
+            email: resolvedEmail,
+            role: resolvedRole,
             mode,
-            followings: JSON.stringify([]),
+            followings: [],
         };
-        const formData = new FormData();
 
-        Object.entries(payload).forEach(([key, value]) =>
-            formData.append(key, value)
-        );
-        formData.append('cv', fakePdfFile);
-
+        // Keep compatibility for non-OAuth flows that still send these fields.
+        if (resolvedFirstName) payload.firstName = resolvedFirstName;
+        if (resolvedLastName) payload.lastName = resolvedLastName;
+        if (password) payload.password = password;
+        
         try {
             setShow(true);
-            await axiosInstance.post('/auth/signup', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            console.log('[EmployerOpt] Sending complete-signup payload:', payload);
+            const response = await axiosPublic.post('/auth/complete-signup', payload, {
+                headers: { 'Content-Type': 'application/json' },
             });
+            console.log('[EmployerOpt] Complete-signup API success');
+            console.log('[EmployerOpt] Complete-signup API response:', response?.data);
+
+            const responseData = response?.data || {};
+            const responseUser =
+                responseData?.user ||
+                responseData?.confirmedUser ||
+                responseData?.data?.user ||
+                null;
+            const responseAccessToken =
+                responseData?.accessToken ||
+                responseData?.token ||
+                responseData?.data?.accessToken ||
+                null;
+            const responseRefreshToken =
+                responseData?.refreshToken ||
+                responseData?.data?.refreshToken ||
+                null;
+
+            if (responseAccessToken) {
+                localStorage.setItem('accessToken', responseAccessToken);
+                localStorage.setItem('authToken', responseAccessToken);
+                console.log('[EmployerOpt] Stored access token from complete-signup response');
+            }
+            if (responseRefreshToken) {
+                localStorage.setItem('refreshToken', responseRefreshToken);
+                console.log('[EmployerOpt] Stored refresh token from complete-signup response');
+            }
+
+            // Keep local user context for subsequent profile setup steps.
+            const normalizedUser = responseUser
+                ? {
+                    ...storedUser,
+                    ...responseUser,
+                    id: responseUser?.id || responseUser?.userId || responseUser?.sub || storedUser?.id || null,
+                    email: responseUser?.email || resolvedEmail,
+                    firstName: responseUser?.firstName || resolvedFirstName || storedUser?.firstName || '',
+                    lastName: responseUser?.lastName || resolvedLastName || storedUser?.lastName || '',
+                    role: responseUser?.role || resolvedRole,
+                }
+                : {
+                    ...storedUser,
+                    email: storedUser?.email || resolvedEmail,
+                    firstName: storedUser?.firstName || resolvedFirstName || '',
+                    lastName: storedUser?.lastName || resolvedLastName || '',
+                    role: storedUser?.role || resolvedRole,
+                };
+
+            localStorage.setItem('user', JSON.stringify(normalizedUser));
+            console.log('[EmployerOpt] Stored normalized user after complete-signup:', normalizedUser);
+
+            dispatch(updateUser(normalizedUser));
 
             toast.success('Registration successful');
+
+            const navState = {
+                email: normalizedUser.email || resolvedEmail,
+                firstName:
+                    normalizedUser.firstName !== undefined && normalizedUser.firstName !== null
+                        ? normalizedUser.firstName
+                        : resolvedFirstName,
+                lastName:
+                    normalizedUser.lastName !== undefined && normalizedUser.lastName !== null
+                        ? normalizedUser.lastName
+                        : resolvedLastName,
+            };
+
+            if (mode === 'individual') {
+                console.log('[EmployerOpt] Navigating to individual basic-details with state:', navState);
+                navigate('/individual/basic-details', {
+                    state: navState,
+                });
+            
+            } else if (mode === 'corporate') {
+                console.log('[EmployerOpt] Navigating to corporate basic-details with state:', navState);
+                navigate('/corporate/basic-details', {
+                    state: navState,
+                });
+            }
+
         } catch (error) {
-            const { error: errorText } = error.response.data;
+            console.error("Complete signup error:", error);
+            const errorText = error?.response?.data?.error || "Signup failed";
             toast.error(errorText);
-            return;
         } finally {
             setShow(false);
         }
 
-        if (mode === 'individual') {
-            navigate('/individual/basic-details');
-        } else if (mode === 'coperate') {
-            navigate('/coperate/basic-details');
-        }
+       
     };
 
     useEffect(() => {
@@ -98,18 +193,18 @@ const EmployerOpt = () => {
                         infoText="Individual employers are people whose businesses are not registered with the federal, state, or local governments. 
                       They are micro, small, and medium scale enterprises (SMEs). They also include people who are HR consultants (they recruit for other companies); 
                       individuals who require the services of other people on the platform."
-                        position="above-icon"
-                        showInfo={showIndividualInfo}
-                        setShowInfo={setShowIndividualInfo}
-                        containerRef={individualRef}
-                        // onClick={() => navigate("/individual/basic-details")}
-                        onClick={() => handleClick('individual')}
-                    />
+            position="above-icon"
+            showInfo={showIndividualInfo}
+            setShowInfo={setShowIndividualInfo}
+            containerRef={individualRef}
+            // onClick={() => navigate("/individual/basic-details")}
+            onClick={() => handleClick("individual")}
+          />
 
-                    <MemberCard
-                        label="Corporate "
-                        iconSrc="/assets/images/freelic2.svg"
-                        infoText="These are businesses, NGOs, religious bodies, or government organizations that are registered 
+          <MemberCard
+            label="Corporate "
+            iconSrc="/assets/images/freelic2.svg"
+            infoText="These are businesses, NGOs, religious bodies, or government organizations that are registered 
             with the federal, state, or local government of their country. They may be SMEs or larger corporate
              organizations, NGOs, and government bodies (Federal, state, or local governments). The representative
               on Bejite must be verified to ensure they are genuine."
@@ -118,7 +213,7 @@ const EmployerOpt = () => {
                         setShowInfo={setShowCoperateInfo}
                         containerRef={coperateRef}
                         // onClick={() => navigate("/coperate/Basic-details")}
-                        onClick={() => handleClick('coperate')}
+                        onClick={() => handleClick('corporate')}
                     />
                 </div>
             </div>

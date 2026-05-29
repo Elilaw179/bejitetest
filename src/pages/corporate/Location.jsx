@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import { toast } from "react-toastify";
 import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
+import useRecruiterProfile from "../../services/recruiterProfile";
 
 const CoperateLocation = () => {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
 
   const steps = [
     "Basic Details",
@@ -67,17 +69,67 @@ const CoperateLocation = () => {
     "Hungary",
   ];
 
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [formData, setFormData] = useState({
     address: "",
     city: "",
     country: "",
   });
 
+  const { updateLocation } = useRecruiterProfile();
+
+  useEffect(() => {
+    if (isEditMode && recruiterData && !dataLoaded) {
+      setFormData({
+        address: recruiterData.address || "",
+        city: recruiterData.city || "",
+        country: recruiterData.country || "",
+      });
+      setDataLoaded(true);
+    }
+  }, [isEditMode, recruiterData, dataLoaded]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const isFormComplete = Object.values(formData).every((v) => v.trim() !== "");
+
+  const handleNextStep = async () => {
+    if (!isFormComplete) {
+      toast.error("Please complete all fields.");
+      return;
+    }
+
+    const submitData = async () => {
+      await updateLocation({
+        address: formData.address,
+        city: formData.city,
+        country: formData.country,
+      });
+      return "Location saved successfully!";
+    };
+
+    try {
+      await toast.promise(submitData(), {
+        pending: "Saving location...",
+        success: "Location saved successfully!",
+        error: {
+          render({ data }) {
+            return `Save failed: ${data}`;
+          },
+        },
+      });
+
+      if (isEditMode) {
+        navigate(getPath(currentStep + 1));
+      } else {
+        navigate("/corporate/verify");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="bg-white min-h-screen">
@@ -98,7 +150,7 @@ const CoperateLocation = () => {
           {/* ADDRESS */}
           <div className="p-5 bg-[#82828280] lg:rounded-3xl rounded-md  mb-4">
             <label className="font-semibold text-[12px] mb-2 block">
-              	Business HQ Address(Required)(Jobseekers see only city/region)
+               	Business HQ Address(Required)(Jobseekers see only city/region)
             </label>
             <input
               type="text"
@@ -153,8 +205,14 @@ const CoperateLocation = () => {
 
       <NavigationButtons
         isFormComplete={isFormComplete}
-        onBack={() => navigate(-1)}
-        onNext={() => isFormComplete && navigate("/coperate/verify")}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+          } else {
+            navigate(-1);
+          }
+        }}
+        onNext={handleNextStep}
       />
     </div>
   );

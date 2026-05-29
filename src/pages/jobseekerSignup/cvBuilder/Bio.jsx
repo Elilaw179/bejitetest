@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import StepTabs from '../../../components/StepTabs';
 import ProgressBar from '../../../components/ProgressBar';
 import ImageUpload from '../../../components/ImageUpload';
@@ -11,13 +12,25 @@ import useLocalStorage from '../../../hooks/useLocalStorage';
 import CreateBio from '../../../services/createBio';
 import { countries } from '../../../data/countries';
 import { steps } from '../../../data/bioSteps';
+import { profilePhotoUrl } from '../../../utils/profilePhotoUrl';
+import { updateUser } from '../../../features/auth/authSlice';
+import { fetchCurrentUserProfilePhoto } from '../../../services/profilePhotoService';
+import { getUser, pickProfilePhotoPath } from '../../../utils/tokenManager';
+import useAuth from '../../../hooks/useAuth';
 
 const Bio = () => {
     const navigate = useNavigate();
-    const { currentStep } = useOutletContext();
+    const dispatch = useDispatch();
+    const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
+    const { user: authUser } = useAuth();
+
+    const handleStepClick = (path) => {
+        navigate(path);
+    };
 
     const [imageFile, setImageFile] = useState(null); 
     const [imagePreview, setImagePreview] = useState(null);
+    const [dataLoaded, setDataLoaded] = useState(false);
     const [formData, setFormData] = useState({
         nickname: '',
         phone: '',
@@ -32,8 +45,84 @@ const Bio = () => {
         bio: '',
     });
 
-    const handleChange = (e) =>
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Helper function to safely convert values to strings
+    const toString = (value) => {
+        if (value === null || value === undefined) return '';
+        return String(value);
+    };
+
+    const applyPhotoPreview = (stored) => {
+        if (!stored) return;
+        const url = profilePhotoUrl(stored);
+        if (url) setImagePreview(url);
+    };
+
+    // Restore photo immediately in edit mode (not only from user_bio row).
+    useEffect(() => {
+        if (!isEditMode) return;
+        let cancelled = false;
+        (async () => {
+            const fromStorage =
+                pickProfilePhotoPath(authUser) || pickProfilePhotoPath(getUser());
+            if (!cancelled && fromStorage) applyPhotoPreview(fromStorage);
+            try {
+                const fromApi = await fetchCurrentUserProfilePhoto();
+                if (!cancelled && fromApi) applyPhotoPreview(fromApi);
+            } catch {
+                /* optional */
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [isEditMode, authUser]);
+
+    // Load existing bio + photo when in edit mode
+    useEffect(() => {
+        if (!isEditMode || dataLoaded) return;
+
+        const loadEditData = async () => {
+            const bio = cvData?.bio;
+            if (bio) {
+                setFormData({
+                    nickname: toString(bio.nickname),
+                    phone: toString(bio.phone),
+                    gender: toString(bio.gender),
+                    maritalStatus: toString(bio.marital_status),
+                    age: toString(bio.age),
+                    country: toString(bio.country),
+                    street: toString(bio.street),
+                    city: toString(bio.city),
+                    tribe: toString(bio.tribe),
+                    zip: toString(bio.zip),
+                    bio: toString(bio.bio),
+                });
+                applyPhotoPreview(bio.profile_photo);
+            }
+
+            const fromStorage = pickProfilePhotoPath(authUser) || pickProfilePhotoPath(getUser());
+            if (fromStorage) applyPhotoPreview(fromStorage);
+
+            try {
+                const fromApi = await fetchCurrentUserProfilePhoto();
+                if (fromApi) applyPhotoPreview(fromApi);
+            } catch {
+                /* keep existing preview */
+            }
+
+            setDataLoaded(true);
+        };
+
+        if (cvData !== null && cvData !== undefined) {
+            loadEditData();
+        }
+    }, [isEditMode, cvData, dataLoaded, authUser]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        // Ensure all form values are strings
+        setFormData({ ...formData, [name]: String(value) });
+    };
     const handleImageChange = (e) => {
         const file = e.target.files?.[0]; 
         if (file) {
@@ -45,35 +134,71 @@ const Bio = () => {
         }
     };
 
+    const requiredFields = ['nickname', 'phone', 'gender', 'maritalStatus', 'country', 'street', 'city', 'zip', 'bio'];
     const isFormComplete =
-        Object.values(formData).every((v) => v.trim() !== '') && imageFile;
+        requiredFields.every((key) => {
+            const v = formData[key];
+            const str = typeof v === 'string' ? v : String(v || '');
+            return str.trim() !== '';
+        }) && (imageFile || imagePreview);
 
     //pass data and image to createBio Api
     const { postBioData, uploadProfileImage } = CreateBio(); 
     const { id: userId } = useLocalStorage('user');
 
+    // Utility function to normalize text for consistent storage
+    const normalizeText = (text) => {
+        if (!text || typeof text !== 'string') return text;
+        return text.trim().toLowerCase();
+    };
+
     // function that chains both API calls
     const handleNextStep = async () => {
         if (!isFormComplete) {
-            toast.error('Please complete all fields and upload an image.');
+            toast.error('Please complete all required fields and upload an image.');
             return;
         }
-        
+
         const bioPayload = {
             userId,
-            ...formData,
+            nickname: normalizeText(formData.nickname),
+            phone: normalizeText(formData.phone),
+            gender: normalizeText(formData.gender),
+            maritalStatus: normalizeText(formData.maritalStatus),
+            age: formData.age ? Number(formData.age) : null,
+            country: normalizeText(formData.country),
+            street: normalizeText(formData.street),
+            city: normalizeText(formData.city),
+            tribe: formData.tribe ? normalizeText(formData.tribe) : null,
+            zip: normalizeText(formData.zip),
+            bio: formData.bio,
         };
 
         //  sequential logic
         const submitProfileSequence = async () => {
-            await postBioData(bioPayload); 
+            await postBioData(bioPayload);
+            let photoResponse = null;
             if (imageFile) {
-                await uploadProfileImage(imageFile);
-            } else {
-                throw new Error('Image file is missing for upload.'); 
+                photoResponse = await uploadProfileImage(imageFile);
+                const photoUrl =
+                    photoResponse?.data?.profilePhoto ??
+                    photoResponse?.data?.profile_photo ??
+                    photoResponse?.profilePhoto ??
+                    null;
+                if (photoUrl) {
+                    dispatch(
+                        updateUser({
+                            image: photoUrl,
+                            profile_photo: photoUrl,
+                            profilePhoto: photoUrl,
+                        }),
+                    );
+                }
+            } else if (!imagePreview) {
+                throw new Error('Image file is missing for upload.');
             }
-            
-            return 'Profile updated successfully!'; 
+
+            return 'Profile updated successfully!';
         };
 
         try {
@@ -91,7 +216,11 @@ const Bio = () => {
             );
             
             // Navigate only after the entire sequence completes successfully
-            navigate('/education'); 
+            if (isEditMode) {
+                navigate(getPath(currentStep + 1));
+            } else {
+                navigate('/education'); 
+            }
 
         } catch (error) {
             console.error(error); 
@@ -102,7 +231,7 @@ const Bio = () => {
         <div className="bg-white">
             <Header />
 
-            <StepTabs steps={steps} currentStep={currentStep} />
+            <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
             <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
             <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
@@ -129,7 +258,13 @@ const Bio = () => {
 
             <NavigationButtons
                 isFormComplete={isFormComplete}
-                onBack={() => navigate(-1)}
+                onBack={() => {
+                    if (isEditMode) {
+                        navigate(getPath(currentStep - 1));
+                    } else {
+                        navigate(-1);
+                    }
+                }}
                 onNext={handleNextStep}
             />
         </div>

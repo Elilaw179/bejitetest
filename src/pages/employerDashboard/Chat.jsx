@@ -32,12 +32,12 @@ function Chat() {
        <NewsFeedHeader />
        
       {/* Main Grid */}
-      <div className="flex-1 w-full max-w-screen-xl mx-auto p-2 sm:p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] lg:grid-cols-[1fr_3fr_1fr] gap-4 h-full">
+      <div className="flex-1 w-full max-w-screen-xl mx-auto p-2 sm:p-4 min-h-0">
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] lg:grid-cols-[1fr_3fr_1fr] gap-4 h-[calc(100vh-120px)] min-h-0">
           {/* Desktop Layout */}
-          <div className="hidden lg:grid lg:grid-cols-subgrid lg:col-span-3 lg:gap-4 h-full">
+          <div className="hidden lg:grid lg:grid-cols-subgrid lg:col-span-3 lg:gap-4 h-full min-h-0">
             {/* Left Sidebar */}
-            <div className="bg-[#1A3E32]  overflow-y-auto">
+            <div className="bg-[#1A3E32] overflow-hidden h-full min-h-0">
               <ChatsLeft 
                 onSelectChat={handleSelectChat} 
                 selectedChat={selectedChat}
@@ -45,7 +45,7 @@ function Chat() {
             </div>
 
             {/* Middle Chat Section */}
-            <div className="bg-white  overflow-y-auto">
+            <div className="bg-white overflow-hidden h-full min-h-0">
               <ChatsMiddle 
                 selectedChat={selectedChat} 
                 onShowChatList={showChatList}
@@ -54,7 +54,7 @@ function Chat() {
             </div>
 
             {/* Right Sidebar */}
-            <div className="bg-[#F5F5F5] rounded-lg overflow-y-auto">
+            <div className="bg-[#F5F5F5] rounded-lg overflow-hidden h-full min-h-0">
               <ChatsRight 
                 selectedChat={selectedChat}
                 onBack={showChatView}

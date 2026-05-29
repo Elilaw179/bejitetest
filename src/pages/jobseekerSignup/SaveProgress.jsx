@@ -1,7 +1,8 @@
 import { Eye, EyeOff } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { isAuthenticated } from "../../utils/tokenManager";
 
 function SaveProgress() {
   const [email, setEmail] = useState("");
@@ -10,6 +11,14 @@ function SaveProgress() {
 
   const isDisabled = !email || !password;
   const navigate = useNavigate();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    if (isAuthenticated()) {
+      // User is already logged in, redirect to post-page
+      navigate("/post-page");
+    }
+  }, [navigate]);
 
   return (
     <div className="bg-white flex items-center justify-center w-full min-h-screen px-4">

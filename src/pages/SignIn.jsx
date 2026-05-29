@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, clearErrors } from "../features/auth/authSlice";
 import { toast } from "react-toastify";
-import BejiteLogo from "../../public/assets/images/logo.png";
-import GoogleImg from "../../public/assets/images/google.png";
+const bejiteLogoUrl = "/assets/images/logo.png";
+const googleImgUrl = "/assets/images/google.png";
 import Hyperlinks from "../components/Hyperlinks";
 import { decodeToken } from "../utils/tokenManager";
 
@@ -23,12 +23,20 @@ function SignIn() {
   const { loading, errors } = useSelector((state) => state.auth);
   const isDisabled = !email || !password || loading;
 
-  // Clear errors and any cached auth data when component mounts
+// Clear errors when component mounts - but preserve session data to prevent auto-logout
   useEffect(() => {
     dispatch(clearErrors());
-    // Clear any existing auth data to ensure fresh login
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
+    
+    // Only clear session if explicitly indicated (from expired session redirect)
+    // Don't auto-clear user session - preserve it until user explicitly logs out
+    const sessionExpired = sessionStorage.getItem("sessionExpired");
+    if (sessionExpired) {
+      sessionStorage.removeItem("sessionExpired");
+      
+      // Preserve user session data - only show message, don't destroy session
+      // User can re-login to restore their session
+      toast.error("Your session is expired, please login to continue");
+    }
   }, [dispatch]);
 
   // -----------------------------
@@ -73,10 +81,14 @@ function SignIn() {
         const isVerified = user?.verified || user?.isEmailVerified;
         const hasCompletedSignup =
           user?.role !== null && user?.role !== undefined;
+        const hasCompletedProfile = data.profileCompleted;
+        const userRole = user?.role;
 
         console.log("User verification status:", {
           isVerified,
           hasCompletedSignup,
+          hasCompletedProfile,
+          userRole,
           user,
         });
 
@@ -93,8 +105,14 @@ function SignIn() {
                 user.email
               )}&status=verified`
             );
+          } else if (userRole === 'recruiter') {
+            // User is a recruiter, redirect to employer dashboard
+            navigate("/news-feed");
+          } else if (hasCompletedProfile) {
+            // User is a jobseeker and has completed profile, redirect to dashboard
+            navigate("/news-feed");
           } else {
-            // User is verified and has completed signup
+            // User is a jobseeker who hasn't completed profile
             navigate("/resume");
           }
         }, 500);
@@ -140,7 +158,7 @@ function SignIn() {
     <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
       <div className="w-full lg:w-[70%] px-4 py-6 mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 lg:absolute lg:right-4 lg:left-4 lg:top-1/12 lg:transform lg:-translate-y-1/2 lg:z-10">
-        <img src={BejiteLogo} alt="Logo" className="h-10" />
+        <img src={bejiteLogoUrl} alt="Logo" className="h-10" />
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-3">
           <h1 className="text-[#828282] text-base sm:text-xl font-medium text-center sm:text-left">
             Don't have an account?
@@ -253,7 +271,7 @@ function SignIn() {
                 {googleLoading ? (
                   <div className="w-6 h-6 border-2 border-gray-400 rounded-full border-t-transparent animate-spin"></div>
                 ) : (
-                  <img src={GoogleImg} alt="google logo" className="w-8 h-8" />
+                  <img src={googleImgUrl} alt="google logo" className="w-8 h-8" />
                 )}
               </button>
             </div>

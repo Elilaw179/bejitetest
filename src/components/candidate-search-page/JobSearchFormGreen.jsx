@@ -1,24 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { FaCheck } from "react-icons/fa";
 
-const JobSearchFormGreen = () => {
-  const [formData, setFormData] = useState({
-    jobInput: "",
-    industryInput: "",
-    countryInput: "",
-    stateInput: "",
-    workTypeInput: "",
-    salaryInput: "",
-    currencyInput: "",
-    remoteInput: "",
-    availabilityInput: "",
-    educationInput: "",
-    skillInput: "",
-    tribeInput: "",
-    ageInput: "",
-    genderInput: "",
-    maritalInput: "",
-  });
+const JobSearchFormGreen = ({ formData, setFormData, onSearch }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,7 +12,7 @@ const JobSearchFormGreen = () => {
   };
 
   return (
-    <div className="max-w-[400px] m-auto px-6 py-6 bg-[#1A3E32] rounded-2xl mt-2">
+    <div className="w-full max-w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 bg-[#1A3E32] rounded-2xl">
       <FormHeader />
       <Divider />
 
@@ -228,7 +211,10 @@ const JobSearchFormGreen = () => {
         </div>
         <Divider small />
 
-        <SearchButton />
+        <SearchButton
+          onSearch={onSearch}
+          disabled={!Object.values(formData).some((val) => val.trim() !== "")}
+        />
       </div>
     </div>
   );
@@ -298,10 +284,16 @@ const SearchInput = ({
   );
 };
 
-const SearchButton = () => {
+const SearchButton = ({ onSearch, disabled }) => {
   return (
     <div className="mt-6 sm:mt-10">
-      <button className="w-full flex items-center justify-center gap-2 bg-[#16730F] px-6 py-2 sm:py-3 rounded-2xl mx-auto text-white font-medium hover:bg-[#125a0c] transition-colors">
+      <button
+        onClick={onSearch}
+        disabled={disabled}
+        className={`w-full flex items-center justify-center gap-2 px-6 py-2 sm:py-3 rounded-2xl mx-auto text-white font-medium transition-colors ${
+          disabled ? "bg-gray-500 cursor-not-allowed" : "bg-[#16730F] hover:bg-[#125a0c]"
+        }`}
+      >
         Search
         <svg
           xmlns="http://www.w3.org/2000/svg"

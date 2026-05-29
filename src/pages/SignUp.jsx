@@ -1,4 +1,4 @@
-import { API_URL } from '../config'; 
+import { API_URL } from '../config';
 import React, { useState, useEffect } from 'react';
 import { FaGoogle, FaLinkedin } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +6,9 @@ import Input from '../components/ui/Input';
 import { toast } from 'react-toastify';
 import Loader from '../components/ui/Loader';
 import { useDispatch, useSelector } from 'react-redux';
-import { signupUser, clearErrors, logout } from '../features/auth/authSlice';
+import { clearErrors } from '../features/auth/authSlice';
+import { clearAuthData } from '../utils/tokenManager';
+import axiosInstance from '../utils/axiosInstance';
 import Hyperlinks from '../components/Hyperlinks';
 
 function SignUp() {
@@ -15,19 +17,17 @@ function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [formErrors, setFormErrors] = useState({}); 
+  const [formErrors, setFormErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, loading, errors: apiErrors } = useSelector((state) => state.auth);
+  const { errors: apiErrors } = useSelector((state) => state.auth);
 
-  // Clear errors and any cached auth data when component mounts
   useEffect(() => {
     dispatch(clearErrors());
-    // Clear any existing user data to ensure fresh signup
-    dispatch(logout());
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    clearAuthData();
+    localStorage.removeItem('token');
   }, [dispatch]);
 
   const validateForm = () => {
@@ -35,57 +35,67 @@ function SignUp() {
     if (!firstName.trim()) newErrors.firstName = 'First name is required';
     if (!lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!email.trim()) newErrors.email = 'Email is required';
-    else if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/i.test(email))
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
       newErrors.email = 'Email is invalid';
     if (!password) newErrors.password = 'Password is required';
     if (!confirmPassword || confirmPassword !== password)
       newErrors.confirmPassword = 'Passwords do not match';
 
-    console.log('Validation errors:', newErrors);
-    setFormErrors(newErrors); // ✅ UPDATE LOCAL STATE
-
+    setFormErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleContinue = () => {
-    if (validateForm()) {
-      console.log('Dispatching signupUser with:', {
-        firstName,
-        lastName,
-        email,
+  const handleContinue = async (e) => {
+    e?.preventDefault?.();
+    if (!validateForm() || submitting) return;
+
+    const trimmedEmail = email.trim();
+    setSubmitting(true);
+
+    try {
+      const { data } = await axiosInstance.post('/auth/signup', {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: trimmedEmail,
         password,
         confirmPassword,
       });
-      dispatch(signupUser({ firstName, lastName, email, password, confirmPassword }));
+
+      clearAuthData();
+      localStorage.removeItem('token');
+
+      toast.success(
+        data?.message ||
+          'Sign up successful! Please check your email to verify your account.',
+      );
+
+      navigate(
+        `/auth/email-sent?email=${encodeURIComponent(trimmedEmail)}`,
+        { replace: true },
+      );
+    } catch (err) {
+      const body = err.response?.data;
+      const msg =
+        body?.error ||
+        body?.message ||
+        (typeof body === 'string' ? body : null) ||
+        err.message ||
+        'Sign up failed. Please try again.';
+      toast.error(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   useEffect(() => {
-    if (user) {
-      console.log('User signup successful:', user);
-      toast.success('Sign up successful! Please check your email to verify your account.');
-      setTimeout(() => {
-        navigate(`/auth/email-sent?email=${encodeURIComponent(email)}`);
-      }, 1000);
-    }
-  }, [user, navigate, email]);
-
-  useEffect(() => {
     if (apiErrors && Object.keys(apiErrors).length > 0) {
-      console.log('API validation errors:', apiErrors);
-      
-      // Handle both single error string and multiple errors
       if (typeof apiErrors === 'string') {
         toast.error(apiErrors);
       } else if (apiErrors.error) {
-        // Single error object with 'error' key
         toast.error(apiErrors.error);
       } else {
-        // Multiple errors - show each one
         Object.values(apiErrors).forEach((msg) => {
-          if (msg && typeof msg === 'string') {
-            toast.error(msg);
-          }
+          if (msg && typeof msg === 'string') toast.error(msg);
         });
       }
     }
@@ -96,7 +106,7 @@ function SignUp() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      <Loader show={loading} />
+      <Loader show={submitting} />
 
       <div className="w-full lg:w-[70%] px-4 py-6 mx-auto flex flex-col sm:flex-row justify-between items-center">
         <img src="/assets/images/logo.png" alt="Logo" className="h-10" />
@@ -106,6 +116,7 @@ function SignUp() {
             Already have an account?
           </h1>
           <button
+            type="button"
             className="bg-[#16730F] py-2 px-5 sm:py-3 sm:px-7 rounded-2xl shadow text-white"
             onClick={() => navigate('/')}
           >
@@ -129,7 +140,11 @@ function SignUp() {
         </div>
 
         <div className="w-full lg:w-[40%] flex items-center justify-center lg:justify-start px-6 py-10">
-          <div className="w-full max-w-md space-y-2">
+          <form
+            className="w-full max-w-md space-y-2"
+            onSubmit={handleContinue}
+            noValidate
+          >
             <h2 className="text-3xl pt-4 font-norican font-semibold text-[#16730F] text-center">
               Sign Up
             </h2>
@@ -138,41 +153,87 @@ function SignUp() {
             </p>
 
             <div className="space-y-4">
-              <Input type="text" placeholder="First Name" value={firstName} setValue={setFirstName} errorKey="firstName" localErrors={formErrors} />
-              <Input type="text" placeholder="Last Name" value={lastName} setValue={setLastName} errorKey="lastName" localErrors={formErrors} />
-              <Input type="email" placeholder="Email" value={email} setValue={setEmail} errorKey="email" localErrors={formErrors} />
-              <Input type="password" placeholder="Password" value={password} setValue={setPassword} errorKey="password" localErrors={formErrors} />
-              <Input type="password" placeholder="Confirm Password" value={confirmPassword} setValue={setConfirmPassword} errorKey="confirmPassword" localErrors={formErrors} />
+              <Input
+                type="text"
+                placeholder="First Name"
+                value={firstName}
+                setValue={setFirstName}
+                errorKey="firstName"
+                localErrors={formErrors}
+              />
+              <Input
+                type="text"
+                placeholder="Last Name"
+                value={lastName}
+                setValue={setLastName}
+                errorKey="lastName"
+                localErrors={formErrors}
+              />
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                setValue={setEmail}
+                errorKey="email"
+                localErrors={formErrors}
+              />
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                setValue={setPassword}
+                errorKey="password"
+                localErrors={formErrors}
+              />
+              <Input
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                setValue={setConfirmPassword}
+                errorKey="confirmPassword"
+                localErrors={formErrors}
+              />
             </div>
 
             <button
-              className={`w-full py-4 rounded-full text-white font-semibold shadow-md transition mb-5 mt-2 ${isDisabled || loading ? 'bg-[#16730F40] cursor-not-allowed' : 'bg-[#16730F]'
-                }`}
-              onClick={handleContinue}
-              disabled={isDisabled || loading}
+              type="submit"
+              className={`w-full py-4 rounded-full text-white font-semibold shadow-md transition mb-5 mt-2 ${
+                isDisabled || submitting
+                  ? 'bg-[#16730F40] cursor-not-allowed'
+                  : 'bg-[#16730F]'
+              }`}
+              disabled={isDisabled || submitting}
             >
               Continue
             </button>
 
             <p className="text-[#1A3E32] text-center text-xl">...or signup with</p>
             <div className="flex justify-center gap-6 mt-1">
-              {/* LinkedIn placeholder */}
               <FaLinkedin className="text-3xl text-blue-600 cursor-pointer" />
 
-              {/* Google OAuth Button */}
               <button
-                onClick={() => (window.location.href = `${API_URL}/auth/google`)}
+                type="button"
+                onClick={() => {
+                  window.location.href = `${API_URL}/auth/google`;
+                }}
                 className="flex items-center justify-center w-8 h-8"
                 aria-label="Sign up with Google"
               >
-                <img src="/assets/images/google.png" alt="Google logo" className="w-8 h-8" />
+                <img
+                  src="/assets/images/google.png"
+                  alt="Google logo"
+                  className="w-8 h-8"
+                />
               </button>
 
-              {/* Twitter placeholder */}
-              <img src="/assets/images/x.svg" alt="Twitter" className="w-8 h-8 cursor-pointer" />
+              <img
+                src="/assets/images/x.svg"
+                alt="Twitter"
+                className="w-8 h-8 cursor-pointer"
+              />
             </div>
-            <Hyperlinks/>
-          </div>
+            <Hyperlinks />
+          </form>
         </div>
       </div>
     </div>

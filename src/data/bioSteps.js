@@ -6,4 +6,5 @@ export const steps = [
         'Work history',
         'Certificate',
         'Links',
+        'Job Type',
 ];
