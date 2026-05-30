@@ -14,7 +14,7 @@ export default function CompleteSignup() {
   const dispatch = useDispatch();
 
   const params = new URLSearchParams(location.search);
-  const email = params.get("email");
+  const email = params.get("email")?.trim() || "";
   const status = params.get("status");
 
   const [_, setRole] = useState("");
@@ -36,8 +36,8 @@ export default function CompleteSignup() {
     // Navigate to next step (jobseeker-option or employer-option)
     navigate(
       selectedRole === "jobseeker"
-        ? `/jobseeker-option?email=${encodeURIComponent(email)}`
-        : `/employer-option?email=${encodeURIComponent(email)}`,
+        ? `/jobseeker-option?email=${encodeURIComponent(email)}&role=${encodeURIComponent(selectedRole)}`
+        : `/employer-option?email=${encodeURIComponent(email)}&role=${encodeURIComponent(selectedRole)}`,
       { state: { email, role: selectedRole } }
     );
   };
