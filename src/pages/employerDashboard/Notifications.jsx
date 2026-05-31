@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import NewsFeedHeader from '../../components/NewsFeedHeader'
 import { API_URL } from '../../config'
+import NewsFeedLayout from '../../components/layout/NewsFeedLayout'
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([])
@@ -18,7 +19,7 @@ const Notifications = () => {
   const fetchInvitations = async () => {
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token')
-      
+
       if (!token) return
 
       const response = await fetch(`${API_URL}/api/interview-invitations/candidate?status=pending`, {
@@ -29,7 +30,7 @@ const Notifications = () => {
       })
 
       const data = await response.json()
-      
+
       if (response.ok && data.data) {
         setInvitations(data.data)
       }
@@ -83,7 +84,7 @@ const Notifications = () => {
       })
 
       // Update local state
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       )
     } catch (err) {
@@ -93,7 +94,7 @@ const Notifications = () => {
 
   const handleNotificationClick = async (notification) => {
     console.log('Notification clicked:', notification);
-    
+
     // Mark as read
     if (!notification.is_read) {
       await markAsRead(notification.id)
@@ -105,12 +106,12 @@ const Notifications = () => {
     // Check if it's an interview invitation - try multiple approaches
     let invitationId = null;
     let parsedData = null;
-    
+
     // Try parsing the data field
     if (notification.data) {
       try {
-        parsedData = typeof notification.data === 'string' 
-          ? JSON.parse(notification.data) 
+        parsedData = typeof notification.data === 'string'
+          ? JSON.parse(notification.data)
           : notification.data;
         invitationId = parsedData?.invitation_id;
         console.log('Parsed data:', parsedData);
@@ -121,26 +122,26 @@ const Notifications = () => {
 
     // If we found an invitation ID, show the modal
     if (invitationId) {
-      setSelectedNotification({ 
-        ...notification, 
+      setSelectedNotification({
+        ...notification,
         data: parsedData || { invitation_id: invitationId }
       })
       return
     }
-    
+
     // Also check if type is interview_invite and try to extract ID from message or other fields
     if (notification.type === 'interview_invite') {
       // Try to extract from message if data is not available
-      const match = notification.message?.match(/ID[:\s]+(\d+)/i) || 
-                    notification.message?.match(/invitation[\s#]+(\d+)/i);
+      const match = notification.message?.match(/ID[:\s]+(\d+)/i) ||
+        notification.message?.match(/invitation[\s#]+(\d+)/i);
       if (match) {
-        setSelectedNotification({ 
-          ...notification, 
+        setSelectedNotification({
+          ...notification,
           data: { invitation_id: match[1] }
         })
         return
       }
-      
+
       // If still no ID, still show modal but without pre-filled data
       console.log('No invitation ID found, but showing modal anyway');
     }
@@ -167,8 +168,8 @@ const Notifications = () => {
 
       // Update notification in list
       setNotifications(prev =>
-        prev.map(n => n.id === selectedNotification.id 
-          ? { ...n, type: 'invite_accepted', title: 'Invitation Accepted' } 
+        prev.map(n => n.id === selectedNotification.id
+          ? { ...n, type: 'invite_accepted', title: 'Invitation Accepted' }
           : n)
       )
       setSelectedNotification(null)
@@ -199,8 +200,8 @@ const Notifications = () => {
 
       // Update notification in list
       setNotifications(prev =>
-        prev.map(n => n.id === selectedNotification.id 
-          ? { ...n, type: 'invite_declined', title: 'Invitation Declined' } 
+        prev.map(n => n.id === selectedNotification.id
+          ? { ...n, type: 'invite_declined', title: 'Invitation Declined' }
           : n)
       )
       setSelectedNotification(null)
@@ -253,217 +254,217 @@ const Notifications = () => {
   }
 
   return (
-    <div>
-      <NewsFeedHeader />
+    <NewsFeedLayout scrollable={true} classes={false} showSidebars={false}>
 
-      <div className="max-w-2xl mx-auto p-4">
-        <h1 className="text-2xl font-semibold text-[#16730F] text-center mb-4">
-          Notifications
-        </h1>
+      <div>
+        {/* <NewsFeedHeader /> */}
 
-        {/* Toggle between Notifications and Invitations */}
-        <div className="flex justify-center gap-2 mb-6">
-          <button
-            onClick={() => setShowInvitations(false)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              !showInvitations 
-                ? 'bg-[#16730F] text-white' 
+        <div className="max-w-2xl mx-auto p-4">
+          <h1 className="text-2xl font-semibold text-[#16730F] text-center mb-4">
+            Notifications
+          </h1>
+
+          {/* Toggle between Notifications and Invitations */}
+          <div className="flex justify-center gap-2 mb-6">
+            <button
+              onClick={() => setShowInvitations(false)}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${!showInvitations
+                ? 'bg-[#16730F] text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            🔔 Notifications
-          </button>
-          <button
-            onClick={() => {
-              setShowInvitations(true)
-              fetchInvitations()
-            }}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              showInvitations 
-                ? 'bg-[#16730F] text-white' 
+                }`}
+            >
+              🔔 Notifications
+            </button>
+            <button
+              onClick={() => {
+                setShowInvitations(true)
+                fetchInvitations()
+              }}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${showInvitations
+                ? 'bg-[#16730F] text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            📅 My Interview Invitations
-            {invitations.length > 0 && (
-              <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                {invitations.length}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Interview Invitations View */}
-        {showInvitations ? (
-          <div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Pending Interview Invitations</h2>
-            {invitations.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">📅</p>
-                <p className="text-gray-500 mt-2">No pending interview invitations</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {invitations.map((invitation) => (
-                  <div
-                    key={invitation.id}
-                    className="bg-white border border-gray-200 rounded-lg p-4"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-[#16730F]">
-                          {invitation.job_title || 'Interview Invitation'}
-                        </h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          From: {invitation.employer_first_name} {invitation.employer_last_name}
-                          {invitation.company_name && ` (${invitation.company_name})`}
-                        </p>
-                        <div className="mt-2 text-sm text-gray-500">
-                          <p><strong>Date:</strong> {new Date(invitation.interview_date).toLocaleDateString()}</p>
-                          <p><strong>Time:</strong> {invitation.interview_time}</p>
-                          <p><strong>Type:</strong> {invitation.interview_type === 'online' ? 'Online (Video Call)' : 'In-Person'}</p>
-                          {invitation.interview_type === 'online' && invitation.meeting_link && (
-                            <p><strong>Link:</strong> <a href={invitation.meeting_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{invitation.meeting_link}</a></p>
-                          )}
-                          {invitation.interview_type === 'offline' && invitation.venue && (
-                            <p><strong>Venue:</strong> {invitation.venue}</p>
-                          )}
-                          {invitation.message && (
-                            <p className="mt-2"><strong>Message:</strong> {invitation.message}</p>
-                          )}
-                          <p className="mt-2 text-red-500">
-                            Expires: {new Date(invitation.expires_at).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-3 mt-4">
-                      <button
-                        onClick={() => handleDecline(invitation.id)}
-                        className="flex-1 py-2 px-4 border-2 border-red-500 text-red-500 rounded-lg font-medium hover:bg-red-50 transition-colors"
-                      >
-                        Decline
-                      </button>
-                      <button
-                        onClick={() => handleAccept(invitation.id)}
-                        className="flex-1 py-2 px-4 bg-[#16730F] text-white rounded-lg font-medium hover:bg-[#125a0c] transition-colors"
-                      >
-                        Accept
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                }`}
+            >
+              📅 My Interview Invitations
+              {invitations.length > 0 && (
+                <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {invitations.length}
+                </span>
+              )}
+            </button>
           </div>
-        ) : (
-          /* Notifications View */
-          <>
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-center">
-                {error}
-              </div>
-            )}
 
-            {notifications.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">🔔</p>
-                <p className="text-gray-500 mt-2">No notifications yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    onClick={() => handleNotificationClick(notification)}
-                    className={`p-4 rounded-lg cursor-pointer transition-colors ${
-                      notification.is_read 
-                        ? 'bg-white border border-gray-200' 
-                        : 'bg-[#16730F]/5 border-l-4 border-[#16730F]'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-[#16730F]">{notification.title}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                        <p className="text-xs text-gray-400 mt-2">
-                          {formatDate(notification.created_at)}
-                        </p>
-                      </div>
-                      {!notification.is_read && (
-                        <span className="w-2 h-2 bg-[#16730F] rounded-full"></span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Interview Invitation Modal */}
-      {selectedNotification && selectedNotification.type === 'interview_invite' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-[#16730F] mb-4">Interview Invitation</h2>
-              
-              <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                <p className="text-gray-600 mb-2">{selectedNotification.message}</p>
-                {selectedNotification.data?.interview_date && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    <strong>Date:</strong> {new Date(selectedNotification.data.interview_date).toLocaleDateString()}
-                  </p>
-                )}
-                {selectedNotification.data?.interview_time && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    <strong>Time:</strong> {selectedNotification.data.interview_time}
-                  </p>
-                )}
-                {selectedNotification.data?.interview_type && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    <strong>Type:</strong> {selectedNotification.data.interview_type === 'online' ? 'Online' : 'In-Person'}
-                  </p>
-                )}
-                <p className="text-sm text-gray-500 mt-2">
-                  Expires: {selectedNotification.data?.expires_at ? new Date(selectedNotification.data.expires_at).toLocaleString() : '72 hours from now'}
-                </p>
-              </div>
-
-              {selectedNotification.data?.invitation_id ? (
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleDecline(selectedNotification.data.invitation_id)}
-                    className="flex-1 py-3 px-4 border-2 border-red-500 text-red-500 rounded-xl font-medium hover:bg-red-50 transition-colors"
-                  >
-                    Decline
-                  </button>
-                  <button
-                    onClick={() => handleAccept(selectedNotification.data.invitation_id)}
-                    className="flex-1 py-3 px-4 bg-[#16730F] text-white rounded-xl font-medium hover:bg-[#125a0c] transition-colors"
-                  >
-                    Accept
-                  </button>
+          {/* Interview Invitations View */}
+          {showInvitations ? (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-700 mb-4">Pending Interview Invitations</h2>
+              {invitations.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">📅</p>
+                  <p className="text-gray-500 mt-2">No pending interview invitations</p>
                 </div>
               ) : (
-                <p className="text-center text-red-500 text-sm">
-                  Unable to load invitation details. Please try again later.
-                </p>
+                <div className="space-y-4">
+                  {invitations.map((invitation) => (
+                    <div
+                      key={invitation.id}
+                      className="bg-white border border-gray-200 rounded-lg p-4"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-[#16730F]">
+                            {invitation.job_title || 'Interview Invitation'}
+                          </h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            From: {invitation.employer_first_name} {invitation.employer_last_name}
+                            {invitation.company_name && ` (${invitation.company_name})`}
+                          </p>
+                          <div className="mt-2 text-sm text-gray-500">
+                            <p><strong>Date:</strong> {new Date(invitation.interview_date).toLocaleDateString()}</p>
+                            <p><strong>Time:</strong> {invitation.interview_time}</p>
+                            <p><strong>Type:</strong> {invitation.interview_type === 'online' ? 'Online (Video Call)' : 'In-Person'}</p>
+                            {invitation.interview_type === 'online' && invitation.meeting_link && (
+                              <p><strong>Link:</strong> <a href={invitation.meeting_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{invitation.meeting_link}</a></p>
+                            )}
+                            {invitation.interview_type === 'offline' && invitation.venue && (
+                              <p><strong>Venue:</strong> {invitation.venue}</p>
+                            )}
+                            {invitation.message && (
+                              <p className="mt-2"><strong>Message:</strong> {invitation.message}</p>
+                            )}
+                            <p className="mt-2 text-red-500">
+                              Expires: {new Date(invitation.expires_at).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3 mt-4">
+                        <button
+                          onClick={() => handleDecline(invitation.id)}
+                          className="flex-1 py-2 px-4 border-2 border-red-500 text-red-500 rounded-lg font-medium hover:bg-red-50 transition-colors"
+                        >
+                          Decline
+                        </button>
+                        <button
+                          onClick={() => handleAccept(invitation.id)}
+                          className="flex-1 py-2 px-4 bg-[#16730F] text-white rounded-lg font-medium hover:bg-[#125a0c] transition-colors"
+                        >
+                          Accept
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Notifications View */
+            <>
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-center">
+                  {error}
+                </div>
               )}
 
-              <button
-                onClick={() => setSelectedNotification(null)}
-                className="mt-3 w-full py-2 text-gray-500 hover:text-gray-700"
-              >
-                Cancel
-              </button>
+              {notifications.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">🔔</p>
+                  <p className="text-gray-500 mt-2">No notifications yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      onClick={() => handleNotificationClick(notification)}
+                      className={`p-4 rounded-lg cursor-pointer transition-colors ${notification.is_read
+                        ? 'bg-white border border-gray-200'
+                        : 'bg-[#16730F]/5 border-l-4 border-[#16730F]'
+                        }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-[#16730F]">{notification.title}</h3>
+                          <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                          <p className="text-xs text-gray-400 mt-2">
+                            {formatDate(notification.created_at)}
+                          </p>
+                        </div>
+                        {!notification.is_read && (
+                          <span className="w-2 h-2 bg-[#16730F] rounded-full"></span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Interview Invitation Modal */}
+        {selectedNotification && selectedNotification.type === 'interview_invite' && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <h2 className="text-xl font-semibold text-[#16730F] mb-4">Interview Invitation</h2>
+
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <p className="text-gray-600 mb-2">{selectedNotification.message}</p>
+                  {selectedNotification.data?.interview_date && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      <strong>Date:</strong> {new Date(selectedNotification.data.interview_date).toLocaleDateString()}
+                    </p>
+                  )}
+                  {selectedNotification.data?.interview_time && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      <strong>Time:</strong> {selectedNotification.data.interview_time}
+                    </p>
+                  )}
+                  {selectedNotification.data?.interview_type && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      <strong>Type:</strong> {selectedNotification.data.interview_type === 'online' ? 'Online' : 'In-Person'}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-500 mt-2">
+                    Expires: {selectedNotification.data?.expires_at ? new Date(selectedNotification.data.expires_at).toLocaleString() : '72 hours from now'}
+                  </p>
+                </div>
+
+                {selectedNotification.data?.invitation_id ? (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleDecline(selectedNotification.data.invitation_id)}
+                      className="flex-1 py-3 px-4 border-2 border-red-500 text-red-500 rounded-xl font-medium hover:bg-red-50 transition-colors"
+                    >
+                      Decline
+                    </button>
+                    <button
+                      onClick={() => handleAccept(selectedNotification.data.invitation_id)}
+                      className="flex-1 py-3 px-4 bg-[#16730F] text-white rounded-xl font-medium hover:bg-[#125a0c] transition-colors"
+                    >
+                      Accept
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-center text-red-500 text-sm">
+                    Unable to load invitation details. Please try again later.
+                  </p>
+                )}
+
+                <button
+                  onClick={() => setSelectedNotification(null)}
+                  className="mt-3 w-full py-2 text-gray-500 hover:text-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </NewsFeedLayout>
   )
 }
 

@@ -51,8 +51,8 @@ export default function RecruitmentLeft() {
   };
 
   return (
-    <div className="hidden md:block bg-[#F5F5F5] px-2">
-      <aside className="bg-[#16730F] rounded-[0px] pb-2 pt-2 overflow-y-auto overflow-x-hidden max-h-[calc(107vh-120px)] ">
+    <div className="bg-[#F5F5F5] px-2 py-2 h-full">
+      <aside className="bg-[#16730F] rounded-2xl pb-2 pt-2 flex flex-col h-full">
         {/* <div className="space-y-2 p-7">
         <FaArrowLeft className="text-[#1A3E32]" />
         <h2 className="text-[20px] text-[#ffffff]">Dashboardss</h2>
@@ -61,7 +61,7 @@ export default function RecruitmentLeft() {
           {filteredNavItems.map(({ icon: Icon, label }, idx) => (
             <div
               key={idx}
-              className="flex items-center space-x-3 cursor-pointer w-full p-2 hover:bg-[#15600b] rounded-lg"
+              className="flex items-center space-x-3 cursor-pointer w-full p-2 hover:bg-[#15600b] rounded-lg transition-colors duration-200"
               onClick={() => handleNavClick(label)}
             >
               {typeof Icon === "string" ? (
@@ -91,11 +91,11 @@ export default function RecruitmentLeft() {
             </span>
           </button>
         </div>
-        <div className="bg-[#1A3E32] h-[calc(100%-320px)] rounded-b-2xl mt-10 flex flex-col items-center pt-10 space-y-5">
-          <button className="text-white" onClick={() => navigate("/payment")}>
+        <div className="bg-[#1A3E32] flex-1 rounded-b-2xl mt-4 flex flex-col items-center pt-8 pb-6 space-y-5">
+          <button className="text-white hover:text-green-300 transition-colors font-semibold text-sm" onClick={() => navigate("/payment")}>
             AdPro
           </button>
-          <div className="w-[200px] h-[200px] bg-[#FFFFFF]" />
+          <div className="w-[180px] h-[80px] bg-white/10 rounded-xl border border-white/10" />
         </div>
       </aside>
     </div>

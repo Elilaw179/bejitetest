@@ -1,6 +1,7 @@
 import React from "react";
 import AboutPageHeader from "../../components/AboutPageHeader";
 import { Link } from "react-router-dom";
+import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
 
 export default function Help() {
   const faqs = [
@@ -40,106 +41,108 @@ export default function Help() {
 
   return (
     <>
-      <AboutPageHeader headerText="HELP & SUPPORT" />
+      {/* <AboutPageHeader headerText="HELP & SUPPORT" /> */}
+      <NewsFeedLayout showSidebars={false}>
 
-      <main className="bg-white">
-        <div className="max-w-4xl mx-auto px-6 py-10">
-          {/* Back to dashboard */}
-          <Link
-            to="/news-feed"
-            className="inline-flex items-center gap-2 bg-[#16730F] text-white text-sm px-4 py-2 rounded-full hover:bg-[#145a0c] transition-colors mb-8"
-          >
-            ← Back to Dashboard
-          </Link>
-
-          {/* Hero */}
-          <div className="text-center mb-10">
-            <h1 className="text-3xl sm:text-4xl font-semibold text-[#1A3E32]">
-              How can we help you?
-            </h1>
-            <p className="mt-3 text-[#6B8E23] text-lg">
-              Find answers to common questions or get in touch with our support team.
-            </p>
-          </div>
-
-          {/* Quick actions */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+        <main className="bg-white">
+          <div className="max-w-4xl mx-auto px-6 py-10">
+            {/* Back to dashboard */}
             <Link
-              to="/contact"
-              className="block p-6 bg-[#F5F5F5] hover:bg-[#E8F5E9] rounded-2xl border border-[#16730F]/20 transition-colors"
+              to="/news-feed"
+              className="inline-flex items-center gap-2 bg-[#16730F] text-white text-sm px-4 py-2 rounded-full hover:bg-[#145a0c] transition-colors mb-8"
             >
-              <div className="font-semibold text-[#1A3E32] mb-1">Contact Support</div>
-              <p className="text-sm text-[#1A3E32]/70">Send us a message and we’ll get back to you quickly.</p>
+              ← Back to Dashboard
             </Link>
 
-            <Link
-              to="/profile"
-              className="block p-6 bg-[#F5F5F5] hover:bg-[#E8F5E9] rounded-2xl border border-[#16730F]/20 transition-colors"
-            >
-              <div className="font-semibold text-[#1A3E32] mb-1">Manage Your Account</div>
-              <p className="text-sm text-[#1A3E32]/70">Update profile, privacy settings, and preferences.</p>
-            </Link>
-
-            <a
-              href="mailto:support@bejite.com"
-              className="block p-6 bg-[#F5F5F5] hover:bg-[#E8F5E9] rounded-2xl border border-[#16730F]/20 transition-colors"
-            >
-              <div className="font-semibold text-[#1A3E32] mb-1">Email Us Directly</div>
-              <p className="text-sm text-[#1A3E32]/70">support@bejite.com — we typically reply within 24 hours.</p>
-            </a>
-          </div>
-
-          {/* FAQs */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-semibold text-[#1A3E32] mb-6">Frequently Asked Questions</h2>
-
-            <div className="space-y-3">
-              {faqs.map((faq, index) => (
-                <details
-                  key={index}
-                  className="group bg-white border border-[#16730F]/10 rounded-xl px-5 py-4 open:bg-[#F8F9F7]"
-                >
-                  <summary className="cursor-pointer font-medium text-[#1A3E32] select-none flex justify-between items-center">
-                    {faq.q}
-                    <span className="text-[#6B8E23] group-open:rotate-180 transition-transform">▼</span>
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-[#1A3E32]/80">
-                    {faq.a}
-                  </p>
-                </details>
-              ))}
+            {/* Hero */}
+            <div className="text-center mb-10">
+              <h1 className="text-3xl sm:text-4xl font-semibold text-[#1A3E32]">
+                How can we help you?
+              </h1>
+              <p className="mt-3 text-[#6B8E23] text-lg">
+                Find answers to common questions or get in touch with our support team.
+              </p>
             </div>
-          </div>
 
-          {/* Still need help */}
-          <div className="bg-[#1A3E32] rounded-3xl p-8 text-center text-white">
-            <p className="text-xl font-semibold mb-2">Still need assistance?</p>
-            <p className="text-[#F5F5F5]/80 mb-6 max-w-md mx-auto">
-              Our support team is ready to help with account issues, technical problems, or platform questions.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {/* Quick actions */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
               <Link
                 to="/contact"
-                className="inline-flex items-center justify-center bg-[#6B8E23] hover:bg-[#5a7a1d] text-white font-medium px-8 py-3 rounded-3xl transition-colors"
+                className="block p-6 bg-[#F5F5F5] hover:bg-[#E8F5E9] rounded-2xl border border-[#16730F]/20 transition-colors"
               >
-                Open Support Ticket
+                <div className="font-semibold text-[#1A3E32] mb-1">Contact Support</div>
+                <p className="text-sm text-[#1A3E32]/70">Send us a message and we’ll get back to you quickly.</p>
+              </Link>
+
+              <Link
+                to="/profile"
+                className="block p-6 bg-[#F5F5F5] hover:bg-[#E8F5E9] rounded-2xl border border-[#16730F]/20 transition-colors"
+              >
+                <div className="font-semibold text-[#1A3E32] mb-1">Manage Your Account</div>
+                <p className="text-sm text-[#1A3E32]/70">Update profile, privacy settings, and preferences.</p>
               </Link>
 
               <a
                 href="mailto:support@bejite.com"
-                className="inline-flex items-center justify-center border border-white/70 hover:bg-white/10 px-8 py-3 rounded-3xl transition-colors"
+                className="block p-6 bg-[#F5F5F5] hover:bg-[#E8F5E9] rounded-2xl border border-[#16730F]/20 transition-colors"
               >
-                Email support@bejite.com
+                <div className="font-semibold text-[#1A3E32] mb-1">Email Us Directly</div>
+                <p className="text-sm text-[#1A3E32]/70">support@bejite.com — we typically reply within 24 hours.</p>
               </a>
             </div>
-          </div>
 
-          <p className="text-center text-xs text-[#1A3E32]/60 mt-10">
-            Bejite Support • Available 24/7 for urgent issues
-          </p>
-        </div>
-      </main>
+            {/* FAQs */}
+            <div className="mb-12">
+              <h2 className="text-2xl font-semibold text-[#1A3E32] mb-6">Frequently Asked Questions</h2>
+
+              <div className="space-y-3">
+                {faqs.map((faq, index) => (
+                  <details
+                    key={index}
+                    className="group bg-white border border-[#16730F]/10 rounded-xl px-5 py-4 open:bg-[#F8F9F7]"
+                  >
+                    <summary className="cursor-pointer font-medium text-[#1A3E32] select-none flex justify-between items-center">
+                      {faq.q}
+                      <span className="text-[#6B8E23] group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <p className="mt-3 text-sm leading-relaxed text-[#1A3E32]/80">
+                      {faq.a}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </div>
+
+            {/* Still need help */}
+            <div className="bg-[#1A3E32] rounded-3xl p-8 text-center text-white">
+              <p className="text-xl font-semibold mb-2">Still need assistance?</p>
+              <p className="text-[#F5F5F5]/80 mb-6 max-w-md mx-auto">
+                Our support team is ready to help with account issues, technical problems, or platform questions.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center justify-center bg-[#6B8E23] hover:bg-[#5a7a1d] text-white font-medium px-8 py-3 rounded-3xl transition-colors"
+                >
+                  Open Support Ticket
+                </Link>
+
+                <a
+                  href="mailto:support@bejite.com"
+                  className="inline-flex items-center justify-center border border-white/70 hover:bg-white/10 px-8 py-3 rounded-3xl transition-colors"
+                >
+                  Email support@bejite.com
+                </a>
+              </div>
+            </div>
+
+            <p className="text-center text-xs text-[#1A3E32]/60 mt-10">
+              Bejite Support • Available 24/7 for urgent issues
+            </p>
+          </div>
+        </main>
+      </NewsFeedLayout>
     </>
   );
 }
