@@ -1,66 +1,95 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH } from "react-icons/fa";
-import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment, getSavedPosts, getPostLikes, getPostShares } from '../../services/postsApi';
-import { copyPostLink, getPostShareUrl, getSocialShareUrl, openShareWindow, recordPostShare } from '../../utils/postShare';
+import {
+  FaImage,
+  FaVideo,
+  FaPoll,
+  FaComment,
+  FaShare,
+  FaBookmark,
+  FaHeart,
+  FaEllipsisH,
+} from "react-icons/fa";
+import {
+  getFeed,
+  createPost,
+  updatePost,
+  deletePost,
+  likePost,
+  unlikePost,
+  savePost,
+  unsavePost,
+  getComments,
+  addComment,
+  getSavedPosts,
+  getPostLikes,
+  getPostShares,
+} from "../../services/postsApi";
+import {
+  copyPostLink,
+  getPostShareUrl,
+  getSocialShareUrl,
+  openShareWindow,
+  recordPostShare,
+} from "../../utils/postShare";
 import {
   getUser,
   mergeAuthUsers,
   pickProfilePhotoPath,
-} from '../../utils/tokenManager';
-import { profileAvatarSrc } from '../../utils/profilePhotoUrl';
-import { getAuthorProfileImageUrl } from '../../utils/profileImageUtils';
-import PostCreationModal from '../PostCreationModal';
-import ConfirmModal from '../ConfirmModal';
-import useSyncProfilePhoto from '../../hooks/useSyncProfilePhoto';
-import SharePostModal from '../SharePostModal';
-import UsersListModal from '../UsersListModal';
+} from "../../utils/tokenManager";
+import { profileAvatarSrc } from "../../utils/profilePhotoUrl";
+import { getAuthorProfileImageUrl } from "../../utils/profileImageUtils";
+import PostCreationModal from "../PostCreationModal";
+import ConfirmModal from "../ConfirmModal";
+import useSyncProfilePhoto from "../../hooks/useSyncProfilePhoto";
+import SharePostModal from "../SharePostModal";
+import UsersListModal from "../UsersListModal";
 
 // Helper function to get display name (same pattern as NewsFeedHeader)
 const getDisplayName = (user) => {
-  if (!user) return 'Guest';
+  if (!user) return "Guest";
   const toTitleCase = (value) =>
-    String(value || '')
+    String(value || "")
       .toLowerCase()
       .replace(/\b\w/g, (char) => char.toUpperCase())
       .trim();
   if (user.name) return toTitleCase(user.name);
   // Check both camelCase and snake_case
-  const firstName = user.firstName || user.first_name || '';
-  const lastName = user.lastName || user.last_name || '';
+  const firstName = user.firstName || user.first_name || "";
+  const lastName = user.lastName || user.last_name || "";
   if (firstName || lastName) {
     return toTitleCase(`${firstName} ${lastName}`);
   }
-  return 'Guest';
+  return "Guest";
 };
 
 const getDisplayJobTitle = (user) =>
-  user?.jobTitle || user?.title || user?.role || 'Professional';
+  user?.jobTitle || user?.title || user?.role || "Professional";
 
 // Helper function to format date (LinkedIn-style)
 const formatDate = (dateString) => {
-  if (!dateString) return 'Just now';
+  if (!dateString) return "Just now";
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'Just now';
-  
+  if (isNaN(date.getTime())) return "Just now";
+
   const now = new Date();
   const diffMs = now - date;
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
-  
-  if (diffMins < 1) return 'Just now';
+
+  if (diffMins < 1) return "Just now";
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 2) return 'Yesterday';
+  if (diffDays < 2) return "Yesterday";
   if (diffDays < 7) return `${diffDays}d ago`;
-  
+
   const isThisYear = date.getFullYear() === now.getFullYear();
-  const options = isThisYear 
-    ? { month: 'short', day: 'numeric' }
-    : { month: 'short', day: 'numeric', year: 'numeric' };
-  return date.toLocaleDateString('en-US', options);
+  const options = isThisYear
+    ? { month: "short", day: "numeric" }
+    : { month: "short", day: "numeric", year: "numeric" };
+  return date.toLocaleDateString("en-US", options);
 };
 
 // Helper function to parse text with links
@@ -68,11 +97,11 @@ const parseTextWithLinks = (text) => {
   if (!text) return [];
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const parts = text.split(urlRegex);
-  return parts.map(part => {
+  return parts.map((part) => {
     if (part.match(urlRegex)) {
-      return { type: 'link', content: part };
+      return { type: "link", content: part };
     }
-    return { type: 'text', content: part };
+    return { type: "text", content: part };
   });
 };
 
@@ -85,7 +114,7 @@ export default function RecruitmentMiddle() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const feedMode = searchParams.get('feed') === 'saved' ? 'saved' : 'home';
+  const feedMode = searchParams.get("feed") === "saved" ? "saved" : "home";
   const reduxUser = useSelector((state) => state.auth?.user);
 
   const mergedUser = useMemo(() => {
@@ -106,7 +135,7 @@ export default function RecruitmentMiddle() {
   }, [reduxUser, location.pathname]);
 
   useEffect(() => {
-    if (feedMode === 'saved') {
+    if (feedMode === "saved") {
       fetchSavedPosts();
     } else {
       fetchFeed();
@@ -120,15 +149,15 @@ export default function RecruitmentMiddle() {
       setPosts(data.posts || []);
       if (!silent) setError(null);
     } catch (err) {
-      console.error('Error fetching saved posts:', err);
-      if (!silent) setError('Failed to load saved posts');
+      console.error("Error fetching saved posts:", err);
+      if (!silent) setError("Failed to load saved posts");
     } finally {
       if (!silent) setLoading(false);
     }
   };
 
   const refreshPosts = (silent = false) => {
-    if (feedMode === 'saved') {
+    if (feedMode === "saved") {
       return fetchSavedPosts(silent);
     }
     return fetchFeed(silent);
@@ -141,8 +170,8 @@ export default function RecruitmentMiddle() {
       setPosts(data.posts || []);
       if (!silent) setError(null);
     } catch (err) {
-      console.error('Error fetching feed:', err);
-      if (!silent) setError('Failed to load posts');
+      console.error("Error fetching feed:", err);
+      if (!silent) setError("Failed to load posts");
     } finally {
       if (!silent) setLoading(false);
     }
@@ -157,7 +186,7 @@ export default function RecruitmentMiddle() {
       }
       refreshPosts(true);
     } catch (err) {
-      console.error('Error toggling like:', err);
+      console.error("Error toggling like:", err);
     }
   };
 
@@ -166,7 +195,7 @@ export default function RecruitmentMiddle() {
       await recordPostShare(postId);
       refreshPosts(true);
     } catch (err) {
-      console.error('Error sharing post:', err);
+      console.error("Error sharing post:", err);
     }
   };
 
@@ -179,7 +208,7 @@ export default function RecruitmentMiddle() {
       }
       refreshPosts(true);
     } catch (err) {
-      console.error('Error toggling save:', err);
+      console.error("Error toggling save:", err);
     }
   };
 
@@ -188,7 +217,7 @@ export default function RecruitmentMiddle() {
       await updatePost(postId, postData);
       refreshPosts();
     } catch (err) {
-      console.error('Error updating post:', err);
+      console.error("Error updating post:", err);
       throw err;
     }
   };
@@ -196,22 +225,25 @@ export default function RecruitmentMiddle() {
   const handleDeletePost = async (postId) => {
     try {
       await deletePost(postId);
-      setPosts(posts.filter(p => p.id !== postId));
+      setPosts(posts.filter((p) => p.id !== postId));
     } catch (err) {
-      console.error('Error deleting post:', err);
+      console.error("Error deleting post:", err);
       throw err;
     }
   };
 
   return (
-    <main className="w-full px-4 py-6 space-y-8 bg-[#F5F5F5]">
+    <main className="w-full px-2 py-6 space-y-8 bg-[#F5F5F5]">
       {/* Create Post Button */}
       <div className="max-w-3xl p-6 mx-auto bg-white shadow rounded-2xl">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setShowModal(true)}>
-          <img 
-            src={currentUserImage} 
-            alt="profile" 
-            className="rounded-full w-12 h-12" 
+        <div
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => setShowModal(true)}
+        >
+          <img
+            src={currentUserImage}
+            alt="profile"
+            className="rounded-full w-12 h-12"
           />
           <div className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-gray-500 hover:bg-gray-200 transition-colors">
             Start a post
@@ -222,21 +254,33 @@ export default function RecruitmentMiddle() {
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
-            <img src="/assets/images/gallery.svg" alt="Image" className="w-5 h-5" />
+            <img
+              src="/assets/images/gallery.svg"
+              alt="Image"
+              className="w-5 h-5"
+            />
             <span className="text-sm">Image</span>
           </button>
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
-            <img src="/assets/images/video-square.png" alt="Video" className="w-5 h-5" />
+            <img
+              src="/assets/images/video-square.png"
+              alt="Video"
+              className="w-5 h-5"
+            />
             <span className="text-sm">Video</span>
           </button>
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
-            <img src="/assets/images/Amount_Icon_UIA.svg" alt="Poll" className="w-5 h-5" />
+            <img
+              src="/assets/images/Amount_Icon_UIA.svg"
+              alt="Poll"
+              className="w-5 h-5"
+            />
             <span className="text-sm">Poll</span>
           </button>
         </div>
@@ -244,12 +288,12 @@ export default function RecruitmentMiddle() {
 
       <hr className="border-t-2 border-[#16730F]" />
 
-      {feedMode === 'saved' && (
+      {feedMode === "saved" && (
         <div className="max-w-3xl mx-auto flex items-center justify-between bg-white rounded-2xl px-4 py-3 shadow-sm">
           <h2 className="text-lg font-semibold text-[#1A3E32]">Saved posts</h2>
           <button
             type="button"
-            onClick={() => navigate('/news-feed')}
+            onClick={() => navigate("/news-feed")}
             className="text-sm text-[#16730F] hover:underline font-medium"
           >
             Back to feed
@@ -260,18 +304,18 @@ export default function RecruitmentMiddle() {
       {/* Posts Feed */}
       {loading ? (
         <div className="text-center py-8 text-gray-500">
-          {feedMode === 'saved' ? 'Loading saved posts...' : 'Loading posts...'}
+          {feedMode === "saved" ? "Loading saved posts..." : "Loading posts..."}
         </div>
       ) : error ? (
         <div className="text-center py-8 text-red-500">{error}</div>
       ) : posts.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          {feedMode === 'saved'
-            ? 'No saved posts yet. Save posts from your feed to see them here.'
-            : 'No posts yet. Be the first to post!'}
+          {feedMode === "saved"
+            ? "No saved posts yet. Save posts from your feed to see them here."
+            : "No posts yet. Be the first to post!"}
         </div>
       ) : (
-        posts.map(post => (
+        posts.map((post) => (
           <RecruitmentPostCard
             key={post.id}
             post={post}
@@ -321,7 +365,7 @@ const RecruitmentPostCard = ({
   const isOwner = String(post.authorId) === String(currentUserId);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const [liked, setLiked] = useState(post.likedByMe === true);
   const [saved, setSaved] = useState(post.savedByMe === true);
@@ -333,18 +377,18 @@ const RecruitmentPostCard = ({
   }, [post.id, post.likedByMe, post.savedByMe]);
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editBody, setEditBody] = useState(post.body || '');
+  const [editBody, setEditBody] = useState(post.body || "");
   const [savingEdit, setSavingEdit] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
-  const [pendingLink, setPendingLink] = useState('');
-const [showShareModal, setShowShareModal] = useState(false);
+  const [pendingLink, setPendingLink] = useState("");
+  const [showShareModal, setShowShareModal] = useState(false);
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
   // Users list modal state
   const [usersListModalOpen, setUsersListModalOpen] = useState(false);
-  const [usersListTitle, setUsersListTitle] = useState('');
-  const [usersListType, setUsersListType] = useState('likes');
+  const [usersListTitle, setUsersListTitle] = useState("");
+  const [usersListType, setUsersListType] = useState("likes");
   const [usersListUsers, setUsersListUsers] = useState([]);
   const [usersListLoading, setUsersListLoading] = useState(false);
 
@@ -355,7 +399,7 @@ const [showShareModal, setShowShareModal] = useState(false);
   };
 
   const handleConfirmLink = () => {
-    window.open(pendingLink, '_blank');
+    window.open(pendingLink, "_blank");
     setLinkModalOpen(false);
   };
 
@@ -380,7 +424,7 @@ const [showShareModal, setShowShareModal] = useState(false);
       const data = await getComments(post.id);
       setComments(data.comments || []);
     } catch (err) {
-      console.error('Error fetching comments:', err);
+      console.error("Error fetching comments:", err);
     } finally {
       setLoadingComments(false);
     }
@@ -391,10 +435,10 @@ const [showShareModal, setShowShareModal] = useState(false);
     if (!newComment.trim()) return;
     try {
       await addComment(post.id, newComment);
-      setNewComment('');
+      setNewComment("");
       await fetchComments(true);
     } catch (err) {
-      console.error('Error adding comment:', err);
+      console.error("Error adding comment:", err);
     }
   };
 
@@ -423,7 +467,7 @@ const [showShareModal, setShowShareModal] = useState(false);
     try {
       await onShare(post.id);
       const postUrl = getPostShareUrl(post.id);
-      if (platform === 'copy') {
+      if (platform === "copy") {
         await copyPostLink(post.id);
       } else {
         openShareWindow(getSocialShareUrl(platform, postUrl));
@@ -434,7 +478,7 @@ const [showShareModal, setShowShareModal] = useState(false);
   };
 
   const handleEditClick = () => {
-    setEditBody(post.body || '');
+    setEditBody(post.body || "");
     setIsEditing(true);
   };
 
@@ -445,36 +489,36 @@ const [showShareModal, setShowShareModal] = useState(false);
       await onUpdate(post.id, { body: editBody });
       setIsEditing(false);
     } catch (err) {
-      console.error('Error updating post:', err);
+      console.error("Error updating post:", err);
     } finally {
       setSavingEdit(false);
     }
   };
 
   const handleDeleteClick = async () => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
+    if (window.confirm("Are you sure you want to delete this post?")) {
       try {
         await onDelete(post.id);
       } catch (err) {
-        console.error('Error deleting post:', err);
+        console.error("Error deleting post:", err);
       }
     }
   };
 
-const handleCancelEdit = () => {
+  const handleCancelEdit = () => {
     setIsEditing(false);
-    setEditBody(post.body || '');
+    setEditBody(post.body || "");
   };
 
-// Function to show users who liked
+  // Function to show users who liked
   const handleShowLikers = async () => {
     try {
-      setUsersListTitle('People who liked');
-      setUsersListType('likes');
+      setUsersListTitle("People who liked");
+      setUsersListType("likes");
       setUsersListLoading(true);
       setUsersListModalOpen(true);
       const data = await getPostLikes(post.id);
-      console.log('Likes response:', data);
+      console.log("Likes response:", data);
       // Handle response formats: { likers: [...] }, { users: [...] }, { likes: [...] }, { data: [...] }, or direct array
       let usersList = [];
       if (data?.likers) {
@@ -489,13 +533,13 @@ const handleCancelEdit = () => {
         usersList = data;
       }
       // Normalize user objects to have id property (some APIs use userId)
-      usersList = usersList.map(user => ({
+      usersList = usersList.map((user) => ({
         ...user,
-        id: user.id || user.userId
+        id: user.id || user.userId,
       }));
       setUsersListUsers(usersList);
     } catch (err) {
-      console.error('Error fetching likes:', err);
+      console.error("Error fetching likes:", err);
       setUsersListUsers([]);
     } finally {
       setUsersListLoading(false);
@@ -505,12 +549,12 @@ const handleCancelEdit = () => {
   // Function to show users who shared
   const handleShowSharers = async () => {
     try {
-      setUsersListTitle('People who shared');
-      setUsersListType('shares');
+      setUsersListTitle("People who shared");
+      setUsersListType("shares");
       setUsersListLoading(true);
       setUsersListModalOpen(true);
       const data = await getPostShares(post.id);
-      console.log('Shares response:', data);
+      console.log("Shares response:", data);
       // Handle response formats: { sharers: [...] }, { users: [...] }, { shares: [...] }, { data: [...] }, or direct array
       let usersList = [];
       if (data?.sharers) {
@@ -525,13 +569,13 @@ const handleCancelEdit = () => {
         usersList = data;
       }
       // Normalize user objects to have id property (some APIs use userId)
-      usersList = usersList.map(user => ({
+      usersList = usersList.map((user) => ({
         ...user,
-        id: user.id || user.userId
+        id: user.id || user.userId,
       }));
       setUsersListUsers(usersList);
     } catch (err) {
-      console.error('Error fetching shares:', err);
+      console.error("Error fetching shares:", err);
       setUsersListUsers([]);
     } finally {
       setUsersListLoading(false);
@@ -550,7 +594,8 @@ const handleCancelEdit = () => {
     : getAuthorProfileImageUrl(post.author);
 
   const getCommentAuthorImage = (comment) => {
-    const isCurrentUserComment = String(comment.authorId) === String(currentUserId);
+    const isCurrentUserComment =
+      String(comment.authorId) === String(currentUserId);
     if (isCurrentUserComment) return syncedCurrentUserPhoto;
     return getAuthorProfileImageUrl(comment.author);
   };
@@ -582,26 +627,36 @@ const handleCancelEdit = () => {
             >
               {authorName}
             </button>
-            <p className="text-[#1A3E32] text-xs sm:text-sm">{authorJobTitle}</p>
-            <p className="text-[#1A3E32] text-xs sm:text-sm">{formatDate(post.publishedAt)}</p>
+            <p className="text-[#1A3E32] text-xs sm:text-sm">
+              {authorJobTitle}
+            </p>
+            <p className="text-[#1A3E32] text-xs sm:text-sm">
+              {formatDate(post.publishedAt)}
+            </p>
           </div>
         </div>
         {isOwner && (
           <div className="relative">
-            <FaEllipsisH 
-              className="text-gray-500 cursor-pointer" 
+            <FaEllipsisH
+              className="text-gray-500 cursor-pointer"
               onClick={() => setShowMenu(!showMenu)}
             />
             {showMenu && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg py-2 w-32 border z-10">
-                <button 
-                  onClick={() => { setShowMenu(false); handleEditClick(); }}
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    handleEditClick();
+                  }}
                   className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                 >
                   Edit
                 </button>
-                <button 
-                  onClick={() => { setShowMenu(false); handleDeleteClick(); }}
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    handleDeleteClick();
+                  }}
                   className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
                   Delete
@@ -627,7 +682,7 @@ const handleCancelEdit = () => {
               disabled={savingEdit}
               className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c] disabled:opacity-50"
             >
-              {savingEdit ? 'Saving...' : 'Save'}
+              {savingEdit ? "Saving..." : "Save"}
             </button>
             <button
               onClick={handleCancelEdit}
@@ -641,14 +696,15 @@ const handleCancelEdit = () => {
         <div>
           <p className="text-black text-sm sm:text-base whitespace-pre-wrap break-words">
             {(() => {
-              const body = post.body || '';
+              const body = post.body || "";
               const shouldTruncate = body.length > 200;
-              const displayText = shouldTruncate && !isExpanded 
-                ? body.substring(0, 200) + '...' 
-                : body;
+              const displayText =
+                shouldTruncate && !isExpanded
+                  ? body.substring(0, 200) + "..."
+                  : body;
               const textParts = parseTextWithLinks(displayText);
-              return textParts.map((part, index) => 
-                part.type === 'link' ? (
+              return textParts.map((part, index) =>
+                part.type === "link" ? (
                   <a
                     key={index}
                     href={part.content}
@@ -659,16 +715,16 @@ const handleCancelEdit = () => {
                   </a>
                 ) : (
                   <span key={index}>{part.content}</span>
-                )
+                ),
               );
             })()}
           </p>
           {post.body && post.body.length > 200 && (
-            <button 
+            <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-[#16730F] font-medium text-sm mt-1 hover:underline"
             >
-              {isExpanded ? 'See less' : 'See more'}
+              {isExpanded ? "See less" : "See more"}
             </button>
           )}
         </div>
@@ -688,8 +744,8 @@ const handleCancelEdit = () => {
           <div
             className={`${
               post.media.length === 1
-                ? 'grid grid-cols-1'
-                : 'flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1'
+                ? "grid grid-cols-1"
+                : "flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1"
             }`}
             onScroll={handleMediaScroll}
           >
@@ -697,10 +753,12 @@ const handleCancelEdit = () => {
               <div
                 key={index}
                 className={`${
-                  post.media.length === 1 ? 'w-full' : 'min-w-[80%] sm:min-w-[45%] snap-start'
+                  post.media.length === 1
+                    ? "w-full"
+                    : "min-w-[80%] sm:min-w-[45%] snap-start"
                 }`}
               >
-                {item.kind === 'video' ? (
+                {item.kind === "video" ? (
                   <video
                     src={item.url}
                     controls
@@ -726,21 +784,30 @@ const handleCancelEdit = () => {
         </div>
       )}
 
-{/* Post Stats */}
+      {/* Post Stats */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
         {post.likesCount > 0 && (
-          <button onClick={handleShowLikers} className="hover:underline font-medium">
-            {post.likesCount} like{post.likesCount > 1 ? 's' : ''}
+          <button
+            onClick={handleShowLikers}
+            className="hover:underline font-medium"
+          >
+            {post.likesCount} like{post.likesCount > 1 ? "s" : ""}
           </button>
         )}
         {post.commentsCount > 0 && (
-          <button onClick={toggleComments} className="hover:underline font-medium">
-            {post.commentsCount} comment{post.commentsCount > 1 ? 's' : ''}
+          <button
+            onClick={toggleComments}
+            className="hover:underline font-medium"
+          >
+            {post.commentsCount} comment{post.commentsCount > 1 ? "s" : ""}
           </button>
         )}
         {post.sharesCount > 0 && (
-          <button onClick={handleShowSharers} className="hover:underline font-medium">
-            {post.sharesCount} share{post.sharesCount > 1 ? 's' : ''}
+          <button
+            onClick={handleShowSharers}
+            className="hover:underline font-medium"
+          >
+            {post.sharesCount} share{post.sharesCount > 1 ? "s" : ""}
           </button>
         )}
       </div>
@@ -748,14 +815,16 @@ const handleCancelEdit = () => {
       {/* Post Actions */}
       <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 border-t pt-4">
         <div className="grid grid-cols-3 w-full sm:w-auto gap-3 sm:flex sm:gap-6">
-          <button 
+          <button
             onClick={handleLikeClick}
-            className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
+            className={`flex items-center gap-2 ${liked ? "text-red-500" : "text-gray-600 hover:text-red-500"}`}
           >
-            <FaHeart className={liked ? 'fill-current text-red-500' : ''} />
-            <span className="text-xs sm:text-sm">{liked ? 'Liked' : 'Like'}</span>
+            <FaHeart className={liked ? "fill-current text-red-500" : ""} />
+            <span className="text-xs sm:text-sm">
+              {liked ? "Liked" : "Like"}
+            </span>
           </button>
-          <button 
+          <button
             onClick={toggleComments}
             className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]"
           >
@@ -771,12 +840,12 @@ const handleCancelEdit = () => {
             <span className="text-xs sm:text-sm">Share</span>
           </button>
         </div>
-        <button 
+        <button
           onClick={handleSaveClick}
-          className={`flex items-center gap-2 ${saved ? 'text-[#16730F]' : 'text-gray-600 hover:text-[#16730F]'}`}
+          className={`flex items-center gap-2 ${saved ? "text-[#16730F]" : "text-gray-600 hover:text-[#16730F]"}`}
         >
-          <FaBookmark className={saved ? 'fill-current' : ''} />
-          <span className="text-xs sm:text-sm">{saved ? 'Saved' : 'Save'}</span>
+          <FaBookmark className={saved ? "fill-current" : ""} />
+          <span className="text-xs sm:text-sm">{saved ? "Saved" : "Save"}</span>
         </button>
       </div>
 
@@ -787,10 +856,13 @@ const handleCancelEdit = () => {
         onShare={handleShareOption}
       />
 
-{/* Comments Section */}
+      {/* Comments Section */}
       {showComments && (
         <div className="border-t pt-4 mt-4">
-          <form onSubmit={handleAddComment} className="flex flex-wrap sm:flex-nowrap gap-2 mb-4 items-center">
+          <form
+            onSubmit={handleAddComment}
+            className="flex flex-wrap sm:flex-nowrap gap-2 mb-4 items-center"
+          >
             <img
               src={syncedCurrentUserPhoto}
               alt="Your profile"
@@ -803,7 +875,7 @@ const handleCancelEdit = () => {
               onChange={(e) => setNewComment(e.target.value)}
               className="flex-1 min-w-[180px] border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#16730F]"
             />
-            <button 
+            <button
               type="submit"
               className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c]"
             >
@@ -817,7 +889,7 @@ const handleCancelEdit = () => {
             <p className="text-gray-500 text-sm">No comments yet</p>
           ) : (
             <div className="space-y-4">
-              {comments.map(comment => (
+              {comments.map((comment) => (
                 <div key={comment.id} className="flex gap-2">
                   <img
                     src={getCommentAuthorImage(comment)}
@@ -848,4 +920,4 @@ const handleCancelEdit = () => {
       />
     </div>
   );
-}
+};

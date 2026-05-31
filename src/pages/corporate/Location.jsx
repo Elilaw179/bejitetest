@@ -131,6 +131,14 @@ const CoperateLocation = () => {
     }
   };
 
+  const handleSkip = () => {
+    if (isEditMode) {
+      navigate(getPath(currentStep + 1));
+    } else {
+      navigate("/edit-profile/recruiter/verify");
+    }
+  };
+
   return (
     <div className="bg-white min-h-screen">
       <Header />
@@ -150,7 +158,7 @@ const CoperateLocation = () => {
           {/* ADDRESS */}
           <div className="p-5 bg-[#82828280] lg:rounded-3xl rounded-md  mb-4">
             <label className="font-semibold text-[12px] mb-2 block">
-               	Business HQ Address(Required)(Jobseekers see only city/region)
+              Business HQ Address(Required)(Jobseekers see only city/region)
             </label>
             <input
               type="text"
@@ -204,6 +212,8 @@ const CoperateLocation = () => {
       </div>
 
       <NavigationButtons
+        showSkip={true}
+        onSkip={handleSkip}
         isFormComplete={isFormComplete}
         onBack={() => {
           if (isEditMode) {

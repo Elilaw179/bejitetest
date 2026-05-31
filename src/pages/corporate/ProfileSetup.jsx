@@ -171,6 +171,14 @@ const CoperateProfileSetup = () => {
     }
   };
 
+  const handleSkip = () => {
+    if (isEditMode) {
+      navigate(getPath(currentStep + 1));
+    } else {
+      navigate("/edit-profile/recruiter/company-details");
+    }
+  };
+
   return (
     <div className="bg-white min-h-screen">
       <Header />
@@ -228,6 +236,8 @@ const CoperateProfileSetup = () => {
       </div>
 
       <NavigationButtons
+        showSkip={true}
+        onSkip={handleSkip}
         isFormComplete={isFormComplete}
         onBack={() => {
           if (isEditMode) {

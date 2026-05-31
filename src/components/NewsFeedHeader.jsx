@@ -24,7 +24,7 @@ const NewsFeedHeader = ({
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-const [notificationCount, setNotificationCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [connectionRequestCount, setConnectionRequestCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,20 +35,20 @@ const [notificationCount, setNotificationCount] = useState(0);
   const searchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
 
-// Get user from Redux store first (most up-to-date after login), fallback to prop or localStorage
+  // Get user from Redux store first (most up-to-date after login), fallback to prop or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
-  
+
   // Merge Redux + localStorage without wiping photo fields when Redux has undefined/null.
   // Always check localStorage directly as a reliable fallback to prevent "Guest" showing
   const user = useMemo(() => {
     void location.pathname;
-    
+
     // Always get fresh localStorage user to ensure reliability
     const localUser = getUser();
-    
+
     // Priority: Redux user > propUser > localStorage user
     const primaryUser = reduxUser || propUser || localUser;
-    
+
     if (primaryUser && typeof primaryUser === "object") {
       const merged = mergeAuthUsers(localUser || {}, primaryUser);
       const resolvedPhoto =
@@ -65,7 +65,7 @@ const [notificationCount, setNotificationCount] = useState(0);
         role: merged.role || "user",
       };
     }
-    
+
     // No user found - but still check localStorage one more time to avoid showing Guest
     const freshLocalUser = getUser();
     if (freshLocalUser && typeof freshLocalUser === "object") {
@@ -78,7 +78,7 @@ const [notificationCount, setNotificationCount] = useState(0);
         role: freshLocalUser.role || "user",
       };
     }
-    
+
     return {
       name: "Guest",
       image: "/assets/images/photo_placeholder.png",
@@ -320,7 +320,7 @@ const [notificationCount, setNotificationCount] = useState(0);
     }
   };
 
-useEffect(() => {
+  useEffect(() => {
     fetchUnreadMessageCount();
     const interval = setInterval(fetchUnreadMessageCount, 30000);
     return () => clearInterval(interval);
@@ -405,20 +405,21 @@ useEffect(() => {
 
   return (
     <header className="bg-[#F5F5F5] w-full relative z-50">
-      <div className="max-w-[1440px] w-full mx-auto flex flex-col sm:flex-row items-center justify-between px-4 py-3 gap-3 sm:gap-4">
-        <div className="w-full sm:w-auto flex items-center justify-between">
-            <img
-              src="/assets/images/logo.png"
-              alt="Logo"
-              className="h-10 md:h-14 lg:h-16"
-            />
+      <div className="max-w-[1440px] w-full mx-auto flex flex-col lg:flex-row items-center justify-between px-4 py-3 gap-3 lg:gap-4">
+        <div className="w-full lg:w-auto flex items-center justify-between">
+          <img
+            onClick={() => navigate("/news-feed")}
+            src="/assets/images/logo.png"
+            alt="Logo"
+            className="h-10 md:h-14 lg:h-16 cursor-pointer"
+          />
           <FaList
-            className="text-2xl text-[#333] block sm:hidden cursor-pointer"
+            className="text-2xl text-[#333] block lg:hidden cursor-pointer"
             onClick={toggleSidebar}
           />
         </div>
 
-        <div ref={searchRef} className="relative w-full sm:w-[300px] md:max-w-[400px] lg:max-w-[500px]">
+        <div ref={searchRef} className="relative w-full lg:max-w-[500px]">
           <input
             type="text"
             placeholder="Search people, jobs, posts..."
@@ -478,7 +479,7 @@ useEffect(() => {
           )}
         </div>
 
-        <div className="hidden sm:flex gap-3 md:gap-4 items-center">
+        <div className="hidden lg:flex gap-3 md:gap-4 items-center">
           {menuItems.map((name, i) => (
             <div key={i} className="relative flex items-center">
               {name === "home-icon" ? (
@@ -498,7 +499,7 @@ useEffect(() => {
                     }`}
                     onClick={() => handleIconClick(name)}
                   />
-{name === "notifications" && notificationCount > 0 && (
+                  {name === "notifications" && notificationCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                       {notificationCount > 99 ? '99+' : notificationCount}
                     </span>
@@ -526,19 +527,19 @@ useEffect(() => {
           ))}
         </div>
 
-        <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto justify-between sm:justify-normal">
+        <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto justify-between lg:justify-normal">
           <img
-            className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full object-cover"
+            className="w-10 h-10 lg:w-14 lg:h-14 rounded-full object-cover"
             src={avatarSrc(user.image)}
             alt={getDisplayName()}
           />
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
             <div ref={dropdownRef} className="relative">
               <p className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32]">
                 {getDisplayName()}
               </p>
-              
+
               {/* Custom Dropdown for Role & Logout */}
               <div className="relative">
                 <button
@@ -548,7 +549,7 @@ useEffect(() => {
                   <span>{getDisplayRole()}</span>
                   <FaChevronDown className={`text-xs transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
-                
+
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
                   <div className="absolute right-0 left-auto mt-2 w-[min(18rem,calc(100vw-1rem))] bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden max-h-[70vh] overflow-y-auto">
@@ -573,17 +574,16 @@ useEffect(() => {
 
                     {/* Section 1: Profile */}
                     <div className="py-1">
-                      
+
                       <button
                         onClick={() => {
                           navigate(user?.role === 'recruiter' ? '/edit-profile/recruiter/basic-details' : '/edit-profile/bio');
                           setIsDropdownOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
-                          location.pathname.startsWith('/edit-profile')
-                            ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
-                            : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
-                        }`}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${location.pathname.startsWith('/edit-profile')
+                          ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
+                          : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
+                          }`}
                       >
                         <FaUserEdit className="text-base" />
                         <span>Edit Profile</span>
@@ -601,11 +601,10 @@ useEffect(() => {
                             navigate('/candidate-search-page');
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
-                            location.pathname === '/candidate-search-page'
-                              ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
-                              : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
-                          }`}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${location.pathname === '/candidate-search-page'
+                            ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
+                            : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
+                            }`}
                         >
                           <FaSearch className="text-base" />
                           <span>Candidate Search</span>
@@ -617,11 +616,10 @@ useEffect(() => {
                             navigate('/ase/dashboard');
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
-                            ['/ase/dashboard', '/ase/pricing'].includes(location.pathname)
-                              ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
-                              : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
-                          }`}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${['/ase/dashboard', '/ase/pricing'].includes(location.pathname)
+                            ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
+                            : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
+                            }`}
                         >
                           <FaCreditCard className="text-base" />
                           <span>My Subscription</span>
@@ -652,13 +650,14 @@ useEffect(() => {
 
       {/* Mobile Sidebar */}
       {isSidebarOpen && (
-        <div className="fixed top-0 left-0 w-3/4 max-w-[250px] h-full bg-white shadow-lg z-50 p-4 transition-transform sm:hidden">
+        <div className="fixed top-0 left-0 w-3/4 max-w-[250px] h-full bg-white shadow-lg z-50 p-4 transition-transform lg:hidden block">
           <button
             onClick={toggleSidebar}
             className="text-[#16730F] font-bold text-lg mb-4"
           >
             ✕ Close
           </button>
+<<<<<<< HEAD
            <nav className="flex flex-col gap-4">
              {menuItems.map((name, i) => (
                <div
@@ -701,6 +700,50 @@ useEffect(() => {
                </div>
              ))}
            </nav>
+=======
+          <nav className="flex flex-col gap-4">
+            {menuItems.map((name, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => {
+                  handleIconClick(name);
+                  setIsSidebarOpen(false);
+                }}
+              >
+                {name === "home-icon" ? (
+                  <FaHome className="text-[#16730F]" />
+                ) : (
+                  <div className="relative">
+                    <img
+                      src={`/assets/images/${name}.svg`}
+                      alt={name}
+                      className="h-5"
+                    />
+                    {name === "notifications" && notificationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                        {notificationCount > 9 ? '9+' : notificationCount}
+                      </span>
+                    )}
+                    {name === "CHAT" && unreadMessageCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold animate-pulse">
+                        {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                      </span>
+                    )}
+                    {name === "connection" && connectionRequestCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                        {connectionRequestCount > 9 ? '9+' : connectionRequestCount}
+                      </span>
+                    )}
+                  </div>
+                )}
+                <span className="text-[#1A3E32] font-medium capitalize text-sm">
+                  {name === "home-icon" ? "News Feed" : name.toLowerCase()}
+                </span>
+              </div>
+            ))}
+          </nav>
+>>>>>>> 26560dc5b7a1611de1adf5bc69e69f8b47e9e48b
         </div>
       )}
     </header>

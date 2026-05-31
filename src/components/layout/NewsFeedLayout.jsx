@@ -1,0 +1,96 @@
+import React from "react";
+import NewsFeedHeader from "../NewsFeedHeader";
+import RecruitmentLeft from "../recruitment/RecruitmentLeft";
+import RecruitmentRight from "../recruitment/RecruitmentRight";
+
+/**
+ * Reusable NewsFeed-style layout with header, optional sidebars, and a scrollable middle area.
+ *
+ * Props:
+ * - children        — rendered in the middle column (scrollable)
+ * - showSidebars    — show left + right sidebars (default: true)
+ * - leftSidebar     — custom left sidebar component (defaults to <RecruitmentLeft />)
+ * - rightSidebar    — custom right sidebar component (defaults to <RecruitmentRight />)
+ */
+// Updated NewsFeedLayout.js
+export default function NewsFeedLayout({
+  children,
+  showSidebars = true,
+  leftSidebar,
+  rightSidebar,
+  scrollable = true, // New prop to control scrolling
+  classes = `overflow-y-auto overflow-x-hidden max-h-[calc(100vh-72px)] nfl-scroll scroll-smooth`
+}) {
+  return (
+    <div className="flex flex-col min-h-screen bg-[#F5F5F5]">
+      {/* Custom scrollbar styles (same as before) */}
+      <style>{`
+        .nfl-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+        .nfl-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .nfl-scroll::-webkit-scrollbar-thumb {
+          background: rgba(26, 62, 50, 0.2);
+          border-radius: 100px;
+        }
+        .nfl-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(26, 62, 50, 0.4);
+        }
+        .nfl-sidebar-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .nfl-sidebar-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .nfl-sidebar-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 100px;
+        }
+        .nfl-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.35);
+        }
+      `}</style>
+
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-white shadow-sm">
+        <NewsFeedHeader />
+      </div>
+
+      {/* Main Content */}
+      {showSidebars ? (
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-[260px_1fr_280px] gap-0 max-w-screen-xl w-full mx-auto">
+          {/* Left Sidebar */}
+          <div className="hidden lg:block sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto nfl-sidebar-scroll">
+            {leftSidebar || <RecruitmentLeft />}
+          </div>
+
+          {/* Middle — scrollable children (conditional scrolling) */}
+          <div
+            className={`${scrollable ? 'overflow-y-auto overflow-x-hidden max-h-[calc(100vh-72px)] nfl-scroll scroll-smooth' : 'overflow-hidden'}`}
+            style={{ scrollbarWidth: scrollable ? "thin" : "none", scrollbarColor: scrollable ? "rgba(26,62,50,0.2) transparent" : "transparent" }}
+          >
+            {children}
+            {/* Bottom spacer - only show if scrollable */}
+            {scrollable && <div className="h-8" />}
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="hidden lg:block sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto nfl-sidebar-scroll">
+            {rightSidebar || <RecruitmentRight />}
+          </div>
+        </div>
+      ) : (
+        /* No sidebars — conditional scrolling */
+        <div
+          className={`flex-1 ${scrollable ? classes : 'overflow-hidden'}`}
+          style={{ scrollbarWidth: scrollable ? "thin" : "none", scrollbarColor: scrollable ? "rgba(26,62,50,0.2) transparent" : "transparent" }}
+        >
+          {children}
+          {scrollable && <div className="h-8" />}
+        </div>
+      )}
+    </div>
+  );
+}
