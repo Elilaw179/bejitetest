@@ -40,7 +40,6 @@ export default function AuthBootstrap({ children }) {
 
       const storedUser = getUser();
       const refreshToken = getRefreshToken();
-      const accessToken = getAccessToken();
 
       if (storedUser?.is_admin) {
         if (!cancelled) setReady(true);
