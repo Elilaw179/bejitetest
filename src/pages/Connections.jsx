@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import * as connectionsApi from '../services/connectionsApi';
 import { getAuthorProfileImageUrl } from '../utils/profileImageUtils';
 import useSyncProfilePhoto from '../hooks/useSyncProfilePhoto';
+import NewsFeedLayout from '../components/layout/NewsFeedLayout';
 
 const shuffleArray = (arr) => {
   const shuffled = [...arr];
@@ -304,81 +305,83 @@ const Connections = () => {
 
   if (loading) {
     return (
-      <div>
-        <NewsFeedHeader />
+      <NewsFeedLayout showSidebars={false}>
+
+        {/* <NewsFeedHeader /> */}
         <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F] mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading connections...</p>
           </div>
         </div>
-      </div>
+      </NewsFeedLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
-      <NewsFeedHeader />
+    <NewsFeedLayout showSidebars={false}>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#1A3E32] mb-2">Connections</h1>
-          <p className="text-gray-600">Manage your professional network</p>
-        </div>
+      <div className="min-h-screen bg-[#F5F5F5]">
+        {/* <NewsFeedHeader /> */}
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none"
-            />
-            <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1A3E32] h-5 w-5" />
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          {/* Header */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-[#1A3E32] mb-2">Connections</h1>
+            <p className="text-gray-600">Manage your professional network</p>
           </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="flex border-b border-gray-200">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 transition-colors ${
-                    activeTab === tab.id
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none"
+              />
+              <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1A3E32] h-5 w-5" />
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="flex border-b border-gray-200">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 transition-colors ${activeTab === tab.id
                       ? 'bg-[#16730F] text-white'
                       : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{tab.label}</span>
-                  {tab.count > 0 && (
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      activeTab === tab.id
+                      }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="font-medium">{tab.label}</span>
+                    {tab.count > 0 && (
+                      <span className={`px-2 py-1 rounded-full text-xs ${activeTab === tab.id
                         ? 'bg-white text-[#16730F]'
                         : 'bg-[#16730F] text-white'
-                    }`}>
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                        }`}>
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* Tab Content */}
-          <div className="p-6">
-            {tabs.find(tab => tab.id === activeTab)?.content}
+            {/* Tab Content */}
+            <div className="p-6">
+              {tabs.find(tab => tab.id === activeTab)?.content}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </NewsFeedLayout>
   );
 };
 
@@ -390,9 +393,9 @@ const PeopleList = ({ users, onSendRequest, onViewProfile, searchQuery, isSearch
   const filteredUsers = isSearching
     ? usersArray
     : usersArray.filter(user =>
-        user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.role?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.role?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   if (searchLoading) {
     return (

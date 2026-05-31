@@ -1,15 +1,12 @@
-
 import React, { useEffect } from "react";
-import NewsFeedHeader from "../../components/NewsFeedHeader";
-import RecruitmentLeft from "../../components/recruitment/RecruitmentLeft";
+import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
 import RecruitmentMiddle from "../../components/recruitment/RecruitmentMiddle";
-import RecruitmentRight from "../../components/recruitment/RecruitmentRight";
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
 export default function Recruitment() {
   const location = useLocation();
-  
+
   useEffect(() => {
     // Check if user just completed profile update
     if (location.state?.profileUpdateComplete) {
@@ -20,28 +17,8 @@ export default function Recruitment() {
   }, [location.state]);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Fixed Header */}
-      <div className="sticky top-0 z-50 bg-white shadow-sm">
-        <NewsFeedHeader />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_3fr_1fr] gap-4 p-3 sm:p-4 max-w-screen-xl mx-auto flex-1 w-full">
-        {/* Fixed Left Sidebar - Not Scrollable */}
-        <div className="hidden lg:block sticky top-20 self-start">
-          <RecruitmentLeft />
-        </div>
-
-        {/* Floating Middle Section - Only This Scrolls */}
-        <div className="overflow-y-auto max-h-[calc(100vh-120px)] min-w-0">
-          <RecruitmentMiddle />
-        </div>
-
-        {/* Fixed Right Sidebar - Not Scrollable */}
-        <div className="hidden lg:block sticky top-20 self-start">
-          <RecruitmentRight />
-        </div>
-      </div>
-    </div>
+    <NewsFeedLayout showSidebars={true}>
+      <RecruitmentMiddle />
+    </NewsFeedLayout>
   );
 }

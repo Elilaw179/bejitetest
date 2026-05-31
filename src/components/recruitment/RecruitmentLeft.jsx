@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import { FaArrowLeft, FaHome, FaUserPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -13,9 +12,8 @@ const navItems = [
   { icon: "/assets/images/notification.svg", label: "Notifications" },
 ];
 
-
 export default function RecruitmentLeft() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   // Get user from Redux store or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
@@ -25,9 +23,10 @@ export default function RecruitmentLeft() {
   }, [reduxUser]);
 
   // Filter nav items based on user role
-  const filteredNavItems = user?.role === 'jobseeker'
-    ? navItems.filter(item => item.label !== "Recruitment")
-    : navItems;
+  const filteredNavItems =
+    user?.role === "jobseeker"
+      ? navItems.filter((item) => item.label !== "Recruitment")
+      : navItems;
 
   const handleNavClick = (label) => {
     switch (label) {
@@ -52,53 +51,53 @@ export default function RecruitmentLeft() {
   };
 
   return (
-    <div className="hidden md:block bg-[#F5F5F5] p-2">
-  <aside className="bg-[#16730F] rounded-2xl h-[calc(100vh-120px)]">
-      {/* <div className="space-y-2 p-7">
+    <div className="bg-[#F5F5F5] px-2 py-2 h-full">
+      <aside className="bg-[#16730F] rounded-2xl pb-2 pt-2 flex flex-col h-full">
+        {/* <div className="space-y-2 p-7">
         <FaArrowLeft className="text-[#1A3E32]" />
         <h2 className="text-[20px] text-[#ffffff]">Dashboardss</h2>
       </div> */}
-      <nav className="m-auto space-y-4 max-w-48 pt-2">
-        {filteredNavItems.map(({ icon: Icon, label }, idx) => (
-          <div
-            key={idx}
-            className="flex items-center space-x-3 cursor-pointer px-4 py-2 hover:bg-[#15600b] rounded-lg"
-            onClick={() => handleNavClick(label)}
-          >
-            {typeof Icon === "string" ? (
-              <img src={Icon} alt={label} />
-            ) : (
-              <Icon className="text-[#F5F5F5]" />
-            )}
-            <span className="text-[#F5F5F5] font-bold">{label}</span>
-          </div>
-        ))}
-      </nav>
+        <nav className=" space-y-4  p-2">
+          {filteredNavItems.map(({ icon: Icon, label }, idx) => (
+            <div
+              key={idx}
+              className="flex items-center space-x-3 cursor-pointer w-full p-2 hover:bg-[#15600b] rounded-lg transition-colors duration-200"
+              onClick={() => handleNavClick(label)}
+            >
+              {typeof Icon === "string" ? (
+                <img src={Icon} alt={label} />
+              ) : (
+                <Icon className="text-[#F5F5F5]" />
+              )}
+              <span className="text-[#F5F5F5] font-bold">{label}</span>
+            </div>
+          ))}
+        </nav>
 
-      {/* Invite Friends Button */}
-      <div className="m-auto max-w-48 px-4 py-2">
-        <button
-          onClick={() => {
-            const message = encodeURIComponent(
-              "Hey! Join me on Bejite - the best platform for job seekers and recruiters! Sign up here: https://bejite.com"
-            );
-            window.open(`https://wa.me/?text=${message}`, '_blank');
-          }}
-          className="flex items-center space-x-3 w-full px-4 py-2 bg-[#15600b] hover:bg-[#0f4a08] rounded-lg transition-colors"
-        >
-          <FaUserPlus className="text-[#F5F5F5]" />
-          <span className="text-[#F5F5F5] text-sm font-bold whitespace-nowrap">Invite Friends</span>
-        </button>
-      </div>
-      <div className="bg-[#1A3E32] h-[calc(100%-320px)] rounded-b-2xl mt-10 flex flex-col items-center pt-10 space-y-5">
-        <button 
-        className="text-white"
-        onClick={()=>navigate('/payment')}
-        >AdPro</button>
-        <div className="w-[200px] h-[200px] bg-[#FFFFFF]" />
-      </div>
-    </aside>
+        {/* Invite Friends Button */}
+        <div className="  p-2">
+          <button
+            onClick={() => {
+              const message = encodeURIComponent(
+                "Hey! Join me on Bejite - the best platform for job seekers and recruiters! Sign up here: https://bejite.com",
+              );
+              window.open(`https://wa.me/?text=${message}`, "_blank");
+            }}
+            className="flex items-center cursor-pointer space-x-3 w-full px-4 py-2 bg-[#15600b] hover:bg-[#0f4a08] rounded-lg transition-colors"
+          >
+            <FaUserPlus className="text-[#F5F5F5]" />
+            <span className="text-[#F5F5F5] text-sm font-bold whitespace-nowrap">
+              Invite Friends
+            </span>
+          </button>
+        </div>
+        <div className="bg-[#1A3E32] flex-1 rounded-b-2xl mt-4 flex flex-col items-center pt-8 pb-6 space-y-5">
+          <button className="text-white hover:text-green-300 transition-colors font-semibold text-sm" onClick={() => navigate("/payment")}>
+            AdPro
+          </button>
+          <div className="w-[180px] h-[80px] bg-white/10 rounded-xl border border-white/10" />
+        </div>
+      </aside>
     </div>
-  
   );
 }
