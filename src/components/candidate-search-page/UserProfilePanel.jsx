@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../../config";
-import { getProfileImageUrl } from "../../utils/profileImageUtils";
+import { pickAuthorProfilePhoto } from "../../utils/profileImageUtils";
+import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { formatSalaryExpectation } from "../../utils/formatSalary";
 import useCandidateConnect from "../../hooks/useCandidateConnect";
+import { fetchFullUserProfile } from "../../services/fetchFullUserProfile";
 
 const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
 
   useEffect(() => {
     const fetchCandidateDetails = async () => {
@@ -70,7 +73,40 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
 
             if (foundCandidate) {
               console.log("Found candidate from search:", foundCandidate);
-              setCandidate(foundCandidate);
+              let mergedCandidate = foundCandidate;
+              const userId = foundCandidate?.user_id ?? foundCandidate?.userId ?? null;
+              if (userId) {
+                try {
+                  const full = await fetchFullUserProfile(userId);
+                  if (full?.user) {
+                    mergedCandidate = {
+                      ...foundCandidate,
+                      profile_photo:
+                        foundCandidate.profile_photo ||
+                        full.user.profile_photo ||
+                        full.user.profilePhoto ||
+                        full.user.image ||
+                        full.cv?.bio?.profile_photo ||
+                        null,
+                      profilePhoto:
+                        foundCandidate.profilePhoto ||
+                        full.user.profilePhoto ||
+                        full.user.profile_photo ||
+                        full.user.image ||
+                        null,
+                      image:
+                        foundCandidate.image ||
+                        full.user.image ||
+                        full.user.profile_photo ||
+                        full.user.profilePhoto ||
+                        null,
+                    };
+                  }
+                } catch (fullProfileError) {
+                  console.warn("Full profile fallback failed:", fullProfileError?.message || fullProfileError);
+                }
+              }
+              setCandidate(mergedCandidate);
             } else {
               throw new Error(
                 `Candidate with ID ${candidateId} not found in the database`
@@ -85,10 +121,76 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
           console.log("Received data:", data);
 
           if (data.success && data.data) {
-            setCandidate(data.data);
+            let mergedCandidate = data.data;
+            const userId = data.data?.user_id ?? data.data?.userId ?? null;
+            if (userId) {
+              try {
+                const full = await fetchFullUserProfile(userId);
+                if (full?.user) {
+                  mergedCandidate = {
+                    ...data.data,
+                    profile_photo:
+                      data.data.profile_photo ||
+                      full.user.profile_photo ||
+                      full.user.profilePhoto ||
+                      full.user.image ||
+                      full.cv?.bio?.profile_photo ||
+                      null,
+                    profilePhoto:
+                      data.data.profilePhoto ||
+                      full.user.profilePhoto ||
+                      full.user.profile_photo ||
+                      full.user.image ||
+                      null,
+                    image:
+                      data.data.image ||
+                      full.user.image ||
+                      full.user.profile_photo ||
+                      full.user.profilePhoto ||
+                      null,
+                  };
+                }
+              } catch (fullProfileError) {
+                console.warn("Full profile fallback failed:", fullProfileError?.message || fullProfileError);
+              }
+            }
+            setCandidate(mergedCandidate);
           } else if (data.data) {
             // Handle case where success flag might be missing but data exists
-            setCandidate(data.data);
+            let mergedCandidate = data.data;
+            const userId = data.data?.user_id ?? data.data?.userId ?? null;
+            if (userId) {
+              try {
+                const full = await fetchFullUserProfile(userId);
+                if (full?.user) {
+                  mergedCandidate = {
+                    ...data.data,
+                    profile_photo:
+                      data.data.profile_photo ||
+                      full.user.profile_photo ||
+                      full.user.profilePhoto ||
+                      full.user.image ||
+                      full.cv?.bio?.profile_photo ||
+                      null,
+                    profilePhoto:
+                      data.data.profilePhoto ||
+                      full.user.profilePhoto ||
+                      full.user.profile_photo ||
+                      full.user.image ||
+                      null,
+                    image:
+                      data.data.image ||
+                      full.user.image ||
+                      full.user.profile_photo ||
+                      full.user.profilePhoto ||
+                      null,
+                  };
+                }
+              } catch (fullProfileError) {
+                console.warn("Full profile fallback failed:", fullProfileError?.message || fullProfileError);
+              }
+            }
+            setCandidate(mergedCandidate);
           } else {
             throw new Error("No candidate data received from API");
           }
@@ -141,7 +243,10 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
   return (
     <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F5F5F5] mt-1">
       <div className="max-w-4xl mx-auto">
-        <ProfileHeader candidate={candidate} />
+        <ProfileHeader
+          candidate={candidate}
+          onOpenPhotoViewer={() => setIsPhotoViewerOpen(true)}
+        />
         <ProfileStats
           candidate={candidate}
           onViewMainProfile={onViewMainProfile}
@@ -182,20 +287,59 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
           <ContactInfoList candidate={candidate} />
         </ProfileSection>
       </div>
+
+      {isPhotoViewerOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-4"
+          onClick={() => setIsPhotoViewerOpen(false)}
+        >
+          <img
+            src={profilePhotoUrl(
+              pickAuthorProfilePhoto({
+                profile_photo:
+                  candidate.profile_photo ||
+                  (Array.isArray(candidate.user_bio)
+                    ? candidate.user_bio[0]?.profile_photo
+                    : candidate.user_bio?.profile_photo) ||
+                  null,
+                profilePhoto: candidate.profilePhoto || null,
+                image: candidate.image || null,
+              }),
+            ) || "/assets/images/photo_placeholder.png"}
+            alt={`${candidate.first_name || ""} ${candidate.last_name || ""} full view`}
+            className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg"
+            onClick={(event) => event.stopPropagation()}
+          />
+          <button
+            type="button"
+            aria-label="Close photo viewer"
+            className="absolute top-4 right-4 text-white text-2xl bg-black/40 hover:bg-black/60 rounded-full w-10 h-10 flex items-center justify-center"
+            onClick={() => setIsPhotoViewerOpen(false)}
+          >
+            ×
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-const ProfileHeader = ({ candidate }) => {
+const ProfileHeader = ({ candidate, onOpenPhotoViewer }) => {
   const initials = `${candidate.first_name?.[0] || ""}${
     candidate.last_name?.[0] || ""
   }`;
   const isAvailable = candidate.availability === "Available";
-  
-  // Get profile image URL
-  const profileImage = candidate.profile_photo 
-    ? getProfileImageUrl(candidate.profile_photo) 
-    : null;
+  const bioRow = Array.isArray(candidate.user_bio)
+    ? candidate.user_bio[0]
+    : candidate.user_bio;
+
+  const photoPath = pickAuthorProfilePhoto({
+    profile_photo: candidate.profile_photo ?? bioRow?.profile_photo ?? null,
+    profilePhoto: candidate.profilePhoto ?? null,
+    image: candidate.image ?? null,
+  });
+
+  const profileImage = profilePhotoUrl(photoPath) ?? null;
 
   return (
     <div>
@@ -208,7 +352,8 @@ const ProfileHeader = ({ candidate }) => {
             <img 
               src={profileImage} 
               alt={`${candidate.first_name} ${candidate.last_name}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover cursor-zoom-in"
+              onClick={onOpenPhotoViewer}
             />
           ) : (
             <span className="text-white text-3xl font-bold">{initials}</span>
@@ -352,20 +497,51 @@ const EducationItem = ({ education }) => (
   </div>
 );
 
-const SkillsList = ({ skills }) => (
-  <div className="px-4 sm:px-8 pb-6">
-    <div className="flex flex-wrap gap-2">
-      {skills.map((skill, index) => (
-        <span
-          key={index}
-          className="bg-[#1A3E32] text-[#FFFFFF] px-3 py-1.5 rounded-full text-[12px] font-medium"
-        >
-          {skill}
-        </span>
-      ))}
+const normalizeSkills = (skills) => {
+  if (Array.isArray(skills)) {
+    return skills
+      .map((skill) => (typeof skill === "string" ? skill : skill?.name || skill?.skill || ""))
+      .map((skill) => String(skill || "").trim())
+      .filter(Boolean);
+  }
+
+  if (typeof skills === "string") {
+    return skills
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
+const SkillsList = ({ skills }) => {
+  const normalizedSkills = normalizeSkills(skills);
+
+  if (normalizedSkills.length === 0) {
+    return (
+      <div className="px-4 sm:px-8 pb-6">
+        <p className="text-[#E0E0E0] text-sm">No skills added yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-4 sm:px-8 pb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+        {normalizedSkills.map((skill, index) => (
+          <div
+            key={`${skill}-${index}`}
+            className="bg-[#1A3E32] text-[#FFFFFF] px-3 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium leading-snug break-words min-h-[42px] flex items-center"
+            title={skill}
+          >
+            {skill}
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const WorkHistoryItem = ({ work }) => (
   <>

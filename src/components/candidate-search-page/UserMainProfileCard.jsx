@@ -15,6 +15,7 @@ const UserMainProfileCard = ({ candidateId }) => {
   const [cvData, setCvData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -94,6 +95,9 @@ const UserMainProfileCard = ({ candidateId }) => {
   const photoPath =
     pickAuthorProfilePhoto(candidate) ||
     pickAuthorProfilePhoto(profileUser) ||
+    (Array.isArray(candidate?.user_bio)
+      ? candidate.user_bio[0]?.profile_photo
+      : candidate?.user_bio?.profile_photo) ||
     cvData?.bio?.profile_photo;
 
   const aboutText =
@@ -123,6 +127,7 @@ const UserMainProfileCard = ({ candidateId }) => {
         salaryPreview={salaryPreview}
         photoPath={photoPath}
         candidate={candidate}
+        onOpenPhotoViewer={() => setIsPhotoViewerOpen(true)}
       />
 
       {aboutText && (
@@ -137,6 +142,28 @@ const UserMainProfileCard = ({ candidateId }) => {
       <CandidateJobPreferences candidate={candidate} />
 
       <CandidateContactInfo candidate={candidate} bio={cvData?.bio} />
+
+      {isPhotoViewerOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-4"
+          onClick={() => setIsPhotoViewerOpen(false)}
+        >
+          <img
+            src={profileAvatarSrc(photoPath)}
+            alt={`${displayName} full view`}
+            className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg"
+            onClick={(event) => event.stopPropagation()}
+          />
+          <button
+            type="button"
+            aria-label="Close photo viewer"
+            className="absolute top-4 right-4 text-white text-2xl bg-black/40 hover:bg-black/60 rounded-full w-10 h-10 flex items-center justify-center"
+            onClick={() => setIsPhotoViewerOpen(false)}
+          >
+            ×
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -149,6 +176,7 @@ const ProfileHeaderCard = ({
   salaryPreview,
   photoPath,
   candidate,
+  onOpenPhotoViewer,
 }) => {
   const { sendRequest, connectLabel, connectDisabled } = useCandidateConnect(
     candidate?.user_id,
@@ -161,7 +189,8 @@ const ProfileHeaderCard = ({
         <img
           src={profileAvatarSrc(photoPath)}
           alt={displayName}
-          className="w-24 h-24 rounded-full object-cover border-4 border-[#16730F] shrink-0"
+          className="w-24 h-24 rounded-full object-cover border-4 border-[#16730F] shrink-0 cursor-zoom-in"
+          onClick={onOpenPhotoViewer}
         />
         <div className="flex-1 text-center sm:text-left w-full">
           <h1 className="text-2xl font-bold text-[#1A3E32]">{displayName}</h1>

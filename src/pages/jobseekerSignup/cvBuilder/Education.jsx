@@ -16,6 +16,7 @@ import Loader from "../../../components/ui/Loader";
 import axiosInstance from "../../../utils/axiosInstance";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
 import FormLabel from "../../../components/forms/FormLabel";
+import { formatDateRange } from "../../../utils/checksFormat";
 
 // Dummy data for autocomplete suggestions
 const EDUCATIONAL_LEVELS = [
@@ -263,8 +264,10 @@ function Education() {
         location: edu.location,
         fieldOfStudy: edu.field_of_study,
         degree: edu.degree,
-        startDate: edu.start_date,
-        endDate: edu.end_date,
+        startDate: formatDateForInput(edu.start_date),
+        endDate: formatDateForInput(edu.end_date),
+        // startDate: edu.start_date,
+        // endDate: edu.end_date,
         isCurrentlyStudying: !edu.end_date, // If no end date, they're currently studying
       }));
       console.log("Mapped education:", existingEducation);
@@ -499,47 +502,68 @@ function Education() {
         </div>
 
         {allEducation.length > 0 && (
-          <div className="max-w-4xl mx-auto mt-8 space-y-4 px-2 md:px-0">
-            {allEducation.map((item, idx) => (
-              <div
-                key={idx}
-                className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col sm:flex-row justify-between sm:items-center shadow-sm hover:shadow-md transition-shadow gap-4"
-              >
-                <div>
-                  <h3 className="font-bold text-[#1A3E32] text-lg">
-                    {item.fieldOfStudy}
-                  </h3>
-                  <p className="text-gray-600 font-medium">
-                    {item.degree} <span className="text-gray-400 mx-1">•</span>{" "}
-                    {item.institutionName}
-                  </p>
-                  <p className="text-gray-500 text-sm mt-1">
-                    {item.startDate} — {item.isCurrentlyStudying ? "Present" : item.endDate}
-                  </p>
+          <div className="max-w-4xl mx-auto mt-8 px-2 md:px-0">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-[#1A3E32]/10 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-[#1A3E32]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                  </svg>
                 </div>
-                <button
-                  onClick={async () => {
-                    if (item.id) {
-                      try {
-                        await axiosInstance.delete(
-                          `/api/cv-builder/education/${user?.id}/${item.id}`
-                        );
-                        toast.success("Education deleted successfully!");
-                      } catch (error) {
-                        console.error("Error deleting education:", error);
-                        toast.error("Failed to delete education");
-                        return;
-                      }
-                    }
-                    setAllEducation((prev) => prev.filter((_, i) => i !== idx));
-                  }}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  aria-label="Delete education"
-                >
-                  <FaTrash />
-                </button>
+                <h3 className="font-medium text-gray-900">Education</h3>
               </div>
-            ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {allEducation.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="relative bg-white rounded-lg border border-gray-200 p-4 hover:border-gray-300 transition-colors"
+                >
+                  <button
+                    onClick={async () => {
+                      if (item.id) {
+                        try {
+                          await axiosInstance.delete(
+                            `/api/cv-builder/education/${user?.id}/${item.id}`
+                          );
+                          toast.success("Education deleted successfully!");
+                        } catch (error) {
+                          console.error("Error deleting education:", error);
+                          toast.error("Failed to delete education");
+                          return;
+                        }
+                      }
+                      setAllEducation((prev) => prev.filter((_, i) => i !== idx));
+                    }}
+                    className="absolute top-3 right-3 p-1 text-gray-300 hover:text-red-500 transition-colors"
+                  >
+                    <FaTrash className="text-xs" />
+                  </button>
+
+                  <div className="pr-5">
+                    <div className="mb-2">
+                      <h4 className="font-semibold text-gray-900 text-sm">
+                        {item.fieldOfStudy || '—'}
+                      </h4>
+                      {item.degree && (
+                        <p className="text-gray-500 text-xs mt-0.5">{item.degree}</p>
+                      )}
+                    </div>
+
+                    <p className="text-gray-600 text-xs mb-1 truncate">
+                      {item.institutionName}
+                    </p>
+
+                    <p className="text-gray-400 text-xs">
+                      {formatDateRange(item.startDate, item.endDate, item.isCurrentlyStudying)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

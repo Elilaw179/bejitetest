@@ -18,6 +18,42 @@ import {
 
 const ABOUT_CHAR_LIMIT = 500;
 
+
+const buildAvatarCandidates = (rawPhoto) => {
+  const candidates = [];
+  const pushUnique = (value) => {
+    if (!value || typeof value !== 'string') return;
+    const trimmed = value.trim();
+    if (!trimmed || candidates.includes(trimmed)) return;
+    candidates.push(trimmed);
+  };
+
+  pushUnique(profileAvatarSrc(rawPhoto));
+
+  const raw = typeof rawPhoto === 'string' ? rawPhoto.trim() : '';
+  if (!raw) return candidates;
+
+  pushUnique(raw);
+
+  const isAbsolute =
+    /^https?:\/\//i.test(raw) ||
+    raw.startsWith('blob:') ||
+    raw.startsWith('data:') ||
+    raw.startsWith('/assets/') ||
+    raw.startsWith('assets/');
+
+  if (!isAbsolute) {
+    const relativePath = raw.startsWith('/') ? raw : `/${raw}`;
+    const baseUrl = String(import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+    const baseApi = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
+    pushUnique(baseUrl ? `${baseUrl}${relativePath}` : '');
+    pushUnique(baseApi ? `${baseApi}${relativePath}` : '');
+    pushUnique(`${window.location.origin}${relativePath}`);
+  }
+
+  return candidates;
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,6 +62,9 @@ const Profile = () => {
   const [cvData, setCvData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [avatarCandidates, setAvatarCandidates] = useState([]);
+  const [avatarIndex, setAvatarIndex] = useState(0);
+  const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
 
   const user = getUser();
 
@@ -60,6 +99,28 @@ const Profile = () => {
           merged = normalizeProfileData({ ...merged, ...full.user });
           cv = full.cv;
           profileFound = true;
+        }
+      }
+
+      // Fallback for normal /user-profile/:id visits when full profile lacks photo fields.
+      if (targetUserId && !pickAuthorProfilePhoto(merged)) {
+        try {
+          const { data: candidateRes } = await axiosInstance.get(
+            `/api/candidates/${targetUserId}`,
+          );
+          const candidateRow = candidateRes?.data ?? candidateRes;
+          const candidatePhoto = pickAuthorProfilePhoto(candidateRow);
+          if (candidatePhoto) {
+            merged = normalizeProfileData({
+              ...merged,
+              profile_photo: candidatePhoto,
+              profilePhoto: candidatePhoto,
+              image: candidatePhoto,
+            });
+            profileFound = true;
+          }
+        } catch {
+          /* optional fallback only */
         }
       }
 
@@ -135,10 +196,30 @@ const Profile = () => {
   const profileAvatarStored = isViewingOwnProfile
     ? pickProfilePhotoPath(user) || pickAuthorProfilePhoto(profileData)
     : pickAuthorProfilePhoto(profileData);
+  const activeAvatarSrc =
+    avatarCandidates[avatarIndex] ||
+    profileAvatarSrc(profileAvatarStored);
 
   const viewedRole = profileData?.role || user?.role;
   const isJobseekerProfile = viewedRole === 'jobseeker';
   const isRecruiterProfile = viewedRole === 'recruiter';
+
+  useEffect(() => {
+    const nextCandidates = buildAvatarCandidates(profileAvatarStored);
+    setAvatarCandidates(nextCandidates);
+    setAvatarIndex(0);
+  }, [profileAvatarStored]);
+
+  useEffect(() => {
+    if (!isPhotoViewerOpen) return;
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsPhotoViewerOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isPhotoViewerOpen]);
 
   const handleEditProfile = () => {
     if (user?.role === 'jobseeker') {
@@ -186,7 +267,7 @@ const Profile = () => {
 
   if (!profileData && !loading) {
     return (
-      <NewsFeedLayout showSidebars={false}>
+      <NewsFeedLayout classes={false} scrollable={false} showSidebars={false}>
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="text-center">
             <p className="text-gray-600 mb-4">No profile data found</p>
@@ -236,9 +317,15 @@ const Profile = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <img
-              src={profileAvatarSrc(profileAvatarStored)}
+              src={activeAvatarSrc}
               alt="Profile"
-              className="w-24 h-24 rounded-full object-cover border-4 border-[#16730F]"
+              className="w-24 h-24 rounded-full object-cover border-4 border-[#16730F] cursor-zoom-in"
+              onClick={() => setIsPhotoViewerOpen(true)}
+              onError={() => {
+                setAvatarIndex((prev) =>
+                  prev < avatarCandidates.length - 1 ? prev + 1 : prev,
+                );
+              }}
             />
             <div className="text-center sm:text-left">
               <h1 className="text-2xl font-bold text-[#1A3E32]">
@@ -320,6 +407,28 @@ const Profile = () => {
 
         {isJobseekerProfile && <ProfileCvSections cv={cvData} />}
       </div>
+
+      {isPhotoViewerOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-4"
+          onClick={() => setIsPhotoViewerOpen(false)}
+        >
+          <img
+            src={activeAvatarSrc}
+            alt="Profile full view"
+            className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg"
+            onClick={(event) => event.stopPropagation()}
+          />
+          <button
+            type="button"
+            aria-label="Close photo viewer"
+            className="absolute top-4 right-4 text-white text-2xl bg-black/40 hover:bg-black/60 rounded-full w-10 h-10 flex items-center justify-center"
+            onClick={() => setIsPhotoViewerOpen(false)}
+          >
+            ×
+          </button>
+        </div>
+      )}
     </NewsFeedLayout>
   );
 };

@@ -1,6 +1,10 @@
 import axios from "axios";
 import { API_URL } from "../config";
-import { refreshAccessToken } from "./tokenManager";
+import {
+  dispatchHydrateAuth,
+  refreshAccessToken,
+  restoreUserFromServer,
+} from "./tokenManager";
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -46,7 +50,12 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
+    // Never retry the refresh endpoint itself.
+    if (originalRequest?.url?.includes("/auth/refresh")) {
+      return Promise.reject(error);
+    }
+
     // If error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -59,19 +68,18 @@ axiosInstance.interceptors.response.use(
         }
 
         const { accessToken: newAccessToken } = await refreshAccessToken();
+        await restoreUserFromServer();
+        await dispatchHydrateAuth();
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        // Token refresh failed - session may be expired but don't auto-destroy
-        // Preserve session data so user can manually re-authenticate
-        console.warn("Token refresh failed, preserving session for manual re-authentication:", refreshError?.message);
-        
-        // Mark session as expired but preserve data for potential recovery
+        console.warn(
+          "Token refresh failed, preserving session for manual re-authentication:",
+          refreshError?.message,
+        );
+
         sessionStorage.setItem("sessionExpired", "true");
-        
-        // Redirect to login without clearing auth data
-        // This allows the user to re-login without losing their session
         window.location.href = "/";
         return Promise.reject(refreshError);
       }

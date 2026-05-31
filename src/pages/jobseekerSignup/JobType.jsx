@@ -136,6 +136,7 @@ function JobType() {
     const currencyCode = form.currency?.match(/\(([^)]+)\)$/)?.[1] || form.currency?.trim() || '';
 
     const payload = {
+      userId,
       job_title: String(form.jobTitle || '').trim(),
       industry_sector: String(form.industry || '').trim(),
       preferred_country: String(form.country || '').trim(),

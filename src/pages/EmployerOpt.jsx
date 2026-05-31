@@ -11,12 +11,15 @@ const EmployerOpt = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const emailFromQuery = queryParams.get('email')?.trim() || '';
+    const roleFromQuery = queryParams.get('role')?.trim() || '';
     const { email, firstName, lastName, password, role } = location.state || {};
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-    const resolvedEmail = email || storedUser?.email || '';
+    const resolvedEmail = emailFromQuery || email || storedUser?.email || '';
     const resolvedFirstName = firstName || storedUser?.firstName || '';
     const resolvedLastName = lastName || storedUser?.lastName || '';
-    const resolvedRole = role || storedUser?.role || 'recruiter';
+    const resolvedRole = roleFromQuery || role || storedUser?.role || 'recruiter';
 
     const [showIndividualInfo, setShowIndividualInfo] = useState(false);
     const [showCoperateInfo, setShowCoperateInfo] = useState(false);
@@ -45,7 +48,7 @@ const EmployerOpt = () => {
         }
 
         const payload = {
-            email: resolvedEmail,
+            email: resolvedEmail.trim(),
             role: resolvedRole,
             mode,
             followings: [],

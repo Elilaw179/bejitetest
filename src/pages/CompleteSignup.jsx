@@ -1,18 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import RoleCard from "../components/RoleCard"; 
+import RoleCard from "../components/RoleCard";
+import { hydrateAuth } from "../features/auth/authSlice";
+import {
+  captureOAuthSessionFromUrl,
+} from "../utils/tokenManager";
 
 export default function CompleteSignup() {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const params = new URLSearchParams(location.search);
-  const email = params.get("email");
+  const email = params.get("email")?.trim() || "";
   const status = params.get("status");
 
   const [_, setRole] = useState("");
-  // const [loading, setLoading] = useState(false);
+
+  // OAuth redirects include tokens in the URL — persist before role selection.
+  useEffect(() => {
+    captureOAuthSessionFromUrl(location.search);
+    dispatch(hydrateAuth());
+  }, [location.search, dispatch]);
 
   const handleRoleSelect = (selectedRole) => {
     if (!email || status !== "verified") {
@@ -25,8 +36,8 @@ export default function CompleteSignup() {
     // Navigate to next step (jobseeker-option or employer-option)
     navigate(
       selectedRole === "jobseeker"
-        ? `/jobseeker-option?email=${encodeURIComponent(email)}`
-        : `/employer-option?email=${encodeURIComponent(email)}`,
+        ? `/jobseeker-option?email=${encodeURIComponent(email)}&role=${encodeURIComponent(selectedRole)}`
+        : `/employer-option?email=${encodeURIComponent(email)}&role=${encodeURIComponent(selectedRole)}`,
       { state: { email, role: selectedRole } }
     );
   };

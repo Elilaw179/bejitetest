@@ -6,15 +6,13 @@ import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
 import {
   FaPlus,
-  FaCheckCircle,
-  FaChevronDown,
   FaCamera,
   FaTrash,
   FaCheck,
 } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
 import { toast } from "react-toastify";
 
+import useAuth from "../../../hooks/useAuth";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import { useCreateCertificate } from "../../../services/certificateService";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
@@ -37,8 +35,11 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 
 function Certificate() {
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const { user } = useAuth();
   const { currentStep, isEditMode, getPath } = useOutletContext();
+  const { id: localUserId } = useLocalStorage("user");
+  const userId = user?.id || localUserId;
 
   const handleStepClick = (path) => {
     navigate(path);
@@ -53,18 +54,28 @@ function Certificate() {
     "Job Type",
   ];
 
-  const { id: userId } = useLocalStorage("user");
-
   const [certName, setCertName] = useState("");
   const [issuer, setIssuer] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [file, setFile] = useState(null);
-  const [allFilled, setAllFilled] = useState(true);
-  const { postCertficateData } = useCreateCertificate();
+  const [filePreview, setFilePreview] = useState(null);
+  const [allFilled, setAllFilled] = useState(false);
+  const { postCertficateData, uploadCertificateFile } = useCreateCertificate();
 
   useEffect(() => {
-    setAllFilled(certName && issuer && issueDate && file);
+    setAllFilled(Boolean(certName && issuer && issueDate && file));
   }, [certName, issuer, issueDate, file]);
+
+  useEffect(() => {
+    if (!file) {
+      setFilePreview(null);
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setFilePreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [file]);
 
   const clearForm = () => {
     setCertName("");
@@ -72,10 +83,11 @@ function Certificate() {
     setIssueDate("");
     setFile(null);
   };
-  const BASE_URL = import.meta.env.VITE_API_URL;
+
+  const { email, firstName, lastName, role, mode, followings } =
+    location.state || {};
 
   const handleSubmit = async () => {
-    // If no certificate data is provided, skip to next step
     if (!certName && !issuer && !issueDate && !file) {
       if (isEditMode) {
         navigate(getPath(currentStep + 1));
@@ -87,15 +99,30 @@ function Certificate() {
       return;
     }
 
+    if (!userId) {
+      toast.error("Could not determine your account. Please sign in again.");
+      return;
+    }
+
+    if (!certName || !issuer || !issueDate || !file) {
+      toast.error("Please complete all certificate fields or skip this step.");
+      return;
+    }
+
     const payLoad = {
-      userId,
       certName,
       issuer,
       issueDate,
     };
 
     const submitCertData = async () => {
-      await postCertficateData(payLoad);
+      const result = await postCertficateData(payLoad);
+      const certificateId = result?.data?.id;
+
+      if (file && certificateId) {
+        await uploadCertificateFile(userId, certificateId, file);
+      }
+
       return "Certificate Added Successfully";
     };
 
@@ -117,11 +144,6 @@ function Certificate() {
       console.error(error);
     }
   };
-
-  const location = useLocation();
-
-  const { email, firstName, lastName, role, mode, followings } =
-    location.state || {};
 
   return (
     <OnboardingLayout
@@ -209,8 +231,8 @@ function Certificate() {
               <button
                 onClick={clearForm}
                 className={`flex-1 cursor-pointer h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${allFilled
-                    ? "bg-[#2A4E42] border-[#2A4E42]"
-                    : "bg-transparent border-[#F5F5F5]"
+                  ? "bg-[#2A4E42] border-[#2A4E42]"
+                  : "bg-transparent border-[#F5F5F5]"
                   }`}
               >
                 ADD MORE <FaPlus />
@@ -225,7 +247,9 @@ function Certificate() {
               <div>
                 <p className="font-semibold">{certName}</p>
                 <p className="text-sm">@ {issuer}</p>
-                <img src={file} alt="" />
+                {filePreview && (
+                  <img src={filePreview} alt={certName} className="mt-2 max-h-24 rounded" />
+                )}
               </div>
               <button onClick={clearForm} className="text-white text-xl">
                 <FaTrash />

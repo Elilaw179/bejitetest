@@ -133,3 +133,154 @@ export const SKILL_SUGGESTIONS = [
     "NFT",
     "Cryptocurrency",
 ];
+
+
+
+/**
+ * Format a date string to a readable format (MMM DD, YYYY)
+ * @param {string|Date} date - The date to format
+ * @returns {string} Formatted date string (e.g., "Jan 15, 2024")
+ */
+export const formatDate = (date) => {
+    if (!date) return '';
+
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+
+    return d.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+};
+
+/**
+ * Format date for API submission (YYYY-MM-DD)
+ * @param {string|Date} date - The date to format
+ * @returns {string} Formatted date string (e.g., "2024-01-15")
+ */
+export const formatDateForAPI = (date) => {
+    if (!date) return '';
+
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+
+    return d.toISOString().split('T')[0];
+};
+
+/**
+ * Format date for display (e.g., "2024-01-15")
+ * @param {string|Date} date - The date to format
+ * @returns {string} Formatted date string
+ */
+export const formatDateForDisplay = (date) => {
+    if (!date) return '';
+
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+};
+
+/**
+ * Format date range with start and end dates
+ * @param {string|Date} startDate - Start date
+ * @param {string|Date} endDate - End date (can be "Present")
+ * @param {boolean} isPresent - Whether it's currently ongoing
+ * @returns {string} Formatted date range (e.g., "Jan 2024 - Present" or "Jan 2024 - Mar 2024")
+ */
+export const formatDateRange = (startDate, endDate, isPresent = false) => {
+    const formattedStart = formatDateToMonthYear(startDate);
+    const formattedEnd = isPresent ? 'Present' : formatDateToMonthYear(endDate);
+
+    return `${formattedStart} — ${formattedEnd}`;
+};
+
+/**
+ * Format date to Month Year format (e.g., "Jan 2024")
+ * @param {string|Date} date - The date to format
+ * @returns {string} Formatted date string
+ */
+export const formatDateToMonthYear = (date) => {
+    if (!date) return '';
+
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+
+    return d.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short'
+    });
+};
+
+/**
+ * Format date to full date (e.g., "January 15, 2024")
+ * @param {string|Date} date - The date to format
+ * @returns {string} Formatted date string
+ */
+export const formatDateFull = (date) => {
+    if (!date) return '';
+
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+
+    return d.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+};
+
+/**
+ * Parse API date format (YYYY-MM-DD) to Date object
+ * @param {string} dateString - Date string in YYYY-MM-DD format
+ * @returns {Date} Date object
+ */
+export const parseAPIDate = (dateString) => {
+    if (!dateString) return null;
+    return new Date(dateString);
+};
+
+/**
+ * Get today's date in YYYY-MM-DD format
+ * @returns {string} Today's date
+ */
+export const getTodayDate = () => {
+    return new Date().toISOString().split('T')[0];
+};
+
+/**
+ * Validate if a date string is valid
+ * @param {string} dateString - Date string to validate
+ * @returns {boolean} True if valid, false otherwise
+ */
+export const isValidDate = (dateString) => {
+    if (!dateString) return false;
+    const d = new Date(dateString);
+    return !isNaN(d.getTime());
+};
+
+/**
+ * Check if start date is before end date
+ * @param {string|Date} startDate - Start date
+ * @param {string|Date} endDate - End date
+ * @returns {boolean} True if valid range, false otherwise
+ */
+export const isValidDateRange = (startDate, endDate) => {
+    if (!startDate || !endDate) return true;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return start <= end;
+};
+
+// Format date for input fields (YYYY-MM-DD)
+export const formatDateForInput = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+};

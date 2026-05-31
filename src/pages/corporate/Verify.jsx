@@ -39,10 +39,15 @@ const CoperateVerify = () => {
 
   const handleSkip = () => {
     if (isEditMode) {
-      navigate(getPath(currentStep + 1));
+      if (currentStep === 5) {
+        navigate("/news-feed");
+      } else {
+        navigate(getPath(currentStep + 1));
+      }
     } else {
       navigate("/news-feed");
     }
+
   };
 
   return (
