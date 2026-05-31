@@ -273,9 +273,7 @@ const Bio = () => {
           if (isEditMode) {
             navigate(getPath(currentStep + 1));
           } else {
-            navigate("/links", {
-              state: { email, firstName, lastName, role, mode, followings },
-            });
+            navigate("/links");
           }
         }}
         onBack={() => {

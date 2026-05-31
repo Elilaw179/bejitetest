@@ -12,6 +12,7 @@ import {
   FaGraduationCap,
   FaUserTie,
   FaStar,
+  FaChevronDown,
 } from "react-icons/fa";
 import useAuth from "../../../hooks/useAuth";
 import Loader from "../../../components/ui/Loader";
@@ -24,6 +25,14 @@ import OnboardingLayout from "../../../components/layout/onboardingLayout";
 // const skillOptions = [...];
 // const categoryOptions = [...];
 // const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);
+
+const CATEGORY_OPTIONS = [
+  { value: "Entry Level", label: "Entry Level", icon: FaRocket, color: "text-blue-500" },
+  { value: "Junior", label: "Junior", icon: FaGraduationCap, color: "text-green-500" },
+  { value: "Mid-level", label: "Mid-level", icon: FaUserTie, color: "text-yellow-500" },
+  { value: "Senior", label: "Senior", icon: FaStar, color: "text-orange-500" },
+  { value: "Veteran", label: "Veteran", icon: FaStar, color: "text-red-500" },
+];
 
 
 const InputWithIcon = ({ value, onChange, placeholder }) => (
@@ -265,13 +274,7 @@ function Skills() {
     "Job Type",
   ];
 
-  const CATEGORY_OPTIONS = [
-    { value: "Entry Level", label: "Entry Level", icon: FaRocket, color: "text-blue-500" },
-    { value: "Junior", label: "Junior", icon: FaGraduationCap, color: "text-green-500" },
-    { value: "Mid-level", label: "Mid-level", icon: FaUserTie, color: "text-yellow-500" },
-    { value: "Senior", label: "Senior", icon: FaStar, color: "text-orange-500" },
-    { value: "Veteran", label: "Veteran", icon: FaStar, color: "text-red-500" },
-  ];
+
 
   const [skillsData, setSkillsData] = useState({
     userId: "",
@@ -357,8 +360,8 @@ function Skills() {
     }
 
     // Add new skill to suggestions list if it doesn't exist
-    if (!skillSuggestionsList.includes(skillSector)) {
-      setSkillSuggestionsList(prev => [...prev, skillSector]);
+    if (!skillSuggestionsList.includes(skillsData.skillSector)) {
+      setSkillSuggestionsList(prev => [...prev, skillsData.skillSector]);
     }
 
     setAllSkill((prev) => [...prev, newEntry]);
@@ -404,9 +407,9 @@ function Skills() {
           Highlight what you're great at. This helps employers match you to the right role
         </p>
 
-        <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4">
-          <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-1">
-            <div className="bg-[#82828280] rounded-2xl p-4">
+        <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 overflow-visible">
+          <div className="bg-[#fff] overflow-visible p-3 rounded-2xl space-y-1">
+            <div className="bg-[#fff] rounded-2xl p-4">
               <p className="font-semibold text-xs mb-1">SKILL</p>
               <AutocompleteSkillInput
                 value={skillsData.skillSector}
@@ -424,7 +427,7 @@ function Skills() {
               /> */}
             </div>
 
-            <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
+            <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <p className="font-semibold text-xs mb-1">CATEGORY</p>
                 <CategorySelect
