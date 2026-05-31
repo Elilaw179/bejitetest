@@ -1,153 +1,46 @@
 import React, { useState, useEffect, useRef } from "react";
-import Header from "../../../components/Header";
-import StepTabs from "../../../components/StepTabs";
-import ProgressBar from "../../../components/ProgressBar";
+// import Header from "../../../components/Header";
+// import StepTabs from "../../../components/StepTabs";
+// import ProgressBar from "../../../components/ProgressBar";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
 import {
   FaPlus,
-  FaCheckCircle,
-  FaChevronDown,
   FaTrash,
   FaCheck,
-  FaStar,
-  FaUserTie,
-  FaGraduationCap,
   FaRocket,
+  FaGraduationCap,
+  FaUserTie,
+  FaStar,
 } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
 import useAuth from "../../../hooks/useAuth";
 import Loader from "../../../components/ui/Loader";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../utils/axiosInstance";
-import { InputWithIcon } from "../../../components/forms/InputIcon";
+import { SKILL_SUGGESTIONS } from "../../../utils/checksFormat";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
 
-// Dummy skill data for autocomplete
-const SKILL_SUGGESTIONS = [
-  "Python",
-  "JavaScript",
-  "React",
-  "Node.js",
-  "Java",
-  "C++",
-  "C#",
-  "PHP",
-  "Ruby",
-  "Go",
-  "Swift",
-  "Kotlin",
-  "TypeScript",
-  "HTML",
-  "CSS",
-  "SQL",
-  "MongoDB",
-  "PostgreSQL",
-  "MySQL",
-  "Firebase",
-  "AWS",
-  "Azure",
-  "Google Cloud",
-  "Docker",
-  "Kubernetes",
-  "Git",
-  "GitHub",
-  "GitLab",
-  "Jira",
-  "Agile",
-  "Scrum",
-  "Project Management",
-  "Leadership",
-  "Communication",
-  "Problem Solving",
-  "Critical Thinking",
-  "Teamwork",
-  "Time Management",
-  "Data Analysis",
-  "Machine Learning",
-  "Artificial Intelligence",
-  "Deep Learning",
-  "Data Science",
-  "R",
-  "Excel",
-  "Tableau",
-  "Power BI",
-  "Digital Marketing",
-  "SEO",
-  "Content Writing",
-  "Graphic Design",
-  "Adobe Photoshop",
-  "Adobe Illustrator",
-  "Figma",
-  "UI/UX Design",
-  "Product Management",
-  "Sales",
-  "Customer Service",
-  "Public Speaking",
-  "Negotiation",
-  "Financial Analysis",
-  "Accounting",
-  "HR Management",
-  "Recruiting",
-  "Teaching",
-  "Research",
-  "Writing",
-  "Editing",
-  "Photography",
-  "Video Editing",
-  "Programmer",
-  "Web Developer",
-  "Software Engineer",
-  "DevOps Engineer",
-  "System Administrator",
-  "Network Engineer",
-  "Database Administrator",
-  "Business Analyst",
-  "Marketing Manager",
-  "Sales Representative",
-  "Project Coordinator",
-  "Product Owner",
-  "Scrum Master",
-  "Quality Assurance",
-  "Technical Writing",
-  "Cloud Architect",
-  "Security Analyst",
-  "Data Engineer",
-  "ML Engineer",
-  "Frontend Developer",
-  "Backend Developer",
-  "Full Stack Developer",
-  "Mobile Developer",
-  "iOS Developer",
-  "Android Developer",
-  "DevOps",
-  "CI/CD",
-  "Jenkins",
-  "Terraform",
-  "Ansible",
-  "Linux",
-  "Windows Server",
-  "Networking",
-  "Cybersecurity",
-  "Penetration Testing",
-  "Ethical Hacking",
-  "Blockchain",
-  "Smart Contracts",
-  "Solidity",
-  "Rust",
-  "Web3",
-  "NFT",
-  "Cryptocurrency",
-];
+// Skills options removed - now using text inputs
+// const skillOptions = [...];
+// const categoryOptions = [...];
+// const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);
 
-// Category options
-const CATEGORY_OPTIONS = [
-  { value: "Entry Level", label: "Entry Level", icon: FaRocket, color: "text-blue-500" },
-  { value: "Junior", label: "Junior", icon: FaGraduationCap, color: "text-green-500" },
-  { value: "Mid-level", label: "Mid-level", icon: FaUserTie, color: "text-yellow-500" },
-  { value: "Senior", label: "Senior", icon: FaStar, color: "text-orange-500" },
-  { value: "Veteran", label: "Veteran", icon: FaStar, color: "text-red-500" },
-];
+
+const InputWithIcon = ({ value, onChange, placeholder }) => (
+  <div className="relative w-full">
+    <input
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${value ? "border-[#828282]" : "border-[#F5F5F5]"
+        }`}
+    />
+    {value && (
+      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
+    )}
+  </div>
+);
+
 
 // Autocomplete Input Component for Skills
 const AutocompleteSkillInput = ({ value, onChange, placeholder, suggestions, onAddNew }) => {
@@ -174,7 +67,7 @@ const AutocompleteSkillInput = ({ value, onChange, placeholder, suggestions, onA
     const newValue = e.target.value;
     setInputValue(newValue);
     onChange(e);
-    
+
     if (newValue.trim()) {
       const filtered = suggestions.filter(suggestion =>
         suggestion.toLowerCase().includes(newValue.toLowerCase())
@@ -225,11 +118,11 @@ const AutocompleteSkillInput = ({ value, onChange, placeholder, suggestions, onA
       {inputValue && (
         <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg pointer-events-none" />
       )}
-      
+
       {showSuggestions && (
-        <div 
+        <div
           className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto"
-          style={{ 
+          style={{
             zIndex: 9999,
             position: "absolute",
             top: "100%",
@@ -297,9 +190,8 @@ const CategorySelect = ({ value, onChange }) => {
     <div ref={wrapperRef} className="relative w-full" style={{ position: "relative", zIndex: 15 }}>
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 flex items-center justify-between cursor-pointer focus:outline-1 focus:outline-[#1A3E32] ${
-          value ? "border-[#828282]" : "border-[#F5F5F5]"
-        } bg-white`}
+        className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 flex items-center justify-between cursor-pointer focus:outline-1 focus:outline-[#1A3E32] ${value ? "border-[#828282]" : "border-[#F5F5F5]"
+          } bg-white`}
       >
         <div className="flex items-center gap-2">
           {SelectedIcon && <SelectedIcon className={`text-lg ${selectedCategory?.color}`} />}
@@ -313,11 +205,11 @@ const CategorySelect = ({ value, onChange }) => {
           <FaChevronDown className={`text-gray-400 text-lg transition-transform ${isOpen ? "rotate-180" : ""}`} />
         )}
       </div>
-      
+
       {isOpen && (
-        <div 
+        <div
           className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
-          style={{ 
+          style={{
             zIndex: 9998,
             position: "absolute",
             top: "100%",
@@ -373,9 +265,21 @@ function Skills() {
     "Job Type",
   ];
 
-  const [skillSector, setSkillSector] = useState("");
-  const [category, setCategory] = useState("");
-  const [experience, setExperience] = useState("");
+  const CATEGORY_OPTIONS = [
+    { value: "Entry Level", label: "Entry Level", icon: FaRocket, color: "text-blue-500" },
+    { value: "Junior", label: "Junior", icon: FaGraduationCap, color: "text-green-500" },
+    { value: "Mid-level", label: "Mid-level", icon: FaUserTie, color: "text-yellow-500" },
+    { value: "Senior", label: "Senior", icon: FaStar, color: "text-orange-500" },
+    { value: "Veteran", label: "Veteran", icon: FaStar, color: "text-red-500" },
+  ];
+
+  const [skillsData, setSkillsData] = useState({
+    userId: "",
+    skillSector: "",
+    category: "",
+    experience: "",
+  });
+
   const [allFilled, setAllFilled] = useState(false);
   const { user } = useAuth();
   const [allSkill, setAllSkill] = useState([]);
@@ -406,13 +310,20 @@ function Skills() {
   }, [isEditMode, cvData, user?.id, dataLoaded]);
 
   useEffect(() => {
-    setAllFilled(skillSector && category && experience);
-  }, [skillSector, category, experience]);
+    setSkillsData((prev) => ({ ...prev, userId: user?.id || "" }));
+  }, [user?.id]);
+
+  useEffect(() => {
+    setAllFilled(skillsData.skillSector && skillsData.category && skillsData.experience);
+  }, [skillsData.skillSector, skillsData.category, skillsData.experience]);
 
   const clearForm = () => {
-    setSkillSector("");
-    setCategory("");
-    setExperience("");
+    setSkillsData((prev) => ({
+      ...prev,
+      skillSector: "",
+      category: "",
+      experience: "",
+    }));
   };
 
   const location = useLocation();
@@ -428,9 +339,9 @@ function Skills() {
 
     const newEntry = {
       userId: user?.id,
-      skillSector,
-      category,
-      experience,
+      skillSector: skillsData.skillSector,
+      category: skillsData.category,
+      experience: skillsData.experience,
     };
 
     // Check for duplicates
@@ -465,7 +376,7 @@ function Skills() {
   };
 
   const getCategoryBadgeColor = (categoryName) => {
-    switch(categoryName) {
+    switch (categoryName) {
       case "Entry Level": return "bg-blue-100 text-blue-700";
       case "Junior": return "bg-green-100 text-green-700";
       case "Mid-level": return "bg-yellow-100 text-yellow-700";
@@ -474,6 +385,8 @@ function Skills() {
       default: return "bg-gray-100 text-gray-700";
     }
   };
+
+
 
   return (
     <OnboardingLayout
@@ -491,45 +404,51 @@ function Skills() {
           Highlight what you're great at. This helps employers match you to the right role
         </p>
 
-        <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 overflow-visible">
-          <div className="p-6 space-y-6 overflow-visible">
-            {/* Skill Name Input */}
-            <div className="overflow-visible">
-              <label className="block text-xs font-semibold text-gray-600 mb-2">
-                SKILL NAME
-              </label>
+        <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4">
+          <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-1">
+            <div className="bg-[#82828280] rounded-2xl p-4">
+              <p className="font-semibold text-xs mb-1">SKILL</p>
               <AutocompleteSkillInput
-                value={skillSector}
-                onChange={(e) => setSkillSector(e.target.value)}
-                placeholder="Type a skill (e.g., Python, JavaScript, Project Management)"
+                value={skillsData.skillSector}
+                onChange={(e) =>
+                  setSkillsData((prev) => ({ ...prev, skillSector: e.target.value }))
+                } placeholder="Type a skill (e.g., Python, JavaScript, Project Management)"
                 suggestions={skillSuggestionsList}
               />
+              {/* <InputWithIcon
+                value={skillsData.skillSector}
+                onChange={(e) =>
+                  setSkillsData((prev) => ({ ...prev, skillSector: e.target.value }))
+                }
+                placeholder="Enter skill name"
+              /> */}
             </div>
 
-            {/* Category and Experience Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="overflow-visible">
-                <label className="block text-xs font-semibold text-gray-600 mb-2">
-                  CATEGORY
-                </label>
+            <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <p className="font-semibold text-xs mb-1">CATEGORY</p>
                 <CategorySelect
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
+                  value={skillsData.category}
+                  onChange={(e) =>
+                    setSkillsData((prev) => ({ ...prev, category: e.target.value }))
+                  }
                 />
+                {/* <InputWithIcon
+                  value={skillsData.category}
+                  onChange={(e) =>
+                    setSkillsData((prev) => ({ ...prev, category: e.target.value }))
+                  }
+                  placeholder="Enter category"
+                /> */}
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-2">
-                  YEARS OF EXPERIENCE
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="50"
-                  step="1"
-                  value={experience}
-                  onChange={(e) => setExperience(e.target.value)}
-                  placeholder="Enter years (e.g., 3)"
-                  className="w-full h-12 border-2 rounded-[10px] pl-4 pr-10 focus:outline-1 focus:outline-[#1A3E32] transition-all bg-white"
+              <div className="flex-1">
+                <p className="font-semibold text-xs mb-1">YEARS OF EXPERIENCE</p>
+                <InputWithIcon
+                  value={skillsData.experience}
+                  onChange={(e) =>
+                    setSkillsData((prev) => ({ ...prev, experience: e.target.value }))
+                  }
+                  placeholder="Enter years of experience"
                 />
               </div>
             </div>
@@ -538,11 +457,10 @@ function Skills() {
             <button
               onClick={addMore}
               disabled={!allFilled}
-              className={`w-full py-3 flex items-center justify-center gap-2 text-white font-semibold rounded-xl text-sm transition-all shadow-sm ${
-                allFilled
-                  ? "bg-[#1A3E32] hover:bg-[#143026] cursor-pointer"
-                  : "bg-gray-300 cursor-not-allowed"
-              }`}
+              className={`w-full py-3 flex items-center justify-center gap-2 text-white font-semibold rounded-xl text-sm transition-all shadow-sm ${allFilled
+                ? "bg-[#1A3E32] hover:bg-[#143026] cursor-pointer"
+                : "bg-gray-300 cursor-not-allowed"
+                }`}
             >
               ADD SKILL <FaPlus />
             </button>
@@ -621,9 +539,9 @@ function Skills() {
             if (allFilled) {
               const currentEntry = {
                 userId: user?.id,
-                skillSector,
-                category,
-                experience,
+                skillSector: skillsData.skillSector,
+                category: skillsData.category,
+                experience: skillsData.experience,
               };
 
               const exists = skillsToSave.some(
@@ -697,4 +615,3 @@ function Skills() {
 }
 
 export default Skills;
- 

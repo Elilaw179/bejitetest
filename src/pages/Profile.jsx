@@ -15,7 +15,6 @@ import {
   profilePayloadLooksUsable,
   profileFromSearchPreview,
 } from '../utils/profileUtils';
-import { truncateText } from '../utils/checksFormat';
 
 const ABOUT_CHAR_LIMIT = 500;
 

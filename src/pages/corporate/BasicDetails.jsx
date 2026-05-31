@@ -156,9 +156,7 @@ const CoperateBasicDetails = () => {
     if (isEditMode) {
       navigate(getPath(currentStep + 1));
     } else {
-      navigate("/edit-profile/recruiter/profile-setup", {
-        state: { email, firstName, lastName, role, mode, followings },
-      });
+      navigate("/edit-profile/recruiter/profile-setup");
     }
   };
   return (

@@ -26,9 +26,8 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      } ${type === "date" && value ? "hide-calendar-icon" : ""}`}
+      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${value ? "border-[#828282]" : "border-[#F5F5F5]"
+        } ${type === "date" && value ? "hide-calendar-icon" : ""}`}
     />
     {value && (
       <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
@@ -209,11 +208,10 @@ function Certificate() {
             <div className="max-w-xs mx-auto bg-[#00000040] mt-3 rounded-2xl flex">
               <button
                 onClick={clearForm}
-                className={`flex-1 cursor-pointer h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
-                  allFilled
+                className={`flex-1 cursor-pointer h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${allFilled
                     ? "bg-[#2A4E42] border-[#2A4E42]"
                     : "bg-transparent border-[#F5F5F5]"
-                }`}
+                  }`}
               >
                 ADD MORE <FaPlus />
               </button>
@@ -251,7 +249,7 @@ function Certificate() {
             if (isEditMode) {
               navigate(getPath(currentStep + 1));
             } else {
-              navigate("/links", {
+              navigate("/edit-profile/education", {
                 state: { email, firstName, lastName, role, mode, followings },
               });
             }

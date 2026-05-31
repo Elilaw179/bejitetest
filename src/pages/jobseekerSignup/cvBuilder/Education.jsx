@@ -8,12 +8,9 @@ import useAuth from "../../../hooks/useAuth";
 
 import {
   FaPlus,
-  FaCheckCircle,
-  FaChevronDown,
   FaTrash,
   FaCheck,
 } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import Loader from "../../../components/ui/Loader";
 import axiosInstance from "../../../utils/axiosInstance";
@@ -140,7 +137,7 @@ const AutocompleteInput = ({ value, onChange, placeholder, suggestions, onAddNew
     const newValue = e.target.value;
     setInputValue(newValue);
     onChange(e);
-    
+
     if (newValue.trim()) {
       const filtered = suggestions.filter(suggestion =>
         suggestion.toLowerCase().includes(newValue.toLowerCase())
@@ -183,7 +180,7 @@ const AutocompleteInput = ({ value, onChange, placeholder, suggestions, onAddNew
       {inputValue && (
         <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
       )}
-      
+
       {showSuggestions && filteredSuggestions.length > 0 && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
           {filteredSuggestions.map((suggestion, index) => (
@@ -197,7 +194,7 @@ const AutocompleteInput = ({ value, onChange, placeholder, suggestions, onAddNew
           ))}
         </div>
       )}
-      
+
       {showSuggestions && isAddingNew && inputValue.trim() && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
           <div
@@ -278,15 +275,17 @@ function Education() {
 
   useEffect(() => {
     // Check if all fields are filled (end date is optional if currently studying)
-    const isEndDateValid = isCurrentlyStudying ? true : endDate;
+    // const isEndDateValid = isCurrentlyStudying ? true : endDate;
     setAllFilled(
-      educationLevel &&
+      Boolean(
+        educationLevel &&
         institutionName &&
         userLocation &&
         fieldOfStudy &&
-        degree.trim() &&
+        degree &&
         startDate &&
-        isEndDateValid
+        endDate,
+      ),
     );
   }, [
     educationLevel,
@@ -480,20 +479,18 @@ function Education() {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 disabled={isCurrentlyStudying}
-                className={`w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm ${
-                  isCurrentlyStudying ? "bg-gray-100 cursor-not-allowed" : ""
-                }`}
+                className={`w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm ${isCurrentlyStudying ? "bg-gray-100 cursor-not-allowed" : ""
+                  }`}
               />
             </div>
             <div className="flex-1 flex items-end">
               <button
                 onClick={addMore}
                 disabled={!allFilled}
-                className={`w-full h-11 cursor-pointer flex items-center justify-center gap-2 text-white font-semibold rounded-xl text-sm transition-all shadow-sm ${
-                  allFilled
-                    ? "bg-[#1A3E32] hover:bg-[#143026]"
-                    : "bg-gray-300 cursor-not-allowed"
-                }`}
+                className={`w-full h-11 cursor-pointer flex items-center justify-center gap-2 text-white font-semibold rounded-xl text-sm transition-all shadow-sm ${allFilled
+                  ? "bg-[#1A3E32] hover:bg-[#143026]"
+                  : "bg-gray-300 cursor-not-allowed"
+                  }`}
               >
                 ADD MORE <FaPlus />
               </button>
@@ -637,3 +634,4 @@ function Education() {
 }
 
 export default Education;
+
