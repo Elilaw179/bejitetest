@@ -69,7 +69,6 @@ const Divider = () => (
 const SearchCriteria = ({ formData, setFormData, onSearch }) => {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
-  const [selectedCountryCode, setSelectedCountryCode] = useState("");
 
   // Load all countries on component mount
   useEffect(() => {
@@ -84,7 +83,6 @@ const SearchCriteria = ({ formData, setFormData, onSearch }) => {
       const allCountries = Country.getAllCountries();
       const selected = allCountries.find(country => country.name === formData.countryInput);
       if (selected) {
-        setSelectedCountryCode(selected.isoCode);
         try {
           const stateList = State.getStatesOfCountry(selected.isoCode);
           if (stateList && stateList.length > 0) {
@@ -101,7 +99,6 @@ const SearchCriteria = ({ formData, setFormData, onSearch }) => {
       }
     } else {
       setStates([]);
-      setSelectedCountryCode("");
     }
   }, [formData.countryInput]);
 
