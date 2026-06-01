@@ -124,7 +124,7 @@ const InterviewInviteModal = ({ isOpen, onClose, candidate, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto nfl-scroll scroll-smooth">
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-[#16730F]">Send Interview Invite</h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full">

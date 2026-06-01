@@ -47,7 +47,7 @@ export function CertificateViewerModal({ open, onClose, fileUrl, title }) {
           </p>
         )}
 
-        <div className="flex-1 overflow-auto rounded-lg flex items-center justify-center min-h-[240px] bg-black/30">
+        <div className="flex-1 overflow-auto nfl-scroll rounded-lg flex items-center justify-center min-h-[240px] bg-black/30">
           {loadError ? (
             <div className="text-white text-center p-8">
               <p className="mb-4 text-sm">Could not preview this certificate.</p>

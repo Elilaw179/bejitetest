@@ -137,7 +137,7 @@ const handleConnect = async (e, userId) => {
         </div>
         
         {/* User List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto nfl-scroll scroll-smooth">
           {loading ? (
             <div className="p-8 text-center text-gray-500">
               Loading {type}...

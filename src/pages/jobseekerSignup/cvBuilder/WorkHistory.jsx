@@ -114,7 +114,7 @@ const AutocompleteJobInput = ({ value, onChange, placeholder, suggestions, onAdd
       
       {showSuggestions && (
         <div 
-          className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto"
+          className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto nfl-scroll"
           style={{ 
             zIndex: 9999,
             position: "absolute",

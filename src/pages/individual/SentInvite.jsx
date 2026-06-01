@@ -84,7 +84,7 @@ export default function SentInvite() {
               {/* Divider*/}
               <div className=" border-t-2 border-[#16730F] mt-9 mb-5"></div>
               {/*Invites List */}
-              <div className="flex flex-col gap-3 overflow-y-auto">
+              <div className="flex flex-col gap-3 overflow-y-auto nfl-scroll scroll-smooth">
                 {
                   employers.map(employer => (
                     <div
@@ -134,7 +134,7 @@ export default function SentInvite() {
                     </div>
                   </div>
                   {/* Messages */}
-                  <div className="flex-1 p-6 overflow-y-auto text-[#16730F]">
+                  <div className="flex-1 p-6 overflow-y-auto nfl-scroll scroll-smooth text-[#16730F]">
                     {!acceptedInvite ? (
                       <div>
                         <p className="text-2xl font-semibold text-center">You've been invited for an interview!</p>

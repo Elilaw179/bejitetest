@@ -197,7 +197,7 @@ const CandidateSearchPage = () => {
               </div>
               <div
                 ref={resultsScrollRef}
-                className="flex-1 overflow-y-auto p-3 sm:p-4 min-h-0"
+                className="flex-1 overflow-y-auto nfl-scroll scroll-smooth p-3 sm:p-4 min-h-0"
               >
                 <CandidateSearchResults
                   searchCriteria={formData}
@@ -209,7 +209,7 @@ const CandidateSearchPage = () => {
             {/* Main content */}
             <main
               ref={mainScrollRef}
-              className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-[#F5F5F5] p-3 sm:p-4 md:p-6"
+              className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden nfl-scroll scroll-smooth bg-[#F5F5F5] p-3 sm:p-4 md:p-6"
             >
               {renderMainContent()}
             </main>
@@ -238,7 +238,7 @@ const CandidateSearchPage = () => {
                   <FaTimes />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-3 sm:p-4 min-h-0">
+              <div className="flex-1 overflow-y-auto nfl-scroll scroll-smooth p-3 sm:p-4 min-h-0">
                 <JobSearchFormGreen
                   formData={formData}
                   setFormData={setFormData}

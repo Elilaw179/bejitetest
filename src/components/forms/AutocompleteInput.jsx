@@ -95,7 +95,7 @@ export function AutocompleteInput({
       )}
 
       {showDropdown && (
-        <ul className="absolute z-20 left-0 right-0 mt-1 max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg">
+        <ul className="absolute z-20 left-0 right-0 mt-1 max-h-52 overflow-y-auto nfl-scroll bg-white border border-gray-200 rounded-xl shadow-lg">
           {filteredOptions.map((option) => (
             <li key={option}>
               <button

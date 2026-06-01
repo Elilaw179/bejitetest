@@ -190,7 +190,7 @@ const AdminList = () => {
               </button>
             </div>
             
-            <div className="p-5 overflow-y-auto flex-1">
+            <div className="p-5 overflow-y-auto nfl-scroll scroll-smooth flex-1">
               <form id="addAdminForm" onSubmit={handleAddAdmin} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">

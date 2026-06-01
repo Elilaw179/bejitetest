@@ -86,7 +86,7 @@ const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'publi
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto nfl-scroll scroll-smooth p-4">
           <textarea
             value={postBody}
             onChange={(e) => setPostBody(e.target.value)}
