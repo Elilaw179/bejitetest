@@ -1,13 +1,6 @@
 import React from "react";
 import FormLabel from "../forms/FormLabel";
 
-export const RECRUITER_ONBOARDING_STEPS = [
-  "Basic Details",
-  "Profile Setup",
-  "Company Details",
-  "Location",
-];
-
 const inputClass =
   "w-full h-11 bg-white border border-gray-200 rounded-xl px-4 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all disabled:bg-gray-50 disabled:text-gray-500";
 

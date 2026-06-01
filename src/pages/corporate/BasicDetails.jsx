@@ -8,7 +8,7 @@ import useAuth from "../../hooks/useAuth";
 import OnboardingLayout from "../../components/layout/onboardingLayout";
 import RecruiterFieldGroup from "../../components/recruiter/RecruiterFieldGroup";
 import { navigateBack } from "../../utils/navigateBack";
-import { RECRUITER_ONBOARDING_STEPS } from "../../components/recruiter/recruiterOnboardingUi";
+import { RECRUITER_ONBOARDING_STEPS } from "../../components/recruiter/recruiterOnboardingSteps";
 import { updateUser } from "../../features/auth/authSlice";
 import {
   formatRecruiterFullName,
@@ -78,12 +78,12 @@ const CoperateBasicDetails = () => {
       storedUser = {};
     }
 
-    const stateUser = location.state || {};
+    const routeState = location.state || {};
     const resolvedEmail =
-      stateUser?.email || user?.email || storedUser?.email || "";
+      routeState?.email || user?.email || storedUser?.email || "";
     const resolvedName = formatRecruiterFullName(
-      stateUser?.firstName || user?.firstName || storedUser?.firstName,
-      stateUser?.lastName || user?.lastName || storedUser?.lastName,
+      routeState?.firstName || user?.firstName || storedUser?.firstName,
+      routeState?.lastName || user?.lastName || storedUser?.lastName,
     );
     const resolvedPhone =
       user?.phone_number ||
@@ -109,9 +109,7 @@ const CoperateBasicDetails = () => {
     });
   }, [
     isEditMode,
-    location.state?.email,
-    location.state?.firstName,
-    location.state?.lastName,
+    location.state,
     user?.email,
     user?.firstName,
     user?.lastName,

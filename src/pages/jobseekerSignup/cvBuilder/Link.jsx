@@ -209,30 +209,32 @@ function Link() {
             </div>
 
             <div className="p-6 space-y-6">
-              {linkFields.map(({ name, label, icon: Icon, iconColor, placeholder, borderColor }) => (
-                <div key={name} className="group">
+              {linkFields.map((field) => {
+                const FieldIcon = field.icon;
+                return (
+                <div key={field.name} className="group">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {label}
+                    {field.label}
                     <span className="text-gray-400 text-xs font-normal ml-2">
                       (Optional)
                     </span>
                   </label>
                   <div className="relative">
-                    <div className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconColor} transition-all duration-200 group-focus-within:scale-110`}>
-                      <Icon className="text-xl" />
+                    <div className={`absolute left-3 top-1/2 -translate-y-1/2 ${field.iconColor} transition-all duration-200 group-focus-within:scale-110`}>
+                      <FieldIcon className="text-xl" />
                     </div>
                     <input
                       type="text"
-                      value={formLinks[name]}
-                      onChange={(e) => handleChange(e, name)}
-                      onBlur={() => handleBlur(name)}
-                      placeholder={`https://${placeholder}`}
+                      value={formLinks[field.name]}
+                      onChange={(e) => handleChange(e, field.name)}
+                      onBlur={() => handleBlur(field.name)}
+                      placeholder={`https://${field.placeholder}`}
                       className={`w-full h-12 pl-12 pr-4 rounded-xl border-2 border-gray-200 bg-gray-50/50 
                         focus:outline-none focus:bg-white transition-all duration-200
-                        ${borderColor} ${errors[name] ? "border-red-500 focus:border-red-500" : ""}
+                        ${field.borderColor} ${errors[field.name] ? "border-red-500 focus:border-red-500" : ""}
                         hover:border-gray-300`}
                     />
-                    {formLinks[name] && !errors[name] && (
+                    {formLinks[field.name] && !errors[field.name] && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
                         <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                           <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -242,15 +244,15 @@ function Link() {
                       </div>
                     )}
                   </div>
-                  {errors[name] && (
+                  {errors[field.name] && (
                     <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
-                      {errors[name]}
+                      {errors[field.name]}
                     </p>
                   )}
-                  {!errors[name] && formLinks[name] && (
+                  {!errors[field.name] && formLinks[field.name] && (
                     <p className="text-green-600 text-xs mt-2 flex items-center gap-1">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -259,7 +261,8 @@ function Link() {
                     </p>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             {hasAnyLink && (
