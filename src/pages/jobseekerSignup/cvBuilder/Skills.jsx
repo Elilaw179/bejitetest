@@ -18,7 +18,6 @@ import axiosInstance from "../../../utils/axiosInstance";
 import { AutocompleteInput } from "../../../components/forms/AutocompleteInput";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
 import {
-  skillOptions,
   categoryOptions,
   experienceOptions,
 } from "../../../data/skillsData";

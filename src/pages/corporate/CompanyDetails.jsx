@@ -6,11 +6,11 @@ import NavigationButtons from "../../components/NavigationButtons";
 import useRecruiterProfile from "../../services/recruiterProfile";
 import OnboardingLayout from "../../components/layout/onboardingLayout";
 import {
-  RECRUITER_ONBOARDING_STEPS,
   RecruiterFormShell,
   RecruiterPageHero,
   RecruiterTextField,
 } from "../../components/recruiter/recruiterOnboardingUi";
+import { RECRUITER_ONBOARDING_STEPS } from "../../components/recruiter/recruiterOnboardingSteps";
 
 const CompanyDetails = () => {
   const navigate = useNavigate();

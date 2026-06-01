@@ -13,7 +13,7 @@ import useAuth from "../../hooks/useAuth";
 import OnboardingLayout from "../../components/layout/onboardingLayout";
 import RecruiterFieldGroup from "../../components/recruiter/RecruiterFieldGroup";
 import { navigateBack } from "../../utils/navigateBack";
-import { RECRUITER_ONBOARDING_STEPS } from "../../components/recruiter/recruiterOnboardingUi";
+import { RECRUITER_ONBOARDING_STEPS } from "../../components/recruiter/recruiterOnboardingSteps";
 
 const CoperateProfileSetup = () => {
   const navigate = useNavigate();

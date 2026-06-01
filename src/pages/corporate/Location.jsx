@@ -7,12 +7,12 @@ import useRecruiterProfile from "../../services/recruiterProfile";
 import OnboardingLayout from "../../components/layout/onboardingLayout";
 import { COUNTRY_OPTIONS } from "../../data/jobTypeData";
 import {
-  RECRUITER_ONBOARDING_STEPS,
   RecruiterFormShell,
   RecruiterPageHero,
   RecruiterSelect,
   RecruiterTextField,
 } from "../../components/recruiter/recruiterOnboardingUi";
+import { RECRUITER_ONBOARDING_STEPS } from "../../components/recruiter/recruiterOnboardingSteps";
 
 const CoperateLocation = () => {
   const navigate = useNavigate();
