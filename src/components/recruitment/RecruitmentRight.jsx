@@ -33,9 +33,9 @@ function RecruitmentRight() {
   }, []);
 
   return (
-    <div className="bg-[#1A3E32]  h-full">
-      <aside className="bg-[#1A3E32] rounded-2xl flex flex-col">
-        <div className="bg-[#16730F] rounded-2xl p-3">
+    <div className="bg-[#F5F5F5] px-2 py-2 h-full">
+      <aside className="bg-[#1A3E32] rounded-2xl flex flex-col h-full overflow-hidden">
+        <div className="bg-[#16730F] rounded-t-2xl p-3 shrink-0">
           <div className="p-5 space-y-2">
             {/* <FaArrowLeft className="text-[#1A3E32]" /> */}
           </div>
@@ -127,7 +127,7 @@ function RecruitmentRight() {
           </div>
         </div>
 
-        <div className="flex-1 mt-3 p-4 pb-6">
+        <div className="flex-1 mt-3 p-4 pb-6 overflow-y-auto rounded-b-2xl">
           <div className="space-y-4 cursor-pointer">
             <div
               className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200"

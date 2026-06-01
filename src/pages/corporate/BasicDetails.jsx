@@ -1,28 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import NavigationButtons from "../../components/NavigationButtons";
-import ProgressBar from "../../components/ProgressBar";
-import StepTabs from "../../components/StepTabs";
-import Header from "../../components/Header";
 import useRecruiterProfile from "../../services/recruiterProfile";
 import useAuth from "../../hooks/useAuth";
 import OnboardingLayout from "../../components/layout/onboardingLayout";
+import RecruiterFieldGroup from "../../components/recruiter/RecruiterFieldGroup";
+import { navigateBack } from "../../utils/navigateBack";
+import { RECRUITER_ONBOARDING_STEPS } from "../../components/recruiter/recruiterOnboardingUi";
+import { updateUser } from "../../features/auth/authSlice";
+import {
+  formatRecruiterFullName,
+  splitRecruiterFullName,
+} from "../../utils/recruiterDisplayName";
 
 const CoperateBasicDetails = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const location = useLocation();
   const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
   const { user } = useAuth();
 
-  const steps = [
-    "Basic Details",
-    "Profile Setup",
-    "Company Details",
-    "Location",
-  ];
-
-  const [dataLoaded, setDataLoaded] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -31,24 +30,61 @@ const CoperateBasicDetails = () => {
 
   const { updateBasicDetails } = useRecruiterProfile();
 
-  useEffect(() => {
-    console.log("[CorporateBasicDetails] Page mounted");
-    console.log("[CorporateBasicDetails] Raw location.state on mount:", location.state);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- mount log only
+  const fieldGroups = useMemo(
+    () => [
+      [
+        {
+          name: "full_name",
+          label: "FULL NAME",
+          placeholder: "Enter your full name",
+          width: "w-full",
+        },
+      ],
+      [
+        {
+          name: "email",
+          label: "OFFICIAL EMAIL",
+          type: "email",
+          placeholder: "your@company.com",
+          disabled: true,
+          width: "w-full",
+          hint: "Signed in with this address — cannot be changed here.",
+        },
+      ],
+      [
+        {
+          name: "phone_number",
+          label: "PHONE NUMBER",
+          type: "tel",
+          placeholder: "e.g +234 706 004 0000",
+          width: "w-full",
+        },
+      ],
+    ],
+    [],
+  );
+
+  const handleStepClick = (path) => {
+    if (path) navigate(path);
+  };
 
   useEffect(() => {
+    if (isEditMode) return;
+
     let storedUser = {};
     try {
       storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-    } catch (error) {
-      console.warn("[CorporateBasicDetails] Failed to parse localStorage user:", error);
+    } catch {
       storedUser = {};
     }
 
     const stateUser = location.state || {};
-    const resolvedEmail = stateUser?.email || user?.email || storedUser?.email || "";
-    const resolvedName =
-      `${stateUser?.firstName || user?.firstName || storedUser?.firstName || ""} ${stateUser?.lastName || user?.lastName || storedUser?.lastName || ""}`.trim();
+    const resolvedEmail =
+      stateUser?.email || user?.email || storedUser?.email || "";
+    const resolvedName = formatRecruiterFullName(
+      stateUser?.firstName || user?.firstName || storedUser?.firstName,
+      stateUser?.lastName || user?.lastName || storedUser?.lastName,
+    );
     const resolvedPhone =
       user?.phone_number ||
       user?.phone ||
@@ -56,23 +92,12 @@ const CoperateBasicDetails = () => {
       storedUser?.phone ||
       "";
 
-    console.log("[CorporateBasicDetails] Prefill source route state:", stateUser);
-    console.log("[CorporateBasicDetails] Prefill source auth user:", user);
-    console.log("[CorporateBasicDetails] Prefill source localStorage user:", storedUser);
-    console.log("[CorporateBasicDetails] Prefill resolved:", {
-      resolvedEmail,
-      resolvedName,
-      resolvedPhone,
-    });
-
     setFormData((prev) => {
       const next = {
         full_name: prev.full_name || resolvedName,
         email: prev.email || resolvedEmail,
         phone_number: prev.phone_number || resolvedPhone,
       };
-
-      // Avoid rerender loop/log spam when values are unchanged.
       if (
         prev.full_name === next.full_name &&
         prev.email === next.email &&
@@ -80,11 +105,10 @@ const CoperateBasicDetails = () => {
       ) {
         return prev;
       }
-
       return next;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- primitive deps only; full location.state/user ref churn causes loops
   }, [
+    isEditMode,
     location.state?.email,
     location.state?.firstName,
     location.state?.lastName,
@@ -96,19 +120,24 @@ const CoperateBasicDetails = () => {
   ]);
 
   useEffect(() => {
-    if (isEditMode && recruiterData && !dataLoaded) {
-      setFormData({
-        full_name: recruiterData.firstName || "",
-        email: recruiterData.email || "",
-        phone_number: recruiterData.phone_number || "",
-      });
-      setDataLoaded(true);
-    }
-  }, [isEditMode, recruiterData, dataLoaded]);
+    if (!isEditMode || !recruiterData) return;
 
-  useEffect(() => {
-    console.log("[CorporateBasicDetails] formData updated:", formData);
-  }, [formData]);
+    setFormData({
+      full_name: formatRecruiterFullName(
+        recruiterData.firstName,
+        recruiterData.lastName,
+      ),
+      email: recruiterData.email || "",
+      phone_number: recruiterData.phone_number || "",
+    });
+  }, [
+    isEditMode,
+    recruiterData,
+    recruiterData?.firstName,
+    recruiterData?.lastName,
+    recruiterData?.email,
+    recruiterData?.phone_number,
+  ]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -124,9 +153,38 @@ const CoperateBasicDetails = () => {
 
     const submitData = async () => {
       await updateBasicDetails({
-        full_name: formData.full_name,
+        full_name: formData.full_name.trim(),
         phone_number: formData.phone_number,
       });
+
+      const { firstName, lastName } = splitRecruiterFullName(formData.full_name);
+      const phone_number = formData.phone_number;
+
+      dispatch(
+        updateUser({
+          firstName,
+          lastName,
+          phone_number,
+          phone: phone_number,
+        }),
+      );
+
+      try {
+        const stored = JSON.parse(localStorage.getItem("user") || "{}");
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...stored,
+            firstName,
+            lastName,
+            phone_number,
+            phone: phone_number,
+          }),
+        );
+      } catch {
+        /* ignore */
+      }
+
       return "Basic details saved successfully!";
     };
 
@@ -151,98 +209,53 @@ const CoperateBasicDetails = () => {
     }
   };
 
-
   const handleSkip = () => {
     if (isEditMode) {
       navigate(getPath(currentStep + 1));
     } else {
-      navigate("/edit-profile/recruiter/profile-setup");
+      navigate("/corporate/profile-setup");
     }
   };
+
   return (
     <OnboardingLayout
-      steps={steps}
+      steps={RECRUITER_ONBOARDING_STEPS}
       currentStep={currentStep}
-      handleStepClick={handleNextStep}
+      handleStepClick={handleStepClick}
       getPath={getPath}
       isEditMode={isEditMode}
     >
-      <div className="bg-white min-h-screen">
-        {/* <Header /> */}
+      <section className="max-w-3xl font-nunito-semi text-center md:text-start mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
+        Basic Details
+      </section>
+      <p className="max-w-3xl mx-auto px-4 text-center md:text-start text-[#333] text-[15px]">
+        Tell us who you are. This is how jobseekers and your team will reach you.
+      </p>
 
-        {/* <StepTabs steps={steps} currentStep={currentStep} /> */}
-        {/* <ProgressBar currentStep={currentStep} totalSteps={steps.length} /> */}
-
-        <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
-          Basic Details
-        </section>
-        <p className="max-w-3xl mx-auto px-4 text-[#333] text-[15px]">
-          Let's get to know you
-        </p>
-
-        <div className="max-w-4xl mx-auto mt-6 border-2 border-[#E0E0E0] flex flex-col lg:flex-row gap-8 lg:p-4">
-          <div className="lg:w-[90%] w-full mx-auto lg:rounded-2xl p-5 ">
-            {/* FULL NAME */}
-            <div className="p-5 bg-[#82828280] lg:rounded-3xl  mb-4 rounded-md">
-              <label className="font-semibold text-[12px] mb-2 block">
-                FULL NAME
-              </label>
-              <input
-                type="text"
-                name="full_name"
-                placeholder="Enter your full name"
-                value={formData.full_name}
-                onChange={handleChange}
-                className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
-              />
-            </div>
-
-            {/* EMAIL - read only */}
-            <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
-              <label className="font-semibold text-[12px] mb-2 block">
-                OFFICIAL EMAIL
-              </label>
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                disabled
-                className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none bg-gray-100 text-gray-500"
-              />
-            </div>
-
-            {/* PHONE NUMBER */}
-            <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-2 rounded-md">
-              <label className="font-semibold text-[12px] mb-2 block">
-                PHONE NUMBER
-              </label>
-              <input
-                type="tel"
-                name="phone_number"
-                placeholder="e.g +234706004000"
-                value={formData.phone_number}
-                onChange={handleChange}
-                className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
-              />
-            </div>
-          </div>
-        </div>
-
-        <NavigationButtons
-          showSkip={true}
-          onSkip={handleSkip}
-          isFormComplete={isFormComplete}
-          onBack={() => {
-            if (isEditMode) {
-              navigate(getPath(currentStep - 1));
-            } else {
-              navigate(-1);
-            }
-          }}
-          onNext={handleNextStep}
+      <div className="max-w-4xl mx-auto mt-8 bg-white md:border border-gray-200 rounded-2xl md:shadow-sm p-2 md:p-8">
+        <RecruiterFieldGroup
+          formData={formData}
+          handleChange={handleChange}
+          fieldGroups={fieldGroups}
         />
       </div>
+
+      <NavigationButtons
+        showSkip={true}
+        onSkip={handleSkip}
+        isFormComplete={isFormComplete}
+        onBack={() => {
+          if (isEditMode && currentStep > 1) {
+            navigate(getPath(currentStep - 1));
+            return;
+          }
+          navigateBack(
+            navigate,
+            isEditMode ? "/news-feed" : "/employer-option",
+          );
+        }}
+        onNext={handleNextStep}
+      />
     </OnboardingLayout>
   );
 };

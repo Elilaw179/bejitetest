@@ -16,6 +16,8 @@ const EmailSent = () => {
     }
   }, [location.search]);
 
+  const fromLogin = new URLSearchParams(location.search).get('reason') === 'login';
+
   const handleResendVerification = async () => {
     if (!email?.trim()) {
       setStatusMessage('No email address found. Please sign up again.');
@@ -55,12 +57,26 @@ const EmailSent = () => {
       <h1 className="text-2xl font-bold mb-10 text-[#16730F]">
         Email Verification
       </h1>
-      <p className="text-gray-600 mb-4">
-        We&apos;ve sent a verification link to{' '}
-        <strong>{email || 'your email'}</strong>.
-      </p>
+      {fromLogin ? (
+        <p className="text-gray-600 mb-4 max-w-md">
+          Your account is not verified yet. Check your inbox for the verification
+          link we sent when you signed up, or resend it below.
+        </p>
+      ) : (
+        <p className="text-gray-600 mb-4">
+          We&apos;ve sent a verification link to{' '}
+          <strong>{email || 'your email'}</strong>.
+        </p>
+      )}
       <p className="text-gray-500 mb-6">
-        Please check your inbox and click the link to verify your account.
+        {email ? (
+          <>
+            Email: <strong>{email}</strong>. Please check your inbox and click the
+            link to verify your account.
+          </>
+        ) : (
+          'Please check your inbox and click the link to verify your account.'
+        )}
       </p>
 
       {statusMessage && (

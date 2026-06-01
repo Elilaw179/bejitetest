@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import StepTabs from "../StepTabs";
 import ProgressBar from "../ProgressBar";
-import { Link } from "react-router-dom";
+import { navigateBack } from "../../utils/navigateBack";
 
 const OnboardingLayout = ({
   children,
@@ -27,11 +27,21 @@ const OnboardingLayout = ({
       <button
         className=" bg-transparent "
         onClick={() => {
-          if (isEditMode) {
-            navigate("/news-feed")
-            // navigate(getPath(currentStep - 1));
+          if (currentStep <= 1) {
+            const isRecruiterPath = pathname.startsWith("/corporate") ||
+              pathname.startsWith("/edit-profile/recruiter");
+            navigateBack(
+              navigate,
+              isEditMode
+                ? "/news-feed"
+                : isRecruiterPath
+                  ? "/employer-option"
+                  : "/resume",
+            );
+          } else if (typeof getPath === "function") {
+            navigate(getPath(currentStep - 1));
           } else {
-            navigate(-1);
+            navigateBack(navigate, "/news-feed");
           }
         }}
       >

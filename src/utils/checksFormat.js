@@ -195,10 +195,24 @@ export const formatDateForDisplay = (date) => {
  */
 export const formatDateRange = (startDate, endDate, isPresent = false) => {
     const formattedStart = formatDateToMonthYear(startDate);
-    const formattedEnd = isPresent ? 'Present' : formatDateToMonthYear(endDate);
+    const ongoing =
+        isPresent || endDate == null || endDate === '' || endDate === 'Present';
+    const formattedEnd = ongoing ? 'Present' : formatDateToMonthYear(endDate);
 
+    if (!formattedStart && !formattedEnd) return '';
+    if (!formattedStart) return formattedEnd;
+    if (!formattedEnd) return formattedStart;
     return `${formattedStart} — ${formattedEnd}`;
 };
+
+/** True when an education/work row has no end date (still in progress). */
+export const isOngoingCvEntry = (row) =>
+    Boolean(
+        row?.isCurrentlyStudying ||
+        row?.isCurrentJob ||
+        row?.is_current_job ||
+        !(row?.end_date ?? row?.endDate),
+    );
 
 /**
  * Format date to Month Year format (e.g., "Jan 2024")

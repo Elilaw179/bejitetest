@@ -209,7 +209,7 @@ function Link() {
             </div>
 
             <div className="p-6 space-y-6">
-              {linkFields.map(({ name, label, iconColor, placeholder, borderColor }) => (
+              {linkFields.map(({ name, label, icon: Icon, iconColor, placeholder, borderColor }) => (
                 <div key={name} className="group">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {label}

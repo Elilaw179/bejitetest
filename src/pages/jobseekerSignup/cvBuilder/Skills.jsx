@@ -423,12 +423,12 @@ function Skills() {
         <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 overflow-visible">
           <div className="bg-[#fff] overflow-visible p-3 rounded-2xl space-y-1">
             <div className="bg-[#fff] rounded-2xl p-4">
-              <p className="font-semibold text-xs mb-1">SKILL</p>
+              <p className="font-semibold text-xs mb-1">SKILL (Enter or select a skill name and category and years of experience and use the add more button to add more skills)</p>
               <AutocompleteSkillInput
                 value={skillsData.skillSector}
                 onChange={(e) =>
                   setSkillsData((prev) => ({ ...prev, skillSector: e.target.value }))
-                } placeholder="Type a skill (e.g., Python, JavaScript, Project Management)"
+                } placeholder="Enter or select skill name"
                 suggestions={skillSuggestionsList}
               />
               {/* <InputWithIcon

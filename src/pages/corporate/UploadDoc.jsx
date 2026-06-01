@@ -47,7 +47,7 @@ const CoperateUploadDoc = () => {
 
   const handleSkip = () => {
     if (isEditMode) {
-      navigate(getPath(currentStep + 1));
+      navigate("/news-feed");
     } else {
       navigate("/news-feed");
     }

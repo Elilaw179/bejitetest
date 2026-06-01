@@ -6,6 +6,11 @@ import ProfileCvSections from '../components/ProfileCvSections';
 import axiosInstance from '../utils/axiosInstance';
 import { fetchCurrentUserProfilePhoto } from '../services/profilePhotoService';
 import { fetchFullUserProfile } from '../services/fetchFullUserProfile';
+import {
+  mergeCvWithCandidateSkills,
+  normalizeProfileSkills,
+  resolveProfileSkillSource,
+} from '../utils/profileSkills';
 import { getUser, pickProfilePhotoPath } from '../utils/tokenManager';
 import { profileAvatarSrc } from '../utils/profilePhotoUrl';
 import { pickAuthorProfilePhoto } from '../utils/profileImageUtils';
@@ -99,6 +104,31 @@ const Profile = () => {
           merged = normalizeProfileData({ ...merged, ...full.user });
           cv = full.cv;
           profileFound = true;
+        }
+
+        const hasSkillLabels =
+          normalizeProfileSkills(resolveProfileSkillSource({ cv })).length > 0;
+        if (!hasSkillLabels) {
+          try {
+            const { data: cvRes } = await axiosInstance.get(
+              `/api/cv-builder/complete/${targetUserId}`,
+            );
+            if (cvRes?.success && cvRes.data) {
+              cv = mergeCvWithCandidateSkills(
+                {
+                  bio: cv?.bio ?? cvRes.data.bio ?? null,
+                  education: cv?.education ?? cvRes.data.education ?? [],
+                  skills: cvRes.data.skills ?? [],
+                  workHistory: cv?.workHistory ?? cvRes.data.workHistory ?? [],
+                  certificates: cv?.certificates ?? cvRes.data.certificates ?? [],
+                  links: cv?.links ?? cvRes.data.links ?? null,
+                },
+                null,
+              );
+            }
+          } catch {
+            /* optional CV fallback */
+          }
         }
       }
 
@@ -297,7 +327,14 @@ const Profile = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <button
-            onClick={() => navigate(-1)}
+            type="button"
+            onClick={() => {
+              if (isViewingOwnProfile) {
+                navigate("/news-feed");
+              } else {
+                navigate(-1);
+              }
+            }}
             className="flex items-center gap-2 text-[#16730F] hover:text-[#145a0c] transition-colors"
           >
             <FaArrowLeft />

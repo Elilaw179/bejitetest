@@ -1,6 +1,13 @@
 import React from "react";
 
-const ImageUpload = ({ imagePreview, handleImageChange, bio, onBioChange }) => (
+const ImageUpload = ({
+  imagePreview,
+  handleImageChange,
+  bio,
+  onBioChange,
+  textareaLabel = "SHORT BIO",
+  maxLength,
+}) => (
   <div className="w-full lg:w-64 flex flex-col items-center">
     <div className="relative group cursor-pointer">
       <label className="w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 hover:border-[#1A3E32] hover:bg-gray-100 transition-all duration-300 cursor-pointer overflow-hidden shadow-sm">
@@ -29,14 +36,22 @@ const ImageUpload = ({ imagePreview, handleImageChange, bio, onBioChange }) => (
 
     {bio !== undefined && onBioChange && (
       <div className="w-full mt-6">
-        <label className="block text-[11px] font-bold text-gray-600 tracking-wide mb-1.5 pl-1">SHORT BIO</label>
+        <label className="block text-[11px] font-bold text-gray-600 tracking-wide mb-1.5 pl-1">
+          {textareaLabel}
+        </label>
         <textarea
           name="bio"
           value={bio}
           onChange={onBioChange}
           placeholder="Write a short bio about yourself..."
+          maxLength={maxLength}
           className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 h-32 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm resize-none"
         />
+        {maxLength != null && (
+          <p className="text-xs text-gray-400 text-right mt-1">
+            {String(bio || "").length}/{maxLength}
+          </p>
+        )}
       </div>
     )}
   </div>

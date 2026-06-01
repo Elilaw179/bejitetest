@@ -1,11 +1,12 @@
 import React from 'react';
-
-const formatDate = (value) => {
-  if (!value) return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-};
+import {
+  formatDateRange,
+  formatDateToMonthYear,
+  isOngoingCvEntry,
+} from '../utils/checksFormat';
+import { CertificateViewLink } from './CertificateViewerModal';
+import { normalizeProfileSkills, resolveProfileSkillSource } from '../utils/profileSkills';
+import ProfileSkillsDisplay from './ProfileSkillsDisplay';
 
 const Section = ({ title, children, empty }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
@@ -18,10 +19,13 @@ const Section = ({ title, children, empty }) => (
   </div>
 );
 
-const ProfileCvSections = ({ cv }) => {
+const ProfileCvSections = ({ cv, candidate = null }) => {
   if (!cv) return null;
 
   const bio = cv.bio;
+  const skillItems = normalizeProfileSkills(
+    resolveProfileSkillSource({ cv, candidate }),
+  );
   const hasBioDetails =
     bio &&
     (bio.gender ||
@@ -78,24 +82,22 @@ const ProfileCvSections = ({ cv }) => {
                 {edu.field_of_study} · {edu.location}
               </p>
               <p className="text-sm text-[#16730F]">
-                {formatDate(edu.start_date)} – {formatDate(edu.end_date)}
+                {formatDateRange(
+                  edu.start_date ?? edu.startDate,
+                  edu.end_date ?? edu.endDate,
+                  isOngoingCvEntry(edu),
+                )}
               </p>
             </li>
           ))}
         </ul>
       </Section>
 
-      <Section title="Skills" empty={!cv.skills?.length}>
-        <ul className="flex flex-wrap gap-2">
-          {cv.skills?.map((skill) => (
-            <li
-              key={skill.id}
-              className="px-3 py-1 bg-[#E8F5E6] text-[#1A3E32] rounded-full text-sm"
-            >
-              {skill.skill_sector} · {skill.category} ({skill.experience})
-            </li>
-          ))}
-        </ul>
+      <Section title="Skills" empty={!skillItems.length}>
+        <ProfileSkillsDisplay
+          skills={resolveProfileSkillSource({ cv, candidate })}
+          variant="card"
+        />
       </Section>
 
       <Section title="Work history" empty={!cv.workHistory?.length}>
@@ -105,7 +107,11 @@ const ProfileCvSections = ({ cv }) => {
               <p className="font-semibold text-[#1A3E32]">{job.job_title}</p>
               <p className="text-gray-600">{job.company_name}</p>
               <p className="text-sm text-[#16730F]">
-                {formatDate(job.start_date)} – {formatDate(job.end_date)}
+                {formatDateRange(
+                  job.start_date ?? job.startDate,
+                  job.end_date ?? job.endDate,
+                  isOngoingCvEntry(job),
+                )}
               </p>
               {job.responsibilities && (
                 <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">
@@ -119,24 +125,25 @@ const ProfileCvSections = ({ cv }) => {
 
       <Section title="Certificates" empty={!cv.certificates?.length}>
         <ul className="space-y-3">
-          {cv.certificates?.map((cert) => (
-            <li key={cert.id}>
-              <p className="font-semibold text-[#1A3E32]">{cert.cert_name}</p>
-              <p className="text-sm text-gray-600">
-                {cert.issuer} · {formatDate(cert.issue_date)}
-              </p>
-              {cert.file_url && (
-                <a
-                  href={cert.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[#16730F] hover:underline"
-                >
-                  View certificate
-                </a>
-              )}
-            </li>
-          ))}
+          {cv.certificates?.map((cert) => {
+            const issueDate = formatDateToMonthYear(
+              cert.issue_date ?? cert.issueDate,
+            );
+            const meta = [cert.issuer, issueDate].filter(Boolean).join(' · ');
+            const certTitle = cert.cert_name ?? cert.certName;
+
+            return (
+              <li key={cert.id}>
+                <p className="font-semibold text-[#1A3E32]">{certTitle}</p>
+                {meta && <p className="text-sm text-gray-600">{meta}</p>}
+                <CertificateViewLink
+                  fileUrl={cert.file_url ?? cert.fileUrl}
+                  title={certTitle}
+                  className="text-sm text-[#16730F] hover:underline mt-1"
+                />
+              </li>
+            );
+          })}
         </ul>
       </Section>
 

@@ -254,7 +254,6 @@ function App() {
                 element={<CoperateUploadDoc />}
               />
             </Route>
-            <Route path="/job-type" element={<JobType />} />
             <Route path="/post-page" element={<PostPage />} />
             <Route path="/news-feed" element={<Recruitment />} />
             <Route

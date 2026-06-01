@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { updateUser } from "../../features/auth/authSlice";
 import NavigationButtons from "../../components/NavigationButtons";
-import ProgressBar from "../../components/ProgressBar";
-import StepTabs from "../../components/StepTabs";
-import Header from "../../components/Header";
 import ImageUpload from "../../components/ImageUpload";
 import useRecruiterProfile from "../../services/recruiterProfile";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { fetchCurrentUserProfilePhoto } from "../../services/profilePhotoService";
 import { getUser, pickProfilePhotoPath } from "../../utils/tokenManager";
 import useAuth from "../../hooks/useAuth";
+import OnboardingLayout from "../../components/layout/onboardingLayout";
+import RecruiterFieldGroup from "../../components/recruiter/RecruiterFieldGroup";
+import { navigateBack } from "../../utils/navigateBack";
+import { RECRUITER_ONBOARDING_STEPS } from "../../components/recruiter/recruiterOnboardingUi";
 
 const CoperateProfileSetup = () => {
   const navigate = useNavigate();
@@ -20,27 +21,45 @@ const CoperateProfileSetup = () => {
   const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
   const { user: authUser } = useAuth();
 
-  const handleStepClick = (path) => {
-    navigate(path);
-  };
-
-  const steps = [
-    "Basic Details",
-    "Profile Setup",
-    "Company Details",
-    "Location",
-  ];
-
   const [dataLoaded, setDataLoaded] = useState(false);
   const [formData, setFormData] = useState({
     nickname: "",
     summary: "",
   });
-
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
 
   const { updateProfileSetup, uploadProfilePhoto } = useRecruiterProfile();
+
+  const fieldGroups = useMemo(
+    () => [
+      [
+        {
+          name: "nickname",
+          label: "UNIQUE IDENTIFIER",
+          placeholder: "@your-handle",
+          width: "w-full",
+        },
+      ],
+      [
+        {
+          name: "summary",
+          label: "BIO / SUMMARY (500 chars max)",
+          type: "textarea",
+          placeholder:
+            "e.g. I run a food delivery brand and need a social media manager for daily content.",
+          maxLength: 500,
+          rows: 5,
+          width: "w-full",
+        },
+      ],
+    ],
+    [],
+  );
+
+  const handleStepClick = (path) => {
+    if (path) navigate(path);
+  };
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -72,7 +91,8 @@ const CoperateProfileSetup = () => {
           nickname: recruiterData.nickname || "",
           summary: recruiterData.summary || "",
         });
-        const fromProfile = recruiterData.profile_photo || recruiterData.profilePhoto;
+        const fromProfile =
+          recruiterData.profile_photo || recruiterData.profilePhoto;
         if (fromProfile) {
           setImagePreview(profilePhotoUrl(fromProfile) ?? null);
         }
@@ -104,7 +124,7 @@ const CoperateProfileSetup = () => {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
@@ -112,11 +132,13 @@ const CoperateProfileSetup = () => {
   };
 
   const isFormComplete =
-    Object.values(formData).every((v) => v.trim() !== "") && (imagePreview || imageFile);
+    formData.nickname.trim() !== "" &&
+    formData.summary.trim() !== "" &&
+    (imagePreview || imageFile);
 
   const handleNextStep = async () => {
     if (!isFormComplete) {
-      toast.error("Please complete all fields and upload an image.");
+      toast.error("Please complete all fields and upload a profile photo.");
       return;
     }
 
@@ -175,64 +197,36 @@ const CoperateProfileSetup = () => {
     if (isEditMode) {
       navigate(getPath(currentStep + 1));
     } else {
-      navigate("/edit-profile/recruiter/company-details");
+      navigate("/corporate/company-details");
     }
   };
 
   return (
-    <div className="bg-white min-h-screen">
-      <Header />
-
-      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
-      <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
-
-      <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
+    <OnboardingLayout
+      steps={RECRUITER_ONBOARDING_STEPS}
+      currentStep={currentStep}
+      handleStepClick={handleStepClick}
+      getPath={getPath}
+      isEditMode={isEditMode}
+    >
+      <section className="max-w-3xl font-nunito-semi text-center md:text-start mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
         Profile Setup
       </section>
-      <p className="max-w-3xl mx-auto px-4 text-[#333] text-[15px]">
-        Introduce yourself to jobseekers
+      <p className="max-w-3xl mx-auto px-4 text-center md:text-start text-[#333] text-[15px]">
+        Introduce yourself to jobseekers. Add a photo and a short summary.
       </p>
 
-      <div className="max-w-4xl mx-auto mt-6 lg:border-2 border-[#E0E0E0] flex flex-col lg:flex-row gap-8 lg:p-4 items-center">
+      <div className="max-w-4xl mx-auto mt-8 bg-white md:border border-gray-200 rounded-2xl md:shadow-sm flex flex-col lg:flex-row gap-10 p-2 md:p-8">
         <ImageUpload
           imagePreview={imagePreview}
           handleImageChange={handleImageChange}
-          bio={formData.bio}
-          onBioChange={handleChange}
         />
 
-        <div className="lg:bg-[#F5F5F5] lg:w-[90%] w-full mx-auto lg:rounded-2xl p-5 ">
-          {/* NICK NAME*/}
-          <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
-            <label className="font-semibold text-[12px] mb-2 block">
-              Unique Identifier (required)
-            </label>
-            <input
-              type="text"
-              name="nickname"
-              placeholder="@Nickname"
-              value={formData.nickname}
-              onChange={handleChange}
-              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
-            />
-          </div>
-
-          {/* SUMMARY */}
-          <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
-            <label className="font-semibold text-[12px] mb-2 block">
-              Bio/Summary (Required, 500 chars max)
-            </label>
-            <textarea
-              name="summary"
-              placeholder="e.g., I own a food delivery brand and need a social media manager for daily content."
-              value={formData.summary}
-              onChange={handleChange}
-              rows={4}
-              maxLength={500}
-              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none resize-none"
-            />
-          </div>
-        </div>
+        <RecruiterFieldGroup
+          formData={formData}
+          handleChange={handleChange}
+          fieldGroups={fieldGroups}
+        />
       </div>
 
       <NavigationButtons
@@ -243,12 +237,12 @@ const CoperateProfileSetup = () => {
           if (isEditMode) {
             navigate(getPath(currentStep - 1));
           } else {
-            navigate(-1);
+            navigateBack(navigate, "/corporate/basic-details");
           }
         }}
         onNext={handleNextStep}
       />
-    </div>
+    </OnboardingLayout>
   );
 };
 

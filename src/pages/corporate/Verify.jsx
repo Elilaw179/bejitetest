@@ -23,31 +23,36 @@ const CoperateVerify = () => {
   };
 
   const handleContinue = () => {
-    if (agreed) {
-      if (isEditMode) {
-        if (currentStep === 5) {
-          navigate("/news-feed");
-          toast.success("Profile updated successfully!");
-        } else {
-          navigate(getPath(currentStep + 1));
-        }
-      } else {
-        navigate("/corporate/upload");
-      }
+    if (!agreed) {
+      toast.error("Please confirm the consent checkbox to continue.");
+      return;
     }
+
+    if (isEditMode) {
+      // Step 5 = verify → upload-doc; step 6 = upload-doc → done
+      if (currentStep >= 6) {
+        navigate("/news-feed");
+        toast.success("Profile updated successfully!");
+      } else {
+        navigate(getPath(currentStep + 1));
+      }
+      return;
+    }
+
+    navigate("/corporate/upload");
   };
 
   const handleSkip = () => {
     if (isEditMode) {
-      if (currentStep === 5) {
+      if (currentStep >= 6) {
         navigate("/news-feed");
       } else {
         navigate(getPath(currentStep + 1));
       }
-    } else {
-      navigate("/news-feed");
+      return;
     }
 
+    navigate("/news-feed");
   };
 
   return (
@@ -80,7 +85,7 @@ const CoperateVerify = () => {
             </button>
 
             <button
-              className="bg-[#fff] border border-[#16730F] text-[#16730F] py-3 w-[80%] rounded-full shadow-md disabled:opacity-50"
+              className="bg-[#fff] border border-[#16730F] text-[#16730F] py-3 w-[60%] rounded-full shadow-md disabled:opacity-50"
               onClick={handleSkip}
             // disabled={!agreed}
             >
@@ -123,15 +128,15 @@ const CoperateVerify = () => {
 
 
             <button
-              className=" text-white py-3 w-[40%] rounded-full shadow-md disabled:opacity-50"
+              className="bg-[#16730F] text-white py-3 w-[40%] rounded-full shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleContinue}
-            // disabled={!agreed}
+              disabled={!agreed}
             >
               Continue
             </button>
 
             <button
-              className="bg-[#fff] border border-[#16730F] text-[#16730F] py-3 w-[80%] rounded-full shadow-md disabled:opacity-50"
+              className="bg-[#fff] border border-[#16730F] text-[#16730F] py-3 w-[30%] rounded-full shadow-md disabled:opacity-50"
               onClick={handleSkip}
             // disabled={!agreed}
             >
