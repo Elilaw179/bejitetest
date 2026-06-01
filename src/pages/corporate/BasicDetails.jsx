@@ -78,7 +78,7 @@ const CoperateBasicDetails = () => {
       storedUser = {};
     }
 
-    const routeState = location.state;
+    const routeState = location.state || {};
     const resolvedEmail =
       routeState?.email || user?.email || storedUser?.email || "";
     const resolvedName = formatRecruiterFullName(
