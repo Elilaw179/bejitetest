@@ -20,3 +20,5 @@ export const skillOptions = [
 export const categoryOptions = [
   "Internship","Entry-Level","Junior","Mid-Level","Senior","Lead","Manager","Director","Executive (C-Level)", "Not Available"
 ];
+
+export const experienceOptions = Array.from({ length: 51 }, (_, i) => `${i}`);

@@ -9,7 +9,6 @@ import useAuth from "../../../hooks/useAuth";
 import {
   FaPlus,
   FaTrash,
-  FaCheck,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Loader from "../../../components/ui/Loader";
@@ -17,7 +16,14 @@ import axiosInstance from "../../../utils/axiosInstance";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
 import FormLabel from "../../../components/forms/FormLabel";
 import { InputWithIcon } from "../../../components/forms/InputIcon";
-// Education dropdown options removed - now using text inputs
+import { AutocompleteInput } from "../../../components/forms/AutocompleteInput";
+import {
+  optionsEdu,
+  optionsInst,
+  optionsLoc,
+  optionsField,
+  optionsDegree,
+} from "../../../data/educationData";
 
 function Education() {
   const navigate = useNavigate();
@@ -113,7 +119,7 @@ function Education() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const addMore = () => {
+  const addMore = async () => {
     if (!allFilled) {
       toast.error("Please complete all fields");
       return;
@@ -147,9 +153,22 @@ function Education() {
       return;
     }
 
-    setAllEducation((prev) => [...prev, newEntry]);
-    clearForm();
-    toast.success("Education added!");
+    setIsLoading(true);
+    try {
+      const { data } = await axiosInstance.post(
+        `/api/cv-builder/education`,
+        newEntry,
+      );
+      const savedId = data?.data?.id;
+      setAllEducation((prev) => [...prev, { ...newEntry, id: savedId }]);
+      clearForm();
+      toast.success("Education saved!");
+    } catch (error) {
+      console.error("Error saving education:", error);
+      toast.error("Failed to save education. Try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -176,18 +195,24 @@ function Education() {
                 label="EDUCATIONAL LEVEL"
                 required={false}
               />
-              <InputWithIcon
+              <AutocompleteInput
                 value={educationLevel}
                 onChange={(e) => setEducationLevel(e.target.value)}
-                placeholder="Enter education level"
+                placeholder="Enter or select education level"
+                formName="education"
+                fieldName="education_level"
+                staticOptions={optionsEdu}
               />
             </div>
             <div className="flex-1">
               <FormLabel label="INSTITUTION NAME" />
-              <InputWithIcon
+              <AutocompleteInput
                 value={institutionName}
                 onChange={(e) => setInstitutionName(e.target.value)}
-                placeholder="Enter institution name"
+                placeholder="Enter or select institution name"
+                formName="education"
+                fieldName="institution_name"
+                staticOptions={optionsInst}
               />
             </div>
           </div>
@@ -195,18 +220,24 @@ function Education() {
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-1">
               <FormLabel label="LOCATION" />
-              <InputWithIcon
+              <AutocompleteInput
                 value={userLocation}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Enter location"
+                placeholder="Enter or select location"
+                formName="education"
+                fieldName="location"
+                staticOptions={optionsLoc}
               />
             </div>
             <div className="flex-1">
               <FormLabel label="FIELD OF STUDY" />
-              <InputWithIcon
+              <AutocompleteInput
                 value={fieldOfStudy}
                 onChange={(e) => setFieldOfStudy(e.target.value)}
-                placeholder="Enter field of study"
+                placeholder="Enter or select field of study"
+                formName="education"
+                fieldName="field_of_study"
+                staticOptions={optionsField}
               />
             </div>
           </div>
@@ -214,10 +245,13 @@ function Education() {
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-1">
               <FormLabel label="DEGREE" />
-              <InputWithIcon
+              <AutocompleteInput
                 value={degree}
                 onChange={(e) => setDegree(e.target.value)}
-                placeholder="Enter degree"
+                placeholder="Enter or select degree"
+                formName="education"
+                fieldName="degree"
+                staticOptions={optionsDegree}
               />
             </div>
             <div className="flex-1">
@@ -347,9 +381,15 @@ function Education() {
             setIsLoading(true);
 
             try {
-              // Save all education entries
               for (const edu of educationToSave) {
-                await axiosInstance.post(`/api/cv-builder/education`, edu);
+                if (edu.id) {
+                  await axiosInstance.put(
+                    `/api/cv-builder/education/${user?.id}/${edu.id}`,
+                    edu,
+                  );
+                } else {
+                  await axiosInstance.post(`/api/cv-builder/education`, edu);
+                }
               }
 
               setIsLoading(false);
