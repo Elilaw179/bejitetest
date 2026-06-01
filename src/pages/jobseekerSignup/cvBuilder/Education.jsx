@@ -16,7 +16,7 @@ import Loader from "../../../components/ui/Loader";
 import axiosInstance from "../../../utils/axiosInstance";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
 import FormLabel from "../../../components/forms/FormLabel";
-import { formatDateRange } from "../../../utils/checksFormat";
+import { formatDateForInput, formatDateRange } from "../../../utils/checksFormat";
 
 // Dummy data for autocomplete suggestions
 const EDUCATIONAL_LEVELS = [
