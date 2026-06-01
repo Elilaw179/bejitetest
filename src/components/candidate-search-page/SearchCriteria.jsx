@@ -1,9 +1,10 @@
 
-import React, { memo } from "react";
+import React, { memo, useState, useEffect } from "react";
 import { FaCheck, FaSearch } from "react-icons/fa";
+import { Country, State } from "country-state-city";
 
 // Move components outside to prevent recreation on every render
-const SearchInput = memo(({ id, label, options, placeholder, value, onChange }) => (
+const SearchInput = memo(({ id, label, options, placeholder, value, onChange, disabled }) => (
   <div className="w-full p-3 sm:p-4 rounded-lg">
     <label htmlFor={id} className="text-[#16730F] text-sm sm:text-[12px] font-medium block mb-1">
       {label}
@@ -15,10 +16,13 @@ const SearchInput = memo(({ id, label, options, placeholder, value, onChange }) 
         name={id}
         value={value}
         onChange={onChange}
-        className="w-full rounded-xl px-4 py-2 sm:py-3 pr-10 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#16730F] bg-white text-gray-800 text-sm sm:text-base"
+        disabled={disabled}
+        className={`w-full rounded-xl px-4 py-2 sm:py-3 pr-10 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#16730F] bg-white text-gray-800 text-sm sm:text-base ${
+          disabled ? "opacity-50 cursor-not-allowed bg-gray-100" : ""
+        }`}
         placeholder={placeholder}
       />
-      {value && (
+      {value && !disabled && (
         <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
       )}
       <datalist id={`${id}List`}>
@@ -63,9 +67,54 @@ const Divider = () => (
 );
 
 const SearchCriteria = ({ formData, setFormData, onSearch }) => {
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [selectedCountryCode, setSelectedCountryCode] = useState("");
+
+  // Load all countries on component mount
+  useEffect(() => {
+    const allCountries = Country.getAllCountries();
+    const countryNames = allCountries.map(country => country.name);
+    setCountries(countryNames);
+  }, []);
+
+  // Update states when country changes
+  useEffect(() => {
+    if (formData.countryInput) {
+      const allCountries = Country.getAllCountries();
+      const selected = allCountries.find(country => country.name === formData.countryInput);
+      if (selected) {
+        setSelectedCountryCode(selected.isoCode);
+        try {
+          const stateList = State.getStatesOfCountry(selected.isoCode);
+          if (stateList && stateList.length > 0) {
+            const stateNames = stateList.map(state => state.name);
+            setStates(stateNames);
+          } else {
+            setStates([]);
+            console.log(`No states found for country: ${selected.name}`);
+          }
+        } catch (error) {
+          console.error("Error fetching states:", error);
+          setStates([]);
+        }
+      }
+    } else {
+      setStates([]);
+      setSelectedCountryCode("");
+    }
+  }, [formData.countryInput]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      // Clear state if country is cleared
+      if (name === "countryInput" && !value) {
+        updated.stateInput = "";
+      }
+      return updated;
+    });
   };
 
   // Check if at least one field has a value
@@ -86,8 +135,32 @@ const SearchCriteria = ({ formData, setFormData, onSearch }) => {
 
           <SearchInput id="jobInput" label="JOB TITLE" options={["Software Engineer", "Product Designer", "Data Analyst", "Project Manager", "Marketing Specialist"]} placeholder="Enter your job or select from list" value={formData.jobInput} onChange={handleChange} />
           <SearchInput id="industryInput" label="INDUSTRY" options={["Technology", "Healthcare", "Finance", "Education", "Retail"]} placeholder="Enter sector" value={formData.industryInput} onChange={handleChange} />
-          <SearchInput id="countryInput" label="PREFERRED COUNTRYs" options={["United States", "United Kingdom", "Canada", "Germany", "Australia", "Nigeria"]} placeholder="Enter or select" value={formData.countryInput} onChange={handleChange} />
-          <SearchInput id="stateInput" label="PREFERRED STATE" options={["California", "Texas", "New York", "Florida", "Illinois"]} placeholder="Enter or select" value={formData.stateInput} onChange={handleChange} />
+          <SearchInput id="countryInput" label="PREFERRED COUNTRY" options={countries} placeholder="Enter or select" value={formData.countryInput} onChange={handleChange} />
+          {formData.countryInput && states.length > 0 ? (
+            <SearchInput 
+              id="stateInput" 
+              label="PREFERRED STATE" 
+              options={states} 
+              placeholder="Select a state" 
+              value={formData.stateInput} 
+              onChange={handleChange} 
+            />
+          ) : formData.countryInput && states.length === 0 ? (
+            <div className="w-full p-3 sm:p-4 rounded-lg">
+              <p className="text-[#16730F] text-sm font-medium">PREFERRED STATE</p>
+              <p className="text-gray-500 text-sm mt-2">No states available for this country</p>
+            </div>
+          ) : (
+            <SearchInput 
+              id="stateInput" 
+              label="PREFERRED STATE" 
+              options={[]} 
+              placeholder="Select a country first" 
+              value={formData.stateInput} 
+              onChange={handleChange} 
+              disabled={true}
+            />
+          )}
           <SearchInput id="workTypeInput" label="WORK TYPE" options={["Full-time", "Part-time", "Contract", "Freelance", "Remote"]} placeholder="Enter or select" value={formData.workTypeInput} onChange={handleChange} />
 
           <GroupedInputs>
