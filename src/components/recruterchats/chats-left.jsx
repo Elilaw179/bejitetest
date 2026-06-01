@@ -161,7 +161,7 @@ function ChatsLeft({ onSelectChat }) {
 
 
       {/* Conversations/Search Results List */}
-      <div className="flex-1 overflow-y-auto border-t border-[#556B1F]">
+      <div className="flex-1 overflow-y-auto nfl-sidebar-scroll scroll-smooth border-t border-[#556B1F]">
         <div className="px-2 mt-4">
           {loading && !isSearching ? (
             <div className="text-center text-[#556B1F] py-4">

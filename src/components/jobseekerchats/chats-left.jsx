@@ -99,7 +99,7 @@ function ChatsLeft({ onSelectChat, onBack }) {
   
   
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto border-t border-[#556B1F]">
+        <div className="flex-1 overflow-y-auto nfl-sidebar-scroll scroll-smooth border-t border-[#556B1F]">
           <div className="px-2 mt-4">
             {conversations.map((chat) => (
               <div

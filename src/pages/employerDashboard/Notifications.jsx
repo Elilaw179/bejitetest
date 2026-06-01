@@ -406,7 +406,7 @@ const Notifications = () => {
         {/* Interview Invitation Modal */}
         {selectedNotification && selectedNotification.type === 'interview_invite' && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto nfl-scroll scroll-smooth">
               <div className="p-6">
                 <h2 className="text-xl font-semibold text-[#16730F] mb-4">Interview Invitation</h2>
 

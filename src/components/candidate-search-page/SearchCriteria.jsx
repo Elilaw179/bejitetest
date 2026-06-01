@@ -1,7 +1,7 @@
 
-import React, { memo, useState, useEffect } from "react";
+import React, { memo } from "react";
 import { FaCheck, FaSearch } from "react-icons/fa";
-import { Country, State } from "country-state-city";
+import useCountryStateOptions from "../../hooks/useCountryStateOptions";
 
 // Move components outside to prevent recreation on every render
 const SearchInput = memo(({ id, label, options, placeholder, value, onChange, disabled }) => (
@@ -67,47 +67,13 @@ const Divider = () => (
 );
 
 const SearchCriteria = ({ formData, setFormData, onSearch }) => {
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-
-  // Load all countries on component mount
-  useEffect(() => {
-    const allCountries = Country.getAllCountries();
-    const countryNames = allCountries.map(country => country.name);
-    setCountries(countryNames);
-  }, []);
-
-  // Update states when country changes
-  useEffect(() => {
-    if (formData.countryInput) {
-      const allCountries = Country.getAllCountries();
-      const selected = allCountries.find(country => country.name === formData.countryInput);
-      if (selected) {
-        try {
-          const stateList = State.getStatesOfCountry(selected.isoCode);
-          if (stateList && stateList.length > 0) {
-            const stateNames = stateList.map(state => state.name);
-            setStates(stateNames);
-          } else {
-            setStates([]);
-            console.log(`No states found for country: ${selected.name}`);
-          }
-        } catch (error) {
-          console.error("Error fetching states:", error);
-          setStates([]);
-        }
-      }
-    } else {
-      setStates([]);
-    }
-  }, [formData.countryInput]);
+  const { countries, states } = useCountryStateOptions(formData.countryInput);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => {
       const updated = { ...prev, [name]: value };
-      // Clear state if country is cleared
-      if (name === "countryInput" && !value) {
+      if (name === "countryInput" && value !== prev.countryInput) {
         updated.stateInput = "";
       }
       return updated;

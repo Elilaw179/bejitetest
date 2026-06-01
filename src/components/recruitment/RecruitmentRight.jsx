@@ -127,7 +127,7 @@ function RecruitmentRight() {
           </div>
         </div>
 
-        <div className="flex-1 mt-3 p-4 pb-6 overflow-y-auto rounded-b-2xl">
+        <div className="flex-1 mt-3 p-4 pb-6 overflow-y-auto nfl-sidebar-scroll scroll-smooth rounded-b-2xl">
           <div className="space-y-4 cursor-pointer">
             <div
               className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200"

@@ -18,10 +18,10 @@ import {
   REMOTE_PREFERENCE_OPTIONS,
   AVAILABILITY_OPTIONS,
   RATE_OPTIONS,
-  getStateOptions,
   currencyLabelFromCode,
   currencyCodeFromLabel,
 } from "../../data/jobTypeData";
+import useCountryStateOptions from "../../hooks/useCountryStateOptions";
 
 const SelectField = ({ label, value, onChange, options, placeholder = "Select" }) => {
   const [inputValue, setInputValue] = useState(value);
@@ -138,14 +138,20 @@ function JobType() {
     fetchJobType();
   }, [userId, dataLoaded]);
 
-  const allFilled = Object.values(form).every((val) => String(val).trim() !== "");
-  const states = getStateOptions(form.country);
+  const { states } = useCountryStateOptions(form.country);
+
+  const allFilled = Object.entries(form).every(([key, val]) => {
+    if (key === "statePref" && form.country && states.length === 0) {
+      return true;
+    }
+    return String(val).trim() !== "";
+  });
 
   const updateField = (field) => (e) => {
     const value = e.target.value;
     setForm((prev) => {
       const next = { ...prev, [field]: value };
-      if (field === "country") {
+      if (field === "country" && value !== prev.country) {
         next.statePref = "";
       }
       return next;
@@ -292,7 +298,13 @@ function JobType() {
                     value={form.statePref}
                     onChange={updateField("statePref")}
                     options={states}
-                    placeholder="Select state"
+                    placeholder={
+                      !form.country
+                        ? "Select country first"
+                        : states.length > 0
+                          ? "Select state"
+                          : "Enter region (optional)"
+                    }
                   />
                   <SelectField
                     label="WORK TYPE"

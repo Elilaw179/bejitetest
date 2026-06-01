@@ -1,14 +1,19 @@
 import React from "react";
 import { FaCheck } from "react-icons/fa";
+import useCountryStateOptions from "../../hooks/useCountryStateOptions";
 
 const JobSearchFormGreen = ({ formData, setFormData, onSearch }) => {
+  const { countries, states } = useCountryStateOptions(formData.countryInput);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === "countryInput" && value !== prev.countryInput) {
+        next.stateInput = "";
+      }
+      return next;
+    });
   };
 
   return (
@@ -55,24 +60,37 @@ const JobSearchFormGreen = ({ formData, setFormData, onSearch }) => {
           value={formData.countryInput}
           onChange={handleChange}
           placeholder="Enter or select"
-          options={[
-            "United States",
-            "United Kingdom",
-            "Canada",
-            "Germany",
-            "Australia",
-          ]}
+          options={countries}
         />
         <Divider small />
 
-        <SearchInput
-          id="stateInput"
-          label="PREFERRED STATE"
-          value={formData.stateInput}
-          onChange={handleChange}
-          placeholder="Enter or select"
-          options={["California", "Texas", "New York", "Florida", "Illinois"]}
-        />
+        {formData.countryInput && states.length > 0 ? (
+          <SearchInput
+            id="stateInput"
+            label="PREFERRED STATE"
+            value={formData.stateInput}
+            onChange={handleChange}
+            placeholder="Select a state"
+            options={states}
+          />
+        ) : formData.countryInput && states.length === 0 ? (
+          <div className="w-full p-3 sm:p-4 rounded-lg">
+            <p className="text-[#ffffff] text-sm font-medium">PREFERRED STATE</p>
+            <p className="text-white/70 text-sm mt-2">
+              No states listed for this country — leave blank or type in the main search.
+            </p>
+          </div>
+        ) : (
+          <SearchInput
+            id="stateInput"
+            label="PREFERRED STATE"
+            value={formData.stateInput}
+            onChange={handleChange}
+            placeholder="Select a country first"
+            options={[]}
+            disabled
+          />
+        )}
         <Divider small />
 
         <SearchInput
@@ -247,6 +265,7 @@ const SearchInput = ({
   placeholder,
   options = [],
   type = "datalist",
+  disabled = false,
 }) => {
   return (
     <div className="w-full p-3 sm:p-4 rounded-lg">
@@ -258,15 +277,18 @@ const SearchInput = ({
       </label>
       <div className="relative">
         <input
-          list={type === "datalist" ? `${id}List` : undefined}
+          list={type === "datalist" && !disabled ? `${id}List` : undefined}
           id={id}
           name={id}
           value={value}
           onChange={onChange}
-          className="w-full rounded-xl px-4 py-2 sm:py-3 pr-10 border border-[#556B1F] focus:outline-none focus:ring-2 focus:ring-[#16730F] text-[#ffffff] text-sm sm:text-base"
+          disabled={disabled}
+          className={`w-full rounded-xl px-4 py-2 sm:py-3 pr-10 border border-[#556B1F] focus:outline-none focus:ring-2 focus:ring-[#16730F] text-[#ffffff] text-sm sm:text-base ${
+            disabled ? "opacity-50 cursor-not-allowed" : ""
+          }`}
           placeholder={placeholder}
         />
-        {value && (
+        {value && !disabled && (
           <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
         )}
         {type === "datalist" && options.length > 0 && (

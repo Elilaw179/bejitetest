@@ -1,3 +1,8 @@
+import {
+  getAllCountryNames,
+  getStateNamesByCountryName,
+} from "../utils/countryStateData";
+
 export const JOB_TITLE_OPTIONS = [
   "Software Engineer",
   "Project Manager",
@@ -67,57 +72,7 @@ export const INDUSTRY_OPTIONS = [
   "Not Available",
 ];
 
-export const COUNTRY_OPTIONS = [
-  "Nigeria",
-  "United States",
-  "Canada",
-  "United Kingdom",
-  "Germany",
-  "France",
-  "India",
-  "China",
-  "South Africa",
-  "Brazil",
-  "Australia",
-  "Italy",
-  "Japan",
-  "Kenya",
-  "Mexico",
-  "Netherlands",
-  "Russia",
-  "Spain",
-  "Sweden",
-  "Argentina",
-  "Egypt",
-  "Turkey",
-  "South Korea",
-  "Norway",
-  "Poland",
-  "Indonesia",
-  "Saudi Arabia",
-  "Thailand",
-  "Vietnam",
-  "Philippines",
-  "Malaysia",
-  "Greece",
-  "Ukraine",
-  "Pakistan",
-  "Bangladesh",
-  "New Zealand",
-  "Colombia",
-  "Chile",
-  "Peru",
-  "Finland",
-  "Portugal",
-  "Denmark",
-  "Switzerland",
-  "Belgium",
-  "Austria",
-  "Ireland",
-  "Czech Republic",
-  "Hungary",
-  "Not Available",
-];
+export const COUNTRY_OPTIONS = getAllCountryNames();
 
 export const WORK_TYPE_OPTIONS = [
   "Full-time",
@@ -239,137 +194,7 @@ export const AVAILABILITY_OPTIONS = [
 
 export const RATE_OPTIONS = ["Hourly rate", "Monthly Salary"];
 
-export const getStateOptions = (country) => {
-  const normalizedCountry = country?.toLowerCase() || "";
-  if (normalizedCountry.includes("nigeria")) {
-    return [
-      "Abia",
-      "Adamawa",
-      "Akwa Ibom",
-      "Anambra",
-      "Bauchi",
-      "Bayelsa",
-      "Benue",
-      "Borno",
-      "Cross River",
-      "Delta",
-      "Ebonyi",
-      "Edo",
-      "Ekiti",
-      "Enugu",
-      "Gombe",
-      "Imo",
-      "Jigawa",
-      "Kaduna",
-      "Kano",
-      "Katsina",
-      "Kebbi",
-      "Kogi",
-      "Kwara",
-      "Lagos",
-      "Nasarawa",
-      "Niger",
-      "Ogun",
-      "Ondo",
-      "Osun",
-      "Oyo",
-      "Plateau",
-      "Rivers",
-      "Sokoto",
-      "Taraba",
-      "Yobe",
-      "Zamfara",
-      "Federal Capital Territory",
-    ];
-  }
-  if (normalizedCountry.includes("united states") || normalizedCountry.includes("usa")) {
-    return [
-      "Alabama",
-      "Alaska",
-      "Arizona",
-      "Arkansas",
-      "California",
-      "Colorado",
-      "Connecticut",
-      "Delaware",
-      "Florida",
-      "Georgia",
-      "Hawaii",
-      "Idaho",
-      "Illinois",
-      "Indiana",
-      "Iowa",
-      "Kansas",
-      "Kentucky",
-      "Louisiana",
-      "Maine",
-      "Maryland",
-      "Massachusetts",
-      "Michigan",
-      "Minnesota",
-      "Mississippi",
-      "Missouri",
-      "Montana",
-      "Nebraska",
-      "Nevada",
-      "New Hampshire",
-      "New Jersey",
-      "New Mexico",
-      "New York",
-      "North Carolina",
-      "North Dakota",
-      "Ohio",
-      "Oklahoma",
-      "Oregon",
-      "Pennsylvania",
-      "Rhode Island",
-      "South Carolina",
-      "South Dakota",
-      "Tennessee",
-      "Texas",
-      "Utah",
-      "Vermont",
-      "Virginia",
-      "Washington",
-      "West Virginia",
-      "Wisconsin",
-      "Wyoming",
-    ];
-  }
-  if (normalizedCountry.includes("canada")) {
-    return [
-      "Alberta",
-      "British Columbia",
-      "Manitoba",
-      "New Brunswick",
-      "Newfoundland and Labrador",
-      "Northwest Territories",
-      "Nova Scotia",
-      "Nunavut",
-      "Ontario",
-      "Prince Edward Island",
-      "Quebec",
-      "Saskatchewan",
-      "Yukon",
-    ];
-  }
-  if (normalizedCountry.includes("united kingdom") || normalizedCountry.includes("uk")) {
-    return ["England", "Scotland", "Wales", "Northern Ireland"];
-  }
-  if (normalizedCountry.includes("australia")) {
-    return [
-      "Australian Capital Territory",
-      "New South Wales",
-      "Northern Territory",
-      "Queensland",
-      "South Australia",
-      "Tasmania",
-      "Victoria",
-      "Western Australia",
-    ];
-  }
-  return ["Not Available"];
-};
+export const getStateOptions = (country) => getStateNamesByCountryName(country);
 
 export const currencyLabelFromCode = (code, options = CURRENCY_OPTIONS) => {
   if (!code) return "";

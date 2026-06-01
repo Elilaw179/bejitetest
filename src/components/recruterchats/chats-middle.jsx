@@ -154,7 +154,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   </div>
 
   {/* Messages Area */}
-  <div className="flex-1 min-h-0 overflow-y-auto p-2 md:p-4">
+  <div className="flex-1 min-h-0 overflow-y-auto nfl-scroll scroll-smooth p-2 md:p-4">
     {loading ? (
       <div className="text-center text-[#16730F] py-2 md:py-4">
         Loading messages...
