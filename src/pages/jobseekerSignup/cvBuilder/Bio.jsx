@@ -268,6 +268,14 @@ const Bio = () => {
 
       <NavigationButtons
         isFormComplete={isFormComplete}
+        showSkip={true}
+        onSkip={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep + 1));
+          } else {
+            navigate("/links");
+          }
+        }}
         onBack={() => {
           if (isEditMode) {
             navigate(getPath(currentStep - 1));

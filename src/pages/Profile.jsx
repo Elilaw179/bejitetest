@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaBuilding, FaEdit, FaArrowLeft } from 'react-icons/fa';
-import NewsFeedHeader from '../components/NewsFeedHeader';
+import NewsFeedLayout from '../components/layout/NewsFeedLayout';
 import ProfileCvSections from '../components/ProfileCvSections';
 import axiosInstance from '../utils/axiosInstance';
 import { fetchCurrentUserProfilePhoto } from '../services/profilePhotoService';
@@ -15,6 +15,9 @@ import {
   profilePayloadLooksUsable,
   profileFromSearchPreview,
 } from '../utils/profileUtils';
+
+const ABOUT_CHAR_LIMIT = 500;
+
 
 const buildAvatarCandidates = (rawPhoto) => {
   const candidates = [];
@@ -154,12 +157,12 @@ const Profile = () => {
             merged = merged
               ? { ...merged, profile_photo: photoUrl }
               : normalizeProfileData({
-                  id: currentUser?.id,
-                  profile_photo: photoUrl,
-                  firstName: currentUser?.firstName,
-                  lastName: currentUser?.lastName,
-                  email: currentUser?.email,
-                });
+                id: currentUser?.id,
+                profile_photo: photoUrl,
+                firstName: currentUser?.firstName,
+                lastName: currentUser?.lastName,
+                email: currentUser?.email,
+              });
             profileFound = true;
           }
         } catch {
@@ -186,6 +189,7 @@ const Profile = () => {
   useEffect(() => {
     fetchProfileData();
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const isViewingOwnProfile =
     !userId || String(userId) === String(user?.id ?? '');
@@ -225,25 +229,28 @@ const Profile = () => {
     }
   };
 
+
+  const [isAboutExpanded, setIsAboutExpanded] = useState(false);
+  const aboutText = profileData?.bio || profileData?.summary;
+  const needsTruncation = aboutText?.length > ABOUT_CHAR_LIMIT;
+
   if (loading) {
     return (
-      <div>
-        <NewsFeedHeader />
-        <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
+      <NewsFeedLayout showSidebars={false}>
+        <div className="min-h-[60vh] flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F] mx-auto"></div>
             <p className="mt-4 text-[#1A3E32]">Loading profile...</p>
           </div>
         </div>
-      </div>
+      </NewsFeedLayout>
     );
   }
 
   if (error) {
     return (
-      <div>
-        <NewsFeedHeader />
-        <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
+      <NewsFeedLayout showSidebars={false}>
+        <div className="min-h-[60vh] flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
             <button
@@ -254,15 +261,14 @@ const Profile = () => {
             </button>
           </div>
         </div>
-      </div>
+      </NewsFeedLayout>
     );
   }
 
   if (!profileData && !loading) {
     return (
-      <div>
-        <NewsFeedHeader />
-        <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
+      <NewsFeedLayout classes={false} scrollable={false} showSidebars={false}>
+        <div className="min-h-[60vh] flex items-center justify-center">
           <div className="text-center">
             <p className="text-gray-600 mb-4">No profile data found</p>
             <p className="text-sm text-gray-500 mb-4">
@@ -282,14 +288,12 @@ const Profile = () => {
             </button>
           </div>
         </div>
-      </div>
+      </NewsFeedLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
-      <NewsFeedHeader />
-
+    <NewsFeedLayout showSidebars={false}>
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <button
@@ -374,9 +378,30 @@ const Profile = () => {
         {(profileData.bio || profileData.summary) && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             <h2 className="text-xl font-semibold text-[#1A3E32] mb-4">About</h2>
-            <p className="text-gray-700 leading-relaxed">
-              {profileData.bio || profileData.summary}
-            </p>
+            <div className="relative">
+              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+                {!needsTruncation || isAboutExpanded
+                  ? aboutText
+                  : aboutText.slice(0, ABOUT_CHAR_LIMIT) + '...'}
+              </p>
+              {needsTruncation && (
+                <button
+                  onClick={() => setIsAboutExpanded(!isAboutExpanded)}
+                  className="mt-2 text-[#16730F] hover:text-[#145a0c] font-medium transition-colors inline-flex items-center gap-1 group"
+                >
+                  <span>{isAboutExpanded ? 'See less' : 'See more'}</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 ${isAboutExpanded ? 'rotate-180' : ''
+                      }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -404,7 +429,7 @@ const Profile = () => {
           </button>
         </div>
       )}
-    </div>
+    </NewsFeedLayout>
   );
 };
 

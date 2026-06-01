@@ -74,44 +74,44 @@ const SearchCriteria = ({ formData, setFormData, isFormComplete, onSearch }) => 
       <div className="max-w-3xl m-auto px-6 py-6 mt-2">
         <div className="max-w-3xl mx-auto rounded-2xl p-4 sm:p-6 bg-white shadow-sm">
           <p className="text-xl sm:text-2xl font-medium text-[#16730F] text-center">
-            Search Criteria   
+            Search Criteria
           </p>
         </div>
-        
+
         <Divider />
 
         <div className="max-w-3xl mx-auto rounded-2xl p-4 sm:p-6 bg-white shadow-sm space-y-4">
-         
-          <SearchInput id="jobInput" label="JOB TITLE" options={["Software Engineer","Product Designer","Data Analyst","Project Manager","Marketing Specialist"]} placeholder="Enter your job or select from list" />
-          <SearchInput id="industryInput" label="INDUSTRY" options={["Technology","Healthcare","Finance","Education","Retail"]} placeholder="Enter sector" />
-          <SearchInput id="countryInput" label="PREFERRED COUNTRY" options={["United States","United Kingdom","Canada","Germany","Australia"]} placeholder="Enter or select" />
-          <SearchInput id="stateInput" label="PREFERRED STATE" options={["California","Texas","New York","Florida","Illinois"]} placeholder="Enter or select" />
-          <SearchInput id="workTypeInput" label="WORK TYPE" options={["Full-time","Part-time","Contract","Freelance","Remote"]} placeholder="Enter or select" />
+
+          <SearchInput id="jobInput" label="JOB TITLE" options={["Software Engineer", "Product Designer", "Data Analyst", "Project Manager", "Marketing Specialist"]} placeholder="Enter your job or select from list" />
+          <SearchInput id="industryInput" label="INDUSTRY" options={["Technology", "Healthcare", "Finance", "Education", "Retail"]} placeholder="Enter sector" />
+          <SearchInput id="countryInput" label="PREFERRED COUNTRY" options={["United States", "United Kingdom", "Canada", "Germany", "Australia"]} placeholder="Enter or select" />
+          <SearchInput id="stateInput" label="PREFERRED STATE" options={["California", "Texas", "New York", "Florida", "Illinois"]} placeholder="Enter or select" />
+          <SearchInput id="workTypeInput" label="WORK TYPE" options={["Full-time", "Part-time", "Contract", "Freelance", "Remote"]} placeholder="Enter or select" />
 
           <GroupedInputs>
             <TextInput id="salaryInput" label="SALARY" placeholder="Enter" />
-            <SearchInput id="currencyInput" label="CURRENCY" options={["USD","EUR","GBP","JPY","CAD"]} placeholder="Enter or select" />
+            <SearchInput id="currencyInput" label="CURRENCY" options={["USD", "EUR", "GBP", "JPY", "CAD"]} placeholder="Enter or select" />
           </GroupedInputs>
 
           <GroupedInputs>
             <TextInput id="remoteInput" label="REMOTE REFERENCE" placeholder="Enter" />
-            <SearchInput id="availabilityInput" label="AVAILABILITY" options={["Immediately","1-2 weeks","1 month","2 months","3+ months"]} placeholder="Enter or select" />
+            <SearchInput id="availabilityInput" label="AVAILABILITY" options={["Immediately", "1-2 weeks", "1 month", "2 months", "3+ months"]} placeholder="Enter or select" />
           </GroupedInputs>
 
-          <SearchInput id="educationInput" label="EDUCATION" options={["High School","Associate Degree","Bachelor's Degree","Master's Degree","PhD"]} placeholder="Enter or select" />
-          <SearchInput id="skillInput" label="SKILL" options={["JavaScript","React","Node.js","Python","SQL"]} placeholder="Enter or select" />
+          <SearchInput id="educationInput" label="EDUCATION" options={["High School", "Associate Degree", "Bachelor's Degree", "Master's Degree", "PhD"]} placeholder="Enter or select" />
+          <SearchInput id="skillInput" label="SKILL" options={["JavaScript", "React", "Node.js", "Python", "SQL"]} placeholder="Enter or select" />
 
           <GroupedInputs>
             <TextInput id="tribeInput" label="TRIBE" placeholder="Enter" />
-            <SearchInput id="ageInput" label="AGE" options={["18-24","25-34","35-44","45-54","55+"]} placeholder="Enter or select" />
+            <SearchInput id="ageInput" label="AGE" options={["18-24", "25-34", "35-44", "45-54", "55+"]} placeholder="Enter or select" />
           </GroupedInputs>
 
           <GroupedInputs>
             <TextInput id="genderInput" label="GENDER" placeholder="Enter" />
-            <SearchInput id="maritalInput" label="MARITAL" options={["Single","Married","Divorced","Widowed","Separated"]} placeholder="Enter or select" />
+            <SearchInput id="maritalInput" label="MARITAL" options={["Single", "Married", "Divorced", "Widowed", "Separated"]} placeholder="Enter or select" />
           </GroupedInputs>
 
-          
+
           <div className="mt-6 sm:mt-10">
             <button
               onClick={onSearch}

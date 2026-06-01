@@ -37,6 +37,19 @@ const CoperateVerify = () => {
     }
   };
 
+  const handleSkip = () => {
+    if (isEditMode) {
+      if (currentStep === 5) {
+        navigate("/news-feed");
+      } else {
+        navigate(getPath(currentStep + 1));
+      }
+    } else {
+      navigate("/news-feed");
+    }
+
+  };
+
   return (
     <div className="bg-white min-h-screen relative">
       <Header />
@@ -48,7 +61,7 @@ const CoperateVerify = () => {
             <h1 className="text-xl font-[500] text-[#16730F] italic">Almost there!</h1>
 
             <h1 className="text-[#16730F] font-[600] text-3xl text-center">
-             Confirm your Identity as an Individual Employer
+              Confirm your Identity as an Individual Employer
             </h1>
 
             <div className="mb-5 gap-y-1 flex flex-col">
@@ -65,6 +78,15 @@ const CoperateVerify = () => {
             >
               Start Verification
             </button>
+
+            <button
+              className="bg-[#fff] border border-[#16730F] text-[#16730F] py-3 w-[80%] rounded-full shadow-md disabled:opacity-50"
+              onClick={handleSkip}
+            // disabled={!agreed}
+            >
+              Skip
+            </button>
+
 
             <div
               className="flex justify-center w-full sm:w-auto bg-white items-center px-2 py-1 rounded cursor-pointer"
@@ -99,13 +121,23 @@ const CoperateVerify = () => {
               </label>
             </div>
 
+
             <button
-              className="bg-[#16730F] text-white py-3 w-[40%] rounded-full shadow-md disabled:opacity-50"
+              className=" text-white py-3 w-[40%] rounded-full shadow-md disabled:opacity-50"
               onClick={handleContinue}
-              disabled={!agreed}
+            // disabled={!agreed}
             >
               Continue
             </button>
+
+            <button
+              className="bg-[#fff] border border-[#16730F] text-[#16730F] py-3 w-[80%] rounded-full shadow-md disabled:opacity-50"
+              onClick={handleSkip}
+            // disabled={!agreed}
+            >
+              Skip
+            </button>
+
 
             <button
               className="mt-4 underline text-green-900 flex items-center gap-2"

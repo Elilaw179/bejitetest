@@ -28,7 +28,8 @@ const OnboardingLayout = ({
         className=" bg-transparent "
         onClick={() => {
           if (isEditMode) {
-            navigate(getPath(currentStep - 1));
+            navigate("/news-feed")
+            // navigate(getPath(currentStep - 1));
           } else {
             navigate(-1);
           }

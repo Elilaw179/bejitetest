@@ -93,9 +93,16 @@ const authSlice = createSlice({
             state.user = merged;
           }
         } catch {
-          localStorage.setItem("user", JSON.stringify(action.payload));
-          if (action.payload?.id || action.payload?.email) {
-            state.user = action.payload;
+          let fallback = {};
+          try {
+            fallback = JSON.parse(localStorage.getItem("user") || "{}");
+          } catch {
+            /* keep empty fallback */
+          }
+          const merged = { ...fallback, ...action.payload };
+          localStorage.setItem("user", JSON.stringify(merged));
+          if (merged?.id || merged?.email) {
+            state.user = merged;
           }
         }
       }

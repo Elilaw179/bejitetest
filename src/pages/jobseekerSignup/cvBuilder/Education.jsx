@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Header from "../../../components/Header";
 import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
@@ -24,6 +24,200 @@ import {
   optionsField,
   optionsDegree,
 } from "../../../data/educationData";
+import { formatDateForInput, formatDateRange } from "../../../utils/checksFormat";
+
+// Dummy data for autocomplete suggestions
+const EDUCATIONAL_LEVELS = [
+  "High School Diploma",
+  "GED",
+  "Associate's Degree",
+  "Bachelor's Degree",
+  "Master's Degree",
+  "Doctorate (PhD)",
+  "Professional Degree (MD, JD, etc.)",
+  "Certificate Program",
+  "Diploma",
+  "Trade School",
+  "Vocational Training",
+  "Postdoctoral Fellowship",
+  "Postgraduate Certificate",
+  "Some College",
+  "Technical Degree",
+];
+
+const INSTITUTIONS = [
+  "Harvard University",
+  "Stanford University",
+  "MIT",
+  "University of Oxford",
+  "University of Cambridge",
+  "Columbia University",
+  "University of California, Berkeley",
+  "Yale University",
+  "Princeton University",
+  "University of Chicago",
+  "University of Pennsylvania",
+  "University of Michigan",
+  "Cornell University",
+  "University of Toronto",
+  "University of British Columbia",
+  "New York University",
+  "University of Texas at Austin",
+  "University of Washington",
+  "Boston University",
+  "University of California, Los Angeles",
+];
+
+const FIELDS_OF_STUDY = [
+  "Computer Science",
+  "Business Administration",
+  "Engineering",
+  "Medicine",
+  "Law",
+  "Psychology",
+  "Economics",
+  "Political Science",
+  "Biology",
+  "Chemistry",
+  "Physics",
+  "Mathematics",
+  "English Literature",
+  "History",
+  "Sociology",
+  "Marketing",
+  "Finance",
+  "Accounting",
+  "Graphic Design",
+  "Nursing",
+  "Education",
+  "Architecture",
+  "Philosophy",
+  "Communications",
+  "International Relations",
+];
+
+const DEGREES = [
+  "BSc",
+  "BA",
+  "BEng",
+  "BBA",
+  "LLB",
+  "MD",
+  "PhD",
+  "MSc",
+  "MA",
+  "MBA",
+  "MEng",
+  "JD",
+  "EdD",
+  "DBA",
+  "Associate of Arts",
+  "Associate of Science",
+  "High School Diploma",
+  "Certificate",
+  "Diploma",
+  "Postgraduate Diploma",
+];
+
+// Autocomplete Input Component
+const AutocompleteInput = ({ value, onChange, placeholder, suggestions, onAddNew }) => {
+  const [inputValue, setInputValue] = useState(value);
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+        setIsAddingNew(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleInputChange = (e) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    onChange(e);
+
+    if (newValue.trim()) {
+      const filtered = suggestions.filter(suggestion =>
+        suggestion.toLowerCase().includes(newValue.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(true);
+      setIsAddingNew(filtered.length === 0);
+    } else {
+      setFilteredSuggestions([]);
+      setShowSuggestions(false);
+      setIsAddingNew(false);
+    }
+  };
+
+  const handleSelectSuggestion = (suggestion) => {
+    setInputValue(suggestion);
+    onChange({ target: { value: suggestion } });
+    setShowSuggestions(false);
+    setIsAddingNew(false);
+  };
+
+  const handleAddNew = () => {
+    if (inputValue.trim()) {
+      handleSelectSuggestion(inputValue.trim());
+      if (onAddNew) onAddNew(inputValue.trim());
+      toast.success(`Added new: ${inputValue}`);
+    }
+  };
+
+  return (
+    <div ref={wrapperRef} className="relative w-full">
+      <input
+        type="text"
+        value={inputValue}
+        onChange={handleInputChange}
+        onFocus={() => inputValue.trim() && setShowSuggestions(true)}
+        placeholder={placeholder}
+        className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm placeholder-gray-400"
+      />
+      {inputValue && (
+        <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
+      )}
+
+      {showSuggestions && filteredSuggestions.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+          {filteredSuggestions.map((suggestion, index) => (
+            <div
+              key={index}
+              onClick={() => handleSelectSuggestion(suggestion)}
+              className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 transition-colors"
+            >
+              {suggestion}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showSuggestions && isAddingNew && inputValue.trim() && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
+          <div
+            onClick={handleAddNew}
+            className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-[#1A3E32] font-medium transition-colors flex items-center gap-2"
+          >
+            <FaPlus className="text-xs" />
+            Add "{inputValue}"
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 function Education() {
   const navigate = useNavigate();
@@ -50,9 +244,16 @@ function Education() {
   const [degree, setDegree] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [isCurrentlyStudying, setIsCurrentlyStudying] = useState(false);
   const [allFilled, setAllFilled] = useState(false);
   const [allEducation, setAllEducation] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Dynamic suggestions that can be updated with user-added items
+  const [educationalLevelsList, setEducationalLevelsList] = useState(EDUCATIONAL_LEVELS);
+  const [institutionsList, setInstitutionsList] = useState(INSTITUTIONS);
+  const [fieldsOfStudyList, setFieldsOfStudyList] = useState(FIELDS_OF_STUDY);
+  const [degreesList, setDegreesList] = useState(DEGREES);
 
   // Load existing education data when in edit mode
   useEffect(() => {
@@ -64,15 +265,18 @@ function Education() {
     ) {
       console.log("Loading education data:", cvData.education);
       const existingEducation = cvData.education.map((edu) => ({
-        id: edu.id, // Store the database ID for deletion
+        id: edu.id,
         userId: user?.id,
         educationLevel: edu.education_level,
         institutionName: edu.institution_name,
         location: edu.location,
         fieldOfStudy: edu.field_of_study,
         degree: edu.degree,
-        startDate: edu.start_date,
-        endDate: edu.end_date,
+        startDate: formatDateForInput(edu.start_date),
+        endDate: formatDateForInput(edu.end_date),
+        // startDate: edu.start_date,
+        // endDate: edu.end_date,
+        isCurrentlyStudying: !edu.end_date, // If no end date, they're currently studying
       }));
       console.log("Mapped education:", existingEducation);
       setAllEducation(existingEducation);
@@ -81,6 +285,8 @@ function Education() {
   }, [isEditMode, cvData, user?.id, dataLoaded]);
 
   useEffect(() => {
+    // Check if all fields are filled (end date is optional if currently studying)
+    // const isEndDateValid = isCurrentlyStudying ? true : endDate;
     setAllFilled(
       Boolean(
         educationLevel &&
@@ -90,6 +296,12 @@ function Education() {
           degree &&
           startDate &&
           endDate,
+        institutionName &&
+        userLocation &&
+        fieldOfStudy &&
+        degree &&
+        startDate &&
+        endDate,
       ),
     );
   }, [
@@ -100,6 +312,7 @@ function Education() {
     degree,
     startDate,
     endDate,
+    isCurrentlyStudying,
   ]);
 
   const clearForm = () => {
@@ -110,6 +323,7 @@ function Education() {
     setDegree("");
     setStartDate("");
     setEndDate("");
+    setIsCurrentlyStudying(false);
   };
 
   const location = useLocation();
@@ -133,7 +347,8 @@ function Education() {
       fieldOfStudy,
       degree,
       startDate,
-      endDate,
+      endDate: isCurrentlyStudying ? "" : endDate,
+      isCurrentlyStudying,
     };
 
     // Check for duplicates
@@ -145,7 +360,7 @@ function Education() {
         item.fieldOfStudy === newEntry.fieldOfStudy &&
         item.degree === newEntry.degree &&
         item.startDate === newEntry.startDate &&
-        item.endDate === newEntry.endDate,
+        (isCurrentlyStudying ? !item.endDate : item.endDate === newEntry.endDate)
     );
 
     if (isDuplicate) {
@@ -169,6 +384,23 @@ function Education() {
     } finally {
       setIsLoading(false);
     }
+    // Add new values to suggestion lists if they don't exist
+    if (!educationalLevelsList.includes(educationLevel)) {
+      setEducationalLevelsList(prev => [...prev, educationLevel]);
+    }
+    if (!institutionsList.includes(institutionName)) {
+      setInstitutionsList(prev => [...prev, institutionName]);
+    }
+    if (!fieldsOfStudyList.includes(fieldOfStudy)) {
+      setFieldsOfStudyList(prev => [...prev, fieldOfStudy]);
+    }
+    if (!degreesList.includes(degree)) {
+      setDegreesList(prev => [...prev, degree]);
+    }
+
+    setAllEducation((prev) => [...prev, newEntry]);
+    clearForm();
+    toast.success("Education added!");
   };
 
   return (
@@ -179,7 +411,7 @@ function Education() {
       getPath={getPath}
       isEditMode={isEditMode}
     >
-      <div className=" pb-10">
+      <div className="pb-10">
         <section className="max-w-3xl text-center md:text-left mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
           Education
         </section>
@@ -198,10 +430,11 @@ function Education() {
               <AutocompleteInput
                 value={educationLevel}
                 onChange={(e) => setEducationLevel(e.target.value)}
-                placeholder="Enter or select education level"
+                placeholder="Enter or select educational level"
                 formName="education"
                 fieldName="education_level"
                 staticOptions={optionsEdu}
+                suggestions={educationalLevelsList}
               />
             </div>
             <div className="flex-1">
@@ -213,6 +446,7 @@ function Education() {
                 formName="education"
                 fieldName="institution_name"
                 staticOptions={optionsInst}
+                suggestions={institutionsList}
               />
             </div>
           </div>
@@ -227,6 +461,7 @@ function Education() {
                 formName="education"
                 fieldName="location"
                 staticOptions={optionsLoc}
+                suggestions={locationsList}
               />
             </div>
             <div className="flex-1">
@@ -238,6 +473,7 @@ function Education() {
                 formName="education"
                 fieldName="field_of_study"
                 staticOptions={optionsField}
+                suggestions={fieldsOfStudyList}
               />
             </div>
           </div>
@@ -252,36 +488,56 @@ function Education() {
                 formName="education"
                 fieldName="degree"
                 staticOptions={optionsDegree}
+                suggestions={degreesList}
               />
             </div>
             <div className="flex-1">
               <FormLabel label="START DATE" />
-              <InputWithIcon
+              <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm"
               />
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-1">
-              <FormLabel label="END DATE" />
-              <InputWithIcon
+              <div className="flex items-center justify-between mb-2">
+                <FormLabel label="END DATE" />
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isCurrentlyStudying}
+                    onChange={(e) => {
+                      setIsCurrentlyStudying(e.target.checked);
+                      if (e.target.checked) {
+                        setEndDate("");
+                      }
+                    }}
+                    className="w-4 h-4 text-[#1A3E32] rounded border-gray-300 focus:ring-[#1A3E32]"
+                  />
+                  <span className="text-sm text-gray-600">Currently studying</span>
+                </label>
+              </div>
+              <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                disabled={isCurrentlyStudying}
+                className={`w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm ${isCurrentlyStudying ? "bg-gray-100 cursor-not-allowed" : ""
+                  }`}
               />
             </div>
             <div className="flex-1 flex items-end">
               <button
                 onClick={addMore}
                 disabled={!allFilled}
-                className={`w-full h-11 cursor-pointer flex items-center justify-center gap-2 text-white font-semibold rounded-xl text-sm transition-all shadow-sm ${
-                  allFilled
-                    ? "bg-[#1A3E32] hover:bg-[#143026]"
-                    : "bg-gray-300 cursor-not-allowed"
-                }`}
+                className={`w-full h-11 cursor-pointer flex items-center justify-center gap-2 text-white font-semibold rounded-xl text-sm transition-all shadow-sm ${allFilled
+                  ? "bg-[#1A3E32] hover:bg-[#143026]"
+                  : "bg-gray-300 cursor-not-allowed"
+                  }`}
               >
                 ADD MORE <FaPlus />
               </button>
@@ -290,52 +546,73 @@ function Education() {
         </div>
 
         {allEducation.length > 0 && (
-          <div className="max-w-4xl mx-auto mt-8 space-y-4 px-2 md:px-0">
-            {allEducation.map((item, idx) => (
-              <div
-                key={idx}
-                className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col sm:flex-row justify-between sm:items-center shadow-sm hover:shadow-md transition-shadow gap-4"
-              >
-                <div>
-                  <h3 className="font-bold text-[#1A3E32] text-lg">
-                    {item.fieldOfStudy}
-                  </h3>
-                  <p className="text-gray-600 font-medium">
-                    {item.degree} <span className="text-gray-400 mx-1">•</span>{" "}
-                    {item.institutionName}
-                  </p>
-                  <p className="text-gray-500 text-sm mt-1">
-                    {item.startDate} — {item.endDate}
-                  </p>
+          <div className="max-w-4xl mx-auto mt-8 px-2 md:px-0">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-[#1A3E32]/10 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-[#1A3E32]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                  </svg>
                 </div>
-                <button
-                  onClick={async () => {
-                    if (item.id) {
-                      try {
-                        await axiosInstance.delete(
-                          `/api/cv-builder/education/${user?.id}/${item.id}`,
-                        );
-                        toast.success("Education deleted successfully!");
-                      } catch (error) {
-                        console.error("Error deleting education:", error);
-                        toast.error("Failed to delete education");
-                        return;
-                      }
-                    }
-                    setAllEducation((prev) => prev.filter((_, i) => i !== idx));
-                  }}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  aria-label="Delete education"
-                >
-                  <FaTrash />
-                </button>
+                <h3 className="font-medium text-gray-900">Education</h3>
               </div>
-            ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {allEducation.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="relative bg-white rounded-lg border border-gray-200 p-4 hover:border-gray-300 transition-colors"
+                >
+                  <button
+                    onClick={async () => {
+                      if (item.id) {
+                        try {
+                          await axiosInstance.delete(
+                            `/api/cv-builder/education/${user?.id}/${item.id}`
+                          );
+                          toast.success("Education deleted successfully!");
+                        } catch (error) {
+                          console.error("Error deleting education:", error);
+                          toast.error("Failed to delete education");
+                          return;
+                        }
+                      }
+                      setAllEducation((prev) => prev.filter((_, i) => i !== idx));
+                    }}
+                    className="absolute top-3 right-3 p-1 text-gray-300 hover:text-red-500 transition-colors"
+                  >
+                    <FaTrash className="text-xs" />
+                  </button>
+
+                  <div className="pr-5">
+                    <div className="mb-2">
+                      <h4 className="font-semibold text-gray-900 text-sm">
+                        {item.fieldOfStudy || '—'}
+                      </h4>
+                      {item.degree && (
+                        <p className="text-gray-500 text-xs mt-0.5">{item.degree}</p>
+                      )}
+                    </div>
+
+                    <p className="text-gray-600 text-xs mb-1 truncate">
+                      {item.institutionName}
+                    </p>
+
+                    <p className="text-gray-400 text-xs">
+                      {formatDateRange(item.startDate, item.endDate, item.isCurrentlyStudying)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         <NavigationButtons
-          isFormComplete={true} // Always allow proceeding since it's optional
+          isFormComplete={true}
           onBack={() => {
             if (isEditMode) {
               navigate(getPath(currentStep - 1));
@@ -344,10 +621,8 @@ function Education() {
             }
           }}
           onNext={async () => {
-            // Collect all education saved in state
             let educationToSave = [...allEducation];
 
-            // If current form is filled but not added yet, include it
             if (allFilled) {
               const currentEducation = {
                 userId: user?.id,
@@ -357,10 +632,10 @@ function Education() {
                 fieldOfStudy,
                 degree,
                 startDate,
-                endDate,
+                endDate: isCurrentlyStudying ? "" : endDate,
+                isCurrentlyStudying,
               };
 
-              // Check for duplicates
               const exists = educationToSave.some(
                 (item) =>
                   item.educationLevel === currentEducation.educationLevel &&
@@ -368,15 +643,13 @@ function Education() {
                   item.fieldOfStudy === currentEducation.fieldOfStudy &&
                   item.degree === currentEducation.degree &&
                   item.startDate === currentEducation.startDate &&
-                  item.endDate === currentEducation.endDate,
+                  (isCurrentlyStudying ? !item.endDate : item.endDate === currentEducation.endDate)
               );
 
               if (!exists) {
                 educationToSave.push(currentEducation);
               }
             }
-
-            // No validation required - education is optional
 
             setIsLoading(true);
 
@@ -390,12 +663,21 @@ function Education() {
                 } else {
                   await axiosInstance.post(`/api/cv-builder/education`, edu);
                 }
+                await axiosInstance.post(`/api/cv-builder/education`, {
+                  userId: edu.userId,
+                  educationLevel: edu.educationLevel,
+                  institutionName: edu.institutionName,
+                  location: edu.location,
+                  fieldOfStudy: edu.fieldOfStudy,
+                  degree: edu.degree,
+                  startDate: edu.startDate,
+                  endDate: edu.endDate || null,
+                });
               }
 
               setIsLoading(false);
               toast.success("Education saved successfully!");
 
-              // Navigate to next step
               if (isEditMode) {
                 navigate(getPath(currentStep + 1));
               } else {

@@ -233,9 +233,8 @@ const FormHeader = () => {
 const Divider = ({ small = false }) => {
   return (
     <div
-      className={`max-w-[150px] mx-auto border-t-2 ${
-        small ? "border-[#E0E0E0]" : "border-[#16730F]"
-      }`}
+      className={`max-w-[150px] mx-auto border-t-2 ${small ? "border-[#E0E0E0]" : "border-[#16730F]"
+        }`}
     />
   );
 };
@@ -290,9 +289,8 @@ const SearchButton = ({ onSearch, disabled }) => {
       <button
         onClick={onSearch}
         disabled={disabled}
-        className={`w-full flex items-center justify-center gap-2 px-6 py-2 sm:py-3 rounded-2xl mx-auto text-white font-medium transition-colors ${
-          disabled ? "bg-gray-500 cursor-not-allowed" : "bg-[#16730F] hover:bg-[#125a0c]"
-        }`}
+        className={`w-full flex items-center justify-center gap-2 px-6 py-2 sm:py-3 rounded-2xl mx-auto text-white font-medium transition-colors ${disabled ? "bg-gray-500 cursor-not-allowed" : "bg-[#16730F] hover:bg-[#125a0c]"
+          }`}
       >
         Search
         <svg

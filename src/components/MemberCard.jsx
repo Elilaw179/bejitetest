@@ -16,6 +16,11 @@ const MemberCard = ({
     if (onClick) onClick();
   };
 
+  const handleInfoClick = (e) => {
+    e.stopPropagation();
+    setShowInfo((prev) => !prev);
+  };
+
   return (
     <div className="w-[90%] sm:w-[270px] h-auto relative text-center">
       <img
@@ -24,15 +29,18 @@ const MemberCard = ({
         src={iconSrc}
         alt={label}
       />
-      <div className="mt-5 relative bg-[#16730F] shadow-2xl rounded-2xl py-3 flex justify-center items-center gap-2">
+      <div 
+        onClick={handleClick}
+        className="mt-5 relative bg-[#16730F] shadow-2xl rounded-2xl py-3 flex justify-center items-center gap-2"
+      >
         <p className="text-white text-sm sm:text-base font-medium">{label}</p>
-        <div ref={containerRef} className="relative">
+        <div ref={containerRef} className="relative" onClick={(e) => e.stopPropagation()}>
           {showInfo && <InfoBox text={infoText} position={position} />}
           <img
             src="/assets/images/questiontag.svg"
             alt="info"
             className="w-5 h-5 cursor-pointer"
-            onClick={() => setShowInfo((prev) => !prev)}
+            onClick={handleInfoClick}
           />
         </div>
       </div>

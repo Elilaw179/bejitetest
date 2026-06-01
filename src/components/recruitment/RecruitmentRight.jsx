@@ -33,10 +33,10 @@ function RecruitmentRight() {
   }, []);
 
   return (
-    <div className="bg-[#F5F5F5] p-2 hidden md:block">
-      <aside className="bg-[#1A3E32] rounded-2xl h-[calc(107vh-120px)]">
+    <div className="bg-[#1A3E32]  h-full">
+      <aside className="bg-[#1A3E32] rounded-2xl flex flex-col">
         <div className="bg-[#16730F] rounded-2xl p-3">
-          <div className="p-5 space-y-2 bg-">
+          <div className="p-5 space-y-2">
             {/* <FaArrowLeft className="text-[#1A3E32]" /> */}
           </div>
           <div className="flex flex-col items-center ">
@@ -119,7 +119,7 @@ function RecruitmentRight() {
 
           <div className="w-[150px] m-auto mt-4">
             <button
-              className="bg-[#6B8E23] mb-4 p-2 text-[10px] text-[#FFFFFF] w-full rounded-3xl font-bold"
+              className="bg-[#6B8E23] mb-4 p-2 text-[10px] text-[#FFFFFF] w-full rounded-3xl font-bold hover:bg-[#7BA428] transition-colors"
               onClick={() => navigate("/profile")}
             >
               View Profile
@@ -127,10 +127,10 @@ function RecruitmentRight() {
           </div>
         </div>
 
-        <div className="bg-[#1A3E32] h-[calc(100%-180px)] mt-3 p-2">
-          <div className="m-auto mt-10 ml-6 space-y-5 cursor-pointer max-w-60">
+        <div className="flex-1 mt-3 p-4 pb-6">
+          <div className="space-y-4 cursor-pointer">
             <div
-              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+              className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200"
               onClick={() => navigate("/news-feed?feed=saved")}
               onKeyDown={(e) =>
                 e.key === "Enter" && navigate("/news-feed?feed=saved")
@@ -141,21 +141,21 @@ function RecruitmentRight() {
               <img src="assets/images/setting.png" alt="" />
               <p className="text-[#F5F5F5] font-bold">Saved Posts</p>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200">
               <img src="/assets/images/task-square.svg" alt="" />
               <p className="text-[#F5F5F5] font-bold">Activity Log</p>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200">
               <img src="/assets/images/award.svg" alt="" />
               <p className="text-[#F5F5F5] font-bold">Badge Status</p>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200">
               <img src="/assets/images/setting-2.svg" alt="" />
               <p className="text-[#F5F5F5] font-bold">Account Settings</p>
             </div>
             <div
               onClick={() => navigate("/help")}
-              className="flex space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex space-x-2 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-all duration-200"
               title="Get help and support"
             >
               <img src="/assets/images/repeate-one.svg" alt="" />

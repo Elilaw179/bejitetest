@@ -239,7 +239,7 @@ const FormHeader = () => {
   return (
     <div className="max-w-3xl mx-auto rounded-2xl p-4 sm:p-6 bg-[#1A3E32] shadow-sm">
       <p className="text-xl sm:text-2xl font-medium text-[#16730F] text-center">
-        Search Criteria  
+        Search Criteria
       </p>
     </div>
   );
@@ -248,9 +248,8 @@ const FormHeader = () => {
 const Divider = ({ small = false }) => {
   return (
     <div
-      className={`max-w-[150px] mx-auto border-t-2 ${
-        small ? "border-[#E0E0E0]" : "border-[#16730F]"
-      }`}
+      className={`max-w-[150px] mx-auto border-t-2 ${small ? "border-[#E0E0E0]" : "border-[#16730F]"
+        }`}
     />
   );
 };

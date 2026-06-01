@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Header from "../../../components/Header";
 import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
@@ -6,102 +6,159 @@ import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
 import useAuth from "../../../hooks/useAuth";
 import { toast } from "react-toastify";
-import axiosInstance from "../../../utils/axiosInstance";
-import { FaPlus, FaChevronDown, FaTrash, FaCheck } from "react-icons/fa";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  saveWorkHistory,
+  deleteWorkHistory,
+  addEntry,
+  removeEntryByIndex,
+  loadExistingEntries,
+} from "../../../features/workHistory/workHistorySlice";
+import { FaPlus, FaChevronDown, FaTrash, FaCheck, FaBriefcase } from "react-icons/fa";
 import Loader from "../../../components/ui/Loader";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
 import { InputWithIcon } from "../../../components/forms/InputIcon";
 import FormLabel from "../../../components/forms/FormLabel";
+import { JOB_TITLES } from "../../../data/teamData";
 
-// const optionsJob = [
-//   "Software Developer",
-//   "Frontend Developer",
-//   "Backend Developer",
-//   "Full Stack Developer",
-//   "UI/UX Designer",
-//   "Data Analyst",
-//   "Data Scientist",
-//   "DevOps Engineer",
-//   "Product Manager",
-//   "QA Tester",
-//   "Cybersecurity Analyst",
-//   "Administrative Assistant",
-//   "Project Manager",
-//   "Operations Manager",
-//   "Business Analyst",
-//   "Customer Support Representative",
-//   "Sales Executive",
-//   "Human Resources Manager",
-//   "Digital Marketer",
-//   "SEO Specialist",
-//   "Content Writer",
-//   "Social Media Manager",
-//   "Copywriter",
-//   "Brand Manager",
-//   "Accountant",
-//   "Financial Analyst",
-//   "Auditor",
-//   "Bank Teller",
-//   "Teacher",
-//   "Lecturer",
-//   "Academic Advisor",
-//   "School Administrator",
-//   "Nurse",
-//   "Medical Doctor",
-//   "Pharmacist",
-//   "Laboratory Technician",
-//   "Electrician",
-//   "Plumber",
-//   "Driver",
-//   "Chef",
-//   "Security Guard",
-//   "Not Available",
-// ];
+// Dummy job titles for autocomplete
 
-const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
-  <div className="relative w-full">
-    <select
-      value={value}
-      onChange={onChange}
-      className={`w-full h-12 border-2 rounded-[10px] px-4 pr-10 appearance-none focus:outline-1 focus:outline-[#1A3E32] ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      }`}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-    {value ? (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-    ) : (
-      <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
-    )}
-  </div>
-);
 
-// const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
-//   <div className="relative w-full">
-//     <input
-//       type={type}
-//       value={value}
-//       onChange={onChange}
-//       placeholder={placeholder}
-//       className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${
-//         value ? "border-[#828282]" : "border-[#F5F5F5]"
-//       } ${type === "date" && value ? "hide-calendar-icon" : ""}`}
-//     />
-//     {value && (
-//       <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
-//     )}
-//   </div>
-// );
+// Autocomplete Input Component for Job Titles
+const AutocompleteJobInput = ({ value, onChange, placeholder, suggestions, onAddNew }) => {
+  const [inputValue, setInputValue] = useState(value);
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleInputChange = (e) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    onChange(e);
+    
+    if (newValue.trim()) {
+      const filtered = suggestions.filter(suggestion =>
+        suggestion.toLowerCase().includes(newValue.toLowerCase())
+      );
+      setFilteredSuggestions(filtered.slice(0, 10));
+      setShowSuggestions(true);
+    } else {
+      setFilteredSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSelectSuggestion = (suggestion) => {
+    setInputValue(suggestion);
+    onChange({ target: { value: suggestion } });
+    setShowSuggestions(false);
+  };
+
+  const handleAddNew = () => {
+    if (inputValue.trim()) {
+      handleSelectSuggestion(inputValue.trim());
+      if (onAddNew) onAddNew(inputValue.trim());
+      toast.success(`Added new job title: ${inputValue}`);
+    }
+  };
+
+  return (
+    <div ref={wrapperRef} className="relative w-full" style={{ position: "relative", zIndex: 20 }}>
+      <input
+        type="text"
+        value={inputValue}
+        onChange={handleInputChange}
+        onFocus={() => {
+          if (inputValue.trim()) {
+            const filtered = JOB_TITLES.filter(suggestion =>
+              suggestion.toLowerCase().includes(inputValue.toLowerCase())
+            );
+            setFilteredSuggestions(filtered.slice(0, 10));
+            setShowSuggestions(true);
+          } else {
+            setFilteredSuggestions(JOB_TITLES.slice(0, 10));
+            setShowSuggestions(true);
+          }
+        }}
+        placeholder={placeholder}
+        className="w-full h-12 border-2 rounded-[10px] px-4 pr-10 focus:outline-1 focus:outline-[#1A3E32] transition-all bg-white"
+      />
+      {inputValue && (
+        <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg pointer-events-none" />
+      )}
+      
+      {showSuggestions && (
+        <div 
+          className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto"
+          style={{ 
+            zIndex: 9999,
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0
+          }}
+        >
+          {filteredSuggestions.length > 0 ? (
+            <>
+              {filteredSuggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleSelectSuggestion(suggestion)}
+                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 transition-colors"
+                >
+                  {suggestion}
+                </div>
+              ))}
+              {inputValue.trim() && !filteredSuggestions.includes(inputValue.trim()) && (
+                <div
+                  onClick={handleAddNew}
+                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-[#1A3E32] font-medium transition-colors flex items-center gap-2 border-t border-gray-100"
+                >
+                  <FaPlus className="text-xs" />
+                  Add "{inputValue}"
+                </div>
+              )}
+            </>
+          ) : (
+            inputValue.trim() && (
+              <div
+                onClick={handleAddNew}
+                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-[#1A3E32] font-medium transition-colors flex items-center gap-2"
+              >
+                <FaPlus className="text-xs" />
+                Add "{inputValue}"
+              </div>
+            )
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 function WorkHistory() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { currentStep, isEditMode, cvData, getPath } = useOutletContext();
+
+  // Redux state
+  const { entries: allWorkHistory, loading: isLoading, dataLoaded } = useSelector(
+    (state) => state.workHistory
+  );
 
   const handleStepClick = (path) => {
     navigate(path);
@@ -116,16 +173,15 @@ function WorkHistory() {
     "Job Type",
   ];
 
-  const [isLoading, setIsLoading] = useState(false);
   const [jobTitle, setJobTitle] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [responsibilities, setResponsibilities] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [isCurrentJob, setIsCurrentJob] = useState(false);
   const [allFilled, setAllFilled] = useState(false);
   const { user } = useAuth();
-  const [allWorkHistory, setAllWorkHistory] = useState([]);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [jobTitlesList, setJobTitlesList] = useState(JOB_TITLES);
 
   // Load existing work history data when in edit mode
   useEffect(() => {
@@ -136,30 +192,31 @@ function WorkHistory() {
       !dataLoaded
     ) {
       const existingWork = cvData.workHistory.map((work) => ({
-        id: work.id, // Store the database ID for deletion
+        id: work.id,
         userId: user?.id,
-        jobTitle: work.job_title,
-        companyName: work.company_name,
+        jobTitle: work.job_title || work.jobTitle,
+        companyName: work.company_name || work.companyName,
         responsibilities: work.responsibilities,
-        startDate: work.start_date,
-        endDate: work.end_date,
+        startDate: work.start_date || work.startDate,
+        endDate: work.end_date || work.endDate,
+        isCurrentJob: !work.end_date && !work.endDate, // If no end date, it's current job
       }));
-      setAllWorkHistory(existingWork);
-      setDataLoaded(true);
+      dispatch(loadExistingEntries(existingWork));
     }
-  }, [isEditMode, cvData, user?.id, dataLoaded]);
+  }, [isEditMode, cvData, user?.id, dataLoaded, dispatch]);
 
   // Update allFilled whenever form fields change
   useEffect(() => {
+    const isEndDateValid = isCurrentJob ? true : endDate && endDate.trim() !== "";
     const filled =
       jobTitle.trim() !== "" &&
       companyName.trim() !== "" &&
       responsibilities.trim() !== "" &&
       startDate.trim() !== "" &&
-      endDate.trim() !== "";
+      isEndDateValid;
 
     setAllFilled(filled);
-  }, [jobTitle, companyName, responsibilities, startDate, endDate]);
+  }, [jobTitle, companyName, responsibilities, startDate, endDate, isCurrentJob]);
 
   const clearForm = () => {
     setJobTitle("");
@@ -167,6 +224,7 @@ function WorkHistory() {
     setResponsibilities("");
     setStartDate("");
     setEndDate("");
+    setIsCurrentJob(false);
   };
 
   const addMore = () => {
@@ -181,7 +239,8 @@ function WorkHistory() {
       companyName,
       responsibilities,
       startDate,
-      endDate,
+      endDate: isCurrentJob ? "" : endDate,
+      isCurrentJob,
     };
 
     // Check for duplicates
@@ -190,7 +249,7 @@ function WorkHistory() {
         item.jobTitle === newEntry.jobTitle &&
         item.companyName === newEntry.companyName &&
         item.startDate === newEntry.startDate &&
-        item.endDate === newEntry.endDate,
+        (isCurrentJob ? !item.endDate : item.endDate === newEntry.endDate),
     );
 
     if (isDuplicate) {
@@ -198,7 +257,12 @@ function WorkHistory() {
       return;
     }
 
-    setAllWorkHistory((prev) => [...prev, newEntry]);
+    // Add new job title to suggestions list if it doesn't exist
+    if (!jobTitlesList.includes(jobTitle)) {
+      setJobTitlesList(prev => [...prev, jobTitle]);
+    }
+
+    dispatch(addEntry(newEntry));
     clearForm();
     toast.success("Work history added!");
   };
@@ -215,11 +279,7 @@ function WorkHistory() {
       getPath={getPath}
       isEditMode={isEditMode}
     >
-      <div className="">
-        {/* <Header />
-      <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
-      <ProgressBar currentStep={currentStep} totalSteps={steps.length} /> */}
-
+      <div className="pb-20">
         <div className="max-w-3xl mx-auto mt-6 text-[#1A3E32] text-2xl font-semibold">
           Work history
         </div>
@@ -227,21 +287,20 @@ function WorkHistory() {
           Your professional experience shows your expertise.
         </p>
 
-        <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4 rounded-lg">
-          <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-4">
-            <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
+        <div className="max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4 rounded-lg overflow-visible">
+          <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-4 overflow-visible">
+            <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4 overflow-visible">
+              <div className="flex-1 overflow-visible">
                 <FormLabel required label="JOB TITLE" />
-                <InputWithIcon
+                <AutocompleteJobInput
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
-                  placeholder="Enter job title"
+                  placeholder="Enter or select job title"
+                  suggestions={jobTitlesList}
                 />
               </div>
               <div className="flex-1">
                 <FormLabel required label="COMPANY NAME" />
-
-                {/* <p className="font-semibold text-xs mb-1">COMPANY NAME</p> */}
                 <InputWithIcon
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
@@ -252,9 +311,6 @@ function WorkHistory() {
 
             <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                {/* <p className="font-semibold text-xs mb-1">
-                  KEY RESPONSIBILITIES
-                </p> */}
                 <FormLabel required label="KEY RESPONSIBILITIES" />
                 <textarea
                   value={responsibilities}
@@ -264,8 +320,7 @@ function WorkHistory() {
                 />
               </div>
 
-              <div className="w-full sm:w-56 p-2 rounded-lg">
-                {/* <p className="font-semibold text-xs mb-1">START DATE</p> */}
+              <div className="w-full sm:w-66 p-2 rounded-lg">
                 <FormLabel required label="START DATE" />
                 <InputWithIcon
                   type="date"
@@ -273,24 +328,63 @@ function WorkHistory() {
                   onChange={(e) => setStartDate(e.target.value)}
                 />
                 <br />
-                {/* <p className="font-semibold text-xs mb-1 mt-2">END DATE</p> */}
-                <FormLabel required label="END DATE" />
-                <InputWithIcon
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
+                
+                <div className="flex items-center justify-between mb-2 mt-2">
+                  <FormLabel required={!isCurrentJob} label="END DATE" />
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={isCurrentJob}
+                      onChange={(e) => {
+                        setIsCurrentJob(e.target.checked);
+                        if (e.target.checked) {
+                          setEndDate("");
+                        }
+                      }}
+                      className="w-4 h-4 text-[#1A3E32] rounded border-gray-300 focus:ring-[#1A3E32] cursor-pointer"
+                    />
+                    <span className="text-sm text-gray-600 group-hover:text-[#1A3E32] transition-colors">
+                      Currently working here
+                    </span>
+                  </label>
+                </div>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    disabled={isCurrentJob}
+                    className={`w-full h-12 border-2 rounded-[10px] px-4 pr-10 focus:outline-1 focus:outline-[#1A3E32] transition-all bg-white ${
+                      isCurrentJob 
+                        ? "bg-gray-100 cursor-not-allowed opacity-60" 
+                        : "hover:border-gray-400"
+                    } ${endDate ? "border-[#828282]" : "border-[#F5F5F5]"}`}
+                  />
+                  {endDate && !isCurrentJob && (
+                    <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg pointer-events-none" />
+                  )}
+                  {isCurrentJob && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">
+                      Current
+                    </div>
+                  )}
+                </div>
+                {isCurrentJob && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <FaCheck className="text-xs" /> You are currently employed here
+                  </p>
+                )}
               </div>
             </div>
 
-            <div className="max-w-2xs  bg-[#00000040] mt-3  ml-auto rounded-2xl flex">
+            <div className="max-w-2xs bg-[#00000040] mt-3 ml-auto rounded-2xl flex">
               <button
                 onClick={addMore}
                 disabled={!allFilled}
-                className={`flex-1 h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
+                className={`flex-1 h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm transition-all ${
                   allFilled
-                    ? "bg-[#2A4E42] border-[#2A4E42] cursor-pointer hover:bg-[#2a5949]"
-                    : "bg-transparent border-[#F5F5F5] cursor-not-allowed"
+                    ? "bg-[#2A4E42] border-[#2A4E42] cursor-pointer hover:bg-[#2a5949] transform hover:scale-105"
+                    : "bg-transparent border-[#F5F5F5] cursor-not-allowed opacity-50"
                 }`}
               >
                 ADD MORE <FaPlus />
@@ -305,32 +399,46 @@ function WorkHistory() {
               allWorkHistory.map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-[#1A3E32] text-white rounded-lg flex justify-between items-center p-4"
+                  className="bg-gradient-to-r from-[#1A3E32] to-[#2A4E42] text-white rounded-lg flex justify-between items-center p-4 shadow-md hover:shadow-xl transition-all"
                 >
-                  <div>
-                    <p className="font-semibold">{item.jobTitle}</p>
-                    <p className="text-sm">@ {item.companyName}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FaBriefcase className="text-sm opacity-80" />
+                      <p className="font-semibold text-lg">{item.jobTitle}</p>
+                    </div>
+                    <p className="text-sm opacity-90">@ {item.companyName}</p>
+                    <p className="text-xs opacity-75 mt-2">
+                      <span className="font-medium">Duration:</span> {item.startDate} —{" "}
+                      {item.isCurrentJob ? (
+                        <span className="text-green-300 font-medium">Present</span>
+                      ) : (
+                        item.endDate
+                      )}
+                    </p>
+                    {item.isCurrentJob && (
+                      <p className="text-xs text-green-300 mt-1 flex items-center gap-1">
+                        <span className="inline-block w-2 h-2 bg-green-300 rounded-full animate-pulse"></span>
+                        Currently working here
+                      </p>
+                    )}
                   </div>
 
                   <button
-                    className="text-white text-xl hover:text-red-400 transition-colors"
+                    className="text-white text-xl hover:text-red-400 transition-colors p-2 hover:bg-white/10 rounded-lg"
                     onClick={async () => {
-                      // If the item has an ID, delete from database
                       if (item.id) {
-                        try {
-                          await axiosInstance.delete(
-                            `/api/cv-builder/work-history/${user?.id}/${item.id}`,
-                          );
+                        const result = await dispatch(
+                          deleteWorkHistory({ userId: user?.id, entryId: item.id })
+                        );
+                        if (deleteWorkHistory.fulfilled.match(result)) {
                           toast.success("Work history deleted successfully!");
-                        } catch (err) {
-                          console.error("Error deleting work history:", err);
+                        } else {
                           toast.error("Failed to delete work history");
                           return;
                         }
+                      } else {
+                        dispatch(removeEntryByIndex(idx));
                       }
-                      setAllWorkHistory((prev) =>
-                        prev.filter((_, i) => i !== idx),
-                      );
                     }}
                   >
                     <FaTrash />
@@ -341,7 +449,7 @@ function WorkHistory() {
         </div>
 
         <NavigationButtons
-          isFormComplete={true} // Always allow proceeding since it's optional
+          isFormComplete={true}
           onBack={() => {
             if (isEditMode) {
               navigate(getPath(currentStep - 1));
@@ -350,10 +458,8 @@ function WorkHistory() {
             }
           }}
           onNext={async () => {
-            // Collect all work history to save
             let historyToSave = [...allWorkHistory];
 
-            // If current form is filled but not added to list, include it
             if (allFilled) {
               const currentEntry = {
                 userId: user?.id,
@@ -361,16 +467,16 @@ function WorkHistory() {
                 companyName,
                 responsibilities,
                 startDate,
-                endDate,
+                endDate: isCurrentJob ? "" : endDate,
+                isCurrentJob,
               };
 
-              // Check if it's already in the list
               const exists = historyToSave.some(
                 (item) =>
                   item.jobTitle === currentEntry.jobTitle &&
                   item.companyName === currentEntry.companyName &&
                   item.startDate === currentEntry.startDate &&
-                  item.endDate === currentEntry.endDate,
+                  (isCurrentJob ? !item.endDate : item.endDate === currentEntry.endDate),
               );
 
               if (!exists) {
@@ -378,15 +484,8 @@ function WorkHistory() {
               }
             }
 
-            // No validation required - work history is optional
-
-            setIsLoading(true);
-            try {
-              // Save all work history entries
-              for (const item of historyToSave) {
-                await axiosInstance.post(`/api/cv-builder/work-history/`, item);
-              }
-              setIsLoading(false);
+            const result = await dispatch(saveWorkHistory(historyToSave));
+            if (saveWorkHistory.fulfilled.match(result)) {
               toast.success("Work history saved successfully!");
               if (isEditMode) {
                 navigate(getPath(currentStep + 1));
@@ -395,9 +494,7 @@ function WorkHistory() {
                   state: { email, firstName, lastName, role, mode, followings },
                 });
               }
-            } catch (err) {
-              setIsLoading(false);
-              console.error("Error:", err);
+            } else {
               toast.error("Failed to save work history. Try again.");
             }
           }}
