@@ -6,11 +6,12 @@ import { pickAuthorProfilePhoto } from '../../utils/profileImageUtils';
 import { formatSalaryExpectation } from '../../utils/formatSalary';
 import ProfileCvSections from '../ProfileCvSections';
 import { mergeCvWithCandidateSkills } from '../../utils/profileSkills';
-import { useCandidateConnect } from './useCandidateConnect';
+import { useCandidateConnect } from '../../hooks/useCandidateConnect';
+import { resolveCandidateUserId } from '../../utils/resolveCandidateUserId';
 import CandidateJobPreferences from './CandidateJobPreferences';
 import CandidateContactInfo from './CandidateContactInfo';
 
-const UserMainProfileCard = ({ candidateId }) => {
+const UserMainProfileCard = ({ candidateId, connectUserId: connectUserIdProp }) => {
   const [candidate, setCandidate] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
   const [cvData, setCvData] = useState(null);
@@ -130,6 +131,7 @@ const UserMainProfileCard = ({ candidateId }) => {
         salaryPreview={salaryPreview}
         photoPath={photoPath}
         candidate={candidate}
+        connectUserIdProp={connectUserIdProp}
         onOpenPhotoViewer={() => setIsPhotoViewerOpen(true)}
       />
 
@@ -179,10 +181,13 @@ const ProfileHeaderCard = ({
   salaryPreview,
   photoPath,
   candidate,
+  connectUserIdProp,
   onOpenPhotoViewer,
 }) => {
+  const connectUserId =
+    resolveCandidateUserId(candidate) || connectUserIdProp || null;
   const { sendRequest, connectLabel, connectDisabled } = useCandidateConnect(
-    candidate?.user_id,
+    connectUserId,
     displayName,
   );
 

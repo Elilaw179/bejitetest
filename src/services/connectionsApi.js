@@ -27,7 +27,9 @@ export const getConnections = async (page = 1, limit = 10) => {
  */
 export const getConnectionStatus = async (otherUserId) => {
   try {
-    const response = await axiosInstance.get(`/api/connections/status/${otherUserId}`);
+    const response = await axiosInstance.get(
+      `/api/connections/status/${encodeURIComponent(String(otherUserId))}`,
+    );
     return response.data;
   } catch (error) {
     console.error('Error fetching connection status:', error);
@@ -40,7 +42,9 @@ export const getConnectionStatus = async (otherUserId) => {
  */
 export const sendConnectionRequest = async (toUserId) => {
   try {
-    const response = await axiosInstance.post('/api/connections/requests', { toUserId });
+    const response = await axiosInstance.post('/api/connections/requests', {
+      toUserId: toUserId != null && toUserId !== '' ? String(toUserId) : toUserId,
+    });
     return response.data;
   } catch (error) {
     console.error('Error sending connection request:', error);

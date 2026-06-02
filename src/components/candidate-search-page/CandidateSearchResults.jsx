@@ -134,6 +134,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
 
             return {
               id: candidate.id,
+              user_id: candidate.user_id ?? candidate.userId ?? null,
               name: `${candidate.first_name} ${candidate.last_name}`,
               type: "Jobseeker",
               jobTitle: candidate.title || "N/A",
@@ -293,7 +294,9 @@ const CandidateProfile = ({ candidate, onViewProfile, onInvite }) => (
         location={candidate.location}
         skills={candidate.skills}
         experienceYears={candidate.experienceYears}
-        onViewProfile={() => onViewProfile(candidate.id)}
+        onViewProfile={() =>
+          onViewProfile(candidate.id, candidate.user_id ?? candidate.userId)
+        }
         onInvite={() => onInvite(candidate)}
       />
     </div>
