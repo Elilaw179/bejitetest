@@ -5,7 +5,8 @@ import { pickAuthorProfilePhoto } from "../../utils/profileImageUtils";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { CertificateViewLink } from "../CertificateViewerModal";
 import { formatSalaryExpectation } from "../../utils/formatSalary";
-import useCandidateConnect from "../../hooks/useCandidateConnect";
+import { useCandidateConnect } from "../../hooks/useCandidateConnect";
+import { resolveCandidateUserId } from "../../utils/resolveCandidateUserId";
 import { fetchFullUserProfile } from "../../services/fetchFullUserProfile";
 import {
   formatDateRange,
@@ -92,7 +93,7 @@ const enrichCandidateWithFullProfile = async (row) => {
   return merged;
 };
 
-const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
+const UserProfilePanel = ({ candidateId, connectUserId: connectUserIdProp, onViewMainProfile }) => {
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -225,6 +226,7 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
         />
         <ProfileStats
           candidate={candidate}
+          connectUserIdProp={connectUserIdProp}
           onViewMainProfile={onViewMainProfile}
         />
         <Divider />
@@ -375,11 +377,13 @@ const ProfileHeader = ({ candidate, onOpenPhotoViewer }) => {
   );
 };
 
-const ProfileStats = ({ candidate, onViewMainProfile }) => {
+const ProfileStats = ({ candidate, connectUserIdProp, onViewMainProfile }) => {
   const navigate = useNavigate();
   const displayName = `${candidate.first_name || ""} ${candidate.last_name || ""}`.trim();
+  const connectUserId =
+    resolveCandidateUserId(candidate) || connectUserIdProp || null;
   const { sendRequest, connectLabel, connectDisabled, status } = useCandidateConnect(
-    candidate.user_id,
+    connectUserId,
     displayName,
   );
 

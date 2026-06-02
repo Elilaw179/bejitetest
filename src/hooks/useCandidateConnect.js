@@ -1,115 +1,152 @@
-import { useState, useEffect, useCallback } from "react";
-import * as connectionsApi from "../services/connectionsApi";
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'react-toastify';
+import * as connectionsApi from '../services/connectionsApi';
 
 /**
- * Custom hook for managing candidate connection functionality
- * @param {number|string} userId - The user ID to connect with
- * @param {string} displayName - Display name for the user (used for logging)
- * @returns {Object} Connection state and functions
+ * Connection request state for a candidate (jobseeker User id).
  */
-const useCandidateConnect = (userId, displayName) => {
+export function useCandidateConnect(userId, displayName = '') {
+  const normalizedUserId =
+    userId != null && userId !== '' ? String(userId) : null;
+
   const [status, setStatus] = useState({
+    loading: Boolean(normalizedUserId),
     isConnected: false,
-    pendingIncoming: false,
     pendingOutgoing: false,
-    loading: true,
-    error: null,
+    pendingIncoming: false,
+    unavailable: false,
   });
+  const [sending, setSending] = useState(false);
 
-const [connectLabel, setConnectLabel] = useState("Connect");
-  const [connectDisabled, setConnectDisabled] = useState(false);
-
-// Fetch connection status
-  const checkConnectionStatus = useCallback(async () => {
-    if (!userId) {
-      setStatus(prev => ({ ...prev, loading: false }));
-      return;
-    }
-
-    try {
-      setStatus(prev => ({ ...prev, loading: true }));
-      const statusData = await connectionsApi.getConnectionStatus(userId);
-      
-      // Handle different response formats
-      const isConnected = statusData?.connected === true || statusData?.status === "connected";
-      const pendingIncoming = statusData?.pendingIncoming === true || statusData?.status === "pending_incoming";
-      const pendingOutgoing = statusData?.pendingOutgoing === true || statusData?.status === "pending_outgoing";
-
-      setStatus({
-        isConnected,
-        pendingIncoming,
-        pendingOutgoing,
-        loading: false,
-        error: null,
-      });
-
-      // Update button label based on status
-      if (isConnected) {
-        setConnectLabel("Connected");
-        setConnectDisabled(true);
-      } else if (pendingIncoming) {
-        setConnectLabel("Respond");
-        setConnectDisabled(false);
-      } else if (pendingOutgoing) {
-        setConnectLabel("Pending");
-        setConnectDisabled(true);
-      } else {
-        setConnectLabel("Connect");
-        setConnectDisabled(false);
-      }
-    } catch (error) {
-      console.error("Error fetching connection status:", error);
-      setStatus((prev) => ({
-        ...prev,
-        loading: false,
-        error: error.message,
-      }));
-      // Default to Connect button if status check fails
-      setConnectLabel("Connect");
-      setConnectDisabled(false);
-    }
-  }, [userId]);
-
-  // Initial status check
   useEffect(() => {
-    checkConnectionStatus();
-  }, [checkConnectionStatus]);
-
-  // Send connection request
-  const sendRequest = async () => {
-    if (!userId || status.isConnected || status.pendingOutgoing) {
+    if (!normalizedUserId) {
+      setStatus({
+        loading: false,
+        isConnected: false,
+        pendingOutgoing: false,
+        pendingIncoming: false,
+        unavailable: false,
+      });
       return;
     }
 
-    try {
-      setConnectDisabled(true);
-      await connectionsApi.sendConnectionRequest(userId);
-      
-      setStatus((prev) => ({
-        ...prev,
-        pendingOutgoing: true,
-      }));
-      setConnectLabel("Pending");
-      setConnectDisabled(true);
-      
-      console.log(`Connection request sent to ${displayName} (ID: ${userId})`);
-    } catch (error) {
-      console.error("Error sending connection request:", error);
-      setConnectDisabled(false);
-      // Revert label on error
-      if (!status.isConnected && !status.pendingOutgoing) {
-        setConnectLabel("Connect");
+    let cancelled = false;
+
+    (async () => {
+      setStatus((prev) => ({ ...prev, loading: true }));
+      try {
+        const data = await connectionsApi.getConnectionStatus(normalizedUserId);
+        if (!cancelled) {
+          setStatus({
+            loading: false,
+            isConnected: Boolean(data?.isConnected),
+            pendingOutgoing: Boolean(data?.pendingOutgoing),
+            pendingIncoming: Boolean(data?.pendingIncoming),
+            unavailable: false,
+          });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message =
+            error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            '';
+          const unavailable =
+            error?.response?.status === 404 &&
+            /user not found/i.test(message);
+          setStatus({
+            loading: false,
+            isConnected: false,
+            pendingOutgoing: false,
+            pendingIncoming: false,
+            unavailable,
+          });
+        }
       }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [normalizedUserId]);
+
+  const sendRequest = useCallback(async () => {
+    if (!normalizedUserId || sending) return;
+
+    setSending(true);
+    try {
+      const result = await connectionsApi.sendConnectionRequest(normalizedUserId);
+      if (result?.connected) {
+        toast.success(
+          displayName
+            ? `You are now connected with ${displayName}`
+            : 'You are now connected',
+        );
+        setStatus((prev) => ({
+          ...prev,
+          isConnected: true,
+          pendingOutgoing: false,
+          pendingIncoming: false,
+          unavailable: false,
+        }));
+      } else {
+        toast.success(
+          displayName
+            ? `Connection request sent to ${displayName}`
+            : 'Connection request sent',
+        );
+        setStatus((prev) => ({
+          ...prev,
+          pendingOutgoing: true,
+          unavailable: false,
+        }));
+      }
+    } catch (error) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to send connection request';
+      if (error?.response?.status === 404 && /user not found/i.test(message)) {
+        setStatus((prev) => ({ ...prev, unavailable: true }));
+        toast.error('This profile cannot receive connections yet.');
+      } else {
+        toast.error(message);
+      }
+    } finally {
+      setSending(false);
     }
-  };
+  }, [normalizedUserId, displayName, sending]);
+
+  const connectLabel = !normalizedUserId
+    ? 'No account'
+    : status.loading
+      ? 'Connect'
+      : status.isConnected
+        ? 'Connected'
+        : status.pendingOutgoing
+          ? 'Pending'
+          : status.pendingIncoming
+            ? 'Respond in Connections'
+            : status.unavailable
+              ? 'Unavailable'
+              : 'Connect';
+
+  const connectDisabled =
+    !normalizedUserId ||
+    status.loading ||
+    sending ||
+    status.isConnected ||
+    status.pendingOutgoing ||
+    status.pendingIncoming ||
+    status.unavailable;
 
   return {
     sendRequest,
     connectLabel,
     connectDisabled,
+    sending,
     status,
-    checkConnectionStatus,
   };
-};
+}
 
 export default useCandidateConnect;

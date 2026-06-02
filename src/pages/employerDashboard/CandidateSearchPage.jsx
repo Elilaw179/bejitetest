@@ -31,6 +31,7 @@ const CandidateSearchPage = () => {
   const [viewProfile, setViewProfile] = useState(false);
   const [showMainProfile, setShowMainProfile] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(null);
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const mainScrollRef = useRef(null);
@@ -44,8 +45,9 @@ const CandidateSearchPage = () => {
     resultsScrollRef.current?.scrollTo({ top: 0, left: 0 });
   }, []);
 
-  const handleViewProfile = useCallback((candidateId) => {
+  const handleViewProfile = useCallback((candidateId, userId = null) => {
     setSelectedCandidateId(candidateId);
+    setSelectedUserId(userId != null && userId !== '' ? String(userId) : null);
     setViewProfile(true);
     setShowMainProfile(false);
     setLeftPanelOpen(false);
@@ -97,11 +99,17 @@ const CandidateSearchPage = () => {
       return (
         <UserProfilePanel
           candidateId={selectedCandidateId}
+          connectUserId={selectedUserId}
           onViewMainProfile={() => setShowMainProfile(true)}
         />
       );
     }
-    return <UserMainProfileCard candidateId={selectedCandidateId} />;
+    return (
+      <UserMainProfileCard
+        candidateId={selectedCandidateId}
+        connectUserId={selectedUserId}
+      />
+    );
   };
 
   const showMobileToolbar = showResults || viewProfile;
