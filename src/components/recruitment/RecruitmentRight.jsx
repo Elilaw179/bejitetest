@@ -141,15 +141,24 @@ function RecruitmentRight() {
               <img src="assets/images/setting.png" alt="" />
               <p className="text-[#F5F5F5] font-bold">Saved Posts</p>
             </div>
-            <div className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200">
+            <div
+              onClick={() => navigate("/activity-logs")}
+              className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200"
+            >
               <img src="/assets/images/task-square.svg" alt="" />
               <p className="text-[#F5F5F5] font-bold">Activity Log</p>
             </div>
-            <div className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200">
+            <div
+              onClick={() => navigate("/badge")}
+              className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200"
+            >
               <img src="/assets/images/award.svg" alt="" />
               <p className="text-[#F5F5F5] font-bold">Badge Status</p>
             </div>
-            <div className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200">
+            <div
+              onClick={() => navigate("/account-settings")}
+              className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200"
+            >
               <img src="/assets/images/setting-2.svg" alt="" />
               <p className="text-[#F5F5F5] font-bold">Account Settings</p>
             </div>
