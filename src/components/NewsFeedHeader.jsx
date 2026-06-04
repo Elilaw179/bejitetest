@@ -332,11 +332,17 @@ const NewsFeedHeader = ({
       const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
       if (!token) return;
 
-      const response = await axiosInstance.get('/api/connections/requests/incoming');
+      // Backend paginates (default limit 10); use pagination.total, not requests.length
+      const response = await axiosInstance.get('/api/connections/requests/incoming', {
+        params: { page: 1, limit: 1 },
+      });
       const data = response.data;
-      // Handle both {requests: [...]} and direct array responses
+      if (typeof data?.pagination?.total === 'number') {
+        setConnectionRequestCount(data.pagination.total);
+        return;
+      }
       const requestsArray = data?.requests || data || [];
-      setConnectionRequestCount(requestsArray.length);
+      setConnectionRequestCount(Array.isArray(requestsArray) ? requestsArray.length : 0);
     } catch (err) {
       console.error('Error fetching connection request count:', err);
     }
@@ -346,7 +352,7 @@ const NewsFeedHeader = ({
     fetchConnectionRequestCount();
     const interval = setInterval(fetchConnectionRequestCount, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [location.pathname]);
 
   // Cleanup search timeout on unmount
   useEffect(() => {

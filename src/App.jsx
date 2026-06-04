@@ -63,13 +63,13 @@ import AuthSuccess from "./pages/auth/AuthSuccess.jsx";
 import AuthFailure from "./pages/auth/AuthFailure.jsx";
 import CompleteSignup from "./pages/CompleteSignup.jsx";
 import Profile from "./pages/Profile.jsx";
-import { ToastContainer } from 'react-toastify';
-import ProtectedRoute from './components/ProtectedRoute.jsx';
+import { ToastContainer } from "react-toastify";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import ASEPricingPage from "./pages/employerDashboard/ASEPricingPage.jsx";
 import ASEPaymentCallback from "./pages/employerDashboard/ASEPaymentCallback.jsx";
 import ASESubscriptionDashboard from "./pages/employerDashboard/ASESubscriptionDashboard.jsx";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 
 // Admin imports
 import AdminLogin from "./pages/admin/AdminLogin.jsx";
@@ -85,6 +85,10 @@ import AdminProtectedRoute from "./components/admin/AdminProtectedRoute.jsx";
 import AuthBootstrap from "./components/AuthBootstrap.jsx";
 import ProfileCompletionReminder from "./components/ProfileCompletionReminder.jsx";
 import { Navigate } from "react-router-dom";
+import BadgeStatus from "./pages/badge/BadgeStatus.jsx";
+import AccountSettings from "./pages/AccountSettings.jsx";
+import ActivityLog from "./pages/ActivityLog.jsx";
+import BadgeHolder from "./pages/badge/BadgeHolder.jsx";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
@@ -95,7 +99,10 @@ function App() {
         <AuthBootstrap>
           <Routes>
             {/* Admin Routes */}
-            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route
+              path="/admin"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
               path="/admin/dashboard"
@@ -178,7 +185,13 @@ function App() {
             <Route path="/resume" element={<Resume />} />
             <Route path="/save-progress" element={<SaveProgress />} />
 
-            <Route element={<ProtectedRoute><ResumeLayout /></ProtectedRoute>}>
+            <Route
+              element={
+                <ProtectedRoute>
+                  <ResumeLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route path="/bio" element={<Bio />} />
               <Route path="/education" element={<Education />} />
               <Route path="/skills" element={<Skills />} />
@@ -188,12 +201,24 @@ function App() {
               <Route path="/links" element={<Link />} />
             </Route>
 
-            <Route element={<ProtectedRoute><ResumeLayout /></ProtectedRoute>}>
+            <Route
+              element={
+                <ProtectedRoute>
+                  <ResumeLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route path="/edit-profile/bio" element={<Bio />} />
               <Route path="/edit-profile/education" element={<Education />} />
               <Route path="/edit-profile/skills" element={<Skills />} />
-              <Route path="/edit-profile/work-history" element={<WorkHistory />} />
-              <Route path="/edit-profile/certificate" element={<Certificate />} />
+              <Route
+                path="/edit-profile/work-history"
+                element={<WorkHistory />}
+              />
+              <Route
+                path="/edit-profile/certificate"
+                element={<Certificate />}
+              />
               <Route path="/edit-profile/links" element={<Link />} />
               <Route path="/edit-profile/job-type" element={<JobType />} />
             </Route>
@@ -225,10 +250,16 @@ function App() {
                 path="/corporate/company-details"
                 element={<CompanyDetails />}
               />
-              <Route path="/corporate/location" element={<CoperateLocation />} />
+              <Route
+                path="/corporate/location"
+                element={<CoperateLocation />}
+              />
               <Route path="/corporate/verify" element={<CoperateVerify />} />
               <Route path="/corporate/upload" element={<CoperateUploadDoc />} />
-              <Route path="/corporate/inreview" element={<CoperateInReview />} />
+              <Route
+                path="/corporate/inreview"
+                element={<CoperateInReview />}
+              />
               <Route
                 path="/edit-profile/recruiter/basic-details"
                 element={<CoperateBasicDetails />}
@@ -256,9 +287,18 @@ function App() {
             </Route>
             <Route path="/post-page" element={<PostPage />} />
             <Route path="/news-feed" element={<Recruitment />} />
+            <Route path="/badge" element={<BadgeStatus />} />
+            <Route path="/activity-logs" element={<ActivityLog />} />
+            <Route path="/account-settings" element={<AccountSettings />} />
+            <Route path="/badge-holder" element={<BadgeHolder />} />
+
             <Route
               path="/candidate-search-page"
-              element={<ProtectedRoute redirectMessage="Your session has expired. Please log in again."><CandidateSearchPage /></ProtectedRoute>}
+              element={
+                <ProtectedRoute redirectMessage="Your session has expired. Please log in again.">
+                  <CandidateSearchPage />
+                </ProtectedRoute>
+              }
             />
             <Route path="/chats" element={<Chat />} />
             <Route path="/connection" element={<Connections />} />
@@ -274,13 +314,27 @@ function App() {
               element={<EmployeeSentInvite />}
             />
             <Route path="/interview-invite" element={<InterviewInvite />} />
-            <Route path="/my-invitations" element={<InterviewNotifications />} />
+            <Route
+              path="/my-invitations"
+              element={<InterviewNotifications />}
+            />
             <Route path="/sent-invitations" element={<SentInvitations />} />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>} />
-            <Route path="/user-profile/:userId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user-profile/:userId"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/about" element={<About />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/security-advice" element={<SecurityAdvice />} />
@@ -289,9 +343,18 @@ function App() {
             <Route path="/help" element={<Help />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/ase/pricing" element={<ASEPricingPage />} />
-            <Route path="/ase/payment-callback" element={<ASEPaymentCallback />} />
-            <Route path="/ase/subscription-callback" element={<ASEPaymentCallback />} />
-            <Route path="/ase/dashboard" element={<ASESubscriptionDashboard />} />
+            <Route
+              path="/ase/payment-callback"
+              element={<ASEPaymentCallback />}
+            />
+            <Route
+              path="/ase/subscription-callback"
+              element={<ASEPaymentCallback />}
+            />
+            <Route
+              path="/ase/dashboard"
+              element={<ASESubscriptionDashboard />}
+            />
           </Routes>
           <ProfileCompletionReminder />
           <ToastContainer
