@@ -46,6 +46,22 @@ import useSyncProfilePhoto from "../../hooks/useSyncProfilePhoto";
 import SharePostModal from "../SharePostModal";
 import UsersListModal from "../UsersListModal";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
+import PostMediaGallery from "../PostMediaGallery";
+import FeedLoadMoreButton from "../FeedLoadMoreButton";
+
+const FEED_PAGE_SIZE = 20;
+
+const mergeFeedPosts = (existing, incoming) => {
+  const seen = new Set(existing.map((p) => p.id));
+  const merged = [...existing];
+  for (const post of incoming) {
+    if (!seen.has(post.id)) {
+      seen.add(post.id);
+      merged.push(post);
+    }
+  }
+  return merged;
+};
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
 
@@ -93,6 +109,8 @@ const parseTextWithLinks = (text) => {
 export default function RecruitmentMiddle() {
   useSyncProfilePhoto();
   const [posts, setPosts] = useState([]);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -130,8 +148,9 @@ export default function RecruitmentMiddle() {
   const fetchSavedPosts = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const data = await getSavedPosts(20);
+      const data = await getSavedPosts(FEED_PAGE_SIZE);
       setPosts(data.posts || []);
+      setNextCursor(data.nextCursor ?? null);
       if (!silent) setError(null);
     } catch (err) {
       console.error("Error fetching saved posts:", err);
@@ -151,8 +170,9 @@ export default function RecruitmentMiddle() {
   const fetchFeed = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const data = await getFeed(20);
+      const data = await getFeed(FEED_PAGE_SIZE);
       setPosts(data.posts || []);
+      setNextCursor(data.nextCursor ?? null);
       if (!silent) setError(null);
     } catch (err) {
       console.error("Error fetching feed:", err);
@@ -162,6 +182,29 @@ export default function RecruitmentMiddle() {
     }
   };
 
+  const loadMorePosts = async () => {
+    if (!nextCursor || loadingMore) return;
+    try {
+      setLoadingMore(true);
+      const data =
+        feedMode === "saved"
+          ? await getSavedPosts(FEED_PAGE_SIZE, nextCursor)
+          : await getFeed(FEED_PAGE_SIZE, nextCursor);
+      setPosts((prev) => mergeFeedPosts(prev, data.posts || []));
+      setNextCursor(data.nextCursor ?? null);
+    } catch (err) {
+      console.error("Error loading more posts:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const patchPost = (postId, patch) => {
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, ...patch } : p)),
+    );
+  };
+
   const handleLike = async (postId, isLiked) => {
     try {
       if (isLiked) {
@@ -169,7 +212,14 @@ export default function RecruitmentMiddle() {
       } else {
         await likePost(postId);
       }
-      refreshPosts(true);
+      const current = posts.find((p) => p.id === postId);
+      patchPost(postId, {
+        likedByMe: !isLiked,
+        likesCount: Math.max(
+          0,
+          (current?.likesCount || 0) + (isLiked ? -1 : 1),
+        ),
+      });
     } catch (err) {
       console.error("Error toggling like:", err);
     }
@@ -178,7 +228,10 @@ export default function RecruitmentMiddle() {
   const handleShare = async (postId) => {
     try {
       await recordPostShare(postId);
-      refreshPosts(true);
+      const current = posts.find((p) => p.id === postId);
+      patchPost(postId, {
+        sharesCount: (current?.sharesCount || 0) + 1,
+      });
     } catch (err) {
       console.error("Error sharing post:", err);
     }
@@ -188,10 +241,15 @@ export default function RecruitmentMiddle() {
     try {
       if (isSaved) {
         await unsavePost(postId);
+        if (feedMode === "saved") {
+          setPosts((prev) => prev.filter((p) => p.id !== postId));
+        } else {
+          patchPost(postId, { savedByMe: false });
+        }
       } else {
         await savePost(postId);
+        patchPost(postId, { savedByMe: true });
       }
-      refreshPosts(true);
     } catch (err) {
       console.error("Error toggling save:", err);
     }
@@ -300,19 +358,27 @@ export default function RecruitmentMiddle() {
             : "No posts yet. Be the first to post!"}
         </div>
       ) : (
-        posts.map((post) => (
-          <RecruitmentPostCard
-            key={post.id}
-            post={post}
-            currentUserId={mergedUser?.id}
-            currentUserPhotoUrl={currentUserImage}
-            onLike={handleLike}
-            onSave={handleSave}
-            onShare={handleShare}
-            onUpdate={handleUpdatePost}
-            onDelete={handleDeletePost}
+        <>
+          {posts.map((post) => (
+            <RecruitmentPostCard
+              key={post.id}
+              post={post}
+              currentUserId={mergedUser?.id}
+              currentUserPhotoUrl={currentUserImage}
+              onLike={handleLike}
+              onSave={handleSave}
+              onShare={handleShare}
+              onUpdate={handleUpdatePost}
+              onDelete={handleDeletePost}
+            />
+          ))}
+          <FeedLoadMoreButton
+            hasMore={Boolean(nextCursor)}
+            loading={loadingMore}
+            onLoadMore={loadMorePosts}
+            label={feedMode === "saved" ? "Load more saved posts" : "Load older posts"}
           />
-        ))
+        </>
       )}
       <PostCreationModal
         isOpen={showModal}
@@ -368,7 +434,6 @@ const RecruitmentPostCard = ({
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState("");
   const [showShareModal, setShowShareModal] = useState(false);
-  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
   // Users list modal state
   const [usersListModalOpen, setUsersListModalOpen] = useState(false);
@@ -387,20 +452,6 @@ const RecruitmentPostCard = ({
     window.open(pendingLink, "_blank");
     setLinkModalOpen(false);
   };
-
-  const handleMediaScroll = (e) => {
-    if (!post.media || post.media.length <= 1) return;
-    const container = e.currentTarget;
-    const itemWidth = container.clientWidth * 0.8;
-    if (!itemWidth) return;
-    const idx = Math.round(container.scrollLeft / itemWidth);
-    const bounded = Math.max(0, Math.min(idx, post.media.length - 1));
-    setActiveMediaIndex(bounded);
-  };
-
-  useEffect(() => {
-    setActiveMediaIndex(0);
-  }, [post.id, post.media?.length]);
 
   const fetchComments = async (force = false) => {
     if (!force && comments.length > 0) return;
@@ -723,50 +774,8 @@ const RecruitmentPostCard = ({
         onCancel={() => setLinkModalOpen(false)}
       />
 
-      {/* Post Media */}
       {post.media && post.media.length > 0 && (
-        <div className="space-y-2">
-          <div
-            className={`${
-              post.media.length === 1
-                ? "grid grid-cols-1"
-                : "flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1"
-            }`}
-            onScroll={handleMediaScroll}
-          >
-            {post.media.map((item, index) => (
-              <div
-                key={index}
-                className={`${
-                  post.media.length === 1
-                    ? "w-full"
-                    : "min-w-[80%] sm:min-w-[45%] snap-start"
-                }`}
-              >
-                {item.kind === "video" ? (
-                  <video
-                    src={item.url}
-                    controls
-                    className="w-full rounded-xl max-h-[55vh] sm:max-h-96 object-contain bg-black"
-                  />
-                ) : (
-                  <img
-                    src={item.url}
-                    alt={`Media ${index + 1}`}
-                    className="w-full rounded-xl max-h-[55vh] sm:max-h-96 object-cover"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-          {post.media.length > 1 && (
-            <div className="flex justify-center">
-              <span className="text-xs font-medium text-white bg-black/60 px-2 py-1 rounded-full">
-                {activeMediaIndex + 1}/{post.media.length}
-              </span>
-            </div>
-          )}
-        </div>
+        <PostMediaGallery media={post.media} />
       )}
 
       {/* Post Stats */}
