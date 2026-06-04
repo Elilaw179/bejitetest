@@ -4,6 +4,12 @@ import { toast } from "react-toastify";
 import Header from "../../components/Header";
 import { FaArrowLeft } from "react-icons/fa";
 
+const btnPrimary =
+  "w-full max-w-md min-h-[44px] px-6 py-3 sm:py-4 bg-[#16730F] text-white text-sm sm:text-base font-medium rounded-3xl shadow-md hover:bg-[#145a0c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+
+const btnSecondary =
+  "w-full max-w-md min-h-[44px] px-6 py-3 bg-white border-2 border-[#16730F] text-[#16730F] text-sm sm:text-base font-medium rounded-full shadow-sm hover:bg-[#16730F]/5 transition-colors";
+
 const CoperateVerify = () => {
   const navigate = useNavigate();
   const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
@@ -29,7 +35,6 @@ const CoperateVerify = () => {
     }
 
     if (isEditMode) {
-      // Step 5 = verify → upload-doc; step 6 = upload-doc → done
       if (currentStep >= 6) {
         navigate("/news-feed");
         toast.success("Profile updated successfully!");
@@ -43,117 +48,110 @@ const CoperateVerify = () => {
   };
 
   const handleSkip = () => {
-    if (isEditMode) {
-      if (currentStep >= 6) {
-        navigate("/news-feed");
-      } else {
-        navigate(getPath(currentStep + 1));
-      }
-      return;
-    }
-
     navigate("/news-feed");
   };
 
+  const handleGoBack = () => {
+    if (isEditMode) {
+      navigate(getPath(currentStep - 1));
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
-    <div className="bg-white min-h-screen relative">
+    <div className="bg-white min-h-screen min-h-[100dvh] flex flex-col w-full min-w-0 overflow-x-hidden">
       <Header />
 
-      <div className="lg:w-[70%] w-full flex flex-col p-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+      <main className="flex-1 w-full min-w-0 flex items-center justify-center px-3 sm:px-4 md:px-6 py-6 sm:py-10 pb-8">
         {!showConsent ? (
-          // ✅ Initial verification instructions
-          <div className="lg:w-[45%] w-full mx-auto rounded-2xl p-5 flex flex-col gap-y-6 items-center">
-            <h1 className="text-xl font-[500] text-[#16730F] italic">Almost there!</h1>
+          <div className="w-full max-w-lg mx-auto flex flex-col gap-5 sm:gap-6 items-center text-center">
+            <p className="text-base sm:text-xl font-medium text-[#16730F] italic">
+              Almost there!
+            </p>
 
-            <h1 className="text-[#16730F] font-[600] text-3xl text-center">
+            <h1 className="text-[#16730F] font-semibold text-xl sm:text-2xl md:text-3xl leading-snug px-1">
               Confirm your Identity as an Individual Employer
             </h1>
 
-            <div className="mb-5 gap-y-1 flex flex-col">
-              <p className="text-sm italic text-center">
-                To maintain a trustworthy platform for jobseekers, Bejite
-                verifies that employers hiring on behalf of companies have
-                proper authority. Help us keep Bejite secure and reliable
-              </p>
+            <p className="text-xs sm:text-sm italic text-gray-700 leading-relaxed max-w-prose px-1">
+              To maintain a trustworthy platform for jobseekers, Bejite verifies
+              that employers hiring on behalf of companies have proper authority.
+              Help us keep Bejite secure and reliable.
+            </p>
+
+            <div className="w-full max-w-md flex flex-col gap-3 mt-1 sm:mt-2">
+              <button
+                type="button"
+                className={btnPrimary}
+                onClick={handleStartVerification}
+              >
+                Start Verification
+              </button>
+
+              <button type="button" className={btnSecondary} onClick={handleSkip}>
+                Skip
+              </button>
             </div>
 
             <button
-              className="bg-[#16730F] w-[80%] text-white py-4 rounded-3xl shadow-md cursor-pointer"
-              onClick={handleStartVerification}
+              type="button"
+              className="mt-2 flex items-center justify-center gap-2 text-[#16730F] text-sm font-medium underline hover:text-[#145a0c] min-h-[44px] px-2"
+              onClick={handleGoBack}
             >
-              Start Verification
+              <FaArrowLeft className="shrink-0" />
+              Go back
             </button>
-
-            <button
-              className="bg-[#fff] border border-[#16730F] text-[#16730F] py-3 w-[60%] rounded-full shadow-md disabled:opacity-50"
-              onClick={handleSkip}
-            // disabled={!agreed}
-            >
-              Skip
-            </button>
-
-
-            <div
-              className="flex justify-center w-full sm:w-auto bg-white items-center px-2 py-1 rounded cursor-pointer"
-              onClick={() => {
-                if (isEditMode) {
-                  navigate(getPath(currentStep - 1));
-                } else {
-                  navigate(-1);
-                }
-              }}
-            >
-              <FaArrowLeft />
-              <button className="ml-1 underline">Go back</button>
-            </div>
           </div>
         ) : (
-          // 🔒 Consent screen after clicking Start Verification
-          <div className="lg:w-[90%] w-full mx-auto rounded-2xl lg:p-5 flex flex-col gap-y-6 items-center">
-            <div className="flex lg:items-center ">
+          <div className="w-full max-w-2xl mx-auto flex flex-col gap-5 sm:gap-6 items-center">
+            <h2 className="text-lg sm:text-xl font-semibold text-[#16730F] text-center px-2">
+              Verification consent
+            </h2>
+
+            <label
+              htmlFor="agree"
+              className="flex items-start gap-3 w-full max-w-xl cursor-pointer rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5"
+            >
               <input
                 type="checkbox"
                 id="agree"
                 checked={agreed}
                 onChange={() => setAgreed(!agreed)}
+                className="mt-1 h-4 w-4 shrink-0 accent-[#16730F]"
               />
-              <label
-                htmlFor="agree"
-                className="ml-5 text-sm lg:text-center text-green-700 "
-              >
+              <span className="text-sm sm:text-base text-green-800 leading-relaxed text-left break-words">
                 I confirm that I am legally authorized to hire for this business
                 and consent to ID verification.
-              </label>
+              </span>
+            </label>
+
+            <div className="w-full max-w-md flex flex-col gap-3">
+              <button
+                type="button"
+                className={btnPrimary}
+                onClick={handleContinue}
+                disabled={!agreed}
+              >
+                Continue
+              </button>
+
+              <button type="button" className={btnSecondary} onClick={handleSkip}>
+                Skip
+              </button>
             </div>
 
-
             <button
-              className="bg-[#16730F] text-white py-3 w-[40%] rounded-full shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleContinue}
-              disabled={!agreed}
-            >
-              Continue
-            </button>
-
-            <button
-              className="bg-[#fff] border border-[#16730F] text-[#16730F] py-3 w-[30%] rounded-full shadow-md disabled:opacity-50"
-              onClick={handleSkip}
-            // disabled={!agreed}
-            >
-              Skip
-            </button>
-
-
-            <button
-              className="mt-4 underline text-green-900 flex items-center gap-2"
+              type="button"
+              className="mt-1 flex items-center justify-center gap-2 text-green-900 text-sm font-medium underline hover:text-[#16730F] min-h-[44px] px-2"
               onClick={() => setShowConsent(false)}
             >
-              <FaArrowLeft />
+              <FaArrowLeft className="shrink-0" />
               Go back
             </button>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };
