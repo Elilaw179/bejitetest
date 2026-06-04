@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import FormLabel from "./forms/FormLabel";
+import PhoneInput from "./forms/PhoneInput";
 
 const FieldGroup = ({ formData, handleChange, countries }) => {
   const bioAges = useMemo(() => {
@@ -23,8 +24,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         name: "phone",
         label: "PHONE NUMBER",
         optional: false,
-        type: "number",
-        placeholder: "e.g +234 706 004 0000",
+        type: "phone",
         width: "w-full sm:w-[calc(50%-0.5rem)]",
       },
     ],
@@ -157,6 +157,14 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
                     ))}
                   </datalist>
                 </div>
+              ) : f.type === "phone" ? (
+                <PhoneInput
+                  value={formData.phone}
+                  countryName={formData.country}
+                  onChange={(e164) =>
+                    handleChange({ target: { name: "phone", value: e164 } })
+                  }
+                />
               ) : (
                 <input
                   name={f.name}

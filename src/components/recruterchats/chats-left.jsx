@@ -3,6 +3,7 @@ import { FaArrowLeft, FaSearch } from 'react-icons/fa';
 import messagingService from '../../services/messagingService';
 import { API_URL } from '../../config';
 import { formatConversationPreview } from '../../utils/conversationPreview';
+import { formatDisplayPersonName } from '../../utils/personDisplayName';
 
 const CONVERSATION_UPDATED = 'chat:conversation-updated';
 
@@ -179,7 +180,7 @@ function ChatsLeft({ onSelectChat }) {
               </div>
             ) : (
               searchResults.map((user) => {
-                const displayName = `${user.firstName} ${user.lastName}`;
+                const displayName = formatDisplayPersonName(user, 'Unknown User');
                 const profileImageRaw = user.profilePictureUrl || user.profilePhoto || user.profile_photo || '';
                 const profileImage = getProfileImageUrl(profileImageRaw);
 
@@ -218,7 +219,7 @@ function ChatsLeft({ onSelectChat }) {
             ) : (
 conversations.map((conversation) => {
                 const otherUser = conversation.other_user;
-                const displayName = otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : 'Unknown User';
+                const displayName = formatDisplayPersonName(otherUser, 'Unknown User');
                 const profileImageRaw = otherUser?.profilePictureUrl || otherUser?.profilePhoto || otherUser?.profile_photo || '';
                 const profileImage = getProfileImageUrl(profileImageRaw);
                 const lastMessageTime = conversation.last_message_at ?

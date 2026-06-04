@@ -8,6 +8,7 @@ import * as connectionsApi from '../services/connectionsApi';
 import { getAuthorProfileImageUrl } from '../utils/profileImageUtils';
 import useSyncProfilePhoto from '../hooks/useSyncProfilePhoto';
 import NewsFeedLayout from '../components/layout/NewsFeedLayout';
+import { formatDisplayPersonName } from '../utils/personDisplayName';
 
 const shuffleArray = (arr) => {
   const shuffled = [...arr];
@@ -18,20 +19,7 @@ const shuffleArray = (arr) => {
   return shuffled;
 };
 
-const formatUserName = (user) => {
-  if (!user) return 'Unknown User';
-  const toTitleCase = (value) =>
-    String(value || '')
-      .toLowerCase()
-      .replace(/\b\w/g, (char) => char.toUpperCase())
-      .trim();
-  const first = user.firstName ?? user.first_name ?? '';
-  const last = user.lastName ?? user.last_name ?? '';
-  const full = `${first} ${last}`.trim();
-  if (full) return toTitleCase(full);
-  if (user.name) return toTitleCase(user.name);
-  return user.email || 'Unknown User';
-};
+const formatUserName = (user) => formatDisplayPersonName(user, 'Unknown User');
 
 const transformDiscoverableUser = (user) => ({
   id: user.id,
