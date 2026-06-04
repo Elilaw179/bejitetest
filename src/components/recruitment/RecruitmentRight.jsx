@@ -5,6 +5,7 @@ import { getUser } from "../../utils/tokenManager";
 import { getUserProfileImage } from "../../utils/profileImageUtils";
 import { getUserPosts } from "../../services/postsApi";
 import { getConnections } from "../../services/connectionsApi";
+import { formatDisplayPersonName } from "../../utils/personDisplayName";
 
 function RecruitmentRight() {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ function RecruitmentRight() {
             <div className="text-[#FFFFFF] text-center mt-[-40px]">
               <p className="text-[16px] font-bold">
                 {userData
-                  ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
+                  ? formatDisplayPersonName(userData, "User")
                   : "Osakwe Prisca"}
               </p>
               <p className="text-[11px] font-bold">@nd_creations</p>

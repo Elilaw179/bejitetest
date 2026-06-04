@@ -20,6 +20,11 @@ import {
   profilePayloadLooksUsable,
   profileFromSearchPreview,
 } from '../utils/profileUtils';
+import {
+  formatDisplayPersonName,
+  formatDisplayRole,
+} from '../utils/personDisplayName';
+import { formatDisplayText } from '../utils/displayFormatUtils';
 
 const ABOUT_CHAR_LIMIT = 500;
 
@@ -366,18 +371,15 @@ const Profile = () => {
             />
             <div className="text-center sm:text-left">
               <h1 className="text-2xl font-bold text-[#1A3E32]">
-                {(() => {
-                  const fromNames =
-                    `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() ||
-                    `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim();
-                  return fromNames || profileData.nickname || 'User';
-                })()}
+                {formatDisplayPersonName(profileData, 'User')}
               </h1>
-              <p className="text-[#16730F] font-medium capitalize">
-                {viewedRole || 'User'}
+              <p className="text-[#16730F] font-medium">
+                {formatDisplayRole(viewedRole)}
               </p>
               {profileData.title && (
-                <p className="text-gray-600 mt-1">{profileData.title}</p>
+                <p className="text-gray-600 mt-1">
+                  {formatDisplayText(profileData.title)}
+                </p>
               )}
             </div>
           </div>
@@ -404,7 +406,7 @@ const Profile = () => {
                 <div>
                   <p className="text-sm text-gray-500">Company</p>
                   <p className="text-[#1A3E32]">
-                    {profileData.company_name || 'Not provided'}
+                    {formatDisplayText(profileData.company_name) || 'Not provided'}
                   </p>
                 </div>
               </div>

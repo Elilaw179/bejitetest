@@ -5,6 +5,7 @@ import messagingService from '../../services/messagingService';
 import { API_URL } from '../../config';
 import ChatMessageInput from '../chat/ChatMessageInput';
 import MessageAttachment from '../chat/MessageAttachment';
+import { formatDisplayPersonName } from '../../utils/personDisplayName';
 
 function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   const [message, setMessage] = useState('');
@@ -95,7 +96,10 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
 
   const selectedFirstName = selectedChat?.other_user?.firstName || '';
   const selectedLastName = selectedChat?.other_user?.lastName || '';
-  const selectedFullName = `${selectedFirstName} ${selectedLastName}`.trim() || 'Chat';
+  const selectedFullName = formatDisplayPersonName(
+    { firstName: selectedFirstName, lastName: selectedLastName },
+    'Chat',
+  );
   const selectedProfileImageRaw = selectedChat?.other_user?.profilePictureUrl || selectedChat?.other_user?.profilePhoto || '';
   const selectedProfileImage = getProfileImageUrl(selectedProfileImageRaw);
 
@@ -198,9 +202,13 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
 
           // Real names from backend JOIN
           // Backend returns firstName/lastName directly on msg (JOIN), NOT msg.sender object
-          const senderName =
-            `${msg.firstName || msg.first_name || ''} ${msg.lastName || msg.last_name || ''}`.trim() ||
-            'User';
+          const senderName = formatDisplayPersonName(
+            {
+              firstName: msg.firstName ?? msg.first_name,
+              lastName: msg.lastName ?? msg.last_name,
+            },
+            'User',
+          );
           const messageTime = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
           return (

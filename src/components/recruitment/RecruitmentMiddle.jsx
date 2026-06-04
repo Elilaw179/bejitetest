@@ -45,24 +45,9 @@ import ConfirmModal from "../ConfirmModal";
 import useSyncProfilePhoto from "../../hooks/useSyncProfilePhoto";
 import SharePostModal from "../SharePostModal";
 import UsersListModal from "../UsersListModal";
+import { formatDisplayPersonName } from "../../utils/personDisplayName";
 
-// Helper function to get display name (same pattern as NewsFeedHeader)
-const getDisplayName = (user) => {
-  if (!user) return "Guest";
-  const toTitleCase = (value) =>
-    String(value || "")
-      .toLowerCase()
-      .replace(/\b\w/g, (char) => char.toUpperCase())
-      .trim();
-  if (user.name) return toTitleCase(user.name);
-  // Check both camelCase and snake_case
-  const firstName = user.firstName || user.first_name || "";
-  const lastName = user.lastName || user.last_name || "";
-  if (firstName || lastName) {
-    return toTitleCase(`${firstName} ${lastName}`);
-  }
-  return "Guest";
-};
+const getDisplayName = (user) => formatDisplayPersonName(user);
 
 const getDisplayJobTitle = (user) =>
   user?.jobTitle || user?.title || user?.role || "Professional";
