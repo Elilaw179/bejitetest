@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import { ConnectionList, RequestList } from '../components/connections';
@@ -62,6 +62,7 @@ const Connections = () => {
   const [networkMeta, setNetworkMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
   const [incomingMeta, setIncomingMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
   const [outgoingMeta, setOutgoingMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
+  const tabContentRef = useRef(null);
 
   const loadConnectionsData = useCallback(async () => {
     setLoading(true);
@@ -159,6 +160,13 @@ const Connections = () => {
   useEffect(() => {
     loadConnectionsData();
   }, [loadConnectionsData]);
+
+  // Pagination controls sit below the list; without this, the scroll container stays at the bottom.
+  useEffect(() => {
+    if (loading) return;
+    tabContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [networkPage, invitationsPage, sentPage, loading]);
 
   useEffect(() => {
     const query = searchQuery.trim();
@@ -450,7 +458,7 @@ const Connections = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="p-6">
+            <div ref={tabContentRef} className="p-6 scroll-mt-20">
               {tabs.find(tab => tab.id === activeTab)?.content}
             </div>
           </div>

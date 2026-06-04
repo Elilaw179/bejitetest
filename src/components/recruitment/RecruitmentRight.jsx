@@ -24,10 +24,15 @@ function RecruitmentRight() {
         })
         .catch((err) => console.error("Error fetching posts:", err));
 
-      // Fetch connections count
-      getConnections()
+      // Use pagination.total — default page only returns up to 10 connections
+      getConnections(1, 1)
         .then((data) => {
-          setConnectionCount(data.connections?.length || 0);
+          const total = data?.pagination?.total;
+          setConnectionCount(
+            typeof total === "number"
+              ? total
+              : data.connections?.length || 0,
+          );
         })
         .catch((err) => console.error("Error fetching connections:", err));
     }
