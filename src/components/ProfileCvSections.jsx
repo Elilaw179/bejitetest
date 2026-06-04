@@ -14,8 +14,10 @@ import {
 } from '../utils/displayFormatUtils';
 
 const Section = ({ title, children, empty }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-    <h2 className="text-xl font-semibold text-[#1A3E32] mb-4">{title}</h2>
+  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6 min-w-0">
+    <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4 break-words">
+      {title}
+    </h2>
     {empty ? (
       <p className="text-gray-500 text-sm">Not provided</p>
     ) : (
@@ -87,19 +89,21 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
               .filter(Boolean)
               .join(' · ');
             return (
-              <li key={edu.id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+              <li key={edu.id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0 min-w-0">
                 {formatted.educationLevel && (
                   <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                     {formatted.educationLevel}
                   </p>
                 )}
                 {formatted.degree && (
-                  <p className="font-semibold text-[#1A3E32]">{formatted.degree}</p>
+                  <p className="font-semibold text-[#1A3E32] text-sm sm:text-base break-words">
+                    {formatted.degree}
+                  </p>
                 )}
                 {formatted.institution && (
-                  <p className="text-gray-600">{formatted.institution}</p>
+                  <p className="text-gray-600 text-sm sm:text-base break-words">{formatted.institution}</p>
                 )}
-                {meta && <p className="text-sm text-gray-500">{meta}</p>}
+                {meta && <p className="text-xs sm:text-sm text-gray-500 break-words">{meta}</p>}
                 <p className="text-sm text-[#16730F]">
                   {formatDateRange(
                     edu.start_date ?? edu.startDate,
@@ -125,12 +129,14 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
           {cv.workHistory?.map((job) => {
             const formatted = getFormattedWorkHistoryFields(job);
             return (
-              <li key={job.id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+              <li key={job.id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0 min-w-0">
                 {formatted.title && (
-                  <p className="font-semibold text-[#1A3E32]">{formatted.title}</p>
+                  <p className="font-semibold text-[#1A3E32] text-sm sm:text-base break-words">
+                    {formatted.title}
+                  </p>
                 )}
                 {formatted.company && (
-                  <p className="text-gray-600">{formatted.company}</p>
+                  <p className="text-gray-600 text-sm sm:text-base break-words">{formatted.company}</p>
                 )}
                 <p className="text-sm text-[#16730F]">
                   {formatDateRange(
@@ -140,7 +146,7 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
                   )}
                 </p>
                 {formatted.description && (
-                  <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">
+                  <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap break-words">
                     {formatted.description}
                   </p>
                 )}
@@ -160,9 +166,9 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
             const certTitle = cert.cert_name ?? cert.certName;
 
             return (
-              <li key={cert.id}>
-                <p className="font-semibold text-[#1A3E32]">{certTitle}</p>
-                {meta && <p className="text-sm text-gray-600">{meta}</p>}
+              <li key={cert.id} className="min-w-0">
+                <p className="font-semibold text-[#1A3E32] text-sm sm:text-base break-words">{certTitle}</p>
+                {meta && <p className="text-xs sm:text-sm text-gray-600 break-words">{meta}</p>}
                 <CertificateViewLink
                   fileUrl={cert.file_url ?? cert.fileUrl}
                   title={certTitle}
@@ -183,9 +189,9 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
           )
         }
       >
-        <ul className="space-y-2">
+        <ul className="space-y-2 min-w-0">
           {cv.links?.linkedin && (
-            <li>
+            <li className="min-w-0 break-words">
               <span className="text-gray-500 text-sm">LinkedIn: </span>
               <a
                 href={cv.links.linkedin}
@@ -198,7 +204,7 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
             </li>
           )}
           {cv.links?.twitter && (
-            <li>
+            <li className="min-w-0 break-words">
               <span className="text-gray-500 text-sm">Twitter: </span>
               <a
                 href={cv.links.twitter}
@@ -211,7 +217,7 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
             </li>
           )}
           {cv.links?.instagram && (
-            <li>
+            <li className="min-w-0 break-words">
               <span className="text-gray-500 text-sm">Instagram: </span>
               <a
                 href={cv.links.instagram}
@@ -224,7 +230,7 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
             </li>
           )}
           {cv.links?.portfolio && (
-            <li>
+            <li className="min-w-0 break-words">
               <span className="text-gray-500 text-sm">Portfolio: </span>
               <a
                 href={cv.links.portfolio}

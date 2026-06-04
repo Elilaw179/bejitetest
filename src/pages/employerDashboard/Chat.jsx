@@ -1,14 +1,41 @@
-import React from 'react'
-import { useState } from 'react'
-import NewsFeedHeader from '../../components/NewsFeedHeader'
+import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import messagingService from '../../services/messagingService'
 import ChatsRight from '../../components/recruterchats/chats-right'
 import ChatsLeft from '../../components/recruterchats/chats-left'
 import ChatsMiddle from '../../components/recruterchats/chats-middle'
 import NewsFeedLayout from '../../components/layout/NewsFeedLayout'
 
 function Chat() {
+  const location = useLocation();
   const [selectedChat, setSelectedChat] = useState(null);
   const [currentView, setCurrentView] = useState('chatList'); // 'chatList', 'chatView', 'chatInfo'
+
+  useEffect(() => {
+    const openConversationId = location.state?.openConversationId;
+    if (!openConversationId) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const conversations = await messagingService.getConversations();
+        const match = (conversations || []).find(
+          (c) => String(c.id) === String(openConversationId),
+        );
+        if (!cancelled && match) {
+          setSelectedChat(match);
+          setCurrentView('chatView');
+        }
+      } catch (err) {
+        console.error('Error opening conversation from profile:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location.state?.openConversationId]);
 
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);
