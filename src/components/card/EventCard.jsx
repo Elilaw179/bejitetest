@@ -1,5 +1,4 @@
 import { Calendar, Clock, MapPin, Video } from "lucide-react";
-// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 
 export function EventCard({ event, onSelect }) {

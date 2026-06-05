@@ -1,7 +1,6 @@
-import { TYPE_COLORS, TYPE_ICONS, TYPE_LABELS } from '../../constants/activity';
+ import { TYPE_COLORS, TYPE_ICONS, TYPE_LABELS } from '../../pages/ActivityLog';
 import { timeAgo } from '../../utils/checksFormat';
 import { Heart, MessageCircle, Share2, FileText,  MoreHorizontal } from 'lucide-react';
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
  
 

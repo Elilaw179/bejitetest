@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Shield, ChevronRight, Sparkles, Star } from "lucide-react";
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { EventModal } from "../../components/modal/confirmBadgeModal";
 import { EventCard } from "../../components/card/EventCard";
@@ -89,7 +88,7 @@ const EVENTS = [
   },
 ];
 
-const CATEGORY_COLORS = {
+export const CATEGORY_COLORS = {
   Technology: "bg-blue-100 text-blue-700",
   Finance: "bg-emerald-100 text-emerald-700",
   Product: "bg-purple-100 text-purple-700",

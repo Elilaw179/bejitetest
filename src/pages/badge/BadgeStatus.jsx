@@ -10,7 +10,6 @@ import {
   Crown,
   Check,
 } from "lucide-react";
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { ConfirmBadgeModal } from "../../components/modal/confirmBadgeModal";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";

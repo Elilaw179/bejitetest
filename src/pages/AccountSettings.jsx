@@ -16,7 +16,6 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import NewsFeedLayout from "../components/layout/NewsFeedLayout";
 import {
@@ -251,7 +250,7 @@ export default function AccountSettings() {
         {modal === "password" && (
           <ChangePasswordModal key="pw" onClose={() => setModal(null)} />
         )}
-        {/* {modal === "email" && (
+        {modal === "email" && (
           <ChangeEmailModal
             key="email"
             onClose={() => {
@@ -259,7 +258,7 @@ export default function AccountSettings() {
               showToast("Email updated successfully");
             }}
           />
-        )} */}
+        )}
         {modal === "2fa" && (
           <TwoFactorModal
             key="2fa"
