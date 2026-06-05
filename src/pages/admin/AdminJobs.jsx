@@ -181,7 +181,7 @@ const AdminJobs = () => {
                             <Briefcase size={20} />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                            <p className="max-w-74 text-sm font-medium text-gray-900 break-words whitespace-normal">
                               {job.title}
                             </p>
                             <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">

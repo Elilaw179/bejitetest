@@ -145,7 +145,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/recruitment "
+              path="/admin/recruitment"
               element={
                 <AdminProtectedRoute>
                   <AdminRecruitment />
