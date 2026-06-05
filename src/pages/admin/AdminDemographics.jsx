@@ -17,7 +17,7 @@ import {
   Cell,
 } from "recharts";
 
-// eslint-disable-next-line no-unused-vars
+// StatCard component
 const StatCard = ({ title, value, icon: Icon, colorClass, subtitle }) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-shadow">
     <div className="flex items-start justify-between mb-4">
@@ -375,13 +375,13 @@ const AdminDemographics = () => {
           {/* Employers by State (Bar) */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-gray-800 mb-6">
-              Top Country (Employers)
+              Top States (Employers)
             </h3>
             <div className="h-72 w-full">
-              {jobseekersByCountry.length > 0 ? (
+              {employersByState.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={jobseekersByCountry}
+                    data={employersByState}
                     layout="vertical"
                     margin={{ top: 0, right: 0, left: 40, bottom: 0 }}
                   >
@@ -414,7 +414,7 @@ const AdminDemographics = () => {
                       radius={[0, 4, 4, 0]}
                       barSize={20}
                     >
-                      {jobseekersByCountry.map((entry, index) => (
+                      {employersByState.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
                           fill={COLORS[index % COLORS.length]}

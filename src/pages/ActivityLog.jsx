@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Image,
   FileText,
@@ -13,7 +13,6 @@ import {
   Heart,
   MoreHorizontal
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 import NewsFeedLayout from "../components/layout/NewsFeedLayout";
 import {
   getUserPosts,
@@ -726,6 +725,7 @@ export default function ActivityLog() {
     fetchMetrics();
     fetchPosts(true);
     fetchJobs(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mergedUser?.id]);
 
   const fetchMetrics = async () => {

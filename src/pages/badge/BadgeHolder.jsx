@@ -88,7 +88,7 @@ const EVENTS = [
   },
 ];
 
-export const CATEGORY_COLORS = {
+const CATEGORY_COLORS = {
   Technology: "bg-blue-100 text-blue-700",
   Finance: "bg-emerald-100 text-emerald-700",
   Product: "bg-purple-100 text-purple-700",

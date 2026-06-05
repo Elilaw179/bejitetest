@@ -10,7 +10,7 @@ import {
   Crown,
   Check,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { ConfirmBadgeModal } from "../../components/modal/confirmBadgeModal";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
 

@@ -5,7 +5,7 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import { Search, Heart, MessageSquare, Share2, Image as ImageIcon, Video, TrendingUp, Users, Activity } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 
-// eslint-disable-next-line no-unused-vars
+// StatCard component
 const StatCard = ({ title, value, icon: Icon, colorClass, subtitle }) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-shadow">
     <div className="flex items-start justify-between mb-4">

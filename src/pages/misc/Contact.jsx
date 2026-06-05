@@ -13,6 +13,7 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
+import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -66,8 +67,8 @@ export default function Contact() {
   ];
 
   return (
-    <>
-      <AboutPageHeader headerText="CONTACT US" />
+    <NewsFeedLayout scrollable={false} showSidebars={false}>
+      {/* <AboutPageHeader headerText="CONTACT US" /> */}
       <main className="bg-gradient-to-b from-gray-50 to-white min-h-screen">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 pb-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-[#1A3E32] tracking-tight">
@@ -273,6 +274,6 @@ export default function Contact() {
           </div>
         </div>
       </main>
-    </>
+    </NewsFeedLayout>
   );
 }
