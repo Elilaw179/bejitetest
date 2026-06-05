@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { FaUser, FaEnvelope, FaBuilding, FaEdit, FaArrowLeft } from 'react-icons/fa';
+import {
+  FaUser,
+  FaEnvelope,
+  FaEdit,
+  FaArrowLeft,
+  FaGlobe,
+  FaLinkedin,
+  FaTwitter,
+  FaInstagram,
+  FaMapMarkerAlt,
+} from 'react-icons/fa';
 import NewsFeedLayout from '../components/layout/NewsFeedLayout';
 import ProfileCvSections from '../components/ProfileCvSections';
 import axiosInstance from '../utils/axiosInstance';
@@ -25,9 +35,49 @@ import {
   formatDisplayRole,
 } from '../utils/personDisplayName';
 import { formatDisplayText } from '../utils/displayFormatUtils';
+import { truncateText } from '../utils/checksFormat';
 import ProfileConnectActions from '../components/ProfileConnectActions';
 
-const ABOUT_CHAR_LIMIT = 500;
+const ABOUT_WORD_LIMIT = 100;
+
+const toExternalHref = (url) => {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+};
+
+const ProfileDetailRow = ({ icon: Icon, label, value, href, preserveCase = false }) => {
+  const displayValue = value
+    ? preserveCase
+      ? String(value).trim()
+      : formatDisplayText(value)
+    : 'Not provided';
+  const isLink = Boolean(href && value);
+
+  return (
+    <div className="flex items-start gap-3 min-w-0 rounded-lg border border-gray-100 bg-[#F9FAF8] p-3 sm:border-0 sm:bg-transparent sm:p-0">
+      <Icon className="text-[#16730F] shrink-0 mt-0.5" />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs sm:text-sm text-gray-500">{label}</p>
+        {isLink ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm sm:text-base text-[#16730F] hover:underline break-all"
+          >
+            {displayValue}
+          </a>
+        ) : (
+          <p className="text-sm sm:text-base text-[#1A3E32] break-words break-all">
+            {displayValue}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
 
 
 const buildAvatarCandidates = (rawPhoto) => {
@@ -160,14 +210,16 @@ const Profile = () => {
         }
       }
 
-      if (viewingOwn && targetUserId && !profileFound) {
-        try {
-          const { data } = await axiosInstance.get('/auth/me');
-          const row = unwrapAuthProfileBody(data);
-          merged = normalizeProfileData({ ...merged, ...row });
-          profileFound = profilePayloadLooksUsable(merged);
-        } catch (meError) {
-          console.warn('GET /auth/me failed:', meError?.message || meError);
+      if (viewingOwn && targetUserId) {
+        if (!profileFound) {
+          try {
+            const { data } = await axiosInstance.get('/auth/me');
+            const row = unwrapAuthProfileBody(data);
+            merged = normalizeProfileData({ ...merged, ...row });
+            profileFound = profilePayloadLooksUsable(merged);
+          } catch (meError) {
+            console.warn('GET /auth/me failed:', meError?.message || meError);
+          }
         }
 
         const role = merged?.role || currentUser?.role;
@@ -268,7 +320,21 @@ const Profile = () => {
 
   const [isAboutExpanded, setIsAboutExpanded] = useState(false);
   const aboutText = profileData?.bio || profileData?.summary;
-  const needsTruncation = aboutText?.length > ABOUT_CHAR_LIMIT;
+  const aboutPreview = aboutText
+    ? truncateText(aboutText, ABOUT_WORD_LIMIT, 'words')
+    : { text: '', needsTruncation: false };
+  const needsTruncation = aboutPreview.needsTruncation;
+  const recruiterLinks = profileData?.links || {};
+  const linkedinUrl =
+    profileData?.linkedin_url || recruiterLinks.linkedin || null;
+  const twitterUrl = profileData?.twitter_url || recruiterLinks.twitter || null;
+  const instagramUrl =
+    profileData?.instagram_url || recruiterLinks.instagram || null;
+  const recruiterPublicLocation = [profileData?.city, profileData?.country]
+    .filter((value) => value != null && String(value).trim() !== '')
+    .map((value) => formatDisplayText(value))
+    .join(', ');
+  const viewedProfileId = userId || profileData?.id;
 
   if (loading) {
     return (
@@ -378,14 +444,30 @@ const Profile = () => {
               <p className="text-[#16730F] font-medium text-sm sm:text-base mt-0.5">
                 {formatDisplayRole(viewedRole)}
               </p>
-              {profileData.title && (
-                <p className="text-gray-600 mt-1 text-sm sm:text-base break-words">
-                  {formatDisplayText(profileData.title)}
+              {isRecruiterProfile && profileData.company_name && (
+                <p className="text-gray-700 mt-1 text-sm sm:text-base break-words font-medium">
+                  {formatDisplayText(profileData.company_name)}
                 </p>
               )}
-              {!isViewingOwnProfile && userId && (
+              {(profileData.job_title || profileData.title) && (
+                <p className="text-gray-600 mt-1 text-sm sm:text-base break-words">
+                  {formatDisplayText(profileData.job_title || profileData.title)}
+                </p>
+              )}
+              {isRecruiterProfile && profileData.nickname && (
+                <p className="text-gray-500 mt-1 text-sm break-words">
+                  @{formatDisplayText(profileData.nickname).replace(/^@/, '')}
+                </p>
+              )}
+              {isRecruiterProfile && recruiterPublicLocation && (
+                <p className="flex items-center justify-center sm:justify-start gap-1.5 text-gray-600 mt-2 text-sm sm:text-base">
+                  <FaMapMarkerAlt className="text-[#16730F] shrink-0" aria-hidden />
+                  <span className="break-words">{recruiterPublicLocation}</span>
+                </p>
+              )}
+              {!isViewingOwnProfile && viewedProfileId && (
                 <ProfileConnectActions
-                  userId={userId}
+                  userId={viewedProfileId}
                   displayName={formatDisplayPersonName(profileData, 'User')}
                 />
               )}
@@ -393,60 +475,90 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4 flex items-center gap-2">
-            <FaUser className="shrink-0" />
-            Basic Information
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="flex items-start gap-3 min-w-0 rounded-lg border border-gray-100 bg-[#F9FAF8] p-3 sm:border-0 sm:bg-transparent sm:p-0">
-              <FaEnvelope className="text-[#16730F] shrink-0 mt-0.5" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-500">Email</p>
-                <p className="text-sm sm:text-base text-[#1A3E32] break-all">
-                  {profileData.email || 'Not provided'}
-                </p>
+        {isRecruiterProfile ? (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4 flex items-center gap-2">
+                <FaGlobe className="shrink-0" />
+                Online Presence
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <ProfileDetailRow
+                  icon={FaGlobe}
+                  label="Website"
+                  value={profileData.website}
+                  href={toExternalHref(profileData.website)}
+                  preserveCase
+                />
+                <ProfileDetailRow
+                  icon={FaLinkedin}
+                  label="LinkedIn"
+                  value={linkedinUrl}
+                  href={toExternalHref(linkedinUrl)}
+                  preserveCase
+                />
+                <ProfileDetailRow
+                  icon={FaTwitter}
+                  label="X (Twitter)"
+                  value={twitterUrl}
+                  href={toExternalHref(twitterUrl)}
+                  preserveCase
+                />
+                <ProfileDetailRow
+                  icon={FaInstagram}
+                  label="Instagram"
+                  value={instagramUrl}
+                  href={toExternalHref(instagramUrl)}
+                  preserveCase
+                />
               </div>
             </div>
-            {isRecruiterProfile && (
-              <div className="flex items-start gap-3 min-w-0 rounded-lg border border-gray-100 bg-[#F9FAF8] p-3 sm:border-0 sm:bg-transparent sm:p-0">
-                <FaBuilding className="text-[#16730F] shrink-0 mt-0.5" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-500">Company</p>
-                  <p className="text-sm sm:text-base text-[#1A3E32] break-words">
-                    {formatDisplayText(profileData.company_name) || 'Not provided'}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {(profileData.bio || profileData.summary) && (
+        ) : (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4">About</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4 flex items-center gap-2">
+              <FaUser className="shrink-0" />
+              Basic Information
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <ProfileDetailRow
+                icon={FaEnvelope}
+                label="Email"
+                value={profileData.email}
+              />
+            </div>
+          </div>
+        )}
+
+        {isRecruiterProfile && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4">About Company</h2>
             <div className="relative">
-              <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
-                {!needsTruncation || isAboutExpanded
-                  ? aboutText
-                  : aboutText.slice(0, ABOUT_CHAR_LIMIT) + '...'}
-              </p>
-              {needsTruncation && (
-                <button
-                  onClick={() => setIsAboutExpanded(!isAboutExpanded)}
-                  className="mt-2 text-[#16730F] hover:text-[#145a0c] font-medium transition-colors inline-flex items-center gap-1 group"
-                >
-                  <span>{isAboutExpanded ? 'See less' : 'See more'}</span>
-                  <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${isAboutExpanded ? 'rotate-180' : ''
-                      }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+              {aboutText ? (
+                <>
+                  <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+                    {!needsTruncation || isAboutExpanded
+                      ? aboutText
+                      : aboutPreview.text}
+                  </p>
+                  {needsTruncation && (
+                    <button
+                      onClick={() => setIsAboutExpanded(!isAboutExpanded)}
+                      className="mt-2 text-[#16730F] hover:text-[#145a0c] font-medium transition-colors inline-flex items-center gap-1 group"
+                    >
+                      <span>{isAboutExpanded ? 'See less' : 'See more'}</span>
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-200 ${isAboutExpanded ? 'rotate-180' : ''
+                          }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm sm:text-base text-gray-500">Not provided</p>
               )}
             </div>
           </div>

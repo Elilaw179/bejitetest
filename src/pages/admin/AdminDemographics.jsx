@@ -94,7 +94,7 @@ const AdminDemographics = () => {
   const jobseekersByGender = formatPieData(metrics?.jobseekers_by_gender);
   const jobseekersByAge = formatPieData(metrics?.jobseekers_by_age_group);
   const jobseekersByState = formatBarData(metrics?.jobseekers_by_state);
-  const employersByState = formatBarData(metrics?.employers_by_state);
+  const employersByCountry = formatBarData(metrics?.employers_by_country);
 
   return (
     <AdminLayout>
@@ -375,13 +375,13 @@ const AdminDemographics = () => {
           {/* Employers by State (Bar) */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-gray-800 mb-6">
-              Top States (Employers)
+              Top Countries (Employers)
             </h3>
             <div className="h-72 w-full">
-              {employersByState.length > 0 ? (
+              {employersByCountry.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={employersByState}
+                    data={employersByCountry}
                     layout="vertical"
                     margin={{ top: 0, right: 0, left: 40, bottom: 0 }}
                   >
@@ -414,7 +414,7 @@ const AdminDemographics = () => {
                       radius={[0, 4, 4, 0]}
                       barSize={20}
                     >
-                      {employersByState.map((entry, index) => (
+                      {employersByCountry.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
                           fill={COLORS[index % COLORS.length]}
@@ -425,7 +425,7 @@ const AdminDemographics = () => {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-gray-400">
-                  No state data available
+                  No country data available
                 </div>
               )}
             </div>

@@ -46,6 +46,7 @@ import useSyncProfilePhoto from "../../hooks/useSyncProfilePhoto";
 import SharePostModal from "../SharePostModal";
 import UsersListModal from "../UsersListModal";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
+import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import PostMediaGallery from "../PostMediaGallery";
 import FeedLoadMoreButton from "../FeedLoadMoreButton";
 
@@ -64,9 +65,6 @@ const mergeFeedPosts = (existing, incoming) => {
 };
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
-
-const getDisplayJobTitle = (user) =>
-  user?.jobTitle || user?.title || user?.role || "Professional";
 
 // Helper function to format date (LinkedIn-style)
 const formatDate = (dateString) => {
@@ -619,7 +617,7 @@ const RecruitmentPostCard = ({
   };
 
   const authorName = getDisplayName(post.author);
-  const authorJobTitle = getDisplayJobTitle(post.author);
+  const authorJobTitle = getAuthorSubtitle(post.author, post.authorId);
   const goToAuthorProfile = () => {
     if (post.authorId) navigate(`/user-profile/${post.authorId}`);
   };

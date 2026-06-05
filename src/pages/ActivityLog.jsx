@@ -47,14 +47,13 @@ import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
 import SharePostModal from "../components/SharePostModal";
 import UsersListModal from "../components/UsersListModal";
 import { formatDisplayPersonName } from "../utils/personDisplayName";
+import { getAuthorSubtitle } from "../utils/authorDisplay";
 import PostMediaGallery from "../components/PostMediaGallery";
 import FeedLoadMoreButton from "../components/FeedLoadMoreButton";
 import useJobsApi from "../services/useJobsApi";
+import { motion, AnimatePresence } from "framer-motion";
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
-
-const getDisplayJobTitle = (user) =>
-  user?.jobTitle || user?.title || user?.role || "Professional";
 
 const formatDate = (dateString) => {
   if (!dateString) return "Just now";
@@ -314,7 +313,7 @@ const ActivityLogPostCard = ({
   };
 
   const authorName = getDisplayName(post.author);
-  const authorJobTitle = getDisplayJobTitle(post.author);
+  const authorJobTitle = getAuthorSubtitle(post.author, post.authorId);
   const goToAuthorProfile = () => {
     if (post.authorId) navigate(`/user-profile/${post.authorId}`);
   };

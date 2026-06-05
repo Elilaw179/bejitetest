@@ -24,6 +24,7 @@ const CoperateBasicDetails = () => {
 
   const [formData, setFormData] = useState({
     full_name: "",
+    job_title: "",
     email: "",
     phone_number: "",
   });
@@ -37,6 +38,14 @@ const CoperateBasicDetails = () => {
           name: "full_name",
           label: "FULL NAME",
           placeholder: "Enter your full name",
+          width: "w-full",
+        },
+      ],
+      [
+        {
+          name: "job_title",
+          label: "POSITION / ROLE IN COMPANY",
+          placeholder: "e.g. HR Manager, Talent Acquisition Lead",
           width: "w-full",
         },
       ],
@@ -91,15 +100,23 @@ const CoperateBasicDetails = () => {
       storedUser?.phone_number ||
       storedUser?.phone ||
       "";
+    const resolvedJobTitle =
+      user?.jobTitle ||
+      user?.job_title ||
+      storedUser?.jobTitle ||
+      storedUser?.job_title ||
+      "";
 
     setFormData((prev) => {
       const next = {
         full_name: prev.full_name || resolvedName,
+        job_title: prev.job_title || resolvedJobTitle,
         email: prev.email || resolvedEmail,
         phone_number: prev.phone_number || resolvedPhone,
       };
       if (
         prev.full_name === next.full_name &&
+        prev.job_title === next.job_title &&
         prev.email === next.email &&
         prev.phone_number === next.phone_number
       ) {
@@ -113,6 +130,8 @@ const CoperateBasicDetails = () => {
     user?.email,
     user?.firstName,
     user?.lastName,
+    user?.jobTitle,
+    user?.job_title,
     user?.phone_number,
     user?.phone,
   ]);
@@ -125,6 +144,7 @@ const CoperateBasicDetails = () => {
         recruiterData.firstName,
         recruiterData.lastName,
       ),
+      job_title: recruiterData.job_title || "",
       email: recruiterData.email || "",
       phone_number: recruiterData.phone_number || "",
     });
@@ -133,6 +153,7 @@ const CoperateBasicDetails = () => {
     recruiterData,
     recruiterData?.firstName,
     recruiterData?.lastName,
+    recruiterData?.job_title,
     recruiterData?.email,
     recruiterData?.phone_number,
   ]);
@@ -152,11 +173,13 @@ const CoperateBasicDetails = () => {
     const submitData = async () => {
       await updateBasicDetails({
         full_name: formData.full_name.trim(),
+        job_title: formData.job_title.trim(),
         phone_number: formData.phone_number,
       });
 
       const { firstName, lastName } = splitRecruiterFullName(formData.full_name);
       const phone_number = formData.phone_number;
+      const job_title = formData.job_title.trim();
 
       dispatch(
         updateUser({
@@ -164,6 +187,8 @@ const CoperateBasicDetails = () => {
           lastName,
           phone_number,
           phone: phone_number,
+          jobTitle: job_title,
+          job_title,
         }),
       );
 
@@ -177,6 +202,8 @@ const CoperateBasicDetails = () => {
             lastName,
             phone_number,
             phone: phone_number,
+            jobTitle: job_title,
+            job_title,
           }),
         );
       } catch {

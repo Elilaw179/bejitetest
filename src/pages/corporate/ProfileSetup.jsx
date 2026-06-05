@@ -44,12 +44,12 @@ const CoperateProfileSetup = () => {
       [
         {
           name: "summary",
-          label: "BIO / SUMMARY (500 chars max)",
+          label: "BIO / SUMMARY (1000 words max)",
           type: "textarea",
           placeholder:
             "e.g. I run a food delivery brand and need a social media manager for daily content.",
-          maxLength: 500,
-          rows: 5,
+          maxWords: 1000,
+          rows: 8,
           width: "w-full",
         },
       ],

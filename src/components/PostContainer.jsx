@@ -11,6 +11,7 @@ import SharePostModal from './SharePostModal';
 import PostMediaGallery from './PostMediaGallery';
 import FeedLoadMoreButton from './FeedLoadMoreButton';
 import { formatDisplayPersonName } from '../utils/personDisplayName';
+import { getAuthorSubtitle } from '../utils/authorDisplay';
 
 const FEED_PAGE_SIZE = 20;
 
@@ -27,9 +28,6 @@ const mergeFeedPosts = (existing, incoming) => {
 };
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
-
-const getDisplayJobTitle = (user) =>
-  user?.jobTitle || user?.title || user?.role || 'Professional';
 
 // Helper function to format date (LinkedIn-style)
 const formatDate = (dateString) => {
@@ -572,7 +570,7 @@ const PostCard = ({ post, onLike, onSave, onShare, onUpdate, onDelete, currentUs
 const PostHeader = ({ author, authorId, createdAt, showMenu, setShowMenu, onEdit, onDelete, isOwner }) => {
   const navigate = useNavigate();
   const displayName = getDisplayName(author);
-  const displayJobTitle = getDisplayJobTitle(author);
+  const displayJobTitle = getAuthorSubtitle(author, authorId);
   const authorImage = getProfileImageUrl(author?.image || author?.profile_photo);
 
   const goToAuthorProfile = () => {

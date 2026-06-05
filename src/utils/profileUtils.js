@@ -9,16 +9,33 @@ export function normalizeProfileData(raw) {
     lastName: raw.lastName ?? raw.last_name,
     profile_photo: raw.profile_photo ?? raw.profilePhoto ?? raw.image ?? null,
     email: raw.email,
-    title: raw.title ?? raw.jobTitle,
+    job_title: raw.job_title ?? raw.jobTitle ?? null,
+    title: raw.title ?? raw.job_title ?? raw.jobTitle ?? null,
     phone: raw.phone ?? raw.phone_number,
     phone_number: raw.phone_number ?? raw.phone,
-    location: raw.location,
+    address: raw.address ?? null,
+    city: raw.city ?? null,
+    country: raw.country ?? null,
+    location:
+      raw.location ||
+      [raw.address, raw.city, raw.country].filter(Boolean).join(", ") ||
+      null,
     bio: raw.bio,
     summary: raw.summary ?? raw.bio,
     company_name: raw.company_name ?? raw.companyName,
     nickname: raw.nickname,
     role: raw.role,
     website: raw.website,
+    linkedin_url: raw.linkedin_url ?? raw.linkedin ?? raw.links?.linkedin ?? null,
+    twitter_url: raw.twitter_url ?? raw.twitter ?? raw.links?.twitter ?? null,
+    instagram_url:
+      raw.instagram_url ?? raw.instagram ?? raw.links?.instagram ?? null,
+    links: raw.links ?? {
+      linkedin: raw.linkedin_url ?? raw.linkedin ?? null,
+      twitter: raw.twitter_url ?? raw.twitter ?? null,
+      instagram: raw.instagram_url ?? raw.instagram ?? null,
+      portfolio: raw.website ?? null,
+    },
   };
 }
 
