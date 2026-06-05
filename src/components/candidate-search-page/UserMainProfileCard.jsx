@@ -10,6 +10,8 @@ import { useCandidateConnect } from '../../hooks/useCandidateConnect';
 import { resolveCandidateUserId } from '../../utils/resolveCandidateUserId';
 import CandidateJobPreferences from './CandidateJobPreferences';
 import CandidateContactInfo from './CandidateContactInfo';
+import { formatDisplayPersonName, formatDisplayRole } from '../../utils/personDisplayName';
+import { getFormattedCandidateProfileFields } from '../../utils/displayFormatUtils';
 
 const UserMainProfileCard = ({ candidateId, connectUserId: connectUserIdProp }) => {
   const [candidate, setCandidate] = useState(null);
@@ -91,10 +93,15 @@ const UserMainProfileCard = ({ candidateId, connectUserId: connectUserIdProp }) 
     );
   }
 
-  const displayName =
-    `${candidate?.first_name || profileUser?.first_name || profileUser?.firstName || ''} ${candidate?.last_name || profileUser?.last_name || profileUser?.lastName || ''}`.trim() ||
-    profileUser?.nickname ||
-    'Candidate';
+  const displayName = formatDisplayPersonName(
+    {
+      first_name: candidate?.first_name ?? profileUser?.first_name ?? profileUser?.firstName,
+      last_name: candidate?.last_name ?? profileUser?.last_name ?? profileUser?.lastName,
+      nickname: profileUser?.nickname,
+      name: profileUser?.name,
+    },
+    'Candidate',
+  );
 
   const photoPath =
     pickAuthorProfilePhoto(candidate) ||
@@ -104,17 +111,13 @@ const UserMainProfileCard = ({ candidateId, connectUserId: connectUserIdProp }) 
       : candidate?.user_bio?.profile_photo) ||
     cvData?.bio?.profile_photo;
 
-  const aboutText =
-    profileUser?.bio ||
-    profileUser?.summary ||
-    cvData?.bio?.bio ||
-    candidate?.bio;
-
-  const title = candidate?.title || profileUser?.title;
-  const location =
-    candidate?.location ||
-    profileUser?.location ||
-    [cvData?.bio?.city, cvData?.bio?.country].filter(Boolean).join(', ');
+  const profileFields = getFormattedCandidateProfileFields(
+    { ...candidate, ...profileUser },
+    { cvBio: cvData?.bio },
+  );
+  const aboutText = profileFields.bio;
+  const title = profileFields.title;
+  const location = profileFields.location;
 
   const salaryPreview = formatSalaryExpectation(
     candidate?.salary_expectation,
@@ -202,13 +205,15 @@ const ProfileHeaderCard = ({
         />
         <div className="flex-1 text-center sm:text-left w-full">
           <h1 className="text-2xl font-bold text-[#1A3E32]">{displayName}</h1>
-          <p className="text-[#16730F] font-medium capitalize mt-1">Jobseeker</p>
+          <p className="text-[#16730F] font-medium mt-1">{formatDisplayRole('jobseeker')}</p>
           {title && <p className="text-gray-600 mt-1">{title}</p>}
           {location && (
             <p className="text-sm text-gray-500 mt-1">📍 {location}</p>
           )}
           {experienceYears > 0 && (
-            <p className="text-sm text-gray-500">💼 {experienceYears} years experience</p>
+            <p className="text-sm text-gray-500">
+              💼 {experienceYears} Years Experience
+            </p>
           )}
           {salaryPreview && (
             <p className="text-sm text-gray-500">💰 Expected: {salaryPreview}</p>

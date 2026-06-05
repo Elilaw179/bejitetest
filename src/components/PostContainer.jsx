@@ -8,24 +8,25 @@ import { getUserProfileImage, getProfileImageUrl } from '../utils/profileImageUt
 import PostCreationModal from './PostCreationModal';
 import ConfirmModal from './ConfirmModal';
 import SharePostModal from './SharePostModal';
+import PostMediaGallery from './PostMediaGallery';
+import FeedLoadMoreButton from './FeedLoadMoreButton';
+import { formatDisplayPersonName } from '../utils/personDisplayName';
 
-// Helper function to get display name (same pattern as NewsFeedHeader)
-const getDisplayName = (user) => {
-  if (!user) return 'Guest';
-  const toTitleCase = (value) =>
-    String(value || '')
-      .toLowerCase()
-      .replace(/\b\w/g, (char) => char.toUpperCase())
-      .trim();
-  if (user.name) return toTitleCase(user.name);
-  // Check both camelCase and snake_case
-  const firstName = user.firstName || user.first_name || '';
-  const lastName = user.lastName || user.last_name || '';
-  if (firstName || lastName) {
-    return toTitleCase(`${firstName} ${lastName}`);
+const FEED_PAGE_SIZE = 20;
+
+const mergeFeedPosts = (existing, incoming) => {
+  const seen = new Set(existing.map((p) => p.id));
+  const merged = [...existing];
+  for (const post of incoming) {
+    if (!seen.has(post.id)) {
+      seen.add(post.id);
+      merged.push(post);
+    }
   }
-  return 'Guest';
+  return merged;
 };
+
+const getDisplayName = (user) => formatDisplayPersonName(user);
 
 const getDisplayJobTitle = (user) =>
   user?.jobTitle || user?.title || user?.role || 'Professional';
@@ -57,6 +58,8 @@ const formatDate = (dateString) => {
 
 const PostContainer = () => {
   const [posts, setPosts] = useState([]);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -70,8 +73,9 @@ const PostContainer = () => {
   const fetchFeed = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const data = await getFeed(20);
+      const data = await getFeed(FEED_PAGE_SIZE);
       setPosts(data.posts || []);
+      setNextCursor(data.nextCursor ?? null);
       if (!silent) setError(null);
     } catch (err) {
       console.error('Error fetching feed:', err);
@@ -81,6 +85,26 @@ const PostContainer = () => {
     }
   };
 
+  const loadMorePosts = async () => {
+    if (!nextCursor || loadingMore) return;
+    try {
+      setLoadingMore(true);
+      const data = await getFeed(FEED_PAGE_SIZE, nextCursor);
+      setPosts((prev) => mergeFeedPosts(prev, data.posts || []));
+      setNextCursor(data.nextCursor ?? null);
+    } catch (err) {
+      console.error('Error loading more posts:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const patchPost = (postId, patch) => {
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, ...patch } : p)),
+    );
+  };
+
   const handleLike = async (postId, isLiked) => {
     try {
       if (isLiked) {
@@ -88,7 +112,14 @@ const PostContainer = () => {
       } else {
         await likePost(postId);
       }
-      fetchFeed(true);
+      const current = posts.find((p) => p.id === postId);
+      patchPost(postId, {
+        likedByMe: !isLiked,
+        likesCount: Math.max(
+          0,
+          (current?.likesCount || 0) + (isLiked ? -1 : 1),
+        ),
+      });
     } catch (err) {
       console.error('Error toggling like:', err);
     }
@@ -101,7 +132,7 @@ const PostContainer = () => {
       } else {
         await savePost(postId);
       }
-      fetchFeed(true);
+      patchPost(postId, { savedByMe: !isSaved });
     } catch (err) {
       console.error('Error toggling save:', err);
     }
@@ -110,7 +141,10 @@ const PostContainer = () => {
   const handleShare = async (postId) => {
     try {
       await recordPostShare(postId);
-      fetchFeed(true);
+      const current = posts.find((p) => p.id === postId);
+      patchPost(postId, {
+        sharesCount: (current?.sharesCount || 0) + 1,
+      });
     } catch (err) {
       console.error('Error sharing post:', err);
     }
@@ -183,18 +217,25 @@ const PostContainer = () => {
       ) : posts.length === 0 ? (
         <div className="text-center py-8 text-gray-500">No posts yet. Be the first to post!</div>
       ) : (
-        posts.map(post => (
-          <PostCard 
-            key={post.id} 
-            post={post} 
-            currentUserId={user?.id}
-            onLike={handleLike}
-            onSave={handleSave}
-            onShare={handleShare}
-            onUpdate={handleUpdatePost}
-            onDelete={handleDeletePost}
+        <>
+          {posts.map(post => (
+            <PostCard 
+              key={post.id} 
+              post={post} 
+              currentUserId={user?.id}
+              onLike={handleLike}
+              onSave={handleSave}
+              onShare={handleShare}
+              onUpdate={handleUpdatePost}
+              onDelete={handleDeletePost}
+            />
+          ))}
+          <FeedLoadMoreButton
+            hasMore={Boolean(nextCursor)}
+            loading={loadingMore}
+            onLoadMore={loadMorePosts}
           />
-        ))
+        </>
       )}
       <PostCreationModal
         isOpen={showModal}
@@ -494,7 +535,7 @@ const PostCard = ({ post, onLike, onSave, onShare, onUpdate, onDelete, currentUs
         <PostContent body={post.body} />
       )}
       {post.media && post.media.length > 0 && (
-        <PostImages media={post.media} />
+        <PostMediaGallery media={post.media} />
       )}
       <PostStats 
         likesCount={post.likesCount || 0} 
@@ -662,64 +703,6 @@ const PostContent = ({ body }) => {
         >
           {isExpanded ? 'See less' : 'See more'}
         </button>
-      )}
-    </div>
-  );
-};
-
-const PostImages = ({ media }) => {
-  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
-  if (!media || media.length === 0) return null;
-
-  const handleMediaScroll = (e) => {
-    if (media.length <= 1) return;
-    const container = e.currentTarget;
-    const itemWidth = container.clientWidth * 0.8;
-    if (!itemWidth) return;
-    const idx = Math.round(container.scrollLeft / itemWidth);
-    const bounded = Math.max(0, Math.min(idx, media.length - 1));
-    setActiveMediaIndex(bounded);
-  };
-
-  return (
-    <div className="space-y-2">
-      <div
-        className={`${
-          media.length === 1
-            ? 'grid grid-cols-1'
-            : 'flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1'
-        }`}
-        onScroll={handleMediaScroll}
-      >
-        {media.map((item, index) => (
-          <div
-            key={index}
-            className={`${
-              media.length === 1 ? 'w-full' : 'min-w-[80%] sm:min-w-[45%] snap-start'
-            }`}
-          >
-            {item.kind === 'video' ? (
-              <video
-                src={item.url}
-                controls
-                className="w-full rounded-xl max-h-[55vh] sm:max-h-96 object-contain bg-black"
-              />
-            ) : (
-              <img
-                src={item.url}
-                alt={`Media ${index + 1}`}
-                className="w-full rounded-xl max-h-[55vh] sm:max-h-96 object-cover"
-              />
-            )}
-          </div>
-        ))}
-      </div>
-      {media.length > 1 && (
-        <div className="flex justify-center">
-          <span className="text-xs font-medium text-white bg-black/60 px-2 py-1 rounded-full">
-            {activeMediaIndex + 1}/{media.length}
-          </span>
-        </div>
       )}
     </div>
   );

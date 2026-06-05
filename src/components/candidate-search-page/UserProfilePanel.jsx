@@ -18,6 +18,15 @@ import {
   resolveProfileSkillSource,
 } from "../../utils/profileSkills";
 import ProfileSkillsDisplay from "../ProfileSkillsDisplay";
+import {
+  buildContactInfoItems,
+  getFormattedEducationFields,
+} from "../../utils/displayFormatUtils";
+import { formatDisplayPersonName, formatDisplayRole } from "../../utils/personDisplayName";
+import {
+  getFormattedCandidateProfileFields,
+  getFormattedWorkHistoryFields,
+} from "../../utils/displayFormatUtils";
 
 const mergeFullProfileIntoCandidate = (base, full) => {
   if (!full?.user) return base;
@@ -379,7 +388,8 @@ const ProfileHeader = ({ candidate, onOpenPhotoViewer }) => {
 
 const ProfileStats = ({ candidate, connectUserIdProp, onViewMainProfile }) => {
   const navigate = useNavigate();
-  const displayName = `${candidate.first_name || ""} ${candidate.last_name || ""}`.trim();
+  const displayName = formatDisplayPersonName(candidate, "Candidate");
+  const profile = getFormattedCandidateProfileFields(candidate);
   const connectUserId =
     resolveCandidateUserId(candidate) || connectUserIdProp || null;
   const { sendRequest, connectLabel, connectDisabled, status } = useCandidateConnect(
@@ -400,29 +410,33 @@ const ProfileStats = ({ candidate, connectUserIdProp, onViewMainProfile }) => {
   <div className="px-4 sm:px-8 mt-[-60px] sm:mt-[-40px]">
     <div className="flex gap-2 items-center">
       <p className="text-[#6B8E23] font-semibold text-[16px]">
-        {candidate.first_name} {candidate.last_name}
+        {displayName}
       </p>
-      <p className="text-[#E09A36] font-semibold text-[10px]">• Jobseeker</p>
+      <p className="text-[#E09A36] font-semibold text-[10px]">
+        • {formatDisplayRole("jobseeker")}
+      </p>
     </div>
 
-    {candidate.bio && (
+    {profile.bio && (
       <div className="text-[12px] mt-2">
-        <p className="text-[#6B8E23]">{candidate.bio}</p>
+        <p className="text-[#6B8E23] whitespace-pre-wrap">{profile.bio}</p>
       </div>
     )}
 
     <div className="mt-4">
-      <p className="text-[#E09A36] text-[14px] font-semibold">
-        {candidate.title}
-      </p>
-      <p className="text-[#6B8E23] text-[10px]">📍 {candidate.location}</p>
+      {profile.title && (
+        <p className="text-[#E09A36] text-[14px] font-semibold">{profile.title}</p>
+      )}
+      {profile.location && (
+        <p className="text-[#6B8E23] text-[10px]">📍 {profile.location}</p>
+      )}
       {candidate.experience_years > 0 && (
         <p className="text-[#6B8E23] text-[10px]">
-          💼 {candidate.experience_years} years experience
+          💼 {candidate.experience_years} Years Experience
         </p>
       )}
-      {candidate.remote_preference && (
-        <p className="text-[#6B8E23] text-[10px]">🏠 Open to remote work</p>
+      {profile.remotePreference && (
+        <p className="text-[#6B8E23] text-[10px]">🏠 {profile.remotePreference}</p>
       )}
       {candidate.salary_expectation != null && (
         <p className="text-[#6B8E23] text-[10px]">
@@ -494,15 +508,9 @@ const ProfileSection = ({ title, children }) => (
 );
 
 const EducationItem = ({ education, legacy = false }) => {
-  const degree = education.degree;
-  const institution = legacy
-    ? education.institution
-    : education.institution_name ?? education.institutionName;
-  const field = legacy
-    ? education.field
-    : education.field_of_study ?? education.fieldOfStudy;
+  const formatted = getFormattedEducationFields(education, { legacy });
   const period = legacy
-    ? education.year
+    ? formatted.year
     : formatDateRange(
         education.start_date ?? education.startDate,
         education.end_date ?? education.endDate,
@@ -515,9 +523,23 @@ const EducationItem = ({ education, legacy = false }) => {
         <span className="text-white text-xl font-bold">🎓</span>
       </div>
       <div className="flex-1">
-        <p className="text-[14px] font-semibold">{degree}</p>
-        <p className="text-[12px]">{institution}</p>
-        {field && <p className="text-[11px] text-[#E0E0E0]">{field}</p>}
+        {formatted.educationLevel && (
+          <p className="text-[11px] text-[#E0E0E0] uppercase tracking-wide">
+            {formatted.educationLevel}
+          </p>
+        )}
+        {formatted.degree && (
+          <p className="text-[14px] font-semibold">{formatted.degree}</p>
+        )}
+        {formatted.institution && (
+          <p className="text-[12px]">{formatted.institution}</p>
+        )}
+        {formatted.field && (
+          <p className="text-[11px] text-[#E0E0E0]">{formatted.field}</p>
+        )}
+        {formatted.location && (
+          <p className="text-[11px] text-[#E0E0E0]">{formatted.location}</p>
+        )}
         {period && (
           <span className="text-[#FFB54780] text-[11px]">{period}</span>
         )}
@@ -527,11 +549,7 @@ const EducationItem = ({ education, legacy = false }) => {
 };
 
 const WorkHistoryItem = ({ work, legacy = false }) => {
-  const title = legacy ? work.title : work.job_title ?? work.jobTitle;
-  const company = legacy ? work.company : work.company_name ?? work.companyName;
-  const description = legacy
-    ? work.description
-    : work.responsibilities;
+  const formatted = getFormattedWorkHistoryFields(work, { legacy });
   const duration = legacy
     ? work.duration
     : formatDateRange(
@@ -547,11 +565,15 @@ const WorkHistoryItem = ({ work, legacy = false }) => {
           <span className="text-white text-xl font-bold">💼</span>
         </div>
         <div className="flex-1">
-          <p className="text-[14px] font-semibold">{title}</p>
-          <p className="text-[13px]">{company}</p>
-          {description && (
+          {formatted.title && (
+            <p className="text-[14px] font-semibold">{formatted.title}</p>
+          )}
+          {formatted.company && (
+            <p className="text-[13px]">{formatted.company}</p>
+          )}
+          {formatted.description && (
             <p className="text-[11px] text-[#E0E0E0] mt-1 line-clamp-3">
-              {description}
+              {formatted.description}
             </p>
           )}
           {duration && (
@@ -604,39 +626,48 @@ const CertificationItem = ({ certification }) => (
   </div>
 );
 
-const formatCandidateAddress = (candidate) => {
-  if (!candidate) return null;
-  const parts = [candidate.address, candidate.street, candidate.city, candidate.country]
-    .filter((part) => part != null && String(part).trim() !== "");
-  if (parts.length > 0) return parts.join(", ");
-  return candidate.location || null;
+const CONTACT_ICONS = {
+  Phone: "📱",
+  Address: "📍",
+  Email: "📧",
+  LinkedIn: "💼",
+  GitHub: "💻",
+  Portfolio: "🌐",
 };
 
 const ContactInfoList = ({ candidate }) => {
-  const phone = candidate?.phone || candidate?.phone_number;
-  const address = formatCandidateAddress(candidate);
-
-  const contacts = [
-    { type: "Phone", value: phone, icon: "📱" },
-    { type: "Address", value: address, icon: "📍" },
-    { type: "Email", value: candidate.email, icon: "📧" },
-    { type: "LinkedIn", value: candidate.linkedin_url, icon: "💼" },
-    { type: "GitHub", value: candidate.github_url, icon: "💻" },
-    { type: "Portfolio", value: candidate.portfolio_url, icon: "🌐" },
-  ].filter((contact) => contact.value);
+  const bioRow = Array.isArray(candidate?.user_bio)
+    ? candidate.user_bio[0]
+    : candidate?.user_bio;
+  const contacts = buildContactInfoItems({ candidate, bio: bioRow });
 
   return (
     <div className="px-4 sm:px-8 pb-6 text-[#FFFFFF] space-y-4">
-      {contacts.map((contact, index) => (
-        <div key={index} className="flex gap-3 items-center">
-          <div className="w-10 h-10 rounded-full bg-[#1A3E32] flex items-center justify-center">
-            <span className="text-xl">{contact.icon}</span>
+      {contacts.map((contact) => (
+        <div key={contact.type} className="flex gap-3 items-start min-w-0">
+          <div className="w-10 h-10 rounded-full bg-[#1A3E32] flex items-center justify-center shrink-0">
+            <span className="text-xl">{CONTACT_ICONS[contact.type] || "•"}</span>
           </div>
-          <div>
-            <p className="text-[13px] font-semibold break-all">
-              {contact.value}
-            </p>
-            <p className="text-[11px] font-medium text-[#E0E0E0]">
+          <div className="min-w-0 flex-1">
+            {contact.href ? (
+              <a
+                href={
+                  contact.value.startsWith("http")
+                    ? contact.value
+                    : `https://${contact.value}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[13px] font-semibold text-[#9AE6B0] hover:underline break-words block"
+              >
+                {contact.value}
+              </a>
+            ) : (
+              <p className="text-[13px] font-semibold break-words leading-relaxed">
+                {contact.value}
+              </p>
+            )}
+            <p className="text-[11px] font-medium text-[#E0E0E0] mt-0.5">
               {contact.type}
             </p>
           </div>

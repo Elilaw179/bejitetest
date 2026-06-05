@@ -19,6 +19,10 @@ import { fetchCurrentUserProfilePhoto } from "../../../services/profilePhotoServ
 import { getUser, pickProfilePhotoPath } from "../../../utils/tokenManager";
 import useAuth from "../../../hooks/useAuth";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
+import {
+  formatPhoneForStorage,
+  isPhoneValid,
+} from "../../../utils/displayFormatUtils";
 
 const Bio = () => {
   const navigate = useNavigate();
@@ -173,10 +177,16 @@ const Bio = () => {
       return;
     }
 
+    const phoneE164 = formatPhoneForStorage(formData.phone, formData.country);
+    if (!phoneE164 || !isPhoneValid(phoneE164, formData.country)) {
+      toast.error("Enter a valid phone number for your selected country.");
+      return;
+    }
+
     const bioPayload = {
       userId,
       nickname: normalizeText(formData.nickname),
-      phone: normalizeText(formData.phone),
+      phone: phoneE164,
       gender: normalizeText(formData.gender),
       maritalStatus: normalizeText(formData.maritalStatus),
       age: formData.age ? Number(formData.age) : null,

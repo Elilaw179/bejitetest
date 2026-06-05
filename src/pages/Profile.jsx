@@ -20,6 +20,12 @@ import {
   profilePayloadLooksUsable,
   profileFromSearchPreview,
 } from '../utils/profileUtils';
+import {
+  formatDisplayPersonName,
+  formatDisplayRole,
+} from '../utils/personDisplayName';
+import { formatDisplayText } from '../utils/displayFormatUtils';
+import ProfileConnectActions from '../components/ProfileConnectActions';
 
 const ABOUT_CHAR_LIMIT = 500;
 
@@ -267,10 +273,10 @@ const Profile = () => {
   if (loading) {
     return (
       <NewsFeedLayout showSidebars={false}>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-center">
+        <div className="min-h-[60vh] flex items-center justify-center px-4">
+          <div className="text-center max-w-sm">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F] mx-auto"></div>
-            <p className="mt-4 text-[#1A3E32]">Loading profile...</p>
+            <p className="mt-4 text-[#1A3E32] text-sm sm:text-base">Loading profile...</p>
           </div>
         </div>
       </NewsFeedLayout>
@@ -324,8 +330,8 @@ const Profile = () => {
 
   return (
     <NewsFeedLayout showSidebars={false}>
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="w-full min-w-0 max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
           <button
             type="button"
             onClick={() => {
@@ -335,28 +341,29 @@ const Profile = () => {
                 navigate(-1);
               }
             }}
-            className="flex items-center gap-2 text-[#16730F] hover:text-[#145a0c] transition-colors"
+            className="flex items-center gap-2 text-[#16730F] hover:text-[#145a0c] transition-colors self-start text-sm sm:text-base"
           >
-            <FaArrowLeft />
+            <FaArrowLeft className="shrink-0" />
             <span>Back</span>
           </button>
           {isViewingOwnProfile && (
             <button
+              type="button"
               onClick={handleEditProfile}
-              className="flex items-center gap-2 bg-[#16730F] text-white px-4 py-2 rounded-lg hover:bg-[#145a0c] transition-colors"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto bg-[#16730F] text-white px-4 py-2.5 rounded-lg hover:bg-[#145a0c] transition-colors text-sm sm:text-base"
             >
-              <FaEdit />
+              <FaEdit className="shrink-0" />
               <span>Edit Profile</span>
             </button>
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col sm:flex-row items-center gap-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start items-center gap-4 sm:gap-6">
             <img
               src={activeAvatarSrc}
               alt="Profile"
-              className="w-24 h-24 rounded-full object-cover border-4 border-[#16730F] cursor-zoom-in"
+              className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-full object-cover border-4 border-[#16730F] cursor-zoom-in"
               onClick={() => setIsPhotoViewerOpen(true)}
               onError={() => {
                 setAvatarIndex((prev) =>
@@ -364,47 +371,50 @@ const Profile = () => {
                 );
               }}
             />
-            <div className="text-center sm:text-left">
-              <h1 className="text-2xl font-bold text-[#1A3E32]">
-                {(() => {
-                  const fromNames =
-                    `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() ||
-                    `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim();
-                  return fromNames || profileData.nickname || 'User';
-                })()}
+            <div className="w-full min-w-0 text-center sm:text-left">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] break-words">
+                {formatDisplayPersonName(profileData, 'User')}
               </h1>
-              <p className="text-[#16730F] font-medium capitalize">
-                {viewedRole || 'User'}
+              <p className="text-[#16730F] font-medium text-sm sm:text-base mt-0.5">
+                {formatDisplayRole(viewedRole)}
               </p>
               {profileData.title && (
-                <p className="text-gray-600 mt-1">{profileData.title}</p>
+                <p className="text-gray-600 mt-1 text-sm sm:text-base break-words">
+                  {formatDisplayText(profileData.title)}
+                </p>
+              )}
+              {!isViewingOwnProfile && userId && (
+                <ProfileConnectActions
+                  userId={userId}
+                  displayName={formatDisplayPersonName(profileData, 'User')}
+                />
               )}
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-[#1A3E32] mb-4 flex items-center gap-2">
-            <FaUser />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4 flex items-center gap-2">
+            <FaUser className="shrink-0" />
             Basic Information
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
-              <FaEnvelope className="text-[#16730F]" />
-              <div>
-                <p className="text-sm text-gray-500">Email</p>
-                <p className="text-[#1A3E32]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="flex items-start gap-3 min-w-0 rounded-lg border border-gray-100 bg-[#F9FAF8] p-3 sm:border-0 sm:bg-transparent sm:p-0">
+              <FaEnvelope className="text-[#16730F] shrink-0 mt-0.5" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-gray-500">Email</p>
+                <p className="text-sm sm:text-base text-[#1A3E32] break-all">
                   {profileData.email || 'Not provided'}
                 </p>
               </div>
             </div>
             {isRecruiterProfile && (
-              <div className="flex items-center gap-3">
-                <FaBuilding className="text-[#16730F]" />
-                <div>
-                  <p className="text-sm text-gray-500">Company</p>
-                  <p className="text-[#1A3E32]">
-                    {profileData.company_name || 'Not provided'}
+              <div className="flex items-start gap-3 min-w-0 rounded-lg border border-gray-100 bg-[#F9FAF8] p-3 sm:border-0 sm:bg-transparent sm:p-0">
+                <FaBuilding className="text-[#16730F] shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-500">Company</p>
+                  <p className="text-sm sm:text-base text-[#1A3E32] break-words">
+                    {formatDisplayText(profileData.company_name) || 'Not provided'}
                   </p>
                 </div>
               </div>
@@ -413,10 +423,10 @@ const Profile = () => {
         </div>
 
         {(profileData.bio || profileData.summary) && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 className="text-xl font-semibold text-[#1A3E32] mb-4">About</h2>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4">About</h2>
             <div className="relative">
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+              <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
                 {!needsTruncation || isAboutExpanded
                   ? aboutText
                   : aboutText.slice(0, ABOUT_CHAR_LIMIT) + '...'}

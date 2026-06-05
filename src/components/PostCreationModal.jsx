@@ -24,7 +24,8 @@ const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'publi
       const result = await uploadMedia(file);
       const newMedia = {
         kind: result.kind,
-        url: result.url
+        url: result.url,
+        thumbnailUrl: result.thumbnailUrl ?? null,
       };
       setMediaFiles([...mediaFiles, newMedia]);
     } catch (err) {

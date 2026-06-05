@@ -14,6 +14,11 @@ import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
 import messagingService from "../services/messagingService";
 import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
+import {
+  formatDisplayPersonName,
+  formatDisplayRole,
+} from "../utils/personDisplayName";
+import { formatDisplayText } from "../utils/displayFormatUtils";
 
 const NewsFeedHeader = ({
   user: propUser,
@@ -55,9 +60,7 @@ const NewsFeedHeader = ({
         pickProfilePhotoPath(merged) ||
         pickProfilePhotoPath(primaryUser) ||
         "/assets/images/photo_placeholder.png";
-      const displayName =
-        merged.name ||
-        (`${merged.firstName || ""} ${merged.lastName || ""}`.trim() || null);
+      const displayName = formatDisplayPersonName(merged, "Guest");
       return {
         ...merged,
         name: displayName || "Guest",
@@ -86,20 +89,9 @@ const NewsFeedHeader = ({
     };
   }, [propUser, reduxUser, location.pathname]);
 
-  // Get display name
-  const getDisplayName = () => {
-    if (user?.name) return user.name;
-    if (user?.firstName || user?.lastName) {
-      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
-    }
-    return "Guest";
-  };
+  const getDisplayName = () => formatDisplayPersonName(user);
 
-  // Get display role (capitalize first letter)
-  const getDisplayRole = () => {
-    if (!user?.role) return "User";
-    return user.role.charAt(0).toUpperCase() + user.role.slice(1);
-  };
+  const getDisplayRole = () => formatDisplayRole(user?.role);
 
   const avatarSrc = (stored) => profileAvatarSrc(stored);
 
@@ -156,7 +148,7 @@ const NewsFeedHeader = ({
             results: (response.data.users || []).map((u) => ({
               type: 'people',
               id: u.id,
-              name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Unknown User',
+              name: formatDisplayPersonName(u, 'Unknown User'),
               firstName: u.firstName,
               lastName: u.lastName,
               email: u.email,
@@ -178,11 +170,11 @@ const NewsFeedHeader = ({
               return {
                 type: 'people',
                 id: userId,
-                name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Unknown User',
+                name: formatDisplayPersonName(candidate, 'Unknown User'),
                 firstName: candidate.first_name,
                 lastName: candidate.last_name,
                 email: candidate.email,
-                subtitle: candidate.title || 'Professional',
+                subtitle: formatDisplayText(candidate.title) || 'Professional',
                 image: pickAuthorProfilePhoto(candidate),
                 url: `/user-profile/${userId}`,
               };
@@ -332,11 +324,17 @@ const NewsFeedHeader = ({
       const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
       if (!token) return;
 
-      const response = await axiosInstance.get('/api/connections/requests/incoming');
+      // Backend paginates (default limit 10); use pagination.total, not requests.length
+      const response = await axiosInstance.get('/api/connections/requests/incoming', {
+        params: { page: 1, limit: 1 },
+      });
       const data = response.data;
-      // Handle both {requests: [...]} and direct array responses
+      if (typeof data?.pagination?.total === 'number') {
+        setConnectionRequestCount(data.pagination.total);
+        return;
+      }
       const requestsArray = data?.requests || data || [];
-      setConnectionRequestCount(requestsArray.length);
+      setConnectionRequestCount(Array.isArray(requestsArray) ? requestsArray.length : 0);
     } catch (err) {
       console.error('Error fetching connection request count:', err);
     }
@@ -346,7 +344,7 @@ const NewsFeedHeader = ({
     fetchConnectionRequestCount();
     const interval = setInterval(fetchConnectionRequestCount, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [location.pathname]);
 
   // Cleanup search timeout on unmount
   useEffect(() => {
@@ -398,6 +396,26 @@ const NewsFeedHeader = ({
     : ["home-icon", "CHAT", "notifications", "recruitment", "connection"];
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+
+  const formatNavCount = (count, compact = false) => {
+    if (count > 99) return '99+';
+    if (compact && count > 9) return '9+';
+    return String(count);
+  };
+
+  const countBadgeClass = (count, compact = false) => {
+    const position = compact
+      ? 'absolute -top-1 -right-1 z-10'
+      : 'absolute -top-1.5 -right-1.5 z-10';
+    const base = `${position} bg-red-500 text-white font-bold rounded-full inline-flex items-center justify-center leading-none shadow-sm`;
+    if (count > 99) {
+      return `${base} ${compact ? 'px-1.5 py-0.5 text-[8px] min-h-4' : 'px-2 py-0.5 text-[9px] min-h-[20px]'}`;
+    }
+    if (count > 9) {
+      return `${base} ${compact ? 'px-1 py-0.5 text-[9px] min-h-4 min-w-4' : 'px-1.5 py-0.5 text-[10px] min-h-[20px] min-w-[20px]'}`;
+    }
+    return `${base} ${compact ? 'h-4 min-w-4 px-0.5 text-[9px]' : 'h-5 min-w-5 px-1 text-[10px]'}`;
+  };
 
   useEffect(() => {
     document.body.style.overflow = isSidebarOpen ? "hidden" : "auto";
@@ -481,7 +499,7 @@ const NewsFeedHeader = ({
 
         <div className="hidden lg:flex gap-3 md:gap-4 items-center">
           {menuItems.map((name, i) => (
-            <div key={i} className="relative flex items-center">
+            <div key={i} className="relative flex items-center gap-1">
               {name === "home-icon" ? (
                 <FaHome
                   className={`text-2xl md:text-3xl cursor-pointer transition-opacity ${isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F] hover:opacity-80"
@@ -489,7 +507,7 @@ const NewsFeedHeader = ({
                   onClick={() => handleIconClick(name)}
                 />
               ) : (
-                <div className={`relative rounded-full p-1 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}>
+                <div className={`relative rounded-full p-1.5 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}>
                   <img
                     src={`/assets/images/${name}.svg`}
                     alt={name}
@@ -498,24 +516,24 @@ const NewsFeedHeader = ({
                     onClick={() => handleIconClick(name)}
                   />
                   {name === "notifications" && notificationCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                      {notificationCount > 99 ? '99+' : notificationCount}
+                    <span className={countBadgeClass(notificationCount)}>
+                      {formatNavCount(notificationCount)}
                     </span>
                   )}
                   {name === "CHAT" && unreadMessageCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
-                      {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                    <span className={`${countBadgeClass(unreadMessageCount)} animate-pulse`}>
+                      {formatNavCount(unreadMessageCount)}
                     </span>
                   )}
                   {name === "connection" && connectionRequestCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                      {connectionRequestCount > 99 ? '99+' : connectionRequestCount}
+                    <span className={countBadgeClass(connectionRequestCount)}>
+                      {formatNavCount(connectionRequestCount)}
                     </span>
                   )}
                 </div>
               )}
               {isIconActive(name) && (
-                <span className="px-2 py-1 text-xs bg-[#1A3E32] rounded-r-2xl text-white rounded">
+                <span className="px-3 py-1.5 text-xs bg-[#1A3E32] rounded-r-2xl text-white font-medium whitespace-nowrap">
                   {name === "home-icon"
                     ? "News Feed"
                     : name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()}
@@ -668,25 +686,25 @@ const NewsFeedHeader = ({
                 {name === "home-icon" ? (
                   <FaHome className={isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F]"} />
                 ) : (
-                  <div className={`relative rounded-full p-1 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}>
+                  <div className={`relative rounded-full p-1.5 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}>
                     <img
                       src={`/assets/images/${name}.svg`}
                       alt={name}
                       className="h-5"
                     />
                     {name === "notifications" && notificationCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                        {notificationCount > 9 ? '9+' : notificationCount}
+                      <span className={countBadgeClass(notificationCount, true)}>
+                        {formatNavCount(notificationCount, true)}
                       </span>
                     )}
                     {name === "CHAT" && unreadMessageCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold animate-pulse">
-                        {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                      <span className={`${countBadgeClass(unreadMessageCount, true)} animate-pulse`}>
+                        {formatNavCount(unreadMessageCount, true)}
                       </span>
                     )}
                     {name === "connection" && connectionRequestCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                        {connectionRequestCount > 9 ? '9+' : connectionRequestCount}
+                      <span className={countBadgeClass(connectionRequestCount, true)}>
+                        {formatNavCount(connectionRequestCount, true)}
                       </span>
                     )}
                   </div>

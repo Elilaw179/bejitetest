@@ -6,6 +6,8 @@ const getMediaKind = (url) => {
   const path = String(url).split('?')[0].toLowerCase();
   if (/\.(jpe?g|png|gif|webp|bmp|svg|heic|heif)$/.test(path)) return 'image';
   if (path.endsWith('.pdf')) return 'pdf';
+  if (/\/image\/upload\//.test(path)) return 'image';
+  if (/\/raw\/upload\//.test(path)) return 'pdf';
   return 'unknown';
 };
 

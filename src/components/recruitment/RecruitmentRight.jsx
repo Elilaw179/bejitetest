@@ -5,6 +5,7 @@ import { getUser } from "../../utils/tokenManager";
 import { getUserProfileImage } from "../../utils/profileImageUtils";
 import { getUserPosts } from "../../services/postsApi";
 import { getConnections } from "../../services/connectionsApi";
+import { formatDisplayPersonName } from "../../utils/personDisplayName";
 
 function RecruitmentRight() {
   const navigate = useNavigate();
@@ -23,10 +24,15 @@ function RecruitmentRight() {
         })
         .catch((err) => console.error("Error fetching posts:", err));
 
-      // Fetch connections count
-      getConnections()
+      // Use pagination.total — default page only returns up to 10 connections
+      getConnections(1, 1)
         .then((data) => {
-          setConnectionCount(data.connections?.length || 0);
+          const total = data?.pagination?.total;
+          setConnectionCount(
+            typeof total === "number"
+              ? total
+              : data.connections?.length || 0,
+          );
         })
         .catch((err) => console.error("Error fetching connections:", err));
     }
@@ -53,7 +59,7 @@ function RecruitmentRight() {
             <div className="text-[#FFFFFF] text-center mt-[-40px]">
               <p className="text-[16px] font-bold">
                 {userData
-                  ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
+                  ? formatDisplayPersonName(userData, "User")
                   : "Osakwe Prisca"}
               </p>
               <p className="text-[11px] font-bold">@nd_creations</p>

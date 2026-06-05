@@ -4,6 +4,8 @@ import { pickAuthorProfilePhoto } from "../../utils/profileImageUtils";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import InterviewInviteModal from "./InterviewInviteModal";
 import { useNavigate } from "react-router-dom";
+import { formatDisplayPersonName, formatDisplayRole } from "../../utils/personDisplayName";
+import { formatDisplayText } from "../../utils/displayFormatUtils";
 
 const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
   const navigate = useNavigate();
@@ -135,10 +137,14 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
             return {
               id: candidate.id,
               user_id: candidate.user_id ?? candidate.userId ?? null,
-              name: `${candidate.first_name} ${candidate.last_name}`,
-              type: "Jobseeker",
-              jobTitle: candidate.title || "N/A",
-              location: candidate.location || candidate.preferred_country || "Unknown",
+              name: formatDisplayPersonName(candidate, 'Unknown User'),
+              type: formatDisplayRole("jobseeker"),
+              jobTitle:
+                formatDisplayText(candidate.title) || "N/A",
+              location:
+                formatDisplayText(
+                  candidate.location || candidate.preferred_country,
+                ) || "Unknown",
               skills: candidate.skills || [],
               availability: candidate.availability || "Unknown",
               experienceYears: candidate.experience_years || 0,
@@ -344,7 +350,7 @@ const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYear
           <div className="flex flex-wrap gap-1 mt-1">
             {skills.slice(0, 3).map((skill, index) => (
               <span key={index} className="text-[10px] bg-[#556B1F] text-white px-2 py-1 rounded">
-                {skill}
+                {formatDisplayText(skill) ?? skill}
               </span>
             ))}
             {skills.length > 3 && (
