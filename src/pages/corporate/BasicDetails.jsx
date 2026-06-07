@@ -19,7 +19,8 @@ const CoperateBasicDetails = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
-  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
+  const { currentStep, isEditMode, recruiterData, getPath } =
+    useOutletContext();
   const { user } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -177,7 +178,9 @@ const CoperateBasicDetails = () => {
         phone_number: formData.phone_number,
       });
 
-      const { firstName, lastName } = splitRecruiterFullName(formData.full_name);
+      const { firstName, lastName } = splitRecruiterFullName(
+        formData.full_name,
+      );
       const phone_number = formData.phone_number;
       const job_title = formData.job_title.trim();
 
@@ -254,7 +257,8 @@ const CoperateBasicDetails = () => {
         Basic Details
       </section>
       <p className="max-w-3xl mx-auto px-4 text-center md:text-start text-[#333] text-[15px]">
-        Tell us who you are. This is how jobseekers and your team will reach you.
+        Tell us who you are. This is how jobseekers and your team will reach
+        you.
       </p>
 
       <div className="max-w-4xl mx-auto mt-8 bg-white md:border border-gray-200 rounded-2xl md:shadow-sm p-2 md:p-8">
@@ -266,8 +270,8 @@ const CoperateBasicDetails = () => {
       </div>
 
       <NavigationButtons
-        showSkip={true}
-        onSkip={handleSkip}
+        // showSkip={true}
+        // onSkip={handleSkip}
         isFormComplete={isFormComplete}
         onBack={() => {
           if (isEditMode && currentStep > 1) {

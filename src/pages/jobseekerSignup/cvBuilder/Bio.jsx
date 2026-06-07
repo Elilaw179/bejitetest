@@ -279,14 +279,14 @@ const Bio = () => {
 
       <NavigationButtons
         isFormComplete={isFormComplete}
-        showSkip={true}
-        onSkip={() => {
-          if (isEditMode) {
-            navigate(getPath(currentStep + 1));
-          } else {
-            navigate("/links");
-          }
-        }}
+        // showSkip={true}
+        // onSkip={() => {
+        //   if (isEditMode) {
+        //     navigate(getPath(currentStep + 1));
+        //   } else {
+        //     navigate("/links");
+        //   }
+        // }}
         onBack={() =>
           navigateBack(navigate, isEditMode ? "/news-feed" : "/resume")
         }

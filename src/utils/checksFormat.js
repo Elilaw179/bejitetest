@@ -305,3 +305,31 @@ export function timeAgo(dateStr) {
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
 }
+
+ 
+export const formatTimeRemaining = (expiresAt) => {
+  const remaining = new Date(expiresAt).getTime() - Date.now();
+  const hours = Math.max(0, Math.floor(remaining / (1000 * 60 * 60)));
+  const days = Math.floor(hours / 24);
+  
+  if (days > 0) {
+    return { text: `${days}d left`, isUrgent: false };
+  }
+  if (hours > 0) {
+    return { text: `${hours}h left`, isUrgent: hours < 24 };
+  }
+  return { text: 'Expiring soon', isUrgent: true };
+};
+
+export const formatSalary = (job) => {
+  if (job.salary) return job.salary;
+  if (job.salaryMin && job.salaryMax) {
+    const currency = job.salaryCurrency === 'USD' ? '$' : 
+                     job.salaryCurrency === 'NGN' ? '₦' :
+                     job.salaryCurrency === 'KES' ? 'KES ' :
+                     job.salaryCurrency === 'GHS' ? 'GH₵' :
+                     job.salaryCurrency === 'ZAR' ? 'R' : '';
+    return `${currency}${job.salaryMin.toLocaleString()} - ${currency}${job.salaryMax.toLocaleString()}`;
+  }
+  return 'Competitive';
+};

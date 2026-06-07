@@ -89,6 +89,14 @@ import BadgeStatus from "./pages/badge/BadgeStatus.jsx";
 import AccountSettings from "./pages/AccountSettings.jsx";
 import ActivityLog from "./pages/ActivityLog.jsx";
 import BadgeHolder from "./pages/badge/BadgeHolder.jsx";
+import CreateJob from "./pages/employerDashboard/CreateJob.jsx";
+import EmployerDashboard from "./pages/employerDashboard/EmployerDashboard.jsx";
+import BulkCreateJobs from "./pages/employerDashboard/BulkCreateJobs.jsx";
+import ExtendJob from "./pages/employerDashboard/ExtendJob.jsx";
+import JobApplications from "./pages/employerDashboard/JobApplications.jsx";
+import RecruitWithASE from "./pages/employerDashboard/RecruitWithASE.jsx";
+import RepostJob from "./pages/employerDashboard/RepostJob.jsx";
+import JobVacancyListing from "./pages/jobseekerSignup/Jobs/JobVacancyListing.jsx";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
@@ -292,6 +300,9 @@ function App() {
             <Route path="/account-settings" element={<AccountSettings />} />
             <Route path="/badge-holder" element={<BadgeHolder />} />
 
+            {/* jobseeker */}
+            <Route path="/job-vacancy" element={<JobVacancyListing />} />
+
             <Route
               path="/candidate-search-page"
               element={
@@ -355,6 +366,21 @@ function App() {
               path="/ase/dashboard"
               element={<ASESubscriptionDashboard />}
             />
+            <Route path="/employer/create-job" element={<CreateJob />} />
+
+            <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+
+            <Route path="/employer/bulk-create" element={<BulkCreateJobs />} />
+            <Route path="/employer/job/:id/extend" element={<ExtendJob />} />
+            <Route
+              path="/employer/job/:id/applications"
+              element={<JobApplications />}
+            />
+            <Route
+              path="employer/job/:id/recruit"
+              element={<RecruitWithASE />}
+            />
+            <Route path="employer/job/:id/repost" element={<RepostJob />} />
           </Routes>
           <ProfileCompletionReminder />
           <ToastContainer
