@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { MockJobs } from "../../../utils/mockJobs";
 import { HeroSection } from "../../../components/jobs/HeroSection";
 import { SearchBar } from "../../../components/jobs/SearchBar";
@@ -25,9 +25,6 @@ const JobVacancyListing = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [savedJobs, setSavedJobs] = useState([]);
   const [showSavedModal, setShowSavedModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [jobsPerPage] = useState(6);
 
@@ -42,7 +39,6 @@ const JobVacancyListing = () => {
     localStorage.setItem("savedJobs", JSON.stringify(savedJobs));
   }, [savedJobs]);
 
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [
@@ -77,36 +73,27 @@ const JobVacancyListing = () => {
 
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
-      // Search filter
       const matchesSearch =
         searchTerm === "" ||
         job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.requirements.some((req) =>
-          req.skill.toLowerCase().includes(searchTerm.toLowerCase()),
+        job.requirements?.some((req) =>
+          req.skill?.toLowerCase().includes(searchTerm.toLowerCase()),
         ) ||
         job.tags?.some((tag) =>
           tag.toLowerCase().includes(searchTerm.toLowerCase()),
         );
 
-      // Industry filter
       const matchesIndustry =
         !selectedIndustry || job.industry === selectedIndustry;
-
-      // Work mode filter
       const matchesWorkMode =
         !selectedWorkMode || job.workMode === selectedWorkMode;
-
-      // Job type filter
       const matchesJobType =
         !selectedJobType || job.jobType === selectedJobType;
-
-      // Experience level filter
       const matchesExperienceLevel =
         !selectedExperienceLevel ||
         job.experienceLevel === selectedExperienceLevel;
 
-      // Salary filter - convert to USD equivalent for comparison
       let salaryInUSD = job.salaryMin || 0;
       if (job.salaryCurrency === "NGN") salaryInUSD = job.salaryMin / 1500;
       if (job.salaryCurrency === "KES") salaryInUSD = job.salaryMin / 120;
@@ -135,70 +122,70 @@ const JobVacancyListing = () => {
     salaryRange,
   ]);
 
-  // Pagination logic
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
   const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
   const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
 
-  const handlePageChange = (pageNumber) => {
+  const handlePageChange = useCallback((pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
 
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  };
+  }, [currentPage, totalPages]);
 
-  const handlePrevPage = () => {
+  const handlePrevPage = useCallback(() => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  };
+  }, [currentPage]);
 
-  const handleSaveJob = (jobId) => {
-    if (!savedJobs.some((saved) => saved.jobId === jobId)) {
-      setSavedJobs([
-        ...savedJobs,
-        { jobId, savedAt: new Date().toISOString() },
-      ]);
-    }
-  };
+  const handleSaveJob = useCallback((jobId) => {
+    setSavedJobs((prev) => {
+      if (!prev.some((saved) => saved.jobId === jobId)) {
+        return [...prev, { jobId, savedAt: new Date().toISOString() }];
+      }
+      return prev;
+    });
+  }, []);
 
-  const handleUnsaveJob = (jobId) => {
-    setSavedJobs(savedJobs.filter((saved) => saved.jobId !== jobId));
-  };
+  const handleUnsaveJob = useCallback((jobId) => {
+    setSavedJobs((prev) => prev.filter((saved) => saved.jobId !== jobId));
+  }, []);
 
-  const isJobSaved = (jobId) =>
-    savedJobs.some((saved) => saved.jobId === jobId);
+  const isJobSaved = useCallback(
+    (jobId) => savedJobs.some((saved) => saved.jobId === jobId),
+    [savedJobs],
+  );
 
-  const handleApply = () => {
+  const handleApply = useCallback(() => {
     if (selectedJob) {
       setJobs((prev) =>
         prev.map((job) =>
           job.id === selectedJob.id
-            ? { ...job, applicantsCount: job.applicantsCount + 1 }
+            ? { ...job, applicantsCount: (job.applicantsCount || 0) + 1 }
             : job,
         ),
       );
     }
-  };
+  }, [selectedJob]);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSelectedIndustry("");
     setSelectedWorkMode("");
     setSelectedJobType("");
     setSelectedExperienceLevel("");
     setSalaryRange([0, 2000000]);
     setSearchTerm("");
-  };
+  }, []);
 
-  // Generate page numbers to display
-  const getPageNumbers = () => {
+  const getPageNumbers = useCallback(() => {
     const pageNumbers = [];
     const maxPagesToShow = 5;
 
@@ -206,31 +193,31 @@ const JobVacancyListing = () => {
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
       }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pageNumbers.push(i);
-        }
-        pageNumbers.push("...");
-        pageNumbers.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pageNumbers.push(1);
-        pageNumbers.push("...");
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pageNumbers.push(i);
-        }
-      } else {
-        pageNumbers.push(1);
-        pageNumbers.push("...");
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pageNumbers.push(i);
-        }
-        pageNumbers.push("...");
-        pageNumbers.push(totalPages);
+    } else if (currentPage <= 3) {
+      for (let i = 1; i <= 4; i++) {
+        pageNumbers.push(i);
       }
+      pageNumbers.push("...");
+      pageNumbers.push(totalPages);
+    } else if (currentPage >= totalPages - 2) {
+      pageNumbers.push(1);
+      pageNumbers.push("...");
+      for (let i = totalPages - 3; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      pageNumbers.push(1);
+      pageNumbers.push("...");
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        pageNumbers.push(i);
+      }
+      pageNumbers.push("...");
+      pageNumbers.push(totalPages);
     }
     return pageNumbers;
-  };
+  }, [currentPage, totalPages]);
+
+  const pageNumbers = getPageNumbers();
 
   return (
     <NewsFeedLayout showSidebars={false}>
@@ -261,10 +248,10 @@ const JobVacancyListing = () => {
 
           <div className="lg:col-span-3">
             <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm">
                 Showing{" "}
                 <span className="font-semibold text-gray-900">
-                  {indexOfFirstJob + 1}-
+                  {filteredJobs.length > 0 ? indexOfFirstJob + 1 : 0}-
                   {Math.min(indexOfLastJob, filteredJobs.length)}
                 </span>{" "}
                 of{" "}
@@ -279,17 +266,14 @@ const JobVacancyListing = () => {
                     onClick={() => setShowSavedModal(true)}
                     className="flex items-center gap-2 text-[#16730F] text-sm font-medium border border-[#16730F]/30 rounded-xl px-4 py-2 hover:bg-[#16730F]/5 transition"
                   >
-                    <FaBookmark /> Saved ({savedJobs.length})
+                    <FaBookmark className="text-sm" /> Saved ({savedJobs.length}
+                    )
                   </button>
                 )}
               </div>
             </div>
 
-            {isLoading ? (
-              <div className="flex justify-center py-20">
-                <FaSpinner className="animate-spin text-[#16730F] text-4xl" />
-              </div>
-            ) : currentJobs.length > 0 ? (
+            {currentJobs.length > 0 ? (
               <>
                 <div className="space-y-4">
                   {currentJobs.map((job) => (
@@ -304,9 +288,8 @@ const JobVacancyListing = () => {
                   ))}
                 </div>
 
-                {/* Pagination Component */}
                 {totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-2 mt-8 pt-4 border-t border-gray-200">
+                  <div className="flex flex-wrap justify-center items-center gap-2 mt-8 pt-4 border-t border-gray-200">
                     <button
                       onClick={handlePrevPage}
                       disabled={currentPage === 1}
@@ -315,13 +298,14 @@ const JobVacancyListing = () => {
                           ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                           : "bg-white text-gray-700 hover:bg-[#16730F] hover:text-white border border-gray-300"
                       }`}
+                      aria-label="Previous page"
                     >
                       <FaChevronLeft size={14} />
-                      <span className="text-sm">Prev</span>
+                      <span className="text-sm hidden sm:inline">Prev</span>
                     </button>
 
-                    <div className="flex gap-2">
-                      {getPageNumbers().map((page, index) => (
+                    <div className="flex gap-2 flex-wrap justify-center">
+                      {pageNumbers.map((page, index) => (
                         <button
                           key={index}
                           onClick={() =>
@@ -335,6 +319,7 @@ const JobVacancyListing = () => {
                                 : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
                           }`}
                           disabled={page === "..."}
+                          aria-label={`Page ${page}`}
                         >
                           {page}
                         </button>
@@ -349,14 +334,14 @@ const JobVacancyListing = () => {
                           ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                           : "bg-white text-gray-700 hover:bg-[#16730F] hover:text-white border border-gray-300"
                       }`}
+                      aria-label="Next page"
                     >
-                      <span className="text-sm">Next</span>
+                      <span className="text-sm hidden sm:inline">Next</span>
                       <FaChevronRight size={14} />
                     </button>
                   </div>
                 )}
 
-                {/* Page Info for Mobile */}
                 <div className="text-center mt-4 text-sm text-gray-500 lg:hidden">
                   Page {currentPage} of {totalPages}
                 </div>
@@ -372,7 +357,7 @@ const JobVacancyListing = () => {
                 </p>
                 <button
                   onClick={clearFilters}
-                  className="mt-4 text-[#16730F] hover:underline"
+                  className="mt-4 text-[#16730F] hover:underline font-medium"
                 >
                   Clear all filters
                 </button>
