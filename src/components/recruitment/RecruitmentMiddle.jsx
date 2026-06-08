@@ -49,6 +49,7 @@ import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import PostMediaGallery from "../PostMediaGallery";
 import FeedLoadMoreButton from "../FeedLoadMoreButton";
+import AdCard from "../Ads/AdCard";
 
 const FEED_PAGE_SIZE = 20;
 
@@ -106,6 +107,41 @@ const parseTextWithLinks = (text) => {
 
 export default function RecruitmentMiddle() {
   useSyncProfilePhoto();
+
+  // this is the ads so u can use it and call the feeds endpoint
+  // on it
+  const [ads, setAds] = useState([]);
+  const [dismissedAds, setDismissedAds] = useState(new Set());
+
+  useEffect(() => {
+    fetchAds();
+  }, []);
+
+  const fetchAds = async () => {
+    const mockAds = [
+      {
+        id: "ad1",
+        headline: "Expert Tax Consulting for Lagos SMEs",
+        description:
+          "Get professional tax consulting services. We help SMEs navigate Nigerian tax laws and maximize deductions.",
+        mediaUrl: "https://example.com/ad-image.jpg",
+        mediaType: "image",
+        landingDestination: "https://example.com/tax-consulting",
+      },
+    ];
+    setAds(mockAds);
+  };
+
+  const handleAdInteraction = (type, adId) => {
+    console.log(`Ad ${adId} ${type}`);
+  };
+
+  const handleDismissAd = (adId) => {
+    setDismissedAds((prev) => new Set([...prev, adId]));
+  };
+
+  const visibleAds = ads.filter((ad) => !dismissedAds.has(ad.id));
+
   const [posts, setPosts] = useState([]);
   const [nextCursor, setNextCursor] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -357,24 +393,39 @@ export default function RecruitmentMiddle() {
         </div>
       ) : (
         <>
-          {posts.map((post) => (
-            <RecruitmentPostCard
-              key={post.id}
-              post={post}
-              currentUserId={mergedUser?.id}
-              currentUserPhotoUrl={currentUserImage}
-              onLike={handleLike}
-              onSave={handleSave}
-              onShare={handleShare}
-              onUpdate={handleUpdatePost}
-              onDelete={handleDeletePost}
-            />
+          {posts.map((post, index) => (
+            <React.Fragment key={post.id}>
+              <RecruitmentPostCard
+                key={post.id}
+                post={post}
+                currentUserId={mergedUser?.id}
+                currentUserPhotoUrl={currentUserImage}
+                onLike={handleLike}
+                onSave={handleSave}
+                onShare={handleShare}
+                onUpdate={handleUpdatePost}
+                onDelete={handleDeletePost}
+              />
+              {/* this is ads so is just dummy for now  */}
+              {/* it will display after three posts u can use it */}
+              {(index + 1) % 3 === 0 && visibleAds.length > 0 && (
+                <AdCard
+                  ad={visibleAds[Math.floor(index / 3) % visibleAds.length]}
+                  onInteraction={handleAdInteraction}
+                  onClose={handleDismissAd}
+                />
+              )}
+            </React.Fragment>
           ))}
           <FeedLoadMoreButton
             hasMore={Boolean(nextCursor)}
             loading={loadingMore}
             onLoadMore={loadMorePosts}
-            label={feedMode === "saved" ? "Load more saved posts" : "Load older posts"}
+            label={
+              feedMode === "saved"
+                ? "Load more saved posts"
+                : "Load older posts"
+            }
           />
         </>
       )}

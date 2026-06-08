@@ -724,7 +724,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                         </button>
                       )}
 
-                      {/* {user?.role === "jobseeker" && (
+                      {user?.role === "jobseeker" && (
                         <button
                           onClick={() => {
                             navigate("/job-vacancy");
@@ -739,7 +739,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                           <FaBriefcase className="text-base" />
                           <span>Job Vacancy</span>
                         </button>
-                      )} */}
+                      )}
                     </div>
 
                     {/* Divider */}
