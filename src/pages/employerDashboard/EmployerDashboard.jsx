@@ -4,7 +4,6 @@ import {
   FaBriefcase,
   FaUsers,
   FaClock,
-  FaMoneyBillWave,
   FaRobot,
   FaPlus,
   FaCheckCircle,
@@ -112,13 +111,6 @@ const EmployerDashboard = () => {
       setDeletingJobId(null);
     }
   };
-
-  const formatCurrency = (amount) => (
-    <span className="inline-flex items-center gap-2">
-      <FaMoneyBillWave className="text-orange-500 shrink-0" />
-      <span>₦{Number(amount || 0).toLocaleString()}</span>
-    </span>
-  );
 
   const StatCard = ({ icon: Icon, title, value, color }) => (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
