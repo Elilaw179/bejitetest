@@ -91,12 +91,17 @@ export default function RecruitmentLeft() {
             </span>
           </button>
         </div>
-        <div className="bg-[#1A3E32] flex-1 rounded-b-2xl mt-4 flex flex-col items-center pt-8 pb-6 space-y-5">
-          <button className="text-white hover:text-green-300 transition-colors font-semibold text-sm" onClick={() => navigate("/payment")}>
-            AdPro
-          </button>
-          <div className="w-[180px] h-[80px] bg-white/10 rounded-xl border border-white/10" />
-        </div>
+        {user?.role === "recruiter" && (
+          <div className="bg-[#1A3E32] flex-1 rounded-b-2xl mt-4 flex flex-col items-center pt-8 pb-6 space-y-5">
+            <button
+              className="text-white hover:text-green-300 transition-colors font-semibold text-sm"
+              onClick={() => navigate("/ad-pro-dashboard")}
+            >
+              AdPro
+            </button>
+            {/* <div className="w-[180px] h-[80px] bg-white/10 rounded-xl border border-white/10" /> */}
+          </div>
+        )}
       </aside>
     </div>
   );

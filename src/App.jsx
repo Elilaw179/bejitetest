@@ -98,6 +98,11 @@ import JobApplications from "./pages/employerDashboard/JobApplications.jsx";
 import RecruitWithASE from "./pages/employerDashboard/RecruitWithASE.jsx";
 import RepostJob from "./pages/employerDashboard/RepostJob.jsx";
 import JobVacancyListing from "./pages/jobseekerSignup/Jobs/JobVacancyListing.jsx";
+import AdProDashboard from "./pages/ads/AdProDashboard.jsx";
+import CampaignReports from "./pages/ads/CampaignReports.jsx";
+import CampaignDetails from "./pages/ads/CampaignDetails.jsx";
+import CreateCampaign from "./pages/ads/CreateCampaign.jsx";
+import EditCampaign from "./pages/ads/EditCampaign.jsx";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
@@ -300,6 +305,16 @@ function App() {
             <Route path="/activity-logs" element={<ActivityLog />} />
             <Route path="/account-settings" element={<AccountSettings />} />
             <Route path="/badge-holder" element={<BadgeHolder />} />
+
+            {/* ads */}
+            <Route path="/ad-pro-dashboard" element={<AdProDashboard />} />
+            <Route path="/adpro/campaign/:id" element={<CampaignDetails />} />
+            <Route
+              path="/adpro/campaign/:id/reports"
+              element={<CampaignReports />}
+            />
+            <Route path="/adpro/create" element={<CreateCampaign />} />
+            <Route path="/adpro/campaign/:id/edit" element={<EditCampaign />} />
 
             {/* jobseeker */}
             <Route path="/job-vacancy" element={<JobVacancyListing />} />

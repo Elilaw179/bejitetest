@@ -237,13 +237,13 @@ const CoperateBasicDetails = () => {
     }
   };
 
-  const handleSkip = () => {
-    if (isEditMode) {
-      navigate(getPath(currentStep + 1));
-    } else {
-      navigate("/corporate/profile-setup");
-    }
-  };
+  // const handleSkip = () => {
+  //   if (isEditMode) {
+  //     navigate(getPath(currentStep + 1));
+  //   } else {
+  //     navigate("/corporate/profile-setup");
+  //   }
+  // };
 
   return (
     <OnboardingLayout
