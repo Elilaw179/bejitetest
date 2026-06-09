@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FaDownload,
@@ -14,72 +14,95 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
+import {
+  getJobApplications,
+  updateJobApplicationStatus,
+} from "../../services/employerApi";
+import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
+
+const ApplicantAvatar = ({
+  application,
+  containerClassName,
+  textClassName = "text-base sm:text-lg",
+}) => {
+  const photoSrc = profilePhotoUrl(application?.profilePhoto);
+
+  if (photoSrc) {
+    return (
+      <img
+        src={photoSrc}
+        alt={application?.name || "Candidate"}
+        className={`object-cover ${containerClassName}`}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`flex items-center justify-center text-white font-bold bg-gradient-to-br from-[#16730F] to-[#1A3E32] ${containerClassName}`}
+    >
+      <span className={textClassName}>
+        {(application?.name || "?").charAt(0)}
+      </span>
+    </div>
+  );
+};
 
 const JobApplications = () => {
-  const { jobId } = useParams();
+  const { id: jobId } = useParams();
   const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
+  const [jobTitle, setJobTitle] = useState("");
   const [selectedApplication, setSelectedApplication] = useState(null);
+  const [statusDraft, setStatusDraft] = useState("pending");
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+
+  const loadApplications = useCallback(async () => {
+    if (!jobId) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getJobApplications(jobId);
+
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to load applications");
+      }
+
+      const items = response.data?.applications || [];
+      setJobTitle(response.data?.job?.title || "Job");
+      setApplications(items);
+      setSelectedApplication(items[0] || null);
+      setStatusDraft(items[0]?.status || "pending");
+    } catch (err) {
+      console.error("Applications load error:", err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to load job applications",
+      );
+      setApplications([]);
+      setSelectedApplication(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [jobId]);
 
   useEffect(() => {
     loadApplications();
-  }, [jobId]);
+  }, [loadApplications]);
 
-  const loadApplications = async () => {
-    setTimeout(() => {
-      const mockApplications = [
-        {
-          id: 1,
-          name: "John Doe",
-          email: "john.doe@example.com",
-          phone: "+234 801 234 5678",
-          location: "Lagos, Nigeria",
-          experience: 5,
-          education: "B.Sc. Computer Science",
-          skills: ["React", "Node.js", "Python"],
-          matchScore: 92,
-          appliedAt: "2026-06-06T10:30:00",
-          status: "pending",
-          resume: "john_doe_resume.pdf",
-        },
-        {
-          id: 2,
-          name: "Jane Smith",
-          email: "jane.smith@example.com",
-          phone: "+234 802 345 6789",
-          location: "Accra, Ghana",
-          experience: 3,
-          education: "M.Sc. Software Engineering",
-          skills: ["JavaScript", "TypeScript", "Angular"],
-          matchScore: 85,
-          appliedAt: "2026-06-05T14:20:00",
-          status: "reviewed",
-          resume: "jane_smith_resume.pdf",
-        },
-        {
-          id: 3,
-          name: "Michael Johnson",
-          email: "michael.j@example.com",
-          phone: "+234 803 456 7890",
-          location: "Nairobi, Kenya",
-          experience: 7,
-          education: "Ph.D. Data Science",
-          skills: ["Python", "Machine Learning", "SQL"],
-          matchScore: 78,
-          appliedAt: "2026-06-04T09:15:00",
-          status: "shortlisted",
-          resume: "michael_johnson_resume.pdf",
-        },
-      ];
-      setApplications(mockApplications);
-      setSelectedApplication(mockApplications[0]);
-      setLoading(false);
-    }, 1000);
-  };
+  useEffect(() => {
+    if (selectedApplication) {
+      setStatusDraft(selectedApplication.status);
+    }
+  }, [selectedApplication]);
 
   const getMatchScoreColor = (score) => {
     if (score >= 80) return "text-green-600 bg-green-100";
@@ -96,6 +119,177 @@ const JobApplications = () => {
 
   const closeModal = () => {
     setShowModal(false);
+  };
+
+  const handleStatusUpdate = async () => {
+    if (!selectedApplication || !jobId) return;
+
+    setUpdatingStatus(true);
+    try {
+      const response = await updateJobApplicationStatus(
+        jobId,
+        selectedApplication.id,
+        statusDraft,
+      );
+
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to update status");
+      }
+
+      const updated = response.data;
+      setApplications((prev) =>
+        prev.map((app) => (app.id === updated.id ? updated : app)),
+      );
+      setSelectedApplication(updated);
+    } catch (err) {
+      console.error("Status update error:", err);
+      alert(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to update application status",
+      );
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const hasStatusChange =
+    selectedApplication && statusDraft !== selectedApplication.status;
+
+  const handleContactCandidate = () => {
+    if (!selectedApplication?.userId) {
+      alert("This candidate profile is not available yet.");
+      return;
+    }
+
+    navigate(`/user-profile/${selectedApplication.userId}`);
+  };
+
+  const renderStatusControls = () => (
+    <div className="mt-6">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Update Status
+      </label>
+      <div className="flex gap-2">
+        <select
+          value={statusDraft}
+          onChange={(e) => setStatusDraft(e.target.value)}
+          className="flex-1 border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#16730F]"
+        >
+          <option value="pending">Pending</option>
+          <option value="reviewed">Reviewed</option>
+          <option value="shortlisted">Shortlisted</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <button
+          type="button"
+          onClick={handleStatusUpdate}
+          disabled={updatingStatus || !hasStatusChange}
+          className={`px-4 py-2 rounded-xl font-medium transition-colors disabled:opacity-60 ${
+            hasStatusChange
+              ? "bg-[#16730F] text-white hover:bg-[#145A0C]"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          {updatingStatus ? "Saving..." : "Update"}
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderApplicationDetails = () => {
+    if (!selectedApplication) return null;
+
+    return (
+      <>
+        <div className="text-center mb-6">
+          <ApplicantAvatar
+            application={selectedApplication}
+            containerClassName="w-20 h-20 rounded-full mx-auto overflow-hidden"
+            textClassName="text-2xl"
+          />
+          <h3 className="text-lg font-bold mt-3">{selectedApplication.name}</h3>
+          <p className="text-gray-500 text-sm">{selectedApplication.email}</p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 text-gray-600">
+            <FaPhone className="flex-shrink-0" />
+            <span className="text-sm break-all">{selectedApplication.phone}</span>
+          </div>
+          <div className="flex items-center gap-3 text-gray-600">
+            <FaMapMarkerAlt className="flex-shrink-0" />
+            <span className="text-sm">{selectedApplication.location}</span>
+          </div>
+          <div className="flex items-center gap-3 text-gray-600">
+            <FaBriefcase className="flex-shrink-0" />
+            <span className="text-sm">
+              {selectedApplication.experience} years experience
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-gray-600">
+            <FaGraduationCap className="flex-shrink-0" />
+            <span className="text-sm">{selectedApplication.education}</span>
+          </div>
+        </div>
+
+        {selectedApplication.skills?.length > 0 && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="font-semibold text-gray-900 mb-3">Skills</h4>
+            <div className="flex flex-wrap gap-2">
+              {selectedApplication.skills.map((skill, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1 bg-gray-100 rounded-full text-sm"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedApplication.coverLetter && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="font-semibold text-gray-900 mb-2">Cover Letter</h4>
+            <p className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">
+              {selectedApplication.coverLetter}
+            </p>
+          </div>
+        )}
+
+        <div className="mt-6 space-y-3">
+          <button
+            type="button"
+            onClick={handleContactCandidate}
+            disabled={!selectedApplication.userId}
+            className="w-full bg-[#16730F] text-white py-3 rounded-xl font-semibold hover:bg-[#145A0C] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FaEnvelope className="inline mr-2" />
+            View Candidate Profile
+          </button>
+          {selectedApplication.applicationMethod === "profile" ? (
+            <div className="w-full border-2 border-[#16730F]/30 text-[#16730F] py-3 rounded-xl font-semibold bg-[#16730F]/5 text-center text-sm">
+              Applied with Bejite Profile
+            </div>
+          ) : (
+            selectedApplication.resume && (
+              <a
+                href={selectedApplication.resume}
+                target="_blank"
+                rel="noreferrer"
+                className="block w-full border-2 border-[#16730F] text-[#16730F] py-3 rounded-xl font-semibold hover:bg-green-50 transition-colors text-center"
+              >
+                <FaDownload className="inline mr-2" />
+                Download Resume
+              </a>
+            )
+          )}
+        </div>
+
+        {renderStatusControls()}
+      </>
+    );
   };
 
   const filteredApplications = applications.filter((app) => {
@@ -134,9 +328,15 @@ const JobApplications = () => {
             Job Applications
           </h1>
           <p className="text-gray-500 text-sm sm:text-base mt-1">
-            Review and manage candidate applications
+            {jobTitle} · Review and manage candidate applications
           </p>
         </div>
+
+        {error && (
+          <div className="max-w-7xl mx-auto mb-6 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         {/* Main Content - Responsive Grid */}
         <div className="max-w-7xl mx-auto">
@@ -184,7 +384,12 @@ const JobApplications = () => {
 
               {/* Applications Grid - Responsive */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredApplications.map((app) => {
+                {filteredApplications.length === 0 ? (
+                  <div className="col-span-full text-center py-12 text-gray-500 bg-white rounded-2xl border border-gray-200">
+                    No applications found for this job yet.
+                  </div>
+                ) : (
+                  filteredApplications.map((app) => {
                   const isSelected = selectedApplication?.id === app.id;
                   return (
                     <div
@@ -207,15 +412,16 @@ const JobApplications = () => {
 
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <div
-                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0 ${
-                              isSelected && window.innerWidth >= 1024
+                          <ApplicantAvatar
+                            application={app}
+                            containerClassName={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex-shrink-0 overflow-hidden ${
+                              isSelected &&
+                              window.innerWidth >= 1024 &&
+                              !profilePhotoUrl(app.profilePhoto)
                                 ? "bg-[#16730F]"
-                                : "bg-gradient-to-br from-[#16730F] to-[#1A3E32]"
+                                : ""
                             }`}
-                          >
-                            {app.name.charAt(0)}
-                          </div>
+                          />
                           <div className="flex-1 min-w-0">
                             <h3
                               className={`font-bold text-sm sm:text-base truncate ${
@@ -283,7 +489,8 @@ const JobApplications = () => {
                       </div>
                     </div>
                   );
-                })}
+                })
+                )}
               </div>
             </div>
 
@@ -301,90 +508,7 @@ const JobApplications = () => {
                 </div>
 
                 {selectedApplication ? (
-                  <div className="p-6">
-                    <div className="text-center mb-6">
-                      <div className="w-20 h-20 bg-gradient-to-br from-[#16730F] to-[#1A3E32] rounded-full flex items-center justify-center text-white font-bold text-2xl mx-auto">
-                        {selectedApplication.name.charAt(0)}
-                      </div>
-                      <h3 className="text-lg font-bold mt-3">
-                        {selectedApplication.name}
-                      </h3>
-                      <p className="text-gray-500 text-sm">
-                        {selectedApplication.email}
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3 text-gray-600">
-                        <FaPhone className="flex-shrink-0" />
-                        <span className="text-sm break-all">
-                          {selectedApplication.phone}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 text-gray-600">
-                        <FaMapMarkerAlt className="flex-shrink-0" />
-                        <span className="text-sm">
-                          {selectedApplication.location}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 text-gray-600">
-                        <FaBriefcase className="flex-shrink-0" />
-                        <span className="text-sm">
-                          {selectedApplication.experience} years experience
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 text-gray-600">
-                        <FaGraduationCap className="flex-shrink-0" />
-                        <span className="text-sm">
-                          {selectedApplication.education}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                      <h4 className="font-semibold text-gray-900 mb-3">
-                        Skills
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedApplication.skills.map((skill, idx) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1 bg-gray-100 rounded-full text-sm"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mt-6 space-y-3">
-                      <button className="w-full bg-[#16730F] text-white py-3 rounded-xl font-semibold hover:bg-[#145A0C] transition-colors">
-                        <FaEnvelope className="inline mr-2" />
-                        Contact Candidate
-                      </button>
-                      <button className="w-full border-2 border-[#16730F] text-[#16730F] py-3 rounded-xl font-semibold hover:bg-green-50 transition-colors">
-                        <FaDownload className="inline mr-2" />
-                        Download Resume
-                      </button>
-                    </div>
-
-                    <div className="mt-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Update Status
-                      </label>
-                      <div className="flex gap-2">
-                        <select className="flex-1 border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#16730F]">
-                          <option value="pending">Pending</option>
-                          <option value="reviewed">Reviewed</option>
-                          <option value="shortlisted">Shortlisted</option>
-                          <option value="rejected">Rejected</option>
-                        </select>
-                        <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200">
-                          Update
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <div className="p-6">{renderApplicationDetails()}</div>
                 ) : (
                   <div className="p-12 text-center">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -421,88 +545,7 @@ const JobApplications = () => {
               </button>
             </div>
 
-            <div className="p-5 pb-8">
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-[#16730F] to-[#1A3E32] rounded-full flex items-center justify-center text-white font-bold text-2xl mx-auto">
-                  {selectedApplication.name.charAt(0)}
-                </div>
-                <h3 className="text-lg font-bold mt-3">
-                  {selectedApplication.name}
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  {selectedApplication.email}
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-gray-600">
-                  <FaPhone className="text-sm" />
-                  <span className="text-sm">{selectedApplication.phone}</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <FaMapMarkerAlt className="text-sm" />
-                  <span className="text-sm">
-                    {selectedApplication.location}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <FaBriefcase className="text-sm" />
-                  <span className="text-sm">
-                    {selectedApplication.experience} years experience
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <FaGraduationCap className="text-sm" />
-                  <span className="text-sm">
-                    {selectedApplication.education}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="font-semibold text-gray-900 mb-3 text-sm">
-                  Skills
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {selectedApplication.skills.map((skill, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1.5 bg-gray-100 rounded-full text-sm"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-3">
-                <button className="w-full bg-[#16730F] text-white py-3 rounded-xl font-semibold hover:bg-[#145A0C] transition-colors text-sm">
-                  <FaEnvelope className="inline mr-2" />
-                  Contact Candidate
-                </button>
-                <button className="w-full border-2 border-[#16730F] text-[#16730F] py-3 rounded-xl font-semibold hover:bg-green-50 transition-colors text-sm">
-                  <FaDownload className="inline mr-2" />
-                  Download Resume
-                </button>
-              </div>
-
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Update Status
-                </label>
-                <div className="flex gap-2">
-                  <select className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#16730F]">
-                    <option value="pending">Pending Review</option>
-                    <option value="reviewed">Reviewed</option>
-                    <option value="shortlisted">Shortlisted</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
-                  <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm hover:bg-gray-200">
-                    Update
-                  </button>
-                </div>
-              </div>
-            </div>
+            <div className="p-5 pb-8">{renderApplicationDetails()}</div>
           </div>
         </div>
       )}

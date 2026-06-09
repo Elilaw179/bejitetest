@@ -6,7 +6,7 @@ import {
   FaRegBookmark,
   FaMapMarkerAlt,
   FaClock,
-  FaDollarSign,
+  FaMoneyBillWave,
   FaGraduationCap,
 } from "react-icons/fa";
 import {
@@ -16,10 +16,14 @@ import {
   MdAttachMoney,
 } from "react-icons/md";
 import { formatSalary, formatTimeRemaining } from "../../utils/checksFormat";
+import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 
 export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
   const timeRemaining = formatTimeRemaining(job.expiresAt);
   const salary = formatSalary(job);
+  const companyLogoSrc = profilePhotoUrl(
+    job.recruiterProfilePhoto || job.companyLogo,
+  );
 
   return (
     <div
@@ -41,9 +45,9 @@ export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
           {/* Company Logo - Hidden on very small, visible on sm and up */}
           <div className="hidden sm:block flex-shrink-0">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#16730F] to-[#1A3E32] overflow-hidden shadow-md">
-              {job.companyLogo ? (
+              {companyLogoSrc ? (
                 <img
-                  src={job.companyLogo}
+                  src={companyLogoSrc}
                   alt={job.company}
                   className="w-full h-full object-cover"
                 />
@@ -151,7 +155,7 @@ export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
             <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
               <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm">
                 <span className="flex items-center gap-1.5 text-gray-700 font-medium">
-                  <FaDollarSign className="text-[#16730F] text-sm" />
+                  <FaMoneyBillWave className="text-[#16730F] text-sm" />
                   <span>{salary}</span>
                 </span>
 

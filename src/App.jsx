@@ -93,6 +93,7 @@ import CreateJob from "./pages/employerDashboard/CreateJob.jsx";
 import EmployerDashboard from "./pages/employerDashboard/EmployerDashboard.jsx";
 import BulkCreateJobs from "./pages/employerDashboard/BulkCreateJobs.jsx";
 import ExtendJob from "./pages/employerDashboard/ExtendJob.jsx";
+import JobExtendCallback from "./pages/employerDashboard/JobExtendCallback.jsx";
 import JobApplications from "./pages/employerDashboard/JobApplications.jsx";
 import RecruitWithASE from "./pages/employerDashboard/RecruitWithASE.jsx";
 import RepostJob from "./pages/employerDashboard/RepostJob.jsx";
@@ -371,6 +372,10 @@ function App() {
             <Route path="/employer/dashboard" element={<EmployerDashboard />} />
 
             <Route path="/employer/bulk-create" element={<BulkCreateJobs />} />
+            <Route
+              path="/employer/extend/callback"
+              element={<JobExtendCallback />}
+            />
             <Route path="/employer/job/:id/extend" element={<ExtendJob />} />
             <Route
               path="/employer/job/:id/applications"

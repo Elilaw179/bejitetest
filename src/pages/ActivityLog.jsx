@@ -51,6 +51,7 @@ import { getAuthorSubtitle } from "../utils/authorDisplay";
 import PostMediaGallery from "../components/PostMediaGallery";
 import FeedLoadMoreButton from "../components/FeedLoadMoreButton";
 import useJobsApi from "../services/useJobsApi";
+import ActivityJobDetailsModal from "../components/jobs/ActivityJobDetailsModal";
 import { motion, AnimatePresence } from "framer-motion";
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
@@ -629,26 +630,34 @@ const ActivityLogPostCard = ({
   );
 };
 
-const JobCard = ({ job }) => {
+const JobCard = ({ job, onView, isRecruiterViewer }) => {
   return (
-    <motion.div 
+    <motion.button
+      type="button"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4 hover:shadow-md transition-shadow"
+      onClick={() => onView(job)}
+      className="w-full text-left bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4 hover:shadow-md hover:border-[#16730F]/20 transition-all cursor-pointer group"
     >
-      <div className="flex justify-between items-start">
-        <div className="flex gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100">
-            <Briefcase className="w-6 h-6 text-amber-600" />
+      <div className="flex justify-between items-start gap-3">
+        <div className="flex gap-4 min-w-0">
+          <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100 group-hover:bg-green-50 group-hover:border-green-100 transition-colors">
+            <Briefcase className="w-6 h-6 text-amber-600 group-hover:text-[#16730F]" />
           </div>
-          <div>
-            <h3 className="font-bold text-gray-900 text-lg leading-tight">{job.title}</h3>
-            <p className="text-sm text-gray-500 mt-1">{job.industry_sector} • {job.work_type}</p>
+          <div className="min-w-0">
+            <h3 className="font-bold text-gray-900 text-lg leading-tight break-words">
+              {job.title}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              {[job.industry_sector, job.work_type].filter(Boolean).join(" • ")}
+            </p>
             <div className="flex flex-wrap gap-2 mt-3">
-              <span className="px-2.5 py-1 bg-gray-50 text-gray-600 text-xs rounded-lg border border-gray-100 font-medium">
-                {job.preferred_country}
-              </span>
+              {job.preferred_country && (
+                <span className="px-2.5 py-1 bg-gray-50 text-gray-600 text-xs rounded-lg border border-gray-100 font-medium">
+                  {job.preferred_country}
+                </span>
+              )}
               {job.expected_salary && job.expected_salary !== "Any" && (
                 <span className="px-2.5 py-1 bg-green-50 text-green-700 text-xs rounded-lg border border-green-100 font-medium">
                   {job.currency} {job.expected_salary}
@@ -660,25 +669,38 @@ const JobCard = ({ job }) => {
                 </span>
               )}
             </div>
+            <p className="text-xs text-[#16730F] font-semibold mt-3 group-hover:underline">
+              {isRecruiterViewer
+                ? "View full details"
+                : "View on job board"}
+            </p>
           </div>
         </div>
-        <div className="text-xs text-gray-400 whitespace-nowrap">
+        <div className="text-xs text-gray-400 whitespace-nowrap shrink-0">
           {formatDate(job.created_at)}
         </div>
       </div>
-    </motion.div>
+    </motion.button>
   );
 };
 
 export default function ActivityLog() {
   useSyncProfilePhoto();
   const location = useLocation();
+  const navigate = useNavigate();
   const reduxUser = useSelector((state) => state.auth?.user);
   
   const mergedUser = useMemo(() => {
     void location.pathname;
     return mergeAuthUsers(getUser() || {}, reduxUser);
   }, [reduxUser, location.pathname]);
+
+  const isRecruiter = useMemo(() => {
+    const role = (mergedUser?.role || "").toLowerCase();
+    return role === "recruiter" || role === "employer";
+  }, [mergedUser?.role]);
+
+  const jobsPosterRole = isRecruiter ? "jobseeker" : "recruiter";
 
   const currentUserImage = useMemo(() => {
     void location.pathname;
@@ -692,7 +714,7 @@ export default function ActivityLog() {
     return profileAvatarSrc(raw);
   }, [reduxUser, location.pathname]);
 
-  const { getJobs } = useJobsApi();
+  const { getJobs, getJobById } = useJobsApi();
 
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -711,13 +733,18 @@ export default function ActivityLog() {
   const [nextCursor, setNextCursor] = useState(null);
   const [jobPage, setJobPage] = useState(1);
   const [hasMoreJobs, setHasMoreJobs] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [loadingJobDetails, setLoadingJobDetails] = useState(false);
 
   const filters = [
     { value: "all", label: "All" },
     { value: "post", label: "Posts" },
     { value: "image", label: "Photos" },
     { value: "video", label: "Videos" },
-    { value: "job", label: "Jobs" },
+    {
+      value: "job",
+      label: isRecruiter ? "Job Applications" : "Job postings",
+    },
   ];
 
   useEffect(() => {
@@ -725,7 +752,7 @@ export default function ActivityLog() {
     fetchPosts(true);
     fetchJobs(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mergedUser?.id]);
+  }, [mergedUser?.id, jobsPosterRole]);
 
   const fetchMetrics = async () => {
     try {
@@ -766,7 +793,7 @@ export default function ActivityLog() {
       const data = await getJobs({
         page: currentPage,
         limit: 10,
-        posted_by: mergedUser.id,
+        poster_role: jobsPosterRole,
       });
       const newJobs = data?.data || [];
       if (reset) {
@@ -853,6 +880,32 @@ export default function ActivityLog() {
     } catch (err) {
       console.error("Error deleting post:", err);
     }
+  };
+
+  const handleViewJob = async (job) => {
+    if (!isRecruiter) {
+      navigate(`/job-vacancy?jobId=${job.id}`);
+      return;
+    }
+
+    setSelectedJob(job);
+    setLoadingJobDetails(true);
+
+    try {
+      const response = await getJobById(job.id);
+      if (response?.data) {
+        setSelectedJob(response.data);
+      }
+    } catch (err) {
+      console.error("Error loading job details:", err);
+    } finally {
+      setLoadingJobDetails(false);
+    }
+  };
+
+  const handleCloseJobModal = () => {
+    setSelectedJob(null);
+    setLoadingJobDetails(false);
   };
 
   const filteredPosts = useMemo(() => {
@@ -986,7 +1039,12 @@ export default function ActivityLog() {
                     ))}
                     
                     {showJobs && filteredJobs.map((job) => (
-                      <JobCard key={job.id} job={job} />
+                      <JobCard
+                        key={job.id}
+                        job={job}
+                        onView={handleViewJob}
+                        isRecruiterViewer={isRecruiter}
+                      />
                     ))}
                   </>
                 )}
@@ -1021,6 +1079,15 @@ export default function ActivityLog() {
           </div>
         </div>
       </div>
+
+      {isRecruiter && selectedJob && (
+        <ActivityJobDetailsModal
+          job={selectedJob}
+          isRecruiterViewer={isRecruiter}
+          loading={loadingJobDetails}
+          onClose={handleCloseJobModal}
+        />
+      )}
     </NewsFeedLayout>
   );
 }

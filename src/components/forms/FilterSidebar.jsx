@@ -125,13 +125,13 @@ export const FilterSidebar = ({
 
       <div>
         <h4 className="text-sm font-medium text-gray-700 mb-3">
-          Salary Range (USD)
+          Salary Range (NGN)
         </h4>
         <div className="space-y-3">
           <input
             type="range"
             min={0}
-            max={10000}
+            max={1000000}
             step={500}
             value={salaryRange[1]}
             onChange={(e) =>
@@ -140,8 +140,8 @@ export const FilterSidebar = ({
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#16730F]"
           />
           <div className="flex justify-between text-sm text-gray-600">
-            <span>${salaryRange[0].toLocaleString()}</span>
-            <span>${salaryRange[1].toLocaleString()}+</span>
+            <span>₦{salaryRange[0].toLocaleString()}</span>
+            <span>₦{salaryRange[1].toLocaleString()}+</span>
           </div>
         </div>
       </div>

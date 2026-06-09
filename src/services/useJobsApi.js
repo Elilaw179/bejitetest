@@ -18,7 +18,7 @@ const assertBearerAuth = () => {
 };
 
 const useJobsApi = () => {
-   const getJobs = useCallback(async (params) => {
+  const getJobs = useCallback(async (params) => {
     try {
       assertBearerAuth();
       const response = await axiosInstance.get('/api/jobs', { params });
@@ -28,7 +28,17 @@ const useJobsApi = () => {
     }
   }, []);
 
-  return { getJobs };
+  const getJobById = useCallback(async (jobId) => {
+    try {
+      assertBearerAuth();
+      const response = await axiosInstance.get(`/api/jobs/${jobId}`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  }, []);
+
+  return { getJobs, getJobById };
 };
 
 export default useJobsApi;

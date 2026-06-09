@@ -710,21 +710,21 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       {user?.role !== "jobseeker" && (
                         <button
                           onClick={() => {
-                            navigate("/employer/create-job");
+                            navigate("/employer/dashboard");
                             setIsDropdownOpen(false);
                           }}
                           className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
-                            ["/employer/create-job"].includes(location.pathname)
+                            location.pathname.startsWith("/employer/")
                               ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
                               : "text-gray-700 hover:bg-gray-50 hover:pl-5"
                           }`}
                         >
                           <FaBriefcase className="text-base" />
-                          <span>Create Job</span>
+                          <span>Job Postings</span>
                         </button>
                       )}
 
-                      {/* {user?.role === "jobseeker" && (
+                       {user?.role === "jobseeker" && (
                         <button
                           onClick={() => {
                             navigate("/job-vacancy");
@@ -739,7 +739,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                           <FaBriefcase className="text-base" />
                           <span>Job Vacancy</span>
                         </button>
-                      )} */}
+                      )} 
                     </div>
 
                     {/* Divider */}

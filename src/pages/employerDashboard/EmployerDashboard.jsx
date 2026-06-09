@@ -1,15 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaBriefcase,
   FaUsers,
   FaClock,
-  FaDollarSign,
+  FaMoneyBillWave,
   FaRobot,
   FaPlus,
   FaCheckCircle,
 } from "react-icons/fa";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
+import { getEmployerDashboard } from "../../services/employerApi";
 
 const EmployerDashboard = () => {
   const navigate = useNavigate();
@@ -21,77 +22,66 @@ const EmployerDashboard = () => {
     totalRevenue: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const loadDashboardData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getEmployerDashboard({ status: statusFilter });
+
+      if (response?.success) {
+        setJobs(response.data?.jobs || []);
+        setStats(
+          response.data?.stats || {
+            totalJobs: 0,
+            activeJobs: 0,
+            totalApplications: 0,
+            totalRevenue: 0,
+          }
+        );
+      } else {
+        throw new Error(response?.message || "Failed to load dashboard");
+      }
+    } catch (err) {
+      console.error("Dashboard load error:", err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to load employer dashboard"
+      );
+      setJobs([]);
+      setStats({
+        totalJobs: 0,
+        activeJobs: 0,
+        totalApplications: 0,
+        totalRevenue: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter]);
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [loadDashboardData]);
 
-  const loadDashboardData = async () => {
-    // Simulate API call
-    setTimeout(() => {
-      const mockJobs = [
-        {
-          id: 1,
-          title: "Senior Frontend Developer",
-          industry: "Technology",
-          workMode: "Remote",
-          country: "Nigeria",
-          status: "active",
-          applications: 24,
-          timeLeft: "48h 30m",
-          postedAt: "2026-06-05",
-          expiresAt: "2026-06-08",
-          extensions: 0,
-        },
-        {
-          id: 2,
-          title: "Product Manager",
-          industry: "Technology",
-          workMode: "Remote",
-          country: "Kenya",
-          status: "active",
-          applications: 12,
-          timeLeft: "12h 15m",
-          postedAt: "2026-06-06",
-          expiresAt: "2026-06-09",
-          extensions: 0,
-        },
-        {
-          id: 3,
-          title: "Backend Engineer",
-          industry: "Technology",
-          workMode: "Onsite",
-          country: "South Africa",
-          status: "expired",
-          applications: 45,
-          timeLeft: "Expired",
-          postedAt: "2026-06-02",
-          expiresAt: "2026-06-05",
-          extensions: 1,
-        },
-      ];
-
-      setJobs(mockJobs);
-      setStats({
-        totalJobs: 12,
-        activeJobs: 2,
-        totalApplications: 156,
-        totalRevenue: 30,
-      });
-      setLoading(false);
-    }, 1000);
-  };
-
-  const formatCurrency = (amount) => {
-    return `$${amount}`;
-  };
+  const formatCurrency = (amount) => (
+    <span className="inline-flex items-center gap-2">      
+      <span>₦{Number(amount || 0).toLocaleString()}</span>
+    </span>
+  );
 
   const StatCard = ({ icon: Icon, title, value, color }) => (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-gray-500 text-sm font-medium">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
+          <p className="text-3xl font-bold text-gray-900 mt-2 flex items-center gap-2">
+            {value}
+          </p>
         </div>
         <div
           className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}
@@ -103,63 +93,74 @@ const EmployerDashboard = () => {
   );
 
   const JobCard = ({ job }) => (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h3 className="text-lg font-bold text-gray-900">{job.title}</h3>
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                job.status === "active"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-600"
-              }`}
-            >
-              {job.status === "active" ? "Active" : "Expired"}
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-            <span>{job.industry}</span>
-            <span>•</span>
-            <span>{job.workMode}</span>
-            <span>•</span>
-            <span>{job.country}</span>
-          </div>
+    <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition-shadow h-full flex flex-col min-w-0">
+      <div className="mb-3 sm:mb-4 min-w-0">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 break-words min-w-0 flex-1">
+            {job.title}
+          </h3>
+          <span
+            className={`shrink-0 px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${
+              job.status === "active"
+                ? "bg-green-100 text-green-700"
+                : "bg-gray-100 text-gray-600"
+            }`}
+          >
+            {job.status === "active" ? "Active" : "Expired"}
+          </span>
         </div>
+        <p className="text-xs sm:text-sm text-gray-500 leading-relaxed break-words">
+          {[job.industry, job.workMode, job.country].filter(Boolean).join(" · ")}
+        </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-4 pt-4 border-t border-gray-100">
-        <div className="text-center">
-          <p className="text-2xl font-bold text-[#16730F]">
+      <div className="grid grid-cols-3 gap-1 sm:gap-4 mb-3 sm:mb-4 pt-3 sm:pt-4 border-t border-gray-100">
+        <div className="min-w-0 text-center sm:text-center">
+          <p className="text-lg sm:text-2xl font-bold text-[#16730F] leading-none">
             {job.applications}
           </p>
-          <p className="text-xs text-gray-500">Applications</p>
+          <p className="text-[10px] sm:text-xs text-gray-500 leading-tight mt-1">
+            <span className="sm:hidden">Apps</span>
+            <span className="hidden sm:inline">Applications</span>
+          </p>
         </div>
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1">
-            <FaClock className="text-orange-500 text-sm" />
-            <p className="text-sm font-medium text-gray-700">{job.timeLeft}</p>
+        <div className="min-w-0 text-center">
+          <div className="flex items-center justify-center gap-0.5 sm:gap-1 min-w-0">
+            <FaClock className="text-orange-500 text-[10px] sm:text-sm shrink-0" />
+            <p className="text-[11px] sm:text-sm font-medium text-gray-700 leading-tight">
+              {job.timeLeft}
+            </p>
           </div>
-          <p className="text-xs text-gray-500">Time Left</p>
+          <p className="text-[10px] sm:text-xs text-gray-500 leading-tight mt-1">
+            Time Left
+          </p>
         </div>
-        <div className="text-center">
-          <p className="text-sm font-medium text-gray-700">{job.extensions}</p>
-          <p className="text-xs text-gray-500">Extensions</p>
+        <div className="min-w-0 text-center">
+          <p className="text-lg sm:text-sm font-medium text-gray-700 leading-none">
+            {job.extensions}
+          </p>
+          <p className="text-[10px] sm:text-xs text-gray-500 leading-tight mt-1">
+            <span className="sm:hidden">Ext.</span>
+            <span className="hidden sm:inline">Extensions</span>
+          </p>
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-row gap-2 mt-auto">
         {job.status === "active" ? (
           <>
             <button
+              type="button"
               onClick={() => navigate(`/employer/job/${job.id}/applications`)}
-              className="flex-1 bg-[#16730F] text-white py-2 rounded-xl hover:bg-[#145A0C] transition-colors text-sm font-medium"
+              className="flex-1 min-w-0 bg-[#16730F] text-white py-2 px-2 sm:px-3 rounded-xl hover:bg-[#145A0C] transition-colors text-[11px] sm:text-sm font-medium"
             >
-              View Applications
+              <span className="sm:hidden">Applications</span>
+              <span className="hidden sm:inline">View Applications</span>
             </button>
             <button
+              type="button"
               onClick={() => navigate(`/employer/job/${job.id}/extend`)}
-              className="px-4 py-2 border border-[#16730F] text-[#16730F] rounded-xl hover:bg-green-50 transition-colors text-sm font-medium"
+              className="shrink-0 py-2 px-3 sm:px-4 border border-[#16730F] text-[#16730F] rounded-xl hover:bg-green-50 transition-colors text-[11px] sm:text-sm font-medium"
             >
               Extend
             </button>
@@ -167,15 +168,18 @@ const EmployerDashboard = () => {
         ) : (
           <>
             <button
+              type="button"
               onClick={() => navigate(`/employer/job/${job.id}/recruit`)}
-              className="flex-1 bg-gradient-to-r from-[#16730F] to-[#1A3E32] text-white py-2 rounded-xl hover:opacity-90 transition-opacity text-sm font-medium flex items-center justify-center gap-2"
+              className="flex-1 min-w-0 bg-gradient-to-r from-[#16730F] to-[#1A3E32] text-white py-2 px-2 sm:px-3 rounded-xl hover:opacity-90 transition-opacity text-[11px] sm:text-sm font-medium flex items-center justify-center gap-1 sm:gap-2"
             >
-              <FaRobot />
-              Recruit with ASE
+              <FaRobot className="shrink-0 text-xs sm:text-sm" />
+              <span className="truncate sm:hidden">Recruit ASE</span>
+              <span className="hidden sm:inline">Recruit with ASE</span>
             </button>
             <button
+              type="button"
               onClick={() => navigate(`/employer/job/${job.id}/repost`)}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
+              className="shrink-0 py-2 px-3 sm:px-4 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-[11px] sm:text-sm font-medium"
             >
               Repost
             </button>
@@ -209,7 +213,7 @@ const EmployerDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
           <StatCard
             icon={FaBriefcase}
             title="Total Jobs"
@@ -228,12 +232,12 @@ const EmployerDashboard = () => {
             value={stats.totalApplications}
             color="bg-purple-500"
           />
-          <StatCard
-            icon={FaDollarSign}
+          {/* <StatCard
+            icon={FaMoneyBillWave}
             title="Revenue (Extensions)"
             value={formatCurrency(stats.totalRevenue)}
             color="bg-orange-500"
-          />
+          />*/}
         </div>
 
         {/* Quick Actions */}
@@ -275,29 +279,50 @@ const EmployerDashboard = () => {
 
         {/* Jobs List */}
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">
                 Your Job Vacancies
               </h2>
-              <div className="flex gap-2">
-                <button className="px-3 py-1 text-sm text-gray-600 hover:text-[#16730F]">
-                  All
-                </button>
-                <button className="px-3 py-1 text-sm text-gray-600 hover:text-[#16730F]">
-                  Active
-                </button>
-                <button className="px-3 py-1 text-sm text-gray-600 hover:text-[#16730F]">
-                  Expired
-                </button>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: "all", label: "All" },
+                  { key: "active", label: "Active" },
+                  { key: "expired", label: "Expired" },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setStatusFilter(key)}
+                    className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                      statusFilter === key
+                        ? "bg-[#16730F] text-white font-medium"
+                        : "text-gray-600 hover:text-[#16730F]"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
-          <div className="divide-y divide-gray-100 grid md:grid-cols-3 gap-6">
-            {jobs.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
+          {error && (
+            <div className="px-6 py-4 bg-red-50 text-red-700 text-sm border-b border-red-100">
+              {error}
+            </div>
+          )}
+
+          <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+            {jobs.length === 0 ? (
+              <div className="col-span-full text-center py-12 text-gray-500">
+                {statusFilter === "all"
+                  ? "No job vacancies yet. Post your first job to get started."
+                  : `No ${statusFilter} jobs found.`}
+              </div>
+            ) : (
+              jobs.map((job) => <JobCard key={job.id} job={job} />)
+            )}
           </div>
         </div>
 

@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
+import { createEmployerJob } from "../../services/employerApi";
+import useCountryStateOptions from "../../hooks/useCountryStateOptions";
+import { findCountryByName } from "../../utils/countryStateData";
+import { AutocompleteInput } from "../../components/forms/AutocompleteInput";
+import { INDUSTRY_OPTIONS } from "../../data/jobTypeData";
 import {
   FaBriefcase,
   FaBuilding,
@@ -15,28 +20,9 @@ import {
   FaEye,
 } from "react-icons/fa";
 
-const industries = [
-  "Technology",
-  "Healthcare",
-  "Finance",
-  "Education",
-  "Engineering",
-  "Marketing",
-  "Sales",
-  "Construction",
-  "Agriculture",
-  "Others",
-];
-
-const countries = [
-  "Nigeria",
-  "Ghana",
-  "Kenya",
-  "South Africa",
-  "United States",
-  "United Kingdom",
-  "Canada",
-];
+const INDUSTRY_SUGGESTIONS = INDUSTRY_OPTIONS.filter(
+  (option) => option && option !== "Not Available",
+);
 
 const CreateJob = () => {
   const navigate = useNavigate();
@@ -47,10 +33,13 @@ const CreateJob = () => {
     responsibilities: "",
     workMode: "Remote",
     country: "",
+    state: "",
   });
+  const { countries, states } = useCountryStateOptions(formData.country);
   const [showPreview, setShowPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(null);
 
   const addSkill = () => {
     setSkills([...skills, { skill: "", experience: "" }]);
@@ -68,22 +57,88 @@ const CreateJob = () => {
     setSkills(updated);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
+  const validateForm = () => {
+    if (!formData.title.trim()) return "Job title is required";
+    if (!formData.industry) return "Industry is required";
+    if (!formData.country.trim()) return "Country is required";
+    if (!findCountryByName(formData.country)) {
+      return "Please select a valid country from the list";
+    }
+    if (states.length > 0 && !formData.state.trim()) {
+      return "State is required for the selected country";
+    }
+    if (!formData.responsibilities.trim()) {
+      return "Roles and responsibilities are required";
+    }
+    const hasSkill = skills.some((item) => item.skill.trim());
+    if (!hasSkill) return "At least one required skill is needed";
+    return null;
+  };
 
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitting(false);
+  const handleCountryChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      country: value,
+      state: value !== prev.country ? "" : prev.state,
+    }));
+  };
+
+  const handlePreview = () => {
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setError(null);
+    setShowPreview(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e?.preventDefault?.();
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await createEmployerJob({
+        title: formData.title.trim(),
+        industry: formData.industry,
+        responsibilities: formData.responsibilities.trim(),
+        workMode: formData.workMode,
+        country: formData.country.trim(),
+        state: formData.state.trim() || undefined,
+        skills: skills
+          .filter((item) => item.skill.trim())
+          .map((item) => ({
+            skill: item.skill.trim(),
+            experience: item.experience || 0,
+          })),
+      });
+
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to publish job");
+      }
+
       setSuccess(true);
       setTimeout(() => {
         navigate("/employer/dashboard");
       }, 2000);
-    }, 1500);
-  };
-
-  const handlePreview = () => {
-    setShowPreview(true);
+    } catch (err) {
+      console.error("Create job error:", err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to publish job vacancy"
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (success) {
@@ -134,7 +189,11 @@ const CreateJob = () => {
                 <span>•</span>
                 <span>{formData.workMode}</span>
                 <span>•</span>
-                <span>{formData.country || "Location not specified"}</span>
+                <span>
+                  {[formData.state, formData.country]
+                    .filter(Boolean)
+                    .join(", ") || "Location not specified"}
+                </span>
               </div>
             </div>
 
@@ -181,14 +240,20 @@ const CreateJob = () => {
                 </div>
               </div>
 
+              {error && (
+                <p className="text-sm text-red-600 mb-4">{error}</p>
+              )}
+
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={() => setShowPreview(false)}
                   className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50"
                 >
                   Edit
                 </button>
                 <button
+                  type="button"
                   onClick={handleSubmit}
                   disabled={submitting}
                   className="flex-1 bg-[#16730F] text-white py-3 rounded-xl font-semibold hover:bg-[#145A0C] disabled:opacity-50 flex items-center justify-center gap-2"
@@ -258,7 +323,12 @@ const CreateJob = () => {
               </p>
             </div>
 
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+              {error && !showPreview && (
+                <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
               {/* Job Title */}
               <div>
                 <label className="block mb-2 font-semibold text-[#1A3E32]">
@@ -280,18 +350,16 @@ const CreateJob = () => {
                 <label className="block mb-2 font-semibold text-[#1A3E32]">
                   Industry <span className="text-red-500">*</span>
                 </label>
-                <select
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#16730F]"
+                <AutocompleteInput
                   value={formData.industry}
                   onChange={(e) =>
                     setFormData({ ...formData, industry: e.target.value })
                   }
-                >
-                  <option value="">Select Industry</option>
-                  {industries.map((industry) => (
-                    <option key={industry}>{industry}</option>
-                  ))}
-                </select>
+                  placeholder="Enter or select industry"
+                  formName="employer-job"
+                  fieldName="industry_sector"
+                  staticOptions={INDUSTRY_SUGGESTIONS}
+                />
               </div>
 
               {/* Skills */}
@@ -370,8 +438,8 @@ const CreateJob = () => {
                 <label className="block mb-2 font-semibold text-[#1A3E32]">
                   Work Mode <span className="text-red-500">*</span>
                 </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {["Remote", "Onsite"].map((mode) => (
+                <div className="grid grid-cols-3 gap-3">
+                  {["Remote", "Onsite", "Hybrid"].map((mode) => (
                     <button
                       key={mode}
                       type="button"
@@ -390,23 +458,78 @@ const CreateJob = () => {
                 </div>
               </div>
 
-              {/* Country */}
-              <div>
-                <label className="block mb-2 font-semibold text-[#1A3E32]">
-                  Country <span className="text-red-500">*</span>
-                </label>
-                <select
-                  className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#16730F] outline-none"
-                  value={formData.country}
-                  onChange={(e) =>
-                    setFormData({ ...formData, country: e.target.value })
-                  }
-                >
-                  <option value="">Select Country</option>
-                  {countries.map((country) => (
-                    <option key={country}>{country}</option>
-                  ))}
-                </select>
+              {/* Country & State */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    htmlFor="job-country"
+                    className="block mb-2 font-semibold text-[#1A3E32]"
+                  >
+                    Country <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="job-country"
+                    list="job-country-list"
+                    type="text"
+                    placeholder="Search or select country"
+                    className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#16730F] outline-none"
+                    value={formData.country}
+                    onChange={(e) => handleCountryChange(e.target.value)}
+                  />
+                  <datalist id="job-country-list">
+                    {countries.map((country) => (
+                      <option key={country} value={country} />
+                    ))}
+                  </datalist>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="job-state"
+                    className="block mb-2 font-semibold text-[#1A3E32]"
+                  >
+                    State / Province
+                    {states.length > 0 && (
+                      <span className="text-red-500"> *</span>
+                    )}
+                  </label>
+                  {formData.country && states.length > 0 ? (
+                    <>
+                      <input
+                        id="job-state"
+                        list="job-state-list"
+                        type="text"
+                        placeholder="Search or select state"
+                        className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#16730F] outline-none"
+                        value={formData.state}
+                        onChange={(e) =>
+                          setFormData({ ...formData, state: e.target.value })
+                        }
+                      />
+                      <datalist id="job-state-list">
+                        {states.map((state) => (
+                          <option key={state} value={state} />
+                        ))}
+                      </datalist>
+                    </>
+                  ) : (
+                    <input
+                      id="job-state"
+                      type="text"
+                      placeholder={
+                        formData.country
+                          ? "No states available for this country"
+                          : "Select a country first"
+                      }
+                      className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#16730F] outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                      value={formData.state}
+                      disabled={!formData.country || states.length === 0}
+                      onChange={(e) =>
+                        setFormData({ ...formData, state: e.target.value })
+                      }
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-3">

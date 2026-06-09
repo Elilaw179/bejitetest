@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { MockJobs } from "../../../utils/mockJobs";
+import React, { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { HeroSection } from "../../../components/jobs/HeroSection";
 import { SearchBar } from "../../../components/jobs/SearchBar";
 import NewsFeedLayout from "../../../components/layout/NewsFeedLayout";
@@ -8,6 +8,11 @@ import { JobDetailsModal } from "../../../components/jobs/JobDetailsModal";
 import { SavedJobsModal } from "../../../components/jobs/SavedJobsModal";
 import { JobCard } from "../../../components/jobs/JobCard";
 import {
+  getJobVacancies,
+  getJobVacancyById,
+} from "../../../services/jobVacancyApi";
+import { toast } from "react-toastify";
+import {
   FaBookmark,
   FaSpinner,
   FaChevronLeft,
@@ -15,8 +20,11 @@ import {
 } from "react-icons/fa";
 
 const JobVacancyListing = () => {
-  const [jobs, setJobs] = useState(MockJobs);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [jobs, setJobs] = useState([]);
+  const [industries, setIndustries] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState("");
   const [selectedWorkMode, setSelectedWorkMode] = useState("");
   const [selectedJobType, setSelectedJobType] = useState("");
@@ -25,11 +33,13 @@ const JobVacancyListing = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [savedJobs, setSavedJobs] = useState([]);
   const [showSavedModal, setShowSavedModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [jobsPerPage] = useState(6);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     const saved = localStorage.getItem("savedJobs");
@@ -42,11 +52,42 @@ const JobVacancyListing = () => {
     localStorage.setItem("savedJobs", JSON.stringify(savedJobs));
   }, [savedJobs]);
 
-  // Reset to first page when filters change
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const jobId = searchParams.get("jobId");
+    if (!jobId) return;
+
+    let cancelled = false;
+
+    const openJobFromQuery = async () => {
+      try {
+        const response = await getJobVacancyById(jobId);
+        if (!cancelled && response?.data) {
+          setSelectedJob(response.data);
+        }
+      } catch (err) {
+        console.error("Failed to open job from link:", err);
+        if (!cancelled) {
+          toast.error("This job vacancy is no longer available.");
+        }
+      }
+    };
+
+    openJobFromQuery();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [
-    searchTerm,
+    debouncedSearch,
     selectedIndustry,
     selectedWorkMode,
     selectedJobType,
@@ -54,10 +95,64 @@ const JobVacancyListing = () => {
     salaryRange,
   ]);
 
-  const industries = useMemo(
-    () => Array.from(new Set(jobs.map((job) => job.industry))),
-    [jobs],
-  );
+  const loadJobs = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const params = {
+        page: currentPage,
+        limit: jobsPerPage,
+      };
+
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (selectedIndustry) params.industry = selectedIndustry;
+      if (selectedWorkMode) params.workMode = selectedWorkMode;
+      if (selectedJobType) params.jobType = selectedJobType;
+      if (selectedExperienceLevel) {
+        params.experienceLevel = selectedExperienceLevel;
+      }
+      if (salaryRange[1] < 2000000) {
+        params.salaryMax = salaryRange[1];
+      }
+
+      const response = await getJobVacancies(params);
+
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to load job vacancies");
+      }
+
+      setJobs(response.data?.jobs || []);
+      setIndustries(response.data?.industries || []);
+      setTotalJobs(response.pagination?.total || 0);
+      setTotalPages(response.pagination?.pages || 0);
+    } catch (err) {
+      console.error("Job vacancies load error:", err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to load job vacancies",
+      );
+      setJobs([]);
+      setTotalJobs(0);
+      setTotalPages(0);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    currentPage,
+    jobsPerPage,
+    debouncedSearch,
+    selectedIndustry,
+    selectedWorkMode,
+    selectedJobType,
+    selectedExperienceLevel,
+    salaryRange,
+  ]);
+
+  useEffect(() => {
+    loadJobs();
+  }, [loadJobs]);
 
   const workModes = ["Remote", "Onsite", "Hybrid"];
   const jobTypes = [
@@ -75,71 +170,8 @@ const JobVacancyListing = () => {
     "Executive",
   ];
 
-  const filteredJobs = useMemo(() => {
-    return jobs.filter((job) => {
-      // Search filter
-      const matchesSearch =
-        searchTerm === "" ||
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.requirements.some((req) =>
-          req.skill.toLowerCase().includes(searchTerm.toLowerCase()),
-        ) ||
-        job.tags?.some((tag) =>
-          tag.toLowerCase().includes(searchTerm.toLowerCase()),
-        );
-
-      // Industry filter
-      const matchesIndustry =
-        !selectedIndustry || job.industry === selectedIndustry;
-
-      // Work mode filter
-      const matchesWorkMode =
-        !selectedWorkMode || job.workMode === selectedWorkMode;
-
-      // Job type filter
-      const matchesJobType =
-        !selectedJobType || job.jobType === selectedJobType;
-
-      // Experience level filter
-      const matchesExperienceLevel =
-        !selectedExperienceLevel ||
-        job.experienceLevel === selectedExperienceLevel;
-
-      // Salary filter - convert to USD equivalent for comparison
-      let salaryInUSD = job.salaryMin || 0;
-      if (job.salaryCurrency === "NGN") salaryInUSD = job.salaryMin / 1500;
-      if (job.salaryCurrency === "KES") salaryInUSD = job.salaryMin / 120;
-      if (job.salaryCurrency === "GHS") salaryInUSD = job.salaryMin / 12;
-      if (job.salaryCurrency === "ZAR") salaryInUSD = job.salaryMin / 18;
-
-      const matchesSalary = salaryInUSD <= salaryRange[1];
-
-      return (
-        matchesSearch &&
-        matchesIndustry &&
-        matchesWorkMode &&
-        matchesJobType &&
-        matchesExperienceLevel &&
-        matchesSalary &&
-        job.isActive
-      );
-    });
-  }, [
-    jobs,
-    searchTerm,
-    selectedIndustry,
-    selectedWorkMode,
-    selectedJobType,
-    selectedExperienceLevel,
-    salaryRange,
-  ]);
-
-  // Pagination logic
-  const indexOfLastJob = currentPage * jobsPerPage;
-  const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
-  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+  const indexOfFirstJob = (currentPage - 1) * jobsPerPage;
+  const indexOfLastJob = indexOfFirstJob + jobs.length;
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -186,6 +218,7 @@ const JobVacancyListing = () => {
         ),
       );
     }
+    toast.success("Application submitted successfully!");
   };
 
   const clearFilters = () => {
@@ -197,7 +230,6 @@ const JobVacancyListing = () => {
     setSearchTerm("");
   };
 
-  // Generate page numbers to display
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxPagesToShow = 5;
@@ -206,28 +238,26 @@ const JobVacancyListing = () => {
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
       }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pageNumbers.push(i);
-        }
-        pageNumbers.push("...");
-        pageNumbers.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pageNumbers.push(1);
-        pageNumbers.push("...");
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pageNumbers.push(i);
-        }
-      } else {
-        pageNumbers.push(1);
-        pageNumbers.push("...");
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pageNumbers.push(i);
-        }
-        pageNumbers.push("...");
-        pageNumbers.push(totalPages);
+    } else if (currentPage <= 3) {
+      for (let i = 1; i <= 4; i++) {
+        pageNumbers.push(i);
       }
+      pageNumbers.push("...");
+      pageNumbers.push(totalPages);
+    } else if (currentPage >= totalPages - 2) {
+      pageNumbers.push(1);
+      pageNumbers.push("...");
+      for (let i = totalPages - 3; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      pageNumbers.push(1);
+      pageNumbers.push("...");
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        pageNumbers.push(i);
+      }
+      pageNumbers.push("...");
+      pageNumbers.push(totalPages);
     }
     return pageNumbers;
   };
@@ -237,6 +267,12 @@ const JobVacancyListing = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <HeroSection />
         <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+
+        {error && (
+          <div className="mb-6 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
@@ -264,13 +300,11 @@ const JobVacancyListing = () => {
               <p className="text-gray-600">
                 Showing{" "}
                 <span className="font-semibold text-gray-900">
-                  {indexOfFirstJob + 1}-
-                  {Math.min(indexOfLastJob, filteredJobs.length)}
+                  {totalJobs === 0 ? 0 : indexOfFirstJob + 1}-
+                  {Math.min(indexOfLastJob, totalJobs)}
                 </span>{" "}
                 of{" "}
-                <span className="font-semibold text-gray-900">
-                  {filteredJobs.length}
-                </span>{" "}
+                <span className="font-semibold text-gray-900">{totalJobs}</span>{" "}
                 jobs
               </p>
               <div className="flex gap-3">
@@ -289,10 +323,10 @@ const JobVacancyListing = () => {
               <div className="flex justify-center py-20">
                 <FaSpinner className="animate-spin text-[#16730F] text-4xl" />
               </div>
-            ) : currentJobs.length > 0 ? (
+            ) : jobs.length > 0 ? (
               <>
                 <div className="space-y-4">
-                  {currentJobs.map((job) => (
+                  {jobs.map((job) => (
                     <JobCard
                       key={job.id}
                       job={job}
@@ -304,7 +338,6 @@ const JobVacancyListing = () => {
                   ))}
                 </div>
 
-                {/* Pagination Component */}
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center gap-2 mt-8 pt-4 border-t border-gray-200">
                     <button
@@ -356,9 +389,8 @@ const JobVacancyListing = () => {
                   </div>
                 )}
 
-                {/* Page Info for Mobile */}
                 <div className="text-center mt-4 text-sm text-gray-500 lg:hidden">
-                  Page {currentPage} of {totalPages}
+                  Page {currentPage} of {totalPages || 1}
                 </div>
               </>
             ) : (
@@ -384,7 +416,12 @@ const JobVacancyListing = () => {
         {selectedJob && (
           <JobDetailsModal
             job={selectedJob}
-            onClose={() => setSelectedJob(null)}
+            onClose={() => {
+              setSelectedJob(null);
+              if (searchParams.get("jobId")) {
+                setSearchParams({}, { replace: true });
+              }
+            }}
             onApply={handleApply}
           />
         )}

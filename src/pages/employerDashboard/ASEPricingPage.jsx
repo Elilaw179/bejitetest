@@ -9,6 +9,11 @@ import {
   activateFreeTrial,
 } from "../../services/paymentApi";
 
+const formatPlanPrice = (plan, currency) => {
+  if (currency === "USD") return `$${plan.price}`;
+  return `₦${Number(plan.priceNaira ?? 0).toLocaleString("en-NG")}`;
+};
+
 const ASEPricingPage = () => {
   const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
@@ -307,11 +312,13 @@ const ASEPricingPage = () => {
                 Choose Your Plan
               </h2>
 
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
                 {plans.map((plan) => (
                   <div
                     key={plan.id}
-                    className={`relative border-2 rounded-xl p-6 transition-all hover:shadow-lg ${
+                    className={`relative border-2 rounded-xl p-4 sm:p-6 transition-all hover:shadow-lg min-w-0 overflow-visible ${
+                      plan.id === "premium" || plan.id === "jumbo" ? "pt-8 sm:pt-10" : ""
+                    } ${
                       plan.id === "premium"
                         ? "border-[#16730F] bg-green-50"
                         : plan.id === "jumbo"
@@ -320,19 +327,15 @@ const ASEPricingPage = () => {
                     }`}
                   >
                     {plan.id === "premium" && (
-                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                        <span className="inline-block px-4 py-1 bg-[#16730F] text-white text-xs font-bold rounded-full shadow">
-                          MOST POPULAR
-                        </span>
-                      </div>
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap px-4 py-1 bg-[#16730F] text-white text-xs font-bold rounded-full shadow text-center">
+                        MOST POPULAR
+                      </span>
                     )}
 
                     {plan.id === "jumbo" && (
-                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                        <span className="inline-block px-4 py-1 bg-[#1A3E32] text-white text-xs font-bold rounded-full shadow">
-                          BEST VALUE
-                        </span>
-                      </div>
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap px-4 py-1 bg-[#1A3E32] text-white text-xs font-bold rounded-full shadow text-center">
+                        BEST VALUE
+                      </span>
                     )}
 
                     <div className="text-center">
@@ -340,13 +343,17 @@ const ASEPricingPage = () => {
                         {plan.name}
                       </h3>
 
-                      <div className="mt-4">
-                        <span className="text-4xl font-bold text-[#1A3E32]">
-                          {currency === "USD"
-                            ? `$${plan.price}`
-                            : `₦${plan.priceNaira}`}
+                      <div className="mt-4 flex flex-col items-center gap-1 min-w-0 w-full px-1">
+                        <span
+                          className={`font-bold text-[#1A3E32] leading-tight break-words text-center ${
+                            currency === "NGN"
+                              ? "text-2xl sm:text-3xl"
+                              : "text-3xl sm:text-4xl"
+                          }`}
+                        >
+                          {formatPlanPrice(plan, currency)}
                         </span>
-                        <span className="text-gray-500 text-sm">
+                        <span className="text-gray-500 text-xs sm:text-sm">
                           /{plan.billingPeriod || "search"}
                         </span>
                       </div>

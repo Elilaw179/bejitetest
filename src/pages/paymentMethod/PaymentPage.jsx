@@ -75,110 +75,117 @@ export default function PaymentPage() {
     }
   }
 
-  const styles = {
-    box: "bg-white w-[300px] h-[529px] border-1 border-[#1A3E32] px-3.5 py-12",
-    paragraph1: "font-normal text-[#16730F] text-2xl",
-    paragraph2: "font-medium text-[#1A3E32] text-[12px]",
-    paragraph3: "font-medium text-[50px] text-[#1A3E32] mt-5 mb-5",
-    span: "font-normal text-[15px]",
-    paragraph4: "font-normal text-[#1A3E32] text-[11px]",
-    button:
-      "bg-[#16730F] text-white font-medium text-[15px] text-center w-[220px] h-10 py-2.5 mt-5 mb-5 cursor-pointer",
-    paragraph5: "font-normal text-[14px] text-[#16730F]",
-    listItem:
-      "text-[#1A3E32] text-[9px] font-medium list-disc list-inside mt-2",
-  };
+  const cardClass =
+    "bg-white w-full h-full border border-[#1A3E32] px-5 sm:px-6 py-8 sm:py-10 flex flex-col";
+  const planTitleClass = "font-normal text-[#16730F] text-xl sm:text-2xl";
+  const planSubtitleClass =
+    "font-medium text-[#1A3E32] text-sm sm:text-base leading-snug break-words";
+  const priceClass =
+    "font-medium text-4xl sm:text-5xl text-[#1A3E32] mt-5 mb-5 leading-none";
+  const priceUnitClass = "font-normal text-base sm:text-lg align-top";
+  const descriptionClass =
+    "font-normal text-[#1A3E32] text-sm sm:text-base leading-relaxed break-words";
+  const buttonClass =
+    "bg-[#16730F] text-white font-medium text-sm sm:text-base text-center w-full h-11 py-2.5 mt-5 mb-5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed";
+  const sectionLabelClass = "font-normal text-sm sm:text-base text-[#16730F] mt-auto";
+  const listClass =
+    "text-[#1A3E32] text-sm sm:text-base font-medium list-disc list-outside pl-5 mt-3 space-y-2 leading-relaxed break-words";
+
+  const plans = [
+    {
+      name: "Free Plan",
+      subtitle:
+        "First-Time Users: Enjoy 2 free searches to explore our platform",
+      price: "0",
+      description:
+        "Test-drive our AI-powered recruitment engine. Access full candidate profiles and CV.",
+      buttonLabel: "Start Free Trial",
+      sectionLabel: "Limitations",
+      items: [
+        "Free searches expire in 7 days.",
+        "Maximum 5 candidate views per search.",
+      ],
+    },
+    {
+      name: "Starter Plan",
+      subtitle: "Recruit up to 20 people.",
+      price: "10",
+      description: "Ideal for: Small businesses or occasional recruiters.",
+      buttonLabel: "Upgrade",
+      amount: 10000,
+      sectionLabel: "Benefits",
+      items: [
+        "20 Recruitment Slots - Source up to 20 candidates.",
+        "Filters - Access essential search filters (skills, location).",
+        "Candidate Profiles - View full profiles and CV details.",
+        "Email Alerts - Get notified for new matching candidates.",
+        "24/7 Support - Priority email support.",
+      ],
+    },
+    {
+      name: "Standard Plan",
+      subtitle: "Recruit up to 60 people.",
+      price: "30",
+      description: "Ideal for: Growing teams and frequent recruiters.",
+      buttonLabel: "Upgrade",
+      amount: 30000,
+      sectionLabel: "Benefits",
+      items: [
+        "60 Recruitment Slots - Scale your hiring effortlessly.",
+        "Filters - Access essential search filters (skills, location).",
+        "Bulk Messaging - Contact multiple candidates at once.",
+        "Candidate Profiles - View full profiles and CV details.",
+        "Email Alerts - Get notified for new matching candidates.",
+        "24/7 Support - Priority email support.",
+      ],
+    },
+  ];
 
   return (
-    <div className="bg-white">
+    <div className="bg-white min-h-screen">
       {isLoading && <Loader />}
       <PaymentPageHeader />
 
-      <section className="bg-[#F5F5F5] border border-[#1A3E32] mt-1 max-w-[1000px] max-h-full m-auto px-4.5 py-3.5">
-        <p className="font-fredoka text-[#333333] font-normal text-center text-2xl mt-12">
+      <section className="bg-[#F5F5F5] border border-[#1A3E32] mt-1 max-w-[1000px] w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] lg:w-full m-auto px-4 sm:px-6 py-6 sm:py-8 pb-10">
+        <p className="font-fredoka text-[#333333] font-normal text-center text-xl sm:text-2xl mt-6 sm:mt-12">
           Choose the perfect plan
         </p>
-        <p className="text-center text-[12px]">
+        <p className="text-center text-sm sm:text-base px-2 sm:px-0 mt-2 leading-relaxed">
           Unlock Advanced Recruitment With Bejite's Flexible Plans
         </p>
-        <div className="flex flex-col items-center justify-around gap-5 mt-12 lg:flex-row">
-          <div className={styles.box}>
-            <p className={styles.paragraph1}>Free Plan</p>
-            <p className={styles.paragraph2}>
-              First-Time Users: Enjoy 2 <br /> free searches to explore our
-              platform
-            </p>
-            <p className={styles.paragraph3}>
-              O<span className={styles.span}>us$</span>
-            </p>
-            <p className={styles.paragraph4}>
-              Test-drive our AI-powered recruitment engine. <br />
-              Access full candidate profiles and CV.
-            </p>
-            <button className={styles.button}>Start Free Trial</button>
-            <p className={styles.paragraph5}>Limitations</p>
-            <ul className={styles.listItem}>
-              <li>Free searches expire in 7 days.</li>
-              <li>Maximum 5 candidate views per search.</li>
-            </ul>
-          </div>
-
-          <div className={styles.box}>
-            <p className={styles.paragraph1}>Starter Plan</p>
-            <p className={styles.paragraph2}>Recruit up to 20 people.</p>
-            <p className={styles.paragraph3}>
-              10<span className={styles.span}>us$</span>
-            </p>
-            <p className={styles.paragraph4}>
-              Ideal for: Small businesses or occasional recruiters.
-            </p>
-            <button
-              disabled={isLoading}
-              className={styles.button}
-              onClick={() => handleUpgradeClick(10000)}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-8 sm:mt-12 w-full items-stretch">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`${cardClass} last:md:col-span-2 last:md:max-w-md last:md:justify-self-center last:lg:col-span-1 last:lg:max-w-none last:lg:justify-self-stretch`}
             >
-              Upgrade
-            </button>
-            <p className={styles.paragraph5}>Benefits</p>
-            <ul className={styles.listItem}>
-              <li>20 Recruitment Slots - Source up to 20 candidates.</li>
-              <li>
-                Filters - Access essential search filters (skills, location).
-              </li>
-              <li>Candidate Profiles - View full profiles and CV details.</li>
-              <li>Email Alerts - Get notified for new matching candidates.</li>
-              <li>24/7 Support - Priority email support.</li>
-            </ul>
-          </div>
-
-          <div className={styles.box}>
-            <p className={styles.paragraph1}>Standard Plan</p>
-            <p className={styles.paragraph2}>Recruit up to 60 people.</p>
-            <p className={styles.paragraph3}>
-              30<span className={styles.span}>us$</span>
-            </p>
-            <p className={styles.paragraph4}>
-              Ideal for: Growing teams and frequent recruiters.
-            </p>
-            <button
-              disabled={isLoading}
-              className={styles.button}
-              onClick={() => handleUpgradeClick(30000)}
-            >
-              Upgrade
-            </button>
-            <p className={styles.paragraph5}>Benefits</p>
-            <ul className={styles.listItem}>
-              <li>60 Recruitment Slots - Scale your hiring effortlessly.</li>
-              <li>
-                Filters - Access essential search filters (skills, location).
-              </li>
-              <li>Bulk Messaging - Contact multiple candidates at once.</li>
-              <li>Candidate Profiles - View full profiles and CV details.</li>
-              <li>Email Alerts - Get notified for new matching candidates.</li>
-              <li>24/7 Support - Priority email support.</li>
-            </ul>
-          </div>
+              <p className={planTitleClass}>{plan.name}</p>
+              <p className={`${planSubtitleClass} mt-2`}>{plan.subtitle}</p>
+              <p className={priceClass}>
+                {plan.price}
+                <span className={priceUnitClass}>us$</span>
+              </p>
+              <p className={descriptionClass}>{plan.description}</p>
+              <button
+                type="button"
+                disabled={isLoading && plan.amount}
+                className={buttonClass}
+                onClick={
+                  plan.amount
+                    ? () => handleUpgradeClick(plan.amount)
+                    : undefined
+                }
+              >
+                {plan.buttonLabel}
+              </button>
+              <p className={sectionLabelClass}>{plan.sectionLabel}</p>
+              <ul className={listClass}>
+                {plan.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </section>
     </div>
