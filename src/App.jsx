@@ -307,7 +307,11 @@ function App() {
             <Route path="/badge-holder" element={<BadgeHolder />} />
 
             {/* ads */}
-            <Route path="/ad-pro-dashboard" element={<AdProDashboard />} />
+            <Route path="/adpro" element={<AdProDashboard />} />
+            <Route
+              path="/ad-pro-dashboard"
+              element={<Navigate to="/adpro" replace />}
+            />
             <Route path="/adpro/campaign/:id" element={<CampaignDetails />} />
             <Route
               path="/adpro/campaign/:id/reports"

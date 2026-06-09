@@ -91,11 +91,11 @@ export default function RecruitmentLeft() {
             </span>
           </button>
         </div>
-        {user?.role === "recruiter" && (
+        {(user?.role === "recruiter" || user?.role === "employer") && (
           <div className="bg-[#1A3E32] flex-1 rounded-b-2xl mt-4 flex flex-col items-center pt-8 pb-6 space-y-5">
             <button
               className="text-white hover:text-green-300 transition-colors font-semibold text-sm"
-              onClick={() => navigate("/ad-pro-dashboard")}
+              onClick={() => navigate("/adpro")}
             >
               AdPro
             </button>

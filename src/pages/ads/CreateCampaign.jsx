@@ -140,7 +140,7 @@ export default function CreateCampaign() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      navigate("/ad-pro-dashboard");
+      navigate("/adpro");
     }, 2000);
   };
 
@@ -394,7 +394,7 @@ export default function CreateCampaign() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-3 sm:py-4">
               <button
-                onClick={() => navigate("/ad-pro-dashboard")}
+                onClick={() => navigate("/adpro")}
                 className="flex items-center gap-2 text-gray-500 hover:text-[#1A3E32] transition-colors text-sm sm:text-base"
               >
                 <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />

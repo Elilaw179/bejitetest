@@ -12,6 +12,11 @@ export const createEmployerJob = async (jobData) => {
   return response.data;
 };
 
+export const deleteEmployerJob = async (jobId) => {
+  const response = await axiosInstance.delete(`/api/employer/jobs/${jobId}`);
+  return response.data;
+};
+
 export const getJobApplications = async (jobId, params = {}) => {
   const response = await axiosInstance.get(
     `/api/employer/jobs/${jobId}/applications`,
@@ -60,6 +65,7 @@ export const verifyJobExtensionPayment = async (jobId, reference) => {
 export default {
   getEmployerDashboard,
   createEmployerJob,
+  deleteEmployerJob,
   getJobApplications,
   updateJobApplicationStatus,
   getJobExtendInfo,

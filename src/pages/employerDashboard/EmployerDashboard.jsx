@@ -8,9 +8,13 @@ import {
   FaRobot,
   FaPlus,
   FaCheckCircle,
+  FaTrash,
 } from "react-icons/fa";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
-import { getEmployerDashboard } from "../../services/employerApi";
+import {
+  getEmployerDashboard,
+  deleteEmployerJob,
+} from "../../services/employerApi";
 
 const EmployerDashboard = () => {
   const navigate = useNavigate();
@@ -24,6 +28,7 @@ const EmployerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [deletingJobId, setDeletingJobId] = useState(null);
 
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
@@ -68,6 +73,46 @@ const EmployerDashboard = () => {
     loadDashboardData();
   }, [loadDashboardData]);
 
+  const handleDeleteJob = async (job) => {
+    const confirmed = window.confirm(
+      `Delete "${job.title}"? This will permanently remove the job and all applications. This cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingJobId(job.id);
+    setError(null);
+
+    try {
+      const response = await deleteEmployerJob(job.id);
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to delete job");
+      }
+
+      setJobs((current) => current.filter((entry) => entry.id !== job.id));
+      setStats((current) => ({
+        ...current,
+        totalJobs: Math.max(0, current.totalJobs - 1),
+        activeJobs:
+          job.status === "active"
+            ? Math.max(0, current.activeJobs - 1)
+            : current.activeJobs,
+        totalApplications: Math.max(
+          0,
+          current.totalApplications - (job.applications || 0),
+        ),
+      }));
+    } catch (err) {
+      console.error("Delete job error:", err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to delete job vacancy",
+      );
+    } finally {
+      setDeletingJobId(null);
+    }
+  };
+
   const formatCurrency = (amount) => (
     <span className="inline-flex items-center gap-2">
       <FaMoneyBillWave className="text-orange-500 shrink-0" />
@@ -93,22 +138,36 @@ const EmployerDashboard = () => {
     </div>
   );
 
-  const JobCard = ({ job }) => (
+  const JobCard = ({ job }) => {
+    const isDeleting = deletingJobId === job.id;
+
+    return (
     <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition-shadow h-full flex flex-col min-w-0">
       <div className="mb-3 sm:mb-4 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-2">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 break-words min-w-0 flex-1">
             {job.title}
           </h3>
-          <span
-            className={`shrink-0 px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${
-              job.status === "active"
-                ? "bg-green-100 text-green-700"
-                : "bg-gray-100 text-gray-600"
-            }`}
-          >
-            {job.status === "active" ? "Active" : "Expired"}
-          </span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span
+              className={`px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${
+                job.status === "active"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              {job.status === "active" ? "Active" : "Expired"}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleDeleteJob(job)}
+              disabled={isDeleting}
+              aria-label={`Delete ${job.title}`}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FaTrash className="text-xs sm:text-sm" />
+            </button>
+          </div>
         </div>
         <p className="text-xs sm:text-sm text-gray-500 leading-relaxed break-words">
           {[job.industry, job.workMode, job.country].filter(Boolean).join(" · ")}
@@ -188,7 +247,8 @@ const EmployerDashboard = () => {
         )}
       </div>
     </div>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -214,7 +274,7 @@ const EmployerDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <StatCard
             icon={FaBriefcase}
             title="Total Jobs"
@@ -232,13 +292,7 @@ const EmployerDashboard = () => {
             title="Total Applications"
             value={stats.totalApplications}
             color="bg-purple-500"
-          />
-          <StatCard
-            icon={FaMoneyBillWave}
-            title="Revenue (Extensions)"
-            value={formatCurrency(stats.totalRevenue)}
-            color="bg-orange-500"
-          />
+          />          
         </div>
 
         {/* Quick Actions */}

@@ -63,6 +63,12 @@ export function formatCandidateAddress(candidate, bio) {
   return fallback ? toTitleCaseWords(fallback) : null;
 }
 
+/** Trim text without changing user-entered casing (degrees, acronyms, etc.). */
+export function formatPreservedText(value) {
+  if (value == null || String(value).trim() === '') return null;
+  return String(value).trim();
+}
+
 /** Title-case a single text field for display (education, bio, job title, location, etc.). */
 export function formatEducationText(value) {
   if (value == null || String(value).trim() === '') return null;
@@ -146,7 +152,7 @@ export function getFormattedEducationFields(education, { legacy = false } = {}) 
     : education.field_of_study ?? education.fieldOfStudy ?? education.field;
 
   return {
-    degree: formatEducationText(education.degree),
+    degree: formatPreservedText(education.degree),
     institution: formatEducationText(institutionRaw),
     field: formatEducationText(fieldRaw),
     location: formatEducationText(education.location),
