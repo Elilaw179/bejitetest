@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { MockJobs } from "../../../utils/mockJobs";
 import { HeroSection } from "../../../components/jobs/HeroSection";
 import { SearchBar } from "../../../components/jobs/SearchBar";
@@ -126,7 +125,6 @@ const JobVacancyListing = () => {
       setJobs(response.data?.jobs || []);
       setIndustries(response.data?.industries || []);
       setTotalJobs(response.pagination?.total || 0);
-      setTotalPages(response.pagination?.pages || 0);
     } catch (err) {
       console.error("Job vacancies load error:", err);
       setError(
@@ -136,7 +134,6 @@ const JobVacancyListing = () => {
       );
       setJobs([]);
       setTotalJobs(0);
-      setTotalPages(0);
     } finally {
       setIsLoading(false);
     }

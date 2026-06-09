@@ -69,7 +69,8 @@ const EmployerDashboard = () => {
   }, [loadDashboardData]);
 
   const formatCurrency = (amount) => (
-    <span className="inline-flex items-center gap-2">      
+    <span className="inline-flex items-center gap-2">
+      <FaMoneyBillWave className="text-orange-500 shrink-0" />
       <span>₦{Number(amount || 0).toLocaleString()}</span>
     </span>
   );
@@ -213,7 +214,7 @@ const EmployerDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             icon={FaBriefcase}
             title="Total Jobs"
@@ -232,12 +233,12 @@ const EmployerDashboard = () => {
             value={stats.totalApplications}
             color="bg-purple-500"
           />
-          {/* <StatCard
+          <StatCard
             icon={FaMoneyBillWave}
             title="Revenue (Extensions)"
             value={formatCurrency(stats.totalRevenue)}
             color="bg-orange-500"
-          />*/}
+          />
         </div>
 
         {/* Quick Actions */}
