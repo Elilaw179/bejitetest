@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-=======
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { MockJobs } from "../../../utils/mockJobs";
->>>>>>> 71e4309638a4353018df8665faef588096e11e82
 import { HeroSection } from "../../../components/jobs/HeroSection";
 import { SearchBar } from "../../../components/jobs/SearchBar";
 import NewsFeedLayout from "../../../components/layout/NewsFeedLayout";
@@ -38,16 +35,12 @@ const JobVacancyListing = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [savedJobs, setSavedJobs] = useState([]);
   const [showSavedModal, setShowSavedModal] = useState(false);
-<<<<<<< HEAD
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-=======
->>>>>>> 71e4309638a4353018df8665faef588096e11e82
   const [currentPage, setCurrentPage] = useState(1);
   const [jobsPerPage] = useState(6);
   const [totalJobs, setTotalJobs] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     const saved = localStorage.getItem("savedJobs");
@@ -60,7 +53,6 @@ const JobVacancyListing = () => {
     localStorage.setItem("savedJobs", JSON.stringify(savedJobs));
   }, [savedJobs]);
 
-<<<<<<< HEAD
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
     return () => clearTimeout(timer);
@@ -93,8 +85,6 @@ const JobVacancyListing = () => {
     };
   }, [searchParams]);
 
-=======
->>>>>>> 71e4309638a4353018df8665faef588096e11e82
   useEffect(() => {
     setCurrentPage(1);
   }, [
@@ -181,10 +171,6 @@ const JobVacancyListing = () => {
     "Executive",
   ];
 
-<<<<<<< HEAD
-  const indexOfFirstJob = (currentPage - 1) * jobsPerPage;
-  const indexOfLastJob = indexOfFirstJob + jobs.length;
-=======
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
       const matchesSearch =
@@ -240,7 +226,6 @@ const JobVacancyListing = () => {
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
   const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
   const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
->>>>>>> 71e4309638a4353018df8665faef588096e11e82
 
   const handlePageChange = useCallback((pageNumber) => {
     setCurrentPage(pageNumber);
@@ -289,12 +274,8 @@ const JobVacancyListing = () => {
         ),
       );
     }
-<<<<<<< HEAD
     toast.success("Application submitted successfully!");
-  };
-=======
   }, [selectedJob]);
->>>>>>> 71e4309638a4353018df8665faef588096e11e82
 
   const clearFilters = useCallback(() => {
     setSelectedIndustry("");
@@ -305,11 +286,7 @@ const JobVacancyListing = () => {
     setSearchTerm("");
   }, []);
 
-<<<<<<< HEAD
-  const getPageNumbers = () => {
-=======
   const getPageNumbers = useCallback(() => {
->>>>>>> 71e4309638a4353018df8665faef588096e11e82
     const pageNumbers = [];
     const maxPagesToShow = 5;
 
@@ -381,13 +358,10 @@ const JobVacancyListing = () => {
               <p className="text-gray-600 text-sm">
                 Showing{" "}
                 <span className="font-semibold text-gray-900">
-<<<<<<< HEAD
                   {totalJobs === 0 ? 0 : indexOfFirstJob + 1}-
                   {Math.min(indexOfLastJob, totalJobs)}
-=======
                   {filteredJobs.length > 0 ? indexOfFirstJob + 1 : 0}-
                   {Math.min(indexOfLastJob, filteredJobs.length)}
->>>>>>> 71e4309638a4353018df8665faef588096e11e82
                 </span>{" "}
                 of{" "}
                 <span className="font-semibold text-gray-900">{totalJobs}</span>{" "}
@@ -406,18 +380,14 @@ const JobVacancyListing = () => {
               </div>
             </div>
 
-<<<<<<< HEAD
             {isLoading ? (
               <div className="flex justify-center py-20">
                 <FaSpinner className="animate-spin text-[#16730F] text-4xl" />
               </div>
             ) : jobs.length > 0 ? (
-=======
-            {currentJobs.length > 0 ? (
->>>>>>> 71e4309638a4353018df8665faef588096e11e82
               <>
                 <div className="space-y-4">
-                  {jobs.map((job) => (
+                  {currentJobs.map((job) => (
                     <JobCard
                       key={job.id}
                       job={job}
