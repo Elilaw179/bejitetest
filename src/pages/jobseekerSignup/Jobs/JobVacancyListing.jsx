@@ -354,13 +354,6 @@ const JobVacancyListing = () => {
             <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
               <p className="text-gray-600 text-sm">
                 Showing{" "}
-                <span className="font-semibold text-gray-900">
-                  {totalJobs === 0 ? 0 : indexOfFirstJob + 1}-
-                  {Math.min(indexOfLastJob, totalJobs)}
-                  {filteredJobs.length > 0 ? indexOfFirstJob + 1 : 0}-
-                  {Math.min(indexOfLastJob, filteredJobs.length)}
-                </span>{" "}
-                of{" "}
                 <span className="font-semibold text-gray-900">{totalJobs}</span>{" "}
                 jobs
               </p>

@@ -37,6 +37,14 @@ export const updateJobApplicationStatus = async (
   return response.data;
 };
 
+export const downloadJobApplicationResume = async (jobId, applicationId) => {
+  const response = await axiosInstance.get(
+    `/api/employer/jobs/${jobId}/applications/${applicationId}/resume`,
+    { responseType: "blob" },
+  );
+  return response.data;
+};
+
 export const getJobExtendInfo = async (jobId) => {
   const response = await axiosInstance.get(`/api/employer/jobs/${jobId}/extend`);
   return response.data;
@@ -68,6 +76,7 @@ export default {
   deleteEmployerJob,
   getJobApplications,
   updateJobApplicationStatus,
+  downloadJobApplicationResume,
   getJobExtendInfo,
   extendJobForSubscriber,
   initJobExtensionPayment,

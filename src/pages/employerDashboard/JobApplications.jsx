@@ -17,6 +17,7 @@ import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
 import {
   getJobApplications,
   updateJobApplicationStatus,
+  downloadJobApplicationResume,
 } from "../../services/employerApi";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 
@@ -59,6 +60,7 @@ const JobApplications = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [downloadingResume, setDownloadingResume] = useState(false);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -163,6 +165,40 @@ const JobApplications = () => {
     }
 
     navigate(`/user-profile/${selectedApplication.userId}`);
+  };
+
+  const handleDownloadResume = async () => {
+    if (!selectedApplication || !jobId) return;
+
+    setDownloadingResume(true);
+    try {
+      const blob = await downloadJobApplicationResume(
+        jobId,
+        selectedApplication.id,
+      );
+      const pdfBlob =
+        blob.type === "application/pdf"
+          ? blob
+          : new Blob([blob], { type: "application/pdf" });
+      const fileName = `${selectedApplication.name.replace(/\s+/g, "_")}_Resume.pdf`;
+      const objectUrl = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error("Resume download error:", err);
+      alert(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to download resume",
+      );
+    } finally {
+      setDownloadingResume(false);
+    }
   };
 
   const renderStatusControls = () => (
@@ -274,15 +310,15 @@ const JobApplications = () => {
             </div>
           ) : (
             selectedApplication.resume && (
-              <a
-                href={selectedApplication.resume}
-                target="_blank"
-                rel="noreferrer"
-                className="block w-full border-2 border-[#16730F] text-[#16730F] py-3 rounded-xl font-semibold hover:bg-green-50 transition-colors text-center"
+              <button
+                type="button"
+                onClick={handleDownloadResume}
+                disabled={downloadingResume}
+                className="block w-full border-2 border-[#16730F] text-[#16730F] py-3 rounded-xl font-semibold hover:bg-green-50 transition-colors text-center disabled:opacity-60"
               >
                 <FaDownload className="inline mr-2" />
-                Download Resume
-              </a>
+                {downloadingResume ? "Downloading..." : "Download Resume"}
+              </button>
             )
           )}
         </div>

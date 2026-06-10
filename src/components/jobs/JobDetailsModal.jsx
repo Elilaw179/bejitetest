@@ -272,14 +272,27 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                 {activeTab === "details" ? (
                   <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
                     <div className="lg:col-span-2 space-y-5 sm:space-y-6 order-2 lg:order-1">
-                      <section>
-                        <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
-                          Job Description
-                        </h2>
-                        <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
-                          {job.description}
-                        </p>
-                      </section>
+                      {job.rolesText?.trim() && (
+                        <section>
+                          <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
+                            Roles
+                          </h2>
+                          <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                            {job.rolesText}
+                          </p>
+                        </section>
+                      )}
+
+                      {!job.rolesText?.trim() && job.description?.trim() && (
+                        <section>
+                          <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
+                            Job Description
+                          </h2>
+                          <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                            {job.description}
+                          </p>
+                        </section>
+                      )}
 
                       {job.responsibilities?.length > 0 && (
                         <section>

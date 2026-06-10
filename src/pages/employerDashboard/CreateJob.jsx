@@ -30,6 +30,7 @@ const CreateJob = () => {
   const [formData, setFormData] = useState({
     title: "",
     industry: "",
+    roles: "",
     responsibilities: "",
     workMode: "Remote",
     country: "",
@@ -67,8 +68,9 @@ const CreateJob = () => {
     if (states.length > 0 && !formData.state.trim()) {
       return "State is required for the selected country";
     }
+    if (!formData.roles.trim()) return "Roles are required";
     if (!formData.responsibilities.trim()) {
-      return "Roles and responsibilities are required";
+      return "Responsibilities are required";
     }
     const hasSkill = skills.some((item) => item.skill.trim());
     if (!hasSkill) return "At least one required skill is needed";
@@ -109,6 +111,7 @@ const CreateJob = () => {
       const response = await createEmployerJob({
         title: formData.title.trim(),
         industry: formData.industry,
+        roles: formData.roles.trim(),
         responsibilities: formData.responsibilities.trim(),
         workMode: formData.workMode,
         country: formData.country.trim(),
@@ -217,11 +220,18 @@ const CreateJob = () => {
               </div>
 
               <div className="mb-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">Roles</h3>
+                <p className="text-gray-600 whitespace-pre-wrap">
+                  {formData.roles || "No roles provided"}
+                </p>
+              </div>
+
+              <div className="mb-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-3">
-                  Roles & Responsibilities
+                  Responsibilities
                 </h3>
                 <p className="text-gray-600 whitespace-pre-wrap">
-                  {formData.responsibilities || "No description provided"}
+                  {formData.responsibilities || "No responsibilities provided"}
                 </p>
               </div>
 
@@ -413,15 +423,30 @@ const CreateJob = () => {
                 ))}
               </div>
 
+              {/* Roles */}
+              <div>
+                <label className="block mb-2 font-semibold text-[#1A3E32]">
+                  Roles <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  rows={4}
+                  placeholder="Describe the role, purpose of the position, and key expectations..."
+                  className="w-full border rounded-xl px-4 py-3 resize-none focus:ring-2 focus:ring-[#16730F] outline-none"
+                  value={formData.roles}
+                  onChange={(e) =>
+                    setFormData({ ...formData, roles: e.target.value })
+                  }
+                />
+              </div>
+
               {/* Responsibilities */}
               <div>
                 <label className="block mb-2 font-semibold text-[#1A3E32]">
-                  Roles & Responsibilities{" "}
-                  <span className="text-red-500">*</span>
+                  Responsibilities <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   rows={6}
-                  placeholder="Describe duties, expectations and responsibilities..."
+                  placeholder="List day-to-day duties and responsibilities (one per line)..."
                   className="w-full border rounded-xl px-4 py-3 resize-none focus:ring-2 focus:ring-[#16730F] outline-none"
                   value={formData.responsibilities}
                   onChange={(e) =>
