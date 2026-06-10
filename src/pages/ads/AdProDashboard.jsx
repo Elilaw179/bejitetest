@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Plus,
   TrendingUp,
   Users,
-  DollarSign,
+  Wallet,
   BarChart3,
   Copy,
   Trash2,
@@ -18,39 +18,11 @@ import CampaignStatusBadge from "../../components/Ads/CampaignStatusBadge";
 import MetricCard from "../../components/Ads/MetricCard";
 import CampaignChart from "../../components/Ads/CampaignChart";
 import ScrollToTop from "../../components/Ads/ScrollTOTOP";
-
-const mockCampaigns = [
-  {
-    id: "1",
-    name: "Lagos SME Tax Consulting",
-    status: "active",
-    reachPurchased: 7845,
-    reachDelivered: 3420,
-    spend: 78.45,
-    ctr: 2.4,
-    engagement: 187,
-  },
-  {
-    id: "2",
-    name: "Tech Recruiters Lagos",
-    status: "pending_review",
-    reachPurchased: 2500,
-    reachDelivered: 0,
-    spend: 50.0,
-    ctr: 0,
-    engagement: 0,
-  },
-  {
-    id: "3",
-    name: "Finance Professionals Abuja",
-    status: "completed",
-    reachPurchased: 1500,
-    reachDelivered: 1500,
-    spend: 30.0,
-    ctr: 3.2,
-    engagement: 48,
-  },
-];
+import {
+  getAdProDashboard,
+  deleteAdProCampaign,
+  duplicateAdProCampaign,
+} from "../../services/adProApi";
 
 function FilterModal({ isOpen, onClose, onApply, currentFilter }) {
   const [selectedStatus, setSelectedStatus] = useState(currentFilter || "all");
@@ -61,6 +33,7 @@ function FilterModal({ isOpen, onClose, onApply, currentFilter }) {
     { value: "all", label: "All Campaigns" },
     { value: "active", label: "Active" },
     { value: "pending_review", label: "Pending Review" },
+    { value: "rejected", label: "Rejected" },
     { value: "completed", label: "Completed" },
     { value: "paused", label: "Paused" },
     { value: "draft", label: "Draft" },
@@ -127,12 +100,63 @@ function FilterModal({ isOpen, onClose, onApply, currentFilter }) {
 
 export default function AdProDashboard() {
   const navigate = useNavigate();
-  const [campaigns, setCampaigns] = useState(mockCampaigns);
+  const [campaigns, setCampaigns] = useState([]);
+  const [chartData, setChartData] = useState([]);
+  const [dashboardMetrics, setDashboardMetrics] = useState({
+    totalSpend: 0,
+    totalReach: 0,
+    activeCampaigns: 0,
+    avgCtr: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState("week");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const menuRef = useRef(null);
+
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getAdProDashboard({
+        status: statusFilter,
+        period: selectedPeriod,
+      });
+
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to load AdPro dashboard");
+      }
+
+      setCampaigns(response.data?.campaigns || []);
+      setChartData(response.data?.chartData || []);
+      setDashboardMetrics(
+        response.data?.metrics || {
+          totalSpend: 0,
+          totalReach: 0,
+          activeCampaigns: 0,
+          avgCtr: 0,
+        },
+      );
+    } catch (err) {
+      console.error("AdPro dashboard load error:", err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to load AdPro dashboard",
+      );
+      setCampaigns([]);
+      setChartData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, selectedPeriod]);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -144,34 +168,20 @@ export default function AdProDashboard() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredCampaigns = campaigns.filter((campaign) => {
-    if (statusFilter === "all") return true;
-    return campaign.status === statusFilter;
-  });
-
-  const totalSpend = filteredCampaigns.reduce((sum, c) => sum + c.spend, 0);
-  const totalReach = filteredCampaigns.reduce(
-    (sum, c) => sum + c.reachDelivered,
-    0,
-  );
-  const activeCampaigns = filteredCampaigns.filter(
-    (c) => c.status === "active",
-  ).length;
-  const avgCtr = filteredCampaigns
-    .filter((c) => c.ctr > 0)
-    .reduce((sum, c, _, arr) => sum + c.ctr / arr.length, 0);
+  const filteredCampaigns = campaigns;
+  const activeCampaigns = dashboardMetrics.activeCampaigns;
 
   const metrics = [
     {
       title: "Total Spend",
-      value: `$${totalSpend.toFixed(2)}`,
+      value: `${dashboardMetrics.totalSpend.toFixed(2)} NGN`,
       change: "+12%",
-      icon: DollarSign,
+      icon: Wallet,
       color: "from-emerald-500 to-teal-600",
     },
     {
       title: "Total Reach",
-      value: totalReach.toLocaleString(),
+      value: dashboardMetrics.totalReach.toLocaleString(),
       change: "+8%",
       icon: Users,
       color: "from-blue-500 to-indigo-600",
@@ -185,7 +195,7 @@ export default function AdProDashboard() {
     },
     {
       title: "Avg. CTR",
-      value: `${avgCtr.toFixed(1)}%`,
+      value: `${dashboardMetrics.avgCtr.toFixed(1)}%`,
       change: "+0.5%",
       icon: BarChart3,
       color: "from-amber-500 to-orange-600",
@@ -197,15 +207,44 @@ export default function AdProDashboard() {
   //     navigate(`/adpro/campaign/${campaignId}/edit`);
   //   };
 
-  const handleDuplicateCampaign = (campaignId) => {
+  const handleDuplicateCampaign = async (campaignId) => {
     setOpenMenuId(null);
-    console.log("Duplicate campaign:", campaignId);
+
+    try {
+      const response = await duplicateAdProCampaign(campaignId);
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to duplicate campaign");
+      }
+      await loadDashboard();
+    } catch (err) {
+      console.error("Duplicate campaign error:", err);
+      alert(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to duplicate campaign",
+      );
+    }
   };
 
-  const handleDeleteCampaign = (campaignId) => {
+  const handleDeleteCampaign = async (campaignId) => {
     setOpenMenuId(null);
-    if (window.confirm("Are you sure you want to delete this campaign?")) {
-      setCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
+    if (!window.confirm("Are you sure you want to delete this campaign?")) {
+      return;
+    }
+
+    try {
+      const response = await deleteAdProCampaign(campaignId);
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to delete campaign");
+      }
+      await loadDashboard();
+    } catch (err) {
+      console.error("Delete campaign error:", err);
+      alert(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to delete campaign",
+      );
     }
   };
 
@@ -223,6 +262,7 @@ export default function AdProDashboard() {
     const statusMap = {
       active: "Active",
       pending_review: "Pending",
+      rejected: "Rejected",
       completed: "Completed",
       paused: "Paused",
       draft: "Draft",
@@ -268,6 +308,18 @@ export default function AdProDashboard() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          {error && (
+            <div className="mb-6 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-24">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1A3E32]" />
+            </div>
+          ) : (
+            <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
             {metrics.map((metric, index) => (
               <MetricCard key={index} {...metric} />
@@ -304,10 +356,10 @@ export default function AdProDashboard() {
                 ))}
               </div>
             </div>
-            <CampaignChart period={selectedPeriod} />
+            <CampaignChart period={selectedPeriod} data={chartData} />
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-visible">
             <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -335,12 +387,16 @@ export default function AdProDashboard() {
               </div>
             </div>
 
-            <div className="divide-y divide-gray-100">
-              {filteredCampaigns.map((campaign) => {
+            <div className="divide-y divide-gray-100 overflow-visible">
+              {filteredCampaigns.map((campaign, index) => {
                 const progress =
                   (campaign.reachDelivered / campaign.reachPurchased) * 100;
+                const isNearBottom = index >= filteredCampaigns.length - 2;
                 return (
-                  <div key={campaign.id} className="group">
+                  <div
+                    key={campaign.id}
+                    className={`group ${openMenuId === campaign.id ? "relative z-[200]" : ""}`}
+                  >
                     <div className="p-4 sm:p-5 lg:p-6 hover:bg-gray-50/50 transition-all duration-200">
                       <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
                         <div
@@ -410,21 +466,34 @@ export default function AdProDashboard() {
                           >
                             <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
-                          <div className="relative" ref={menuRef}>
+                          <div
+                            className={`relative ${
+                              openMenuId === campaign.id ? "z-[200]" : ""
+                            }`}
+                            ref={openMenuId === campaign.id ? menuRef : null}
+                          >
                             <button
-                              onClick={() =>
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setOpenMenuId(
                                   openMenuId === campaign.id
                                     ? null
                                     : campaign.id,
-                                )
-                              }
+                                );
+                              }}
                               className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
                             >
                               <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" />
                             </button>
                             {openMenuId === campaign.id && (
-                              <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-20">
+                              <div
+                                className={`absolute right-0 w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-[200] ${
+                                  isNearBottom
+                                    ? "bottom-full mb-2"
+                                    : "top-full mt-2"
+                                }`}
+                                onMouseDown={(e) => e.stopPropagation()}
+                              >
                                 {/* <button
                                   onClick={() =>
                                     handleEditCampaign(campaign.id)
@@ -435,18 +504,20 @@ export default function AdProDashboard() {
                                   Campaign
                                 </button> */}
                                 <button
-                                  onClick={() =>
-                                    handleDuplicateCampaign(campaign.id)
-                                  }
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDuplicateCampaign(campaign.id);
+                                  }}
                                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                                 >
                                   <Copy className="w-3.5 h-3.5" /> Duplicate
                                 </button>
                                 <hr className="my-1 border-gray-100" />
                                 <button
-                                  onClick={() =>
-                                    handleDeleteCampaign(campaign.id)
-                                  }
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteCampaign(campaign.id);
+                                  }}
                                   className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -493,6 +564,8 @@ export default function AdProDashboard() {
               </div>
             )}
           </div>
+            </>
+          )}
         </div>
       </div>
 

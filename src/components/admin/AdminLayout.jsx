@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../features/auth/authSlice";
 import {
@@ -13,9 +13,10 @@ import {
   DollarSign,
   Activity,
   Shield,
+  Megaphone,
 } from "lucide-react";
 
-const AdminLayout = ({ children }) => {
+const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -35,6 +36,7 @@ const AdminLayout = ({ children }) => {
     { name: "Users List", path: "/admin/users", icon: Users },
     { name: "Admins", path: "/admin/admins", icon: Shield },
     { name: "Jobs List", path: "/admin/jobs", icon: Briefcase },
+    { name: "AdPro Review", path: "/admin/adpro", icon: Megaphone },
     { name: "Settings", path: "#", icon: Settings },
   ];
 
@@ -50,9 +52,9 @@ const AdminLayout = ({ children }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 flex flex-col h-screen lg:translate-x-0 lg:static lg:inset-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="flex items-center justify-between h-20 px-6 border-b border-gray-100">
+        <div className="flex items-center justify-between h-20 px-6 border-b border-gray-100 shrink-0">
           <img
             src="/assets/images/logo.png"
             alt="Bejite Logo"
@@ -66,8 +68,8 @@ const AdminLayout = ({ children }) => {
           </button>
         </div>
 
-        <div className="px-4 py-6 flex flex-col h-[calc(100vh-5rem)] justify-between">
-          <nav className="space-y-1">
+        <div className="flex-1 flex flex-col min-h-0">
+          <nav className="flex-1 overflow-y-auto nfl-scroll px-4 py-6 space-y-1">
             <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
               Analytics
             </p>
@@ -96,7 +98,7 @@ const AdminLayout = ({ children }) => {
             ))}
           </nav>
 
-          <div className="border-t border-gray-100 pt-4">
+          <div className="shrink-0 border-t border-gray-100 px-4 py-4">
             <div className="flex items-center gap-3 px-3 py-3 mb-2">
               <div className="h-10 w-10 bg-[#16730F]/10 rounded-full flex items-center justify-center text-[#16730F] font-bold">
                 {user?.firstName?.[0] || "A"}
@@ -140,7 +142,7 @@ const AdminLayout = ({ children }) => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto nfl-scroll scroll-smooth bg-gray-50/50 p-4 lg:p-8">
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>

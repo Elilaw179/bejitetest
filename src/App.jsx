@@ -81,7 +81,9 @@ import AdminEngagement from "./pages/admin/AdminEngagement.jsx";
 import AdminRecruitment from "./pages/admin/AdminRecruitment.jsx";
 import AdminDemographics from "./pages/admin/AdminDemographics.jsx";
 import AdminList from "./pages/admin/AdminList.jsx";
+import AdminAdPro from "./pages/admin/AdminAdPro.jsx";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute.jsx";
+import AdminLayout from "./components/admin/AdminLayout.jsx";
 import AuthBootstrap from "./components/AuthBootstrap.jsx";
 import ProfileCompletionReminder from "./components/ProfileCompletionReminder.jsx";
 import { Navigate } from "react-router-dom";
@@ -113,75 +115,26 @@ function App() {
         <AuthBootstrap>
           <Routes>
             {/* Admin Routes */}
-            <Route
-              path="/admin"
-              element={<Navigate to="/admin/dashboard" replace />}
-            />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
-              path="/admin/dashboard"
+              path="/admin"
               element={
                 <AdminProtectedRoute>
-                  <AdminDashboard />
+                  <AdminLayout />
                 </AdminProtectedRoute>
               }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <AdminProtectedRoute>
-                  <AdminUsers />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/jobs"
-              element={
-                <AdminProtectedRoute>
-                  <AdminJobs />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/revenue"
-              element={
-                <AdminProtectedRoute>
-                  <AdminRevenue />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/engagement"
-              element={
-                <AdminProtectedRoute>
-                  <AdminEngagement />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/recruitment"
-              element={
-                <AdminProtectedRoute>
-                  <AdminRecruitment />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/demographics"
-              element={
-                <AdminProtectedRoute>
-                  <AdminDemographics />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/admins"
-              element={
-                <AdminProtectedRoute>
-                  <AdminList />
-                </AdminProtectedRoute>
-              }
-            />
+            >
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="jobs" element={<AdminJobs />} />
+              <Route path="revenue" element={<AdminRevenue />} />
+              <Route path="engagement" element={<AdminEngagement />} />
+              <Route path="recruitment" element={<AdminRecruitment />} />
+              <Route path="demographics" element={<AdminDemographics />} />
+              <Route path="admins" element={<AdminList />} />
+              <Route path="adpro" element={<AdminAdPro />} />
+            </Route>
 
             <Route path="/auth/email-sent" element={<EmailSent />} />
             <Route path="/auth/success" element={<AuthSuccess />} />

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
-import AdminLayout from "../../components/admin/AdminLayout";
 import { CreditCard, DollarSign, Activity, TrendingUp } from "lucide-react";
 import {
   BarChart,
@@ -65,11 +64,9 @@ const AdminRevenue = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="h-[80vh] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F]"></div>
-        </div>
-      </AdminLayout>
+      <div className="h-[80vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F]"></div>
+      </div>
     );
   }
 
@@ -90,8 +87,7 @@ const AdminRevenue = () => {
   const paginatedTx = recentTransactions.slice(startIdx, endIdx);
 
   return (
-    <AdminLayout>
-      <div className="max-w-7xl mx-auto w-full space-y-6">
+    <div className="max-w-7xl mx-auto w-full space-y-6">
         {/* Header */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h1 className="text-2xl font-bold text-gray-800">
@@ -339,7 +335,6 @@ const AdminRevenue = () => {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 };
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
-import AdminLayout from "../../components/admin/AdminLayout";
 import {
   Search,
   Building2,
@@ -118,8 +117,7 @@ const AdminJobs = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="max-w-7xl mx-auto w-full space-y-6">
+    <div className="max-w-7xl mx-auto w-full space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div>
@@ -328,7 +326,6 @@ const AdminJobs = () => {
           )}
         </div>
       </div>
-    </AdminLayout>
   );
 };
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
-import AdminLayout from '../../components/admin/AdminLayout';
 import { Search, Mail, Shield, CheckCircle, XCircle, Plus, X } from 'lucide-react';
 
 const AdminList = () => {
@@ -69,8 +68,7 @@ const AdminList = () => {
   );
 
   return (
-    <AdminLayout>
-      <div className="max-w-7xl mx-auto w-full space-y-6 relative">
+    <div className="max-w-7xl mx-auto w-full space-y-6 relative">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -171,8 +169,6 @@ const AdminList = () => {
           </div>
         </div>
 
-      </div>
-
       {/* Add Admin Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -272,7 +268,7 @@ const AdminList = () => {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </div>
   );
 };
 

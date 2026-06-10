@@ -50,6 +50,7 @@ import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import PostMediaGallery from "../PostMediaGallery";
 import FeedLoadMoreButton from "../FeedLoadMoreButton";
 import AdCard from "../Ads/AdCard";
+import { getAdProFeedAds } from "../../services/adProApi";
 
 const FEED_PAGE_SIZE = 20;
 
@@ -118,18 +119,13 @@ export default function RecruitmentMiddle() {
   }, []);
 
   const fetchAds = async () => {
-    const mockAds = [
-      {
-        id: "ad1",
-        headline: "Expert Tax Consulting for Lagos SMEs",
-        description:
-          "Get professional tax consulting services. We help SMEs navigate Nigerian tax laws and maximize deductions.",
-        mediaUrl: "https://example.com/ad-image.jpg",
-        mediaType: "image",
-        landingDestination: "https://example.com/tax-consulting",
-      },
-    ];
-    setAds(mockAds);
+    try {
+      const response = await getAdProFeedAds();
+      setAds(response?.data?.ads || []);
+    } catch (err) {
+      console.error("Error fetching feed ads:", err);
+      setAds([]);
+    }
   };
 
   const handleAdInteraction = (type, adId) => {

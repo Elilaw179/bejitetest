@@ -13,6 +13,7 @@ import StepIndicator from "../../components/Ads/StepIndicator";
 import MediaUploader from "../../components/Ads/MediaUploader";
 import AudienceEstimator from "../../components/Ads/AudienceEstimator";
 import AudienceFilterSection from "../../components/Ads/AudienceFilterSection";
+import { createAdProCampaign } from "../../services/adProApi";
 
 const steps = [
   { number: 1, label: "Ad Content" },
@@ -67,6 +68,7 @@ export default function CreateCampaign() {
     loading: false,
   });
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState(null);
 
   const calculateAudienceEstimate = useCallback(() => {
     setAudienceEstimate((prev) => ({ ...prev, loading: true }));
@@ -115,33 +117,69 @@ export default function CreateCampaign() {
     }));
   };
 
-  const validateStep = () => {
+  const validateCampaign = () => {
     const newErrors = {};
-    if (currentStep === 1) {
-      if (!campaignData.name.trim()) newErrors.name = "Campaign name required";
-      if (!campaignData.headline.trim())
-        newErrors.headline = "Headline required";
-      if (campaignData.headline.length > 100)
-        newErrors.headline = "Max 100 characters";
-      if (!campaignData.description.trim())
-        newErrors.description = "Description required";
-      if (campaignData.description.length > 500)
-        newErrors.description = "Max 500 characters";
-      if (!campaignData.media) newErrors.media = "Please upload an ad";
-      if (!campaignData.landingDestination.trim())
-        newErrors.landingDestination = "Landing destination required";
+    if (!campaignData.name.trim()) newErrors.name = "Campaign name required";
+    if (!campaignData.headline.trim())
+      newErrors.headline = "Headline required";
+    if (campaignData.headline.length > 100)
+      newErrors.headline = "Max 100 characters";
+    if (!campaignData.description.trim())
+      newErrors.description = "Description required";
+    if (campaignData.description.length > 500)
+      newErrors.description = "Max 500 characters";
+    if (!campaignData.media) newErrors.media = "Please upload an ad";
+    if (!campaignData.landingDestination.trim()) {
+      newErrors.landingDestination = "Landing destination required";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  const validateStep = () => {
+    if (currentStep !== 1) return true;
+    return validateCampaign();
+  };
+
   const handleSubmit = async () => {
-    if (!validateStep()) return;
+    if (!validateCampaign()) {
+      setCurrentStep(1);
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setSubmitError(null);
+
+    try {
+      const response = await createAdProCampaign({
+        name: campaignData.name.trim(),
+        headline: campaignData.headline.trim(),
+        description: campaignData.description.trim(),
+        landingType: campaignData.landingType,
+        landingDestination: campaignData.landingDestination.trim(),
+        media: campaignData.media,
+        mediaType: campaignData.mediaType,
+        audience: campaignData.audience,
+        budget: audienceEstimate.cost,
+        reachPurchased: audienceEstimate.reach,
+        status: "pending_review",
+      });
+
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to create campaign");
+      }
+
       navigate("/adpro");
-    }, 2000);
+    } catch (err) {
+      console.error("Create campaign error:", err);
+      setSubmitError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to create campaign",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderStepContent = () => {
@@ -415,6 +453,12 @@ export default function CreateCampaign() {
           </div>
 
           <StepIndicator currentStep={currentStep} steps={steps} />
+
+          {submitError && (
+            <div className="mt-6 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+              {submitError}
+            </div>
+          )}
 
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8 mt-6 sm:mt-8">
             {renderStepContent()}

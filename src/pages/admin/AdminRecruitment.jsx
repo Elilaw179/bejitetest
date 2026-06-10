@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
-import AdminLayout from '../../components/admin/AdminLayout';
 import { Briefcase, CheckCircle, Activity, Users } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -41,11 +40,9 @@ const AdminRecruitment = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="h-[80vh] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F]"></div>
-        </div>
-      </AdminLayout>
+      <div className="h-[80vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F]"></div>
+      </div>
     );
   }
 
@@ -60,8 +57,7 @@ const AdminRecruitment = () => {
   const sectorTrendData = (metrics?.sector_trend || metrics?.top_sectors || []).slice(0, 10);
 
   return (
-    <AdminLayout>
-      <div className="max-w-7xl mx-auto w-full space-y-8">
+    <div className="max-w-7xl mx-auto w-full space-y-8">
         
         {/* Header */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -211,7 +207,6 @@ const AdminRecruitment = () => {
          </div>
 
        </div>
-     </AdminLayout>
   );
 };
 

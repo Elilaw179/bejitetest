@@ -162,7 +162,7 @@ function RecruitmentRight() {
               <p className="text-[#F5F5F5] font-bold">Badge Status</p>
             </div>
             <div
-              onClick={() => navigate("/account-settings")}
+              // onClick={() => navigate("/account-settings")}
               className="flex items-center space-x-3 hover:bg-white/5 p-2 rounded-lg transition-all duration-200"
             >
               <img src="/assets/images/setting-2.svg" alt="" />

@@ -62,13 +62,18 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-export default function CampaignChart({ period }) {
-  const data = mockData[period] || mockData.week;
+export default function CampaignChart({ period, data }) {
+  const dataByPeriod = {
+    week: data,
+    month: data,
+    quarter: data,
+  };
+  const chartData = dataByPeriod[period] || data || mockData.week;
 
   return (
     <ResponsiveContainer width="100%" height={320}>
       <AreaChart
-        data={data}
+        data={chartData}
         margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
       >
         <defs>

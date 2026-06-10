@@ -1,27 +1,10 @@
 // AudienceFilterSection.js
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import GeographicTargetingSection from "./GeographicTargetingSection";
+import ProfessionalTargetingSection from "./ProfessionalTargetingSection";
 
 const filterOptions = {
-  // Geographic
-  countries: [
-    { value: "ng", label: "Nigeria" },
-    { value: "gh", label: "Ghana" },
-    { value: "ke", label: "Kenya" },
-    { value: "za", label: "South Africa" },
-  ],
-  states: [
-    { value: "lagos", label: "Lagos" },
-    { value: "abuja", label: "Abuja" },
-    { value: "rivers", label: "Rivers" },
-    { value: "ogun", label: "Ogun" },
-  ],
-  cities: [
-    { value: "ikeja", label: "Ikeja" },
-    { value: "victoria_island", label: "Victoria Island" },
-    { value: "lekki", label: "Lekki" },
-    { value: "abuja_city", label: "Abuja City" },
-  ],
   // Demographic
   gender: [
     { value: "any", label: "Any" },
@@ -42,25 +25,6 @@ const filterOptions = {
     { value: "divorced", label: "Divorced" },
   ],
   // Professional
-  jobTitles: [
-    { value: "ceo", label: "CEO / Founder" },
-    { value: "cto", label: "CTO" },
-    { value: "hr_manager", label: "HR Manager" },
-    { value: "recruiter", label: "Recruiter" },
-    { value: "accountant", label: "Accountant" },
-    { value: "marketing", label: "Marketing Manager" },
-    { value: "sales", label: "Sales Manager" },
-    { value: "software_engineer", label: "Software Engineer" },
-  ],
-  industries: [
-    { value: "tech", label: "Technology" },
-    { value: "banking", label: "Banking & Finance" },
-    { value: "manufacturing", label: "Manufacturing" },
-    { value: "education", label: "Education" },
-    { value: "healthcare", label: "Healthcare" },
-    { value: "retail", label: "Retail" },
-    { value: "consulting", label: "Consulting" },
-  ],
   yearsExperience: [
     { value: "0-2", label: "0-2 years" },
     { value: "3-5", label: "3-5 years" },
@@ -164,11 +128,7 @@ export default function AudienceFilterSection({
     switch (title) {
       case "Geographic Targeting":
         return (
-          <>
-            {renderFilter("countries", "Countries", true)}
-            {renderFilter("states", "States", true)}
-            {renderFilter("cities", "Cities", true)}
-          </>
+          <GeographicTargetingSection audience={audience} onUpdate={onUpdate} />
         );
       case "Demographic Targeting":
         return (
@@ -181,8 +141,10 @@ export default function AudienceFilterSection({
       case "Professional Targeting":
         return (
           <>
-            {renderFilter("jobTitles", "Job Titles", true)}
-            {renderFilter("industries", "Industries", true)}
+            <ProfessionalTargetingSection
+              audience={audience}
+              onUpdate={onUpdate}
+            />
             {renderFilter("yearsExperience", "Years of Experience", true)}
             {renderFilter("companySize", "Company Size", true)}
           </>
@@ -202,7 +164,7 @@ export default function AudienceFilterSection({
   };
 
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+    <div className="border border-gray-200 rounded-xl bg-white overflow-visible">
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
@@ -218,7 +180,9 @@ export default function AudienceFilterSection({
         )}
       </button>
 
-      {expanded && <div className="p-4 space-y-4">{renderContent()}</div>}
+      {expanded && (
+        <div className="p-4 space-y-4 overflow-visible">{renderContent()}</div>
+      )}
     </div>
   );
 }

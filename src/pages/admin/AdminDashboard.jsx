@@ -9,8 +9,6 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts';
-import AdminLayout from '../../components/admin/AdminLayout';
-
 const AdminDashboard = () => {
   const [overview, setOverview] = useState(null);
   const [userMetrics, setUserMetrics] = useState(null);
@@ -79,17 +77,14 @@ const COLORS = ['#16730F', '#2563eb', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex h-[calc(100vh-100px)] items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F]"></div>
-        </div>
-      </AdminLayout>
+      <div className="flex h-[calc(100vh-100px)] items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F]"></div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="max-w-7xl mx-auto w-full space-y-8">
+    <div className="max-w-7xl mx-auto w-full space-y-8">
         
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -306,7 +301,6 @@ const COLORS = ['#16730F', '#2563eb', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'
 
         </div>
       </div>
-    </AdminLayout>
   );
 };
 

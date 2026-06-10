@@ -18,6 +18,7 @@ export default function AdCard({
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [mediaFailed, setMediaFailed] = useState(false);
 
   const handleClick = () => {
     if (ad.landingDestination) {
@@ -90,7 +91,7 @@ export default function AdCard({
           {ad.headline}
         </h3>
 
-        {ad.mediaUrl && (
+        {ad.mediaUrl && !mediaFailed && (
           <div className="mb-3 rounded-xl overflow-hidden bg-gray-100">
             {ad.mediaType === "image" ? (
               <img
@@ -98,6 +99,7 @@ export default function AdCard({
                 alt={ad.headline}
                 className="w-full h-48 object-cover hover:scale-105 transition-transform duration-500"
                 loading="lazy"
+                onError={() => setMediaFailed(true)}
               />
             ) : (
               <video
