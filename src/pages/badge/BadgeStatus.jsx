@@ -89,12 +89,7 @@ const BADGE_BENEFITS = [
     description:
       "Exclusive invitations to Bejite's monthly networking events where recruiters speak and mentor job seekers.",
   },
-  {
-    icon: Users,
-    title: "Priority Visibility",
-    description:
-      "Badge holders appear higher in recruiter searches and recommendations.",
-  },
+  
   {
     icon: Star,
     title: "Featured Profile",
@@ -105,7 +100,7 @@ const BADGE_BENEFITS = [
     icon: Crown,
     title: "Exclusive Content",
     description:
-      "Access to premium career resources, resume templates, and interview prep guides.",
+      "Access to premium career resources and interview prep guides.",
   },
 ];
 
@@ -162,8 +157,7 @@ export default function BadgeStatus() {
               </h2>
               <p className="text-green-100 text-sm leading-relaxed max-w-xl">
                 Unlock Advanced Recruitment With Bejite's Flexible Plans. Badge
-                holders get verified profiles, exclusive round table access, and
-                priority placement in recruiter searches.
+                holders get verified profiles and exclusive round table access.
               </p>
             </div>
 
