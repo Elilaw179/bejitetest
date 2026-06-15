@@ -1,16 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
-import CampaignStatusBadge from "../../components/Ads/CampaignStatusBadge";
-import {
-  Search,
-  Check,
-  X,
-  Pause,
-  Play,
-  ExternalLink,
-  Megaphone,
-} from "lucide-react";
+import AdCampaignReviewCard from "../../components/admin/AdCampaignReviewCard";
+import { Search, Megaphone } from "lucide-react";
 
 const STATUS_FILTERS = [
   { value: "pending_review", label: "Pending Review" },
@@ -158,122 +150,12 @@ export default function AdminAdPro() {
         ) : (
           <div className="space-y-4">
             {campaigns.map((campaign) => (
-              <div
+              <AdCampaignReviewCard
                 key={campaign.id}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-              >
-                <div className="p-5 sm:p-6 flex flex-col lg:flex-row gap-5">
-                  {campaign.mediaUrl && (
-                    <div className="w-full lg:w-48 h-32 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                      {campaign.mediaType === "video" ? (
-                        <video
-                          src={campaign.mediaUrl}
-                          className="w-full h-full object-cover"
-                          controls
-                        />
-                      ) : (
-                        <img
-                          src={campaign.mediaUrl}
-                          alt={campaign.headline}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h2 className="font-semibold text-gray-900">
-                        {campaign.name}
-                      </h2>
-                      <CampaignStatusBadge status={campaign.status} />
-                    </div>
-
-                    <p className="text-sm font-medium text-gray-800 mb-1">
-                      {campaign.headline}
-                    </p>
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                      {campaign.description}
-                    </p>
-
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                      <span>
-                        Advertiser:{" "}
-                        {campaign.advertiserName || campaign.advertiserEmail || "Unknown"}
-                      </span>
-                      {campaign.advertiserEmail && campaign.advertiserName && (
-                        <span>{campaign.advertiserEmail}</span>
-                      )}
-                      <span>
-                        Budget: ₦{Number(campaign.budget || 0).toLocaleString()}
-                      </span>
-                      <span>
-                        Submitted:{" "}
-                        {campaign.createdAt
-                          ? new Date(campaign.createdAt).toLocaleDateString()
-                          : "—"}
-                      </span>
-                    </div>
-
-                    {campaign.landingDestination && (
-                      <a
-                        href={campaign.landingDestination}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 mt-3 text-xs text-[#16730F] hover:underline"
-                      >
-                        Landing page <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                  </div>
-
-                  <div className="flex flex-row lg:flex-col gap-2 shrink-0">
-                    {campaign.status === "pending_review" && (
-                      <>
-                        <button
-                          disabled={updatingId === campaign.id}
-                          onClick={() => updateStatus(campaign.id, "active")}
-                          className="flex items-center justify-center gap-2 px-4 py-2 bg-[#16730F] text-white rounded-xl text-sm font-medium hover:bg-[#125a0c] disabled:opacity-60 transition-colors"
-                        >
-                          <Check className="w-4 h-4" />
-                          Approve
-                        </button>
-                        <button
-                          disabled={updatingId === campaign.id}
-                          onClick={() => updateStatus(campaign.id, "rejected")}
-                          className="flex items-center justify-center gap-2 px-4 py-2 border border-red-200 text-red-600 rounded-xl text-sm font-medium hover:bg-red-50 disabled:opacity-60 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                          Reject
-                        </button>
-                      </>
-                    )}
-
-                    {campaign.status === "active" && (
-                      <button
-                        disabled={updatingId === campaign.id}
-                        onClick={() => updateStatus(campaign.id, "paused")}
-                        className="flex items-center justify-center gap-2 px-4 py-2 border border-amber-200 text-amber-700 rounded-xl text-sm font-medium hover:bg-amber-50 disabled:opacity-60 transition-colors"
-                      >
-                        <Pause className="w-4 h-4" />
-                        Pause
-                      </button>
-                    )}
-
-                    {(campaign.status === "paused" ||
-                      campaign.status === "rejected") && (
-                      <button
-                        disabled={updatingId === campaign.id}
-                        onClick={() => updateStatus(campaign.id, "active")}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-[#16730F] text-white rounded-xl text-sm font-medium hover:bg-[#125a0c] disabled:opacity-60 transition-colors"
-                      >
-                        <Play className="w-4 h-4" />
-                        Activate
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+                campaign={campaign}
+                updatingId={updatingId}
+                onUpdateStatus={updateStatus}
+              />
             ))}
           </div>
         )}

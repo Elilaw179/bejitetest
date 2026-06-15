@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaImage, FaVideo, FaPoll, FaComment, FaShare, FaBookmark, FaHeart, FaEllipsisH, FaTimes } from 'react-icons/fa';
-import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments, addComment } from '../services/postsApi';
+import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, getComments } from '../services/postsApi';
 import { copyPostLink, getPostShareUrl, getSocialShareUrl, openShareWindow, recordPostShare } from '../utils/postShare';
 import { getUser } from '../utils/tokenManager';
 import { getUserProfileImage, getProfileImageUrl } from '../utils/profileImageUtils';
@@ -10,6 +10,7 @@ import ConfirmModal from './ConfirmModal';
 import SharePostModal from './SharePostModal';
 import PostMediaGallery from './PostMediaGallery';
 import FeedLoadMoreButton from './FeedLoadMoreButton';
+import PostCommentsSection from './PostCommentsSection';
 import { formatDisplayPersonName } from '../utils/personDisplayName';
 import { getAuthorSubtitle } from '../utils/authorDisplay';
 
@@ -385,7 +386,6 @@ const PostCard = ({ post, onLike, onSave, onShare, onUpdate, onDelete, currentUs
   const isOwner = String(post.authorId) === String(currentUserId);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
   const [liked, setLiked] = useState(post.likedByMe === true);
   const [saved, setSaved] = useState(post.savedByMe === true);
@@ -400,8 +400,8 @@ const PostCard = ({ post, onLike, onSave, onShare, onUpdate, onDelete, currentUs
   const [savingEdit, setSavingEdit] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
-  const fetchComments = async () => {
-    if (comments.length > 0) return;
+  const fetchComments = async (force = false) => {
+    if (!force && comments.length > 0) return;
     try {
       setLoadingComments(true);
       const data = await getComments(post.id);
@@ -410,18 +410,6 @@ const PostCard = ({ post, onLike, onSave, onShare, onUpdate, onDelete, currentUs
       console.error('Error fetching comments:', err);
     } finally {
       setLoadingComments(false);
-    }
-  };
-
-  const handleAddComment = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-    try {
-      await addComment(post.id, newComment);
-      setNewComment('');
-      fetchComments();
-    } catch (err) {
-      console.error('Error adding comment:', err);
     }
   };
 
@@ -555,12 +543,14 @@ const PostCard = ({ post, onLike, onSave, onShare, onUpdate, onDelete, currentUs
       />
 
       {showComments && (
-        <CommentSection 
+        <PostCommentsSection
+          postId={post.id}
           comments={comments}
-          newComment={newComment}
-          setNewComment={setNewComment}
-          onSubmit={handleAddComment}
+          setComments={setComments}
           loading={loadingComments}
+          onReload={() => fetchComments(true)}
+          currentUserPhotoUrl={getUserProfileImage()}
+          currentUserId={currentUserId}
         />
       )}
     </div>
@@ -749,56 +739,6 @@ const PostActions = ({ liked, saved, onLike, onComment, onShare, onSave }) => {
         <FaBookmark className={saved ? 'fill-current' : ''} />
         <span className="text-xs sm:text-sm">{saved ? 'Saved' : 'Save'}</span>
       </button>
-    </div>
-  );
-};
-
-const CommentSection = ({ comments, newComment, setNewComment, onSubmit, loading }) => {
-  const getCommentAuthorImage = (comment) => {
-    return getProfileImageUrl(comment.author?.image || comment.author?.profile_photo);
-  };
-
-  return (
-    <div className="border-t pt-4 mt-4">
-      <form onSubmit={onSubmit} className="flex flex-wrap sm:flex-nowrap gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Write a comment..."
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          className="flex-1 min-w-[180px] border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#16730F]"
-        />
-        <button 
-          type="submit"
-          className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c]"
-        >
-          Post
-        </button>
-      </form>
-
-      {loading ? (
-        <p className="text-gray-500 text-sm">Loading comments...</p>
-      ) : comments.length === 0 ? (
-        <p className="text-gray-500 text-sm">No comments yet</p>
-      ) : (
-        <div className="space-y-4">
-          {comments.map(comment => (
-            <div key={comment.id} className="flex gap-2">
-              <img
-                src={getCommentAuthorImage(comment)}
-                alt="profile"
-                className="w-8 h-8 rounded-full"
-              />
-              <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2">
-                <p className="font-semibold text-sm text-[#16730F]">
-                  {getDisplayName(comment.author)}
-                </p>
-                <p className="text-sm">{comment.body}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

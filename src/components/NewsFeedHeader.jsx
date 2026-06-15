@@ -4,7 +4,6 @@ import {
   FaList,
   FaSearch,
   FaChevronDown,
-  FaSignOutAlt,
   FaUserEdit,
   FaUser,
   FaCreditCard,
@@ -13,8 +12,7 @@ import {
   FaNewspaper,
 } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { logout as logoutAction } from "../features/auth/authSlice";
+import { useSelector } from "react-redux";
 import {
   getUser,
   mergeAuthUsers,
@@ -34,10 +32,10 @@ import {
   formatDisplayRole,
 } from "../utils/personDisplayName";
 import { formatDisplayText } from "../utils/displayFormatUtils";
+import RecruitmentRightMobileMenu from "./recruitment/RecruitmentRightMobileMenu";
 
 const NewsFeedHeader = ({ user: propUser }) => {
   useSyncProfilePhoto();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -117,7 +115,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
         localStorage.getItem("token");
       if (!token) return;
 
-      const response = await fetch(`${API_URL}/api/notifications`, {
+      const response = await fetch(`${API_URL}/api/notifications/unread-count`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -125,25 +123,12 @@ const NewsFeedHeader = ({ user: propUser }) => {
       });
 
       const data = await response.json();
-      if (response.ok && data.data) {
-        const unreadCount = data.data.filter(
-          (notification) => !notification.is_read,
-        ).length;
-        setNotificationCount(unreadCount);
+      if (response.ok) {
+        setNotificationCount(data.unread_count ?? 0);
       }
     } catch (err) {
       console.error("Error fetching notification count:", err);
     }
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    dispatch(logoutAction());
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    navigate("/");
   };
 
   // Global search function
@@ -612,7 +597,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                 {getDisplayName()}
               </p>
 
-              {/* Custom Dropdown for Role & Logout */}
+              {/* Custom Dropdown for Role */}
               <div className="relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -741,20 +726,6 @@ const NewsFeedHeader = ({ user: propUser }) => {
                         </button>
                       )}
                     </div>
-
-                    {/* Divider */}
-                    <div className="border-t border-gray-100 my-1"></div>
-
-                    {/* Section 3: Account */}
-                    <div className="py-1">
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-all duration-200 hover:pl-5"
-                      >
-                        <FaSignOutAlt className="text-base" />
-                        <span>Logout</span>
-                      </button>
-                    </div>
                   </div>
                 )}
               </div>
@@ -765,73 +736,91 @@ const NewsFeedHeader = ({ user: propUser }) => {
 
       {/* Mobile Sidebar */}
       {isSidebarOpen && (
-        <div className="fixed top-0 left-0 w-3/4 max-w-[250px] h-full bg-white shadow-lg z-50 p-4 transition-transform lg:hidden block">
+        <>
           <button
+            type="button"
+            aria-label="Close menu"
+            className="fixed inset-0 bg-black/40 z-40 lg:hidden"
             onClick={toggleSidebar}
-            className="text-[#16730F] font-bold text-lg mb-4"
-          >
-            ✕ Close
-          </button>
-          <nav className="flex flex-col gap-4">
-            {menuItems.map((name, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => {
-                  handleIconClick(name);
-                  setIsSidebarOpen(false);
-                }}
+          />
+          <div className="fixed top-0 left-0 w-[min(85vw,300px)] h-full bg-white shadow-lg z-50 flex flex-col lg:hidden">
+            <div className="p-4 border-b border-gray-100 shrink-0">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                className="text-[#16730F] font-bold text-lg"
               >
-                {name === "home-icon" ? (
-                  <FaHome
-                    className={
-                      isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F]"
-                    }
-                  />
-                ) : (
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto nfl-scroll p-4 pt-2">
+              <nav className="flex flex-col gap-4">
+                {menuItems.map((name, i) => (
                   <div
-                    className={`relative rounded-full p-1.5 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}
+                    key={i}
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={() => {
+                      handleIconClick(name);
+                      setIsSidebarOpen(false);
+                    }}
                   >
-                    <img
-                      src={`/assets/images/${name}.svg`}
-                      alt={name}
-                      className="h-5"
-                    />
-                    {name === "notifications" && notificationCount > 0 && (
-                      <span
-                        className={countBadgeClass(notificationCount, true)}
+                    {name === "home-icon" ? (
+                      <FaHome
+                        className={
+                          isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F]"
+                        }
+                      />
+                    ) : (
+                      <div
+                        className={`relative rounded-full p-1.5 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}
                       >
-                        {formatNavCount(notificationCount, true)}
-                      </span>
-                    )}
-                    {name === "CHAT" && unreadMessageCount > 0 && (
-                      <span
-                        className={`${countBadgeClass(unreadMessageCount, true)} animate-pulse`}
-                      >
-                        {formatNavCount(unreadMessageCount, true)}
-                      </span>
-                    )}
-                    {name === "connection" && connectionRequestCount > 0 && (
-                      <span
-                        className={countBadgeClass(
-                          connectionRequestCount,
-                          true,
+                        <img
+                          src={`/assets/images/${name}.svg`}
+                          alt={name}
+                          className="h-5"
+                        />
+                        {name === "notifications" && notificationCount > 0 && (
+                          <span
+                            className={countBadgeClass(notificationCount, true)}
+                          >
+                            {formatNavCount(notificationCount, true)}
+                          </span>
                         )}
-                      >
-                        {formatNavCount(connectionRequestCount, true)}
-                      </span>
+                        {name === "CHAT" && unreadMessageCount > 0 && (
+                          <span
+                            className={`${countBadgeClass(unreadMessageCount, true)} animate-pulse`}
+                          >
+                            {formatNavCount(unreadMessageCount, true)}
+                          </span>
+                        )}
+                        {name === "connection" && connectionRequestCount > 0 && (
+                          <span
+                            className={countBadgeClass(
+                              connectionRequestCount,
+                              true,
+                            )}
+                          >
+                            {formatNavCount(connectionRequestCount, true)}
+                          </span>
+                        )}
+                      </div>
                     )}
+                    <span
+                      className={`font-medium capitalize text-sm ${isIconActive(name) ? "text-[#0f4e0a]" : "text-[#1A3E32]"}`}
+                    >
+                      {name === "home-icon" ? "News Feed" : name.toLowerCase()}
+                    </span>
                   </div>
-                )}
-                <span
-                  className={`font-medium capitalize text-sm ${isIconActive(name) ? "text-[#0f4e0a]" : "text-[#1A3E32]"}`}
-                >
-                  {name === "home-icon" ? "News Feed" : name.toLowerCase()}
-                </span>
-              </div>
-            ))}
-          </nav>
-        </div>
+                ))}
+              </nav>
+
+              <RecruitmentRightMobileMenu
+                onNavigate={() => setIsSidebarOpen(false)}
+              />
+            </div>
+          </div>
+        </>
       )}
     </header>
   );

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 import {
   Lock,
   Eye,
@@ -26,20 +27,136 @@ import {
   TwoFactorModal,
 } from "../components/modal/confirmBadgeModal";
 import { SettingRow } from "../components/SettingsRow";
+import {
+  getUser,
+  mergeAuthUsers,
+  pickProfilePhotoPath,
+} from "../utils/tokenManager";
+import {
+  profileAvatarSrc,
+  PROFILE_PHOTO_PLACEHOLDER,
+} from "../utils/profilePhotoUrl";
+import { formatDisplayPersonName } from "../utils/personDisplayName";
+import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
+import useAuth from "../hooks/useAuth";
+import {
+  getNotificationPreferences,
+  isPushSupported,
+  subscribeToPushNotifications,
+  unsubscribeFromPushNotifications,
+  updateNotificationPreferences,
+} from "../services/pushNotificationService";
 
 export default function AccountSettings() {
+  useSyncProfilePhoto();
+  const { logout } = useAuth();
+  const reduxUser = useSelector((state) => state.auth?.user);
+
+  const user = useMemo(() => {
+    const localUser = getUser();
+    return mergeAuthUsers(localUser || {}, reduxUser || localUser || {});
+  }, [reduxUser]);
+
+  const displayName = formatDisplayPersonName(user, "User");
+  const email = user?.email?.trim() || "";
+  const profilePhoto = profileAvatarSrc(
+    pickProfilePhotoPath(user) || user?.image || user?.profilePhoto,
+  );
+  const showPhoto =
+    profilePhoto && profilePhoto !== PROFILE_PHOTO_PLACEHOLDER;
+  const nameInitial = (displayName || "U").charAt(0).toUpperCase();
+
   const [modal, setModal] = useState(null);
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
-    sms: false,
+    sms: true,
   });
+  const [pushLoading, setPushLoading] = useState(false);
+  const [channelLoading, setChannelLoading] = useState(null);
+  const [prefsLoading, setPrefsLoading] = useState(true);
   const [profileVisibility, setProfileVisibility] = useState("Public");
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  const toggleNotif = (key) =>
-    setNotifications((n) => ({ ...n, [key]: !n[key] }));
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPrefs = async () => {
+      try {
+        const prefs = await getNotificationPreferences();
+        if (!cancelled) {
+          setNotifications({
+            email: prefs.email_enabled !== false,
+            push: prefs.push_enabled !== false,
+            sms: prefs.sms_enabled !== false,
+          });
+        }
+      } catch (error) {
+        console.warn("Failed to load notification preferences:", error?.message);
+      } finally {
+        if (!cancelled) setPrefsLoading(false);
+      }
+    };
+
+    loadPrefs();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleChannelToggle = async (channel) => {
+    if (prefsLoading || channelLoading) return;
+
+    const fieldMap = {
+      email: "email_enabled",
+      sms: "sms_enabled",
+    };
+    const field = fieldMap[channel];
+    if (!field) return;
+
+    const nextValue = !notifications[channel];
+    setChannelLoading(channel);
+
+    try {
+      await updateNotificationPreferences({ [field]: nextValue });
+      setNotifications((n) => ({ ...n, [channel]: nextValue }));
+      showToast(
+        `${channel === "email" ? "Email" : "SMS"} notifications ${nextValue ? "enabled" : "disabled"}`,
+      );
+    } catch (error) {
+      showToast(error?.message || "Could not update notification preference");
+    } finally {
+      setChannelLoading(null);
+    }
+  };
+
+  const handlePushToggle = async () => {
+    if (pushLoading || prefsLoading) return;
+
+    const enabling = !notifications.push;
+    setPushLoading(true);
+
+    try {
+      if (enabling) {
+        if (!isPushSupported()) {
+          showToast("Push notifications are not supported in this browser");
+          return;
+        }
+        await subscribeToPushNotifications();
+        setNotifications((n) => ({ ...n, push: true }));
+        showToast("Push notifications enabled");
+      } else {
+        await unsubscribeFromPushNotifications();
+        setNotifications((n) => ({ ...n, push: false }));
+        showToast("Push notifications disabled");
+      }
+    } catch (error) {
+      showToast(error?.message || "Could not update push notifications");
+    } finally {
+      setPushLoading(false);
+    }
+  };
 
   const showToast = (message) => {
     setToastMessage(message);
@@ -50,6 +167,11 @@ export default function AccountSettings() {
   const handleConfirmAction = (action) => {
     setModal(null);
     showToast(`${action} successful`);
+  };
+
+  const handleLogout = () => {
+    setModal(null);
+    logout();
   };
 
   const sections = [
@@ -91,9 +213,10 @@ export default function AccountSettings() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                toggleNotif("email");
+                handleChannelToggle("email");
               }}
-              className={`relative w-11 h-6 rounded-full transition-colors ${notifications.email ? "bg-[#1A3E32]" : "bg-gray-200"}`}
+              disabled={prefsLoading || channelLoading === "email"}
+              className={`relative w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${notifications.email ? "bg-[#1A3E32]" : "bg-gray-200"}`}
             >
               <span
                 className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${notifications.email ? "left-6" : "left-1"}`}
@@ -105,14 +228,17 @@ export default function AccountSettings() {
           icon: Bell,
           iconBg: "bg-amber-50",
           label: "Push Notifications",
-          sublabel: "In-app alerts and updates",
+          sublabel: isPushSupported()
+            ? "Browser alerts when connections post"
+            : "Not supported in this browser",
           action: (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                toggleNotif("push");
+                handlePushToggle();
               }}
-              className={`relative w-11 h-6 rounded-full transition-colors ${notifications.push ? "bg-[#1A3E32]" : "bg-gray-200"}`}
+              disabled={pushLoading || prefsLoading || !isPushSupported()}
+              className={`relative w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${notifications.push ? "bg-[#1A3E32]" : "bg-gray-200"}`}
             >
               <span
                 className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${notifications.push ? "left-6" : "left-1"}`}
@@ -129,9 +255,10 @@ export default function AccountSettings() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                toggleNotif("sms");
+                handleChannelToggle("sms");
               }}
-              className={`relative w-11 h-6 rounded-full transition-colors ${notifications.sms ? "bg-[#1A3E32]" : "bg-gray-200"}`}
+              disabled={prefsLoading || channelLoading === "sms"}
+              className={`relative w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${notifications.sms ? "bg-[#1A3E32]" : "bg-gray-200"}`}
             >
               <span
                 className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${notifications.sms ? "left-6" : "left-1"}`}
@@ -198,13 +325,25 @@ export default function AccountSettings() {
           <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
             {/* Profile preview */}
             <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#1A3E32] to-[#2d6a54] flex items-center justify-center text-white text-xl font-bold shrink-0">
-                A
-              </div>
+              {showPhoto ? (
+                <img
+                  src={profilePhoto}
+                  alt={displayName}
+                  className="w-14 h-14 rounded-full object-cover shrink-0 border-2 border-[#1A3E32]/20"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = PROFILE_PHOTO_PLACEHOLDER;
+                  }}
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#1A3E32] to-[#2d6a54] flex items-center justify-center text-white text-xl font-bold shrink-0">
+                  {nameInitial}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900 text-base">Abel Bejite</p>
+                <p className="font-bold text-gray-900 text-base">{displayName}</p>
                 <p className="text-sm text-gray-400 truncate">
-                  abel@bejite.com
+                  {email || "No email on file"}
                 </p>
               </div>
             </div>
@@ -286,7 +425,7 @@ export default function AccountSettings() {
             description="Are you sure you want to log out of your Bejite account?"
             confirmLabel="Log Out"
             onClose={() => setModal(null)}
-            onConfirm={() => handleConfirmAction("Log out")}
+            onConfirm={handleLogout}
           />
         )}
         {modal === "deactivate" && (

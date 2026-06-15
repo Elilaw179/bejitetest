@@ -389,6 +389,36 @@ export const deleteComment = async (postId, commentId) => {
   }
 };
 
+/**
+ * Like a comment
+ * @param {string} postId - Post UUID
+ * @param {string} commentId - Comment UUID
+ */
+export const likeComment = async (postId, commentId) => {
+  try {
+    const response = await axiosInstance.post(`${POSTS_API_URL}/${postId}/comments/${commentId}/like`);
+    return response.data;
+  } catch (error) {
+    console.error('Error liking comment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Unlike a comment
+ * @param {string} postId - Post UUID
+ * @param {string} commentId - Comment UUID
+ */
+export const unlikeComment = async (postId, commentId) => {
+  try {
+    const response = await axiosInstance.delete(`${POSTS_API_URL}/${postId}/comments/${commentId}/like`);
+    return response.data;
+  } catch (error) {
+    console.error('Error unliking comment:', error);
+    throw error;
+  }
+};
+
 // ============================================
 // CONNECTION ENDPOINTS
 // ============================================

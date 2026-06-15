@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { getLandingHref } from "../../utils/landingDestination";
 
 export default function AdCard({
   ad,
@@ -21,9 +22,10 @@ export default function AdCard({
   const [mediaFailed, setMediaFailed] = useState(false);
 
   const handleClick = () => {
-    if (ad.landingDestination) {
+    const href = getLandingHref(ad.landingType, ad.landingDestination);
+    if (href) {
       onInteraction?.("click", ad.id);
-      window.open(ad.landingDestination, "_blank");
+      window.open(href, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -97,14 +99,14 @@ export default function AdCard({
               <img
                 src={ad.mediaUrl}
                 alt={ad.headline}
-                className="w-full h-48 object-cover hover:scale-105 transition-transform duration-500"
+                className="w-full h-auto block object-contain"
                 loading="lazy"
                 onError={() => setMediaFailed(true)}
               />
             ) : (
               <video
                 src={ad.mediaUrl}
-                className="w-full h-48 object-cover"
+                className="w-full h-auto block object-contain"
                 controls
                 onClick={(e) => e.stopPropagation()}
                 poster={ad.posterUrl}

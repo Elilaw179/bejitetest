@@ -425,7 +425,7 @@ const Connections = () => {
           </div>
 
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm overflow-hidden min-w-0">
-            <div className="flex border-b border-gray-200 overflow-x-auto nfl-scroll scroll-smooth">
+            <div className="flex w-full border-b border-gray-200">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -434,14 +434,14 @@ const Connections = () => {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex shrink-0 flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-3 px-3 sm:py-4 sm:px-4 md:px-5 min-w-[4.5rem] sm:min-w-0 sm:flex-1 transition-colors ${
+                    className={`flex flex-1 min-w-0 flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-3 px-1 sm:py-4 sm:px-4 md:px-5 transition-colors ${
                       isActive
                         ? 'bg-[#16730F] text-white'
                         : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                    <span className="font-medium text-[10px] sm:text-sm leading-tight text-center max-w-[4.5rem] sm:max-w-none truncate">
+                    <span className="font-medium text-[10px] sm:text-sm leading-tight text-center w-full min-w-0 truncate px-0.5">
                       {tab.label}
                     </span>
                     {tab.count > 0 && (

@@ -84,6 +84,7 @@ import AdminList from "./pages/admin/AdminList.jsx";
 import AdminAdPro from "./pages/admin/AdminAdPro.jsx";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute.jsx";
 import AdminLayout from "./components/admin/AdminLayout.jsx";
+import PushNotificationBootstrap from "./components/PushNotificationBootstrap.jsx";
 import AuthBootstrap from "./components/AuthBootstrap.jsx";
 import ProfileCompletionReminder from "./components/ProfileCompletionReminder.jsx";
 import { Navigate } from "react-router-dom";
@@ -113,6 +114,7 @@ function App() {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Router>
         <AuthBootstrap>
+          <PushNotificationBootstrap />
           <Routes>
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />

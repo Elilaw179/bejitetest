@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import NewsFeedHeader from '../../components/NewsFeedHeader'
 import { API_URL } from '../../config'
 import NewsFeedLayout from '../../components/layout/NewsFeedLayout'
 
 const Notifications = () => {
+  const navigate = useNavigate()
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -120,6 +122,42 @@ const Notifications = () => {
       }
     }
 
+    // Connection posted — open news feed at the post
+    if (notification.type === 'connection_post') {
+      const postId = parsedData?.postId
+      if (postId) {
+        navigate(`/news-feed?postId=${postId}`)
+        return
+      }
+      navigate('/news-feed')
+      return
+    }
+
+    // Post engagement — open news feed at the post
+    if (
+      notification.type === 'post_liked' ||
+      notification.type === 'post_commented' ||
+      notification.type === 'post_shared' ||
+      notification.type === 'post_saved'
+    ) {
+      const postId = parsedData?.postId
+      if (postId) {
+        navigate(`/news-feed?postId=${postId}`)
+        return
+      }
+      navigate('/news-feed')
+      return
+    }
+
+    // Connection request or accepted — open connections page
+    if (
+      notification.type === 'connection_request' ||
+      notification.type === 'connection_accepted'
+    ) {
+      navigate('/connection')
+      return
+    }
+
     // If we found an invitation ID, show the modal
     if (invitationId) {
       setSelectedNotification({
@@ -219,6 +257,20 @@ const Notifications = () => {
         return '✅'
       case 'invite_declined':
         return '❌'
+      case 'connection_post':
+        return '📝'
+      case 'post_liked':
+        return '❤️'
+      case 'post_commented':
+        return '💬'
+      case 'post_shared':
+        return '🔁'
+      case 'post_saved':
+        return '🔖'
+      case 'connection_request':
+        return '🤝'
+      case 'connection_accepted':
+        return '✅'
       default:
         return '🔔'
     }
@@ -273,7 +325,7 @@ const Notifications = () => {
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
             >
-              🔔 Notifications
+              Notifications
             </button>
             <button
               onClick={() => {
@@ -285,7 +337,7 @@ const Notifications = () => {
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
             >
-              📅 My Interview Invitations
+              My Interview Invitations
               {invitations.length > 0 && (
                 <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
                   {invitations.length}
