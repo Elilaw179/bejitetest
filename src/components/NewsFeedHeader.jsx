@@ -32,6 +32,7 @@ import {
   formatDisplayRole,
 } from "../utils/personDisplayName";
 import { formatDisplayText } from "../utils/displayFormatUtils";
+import { filterAdminUsersFromSearch, filterAdminSearchResults } from "../utils/filterAdminUsers";
 import RecruitmentRightMobileMenu from "./recruitment/RecruitmentRightMobileMenu";
 
 const NewsFeedHeader = ({ user: propUser }) => {
@@ -50,6 +51,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
+  const searchRequestIdRef = useRef(0);
 
   // Get user from Redux store first (most up-to-date after login), fallback to prop or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
@@ -139,6 +141,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
       return;
     }
 
+    const requestId = ++searchRequestIdRef.current;
     setIsSearching(true);
     try {
       const searchPromises = [];
@@ -149,13 +152,14 @@ const NewsFeedHeader = ({ user: propUser }) => {
           .get(`/api/connections/search?q=${encodeURIComponent(query)}&limit=5`)
           .then((response) => ({
             type: "people",
-            results: (response.data.users || []).map((u) => ({
+            results: filterAdminUsersFromSearch(response.data.users || []).map((u) => ({
               type: "people",
               id: u.id,
               name: formatDisplayPersonName(u, "Unknown User"),
               firstName: u.firstName,
               lastName: u.lastName,
               email: u.email,
+              username: u.username,
               subtitle: u.jobTitle || "Professional",
               image: pickAuthorProfilePhoto(u),
               url: `/user-profile/${u.id}`,
@@ -171,7 +175,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
           .then((response) => ({
             type: "people",
             results: response.data.success
-              ? response.data.data.map((candidate) => {
+              ? filterAdminUsersFromSearch(response.data.data).map((candidate) => {
                   const userId =
                     candidate.user_id ?? candidate.userId ?? candidate.id;
                   return {
@@ -181,6 +185,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                     firstName: candidate.first_name,
                     lastName: candidate.last_name,
                     email: candidate.email,
+                    username: candidate.username,
                     subtitle:
                       formatDisplayText(candidate.title) || "Professional",
                     image: pickAuthorProfilePhoto(candidate),
@@ -216,6 +221,8 @@ const NewsFeedHeader = ({ user: propUser }) => {
       // When available, add posts search here
 
       const results = await Promise.all(searchPromises);
+      if (requestId !== searchRequestIdRef.current) return;
+
       const combinedResults = results.flatMap((result) => result.results);
       const seen = new Set();
       const deduped = combinedResults.filter((item) => {
@@ -223,15 +230,18 @@ const NewsFeedHeader = ({ user: propUser }) => {
         seen.add(String(item.id));
         return true;
       });
-      setSearchResults(deduped.slice(0, 10));
-      if (combinedResults.length > 0) {
-        setShowSearchResults(true);
-      }
+      const publicResults = filterAdminSearchResults(deduped);
+      setSearchResults(publicResults.slice(0, 10));
+      setShowSearchResults(publicResults.length > 0);
     } catch (error) {
+      if (requestId !== searchRequestIdRef.current) return;
       console.error("Global search error:", error);
       setSearchResults([]);
+      setShowSearchResults(false);
     } finally {
-      setIsSearching(false);
+      if (requestId === searchRequestIdRef.current) {
+        setIsSearching(false);
+      }
     }
   };
 

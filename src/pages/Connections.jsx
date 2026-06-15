@@ -9,6 +9,7 @@ import { getAuthorProfileImageUrl } from '../utils/profileImageUtils';
 import useSyncProfilePhoto from '../hooks/useSyncProfilePhoto';
 import NewsFeedLayout from '../components/layout/NewsFeedLayout';
 import { formatDisplayPersonName } from '../utils/personDisplayName';
+import { filterAdminUsersFromSearch } from '../utils/filterAdminUsers';
 
 const shuffleArray = (arr) => {
   const shuffled = [...arr];
@@ -182,7 +183,7 @@ const Connections = () => {
         const searchRes = await connectionsApi.searchUsers(query);
         const usersArray = searchRes?.users || searchRes || [];
         const transformed = Array.isArray(usersArray)
-          ? usersArray.map(transformDiscoverableUser)
+          ? filterAdminUsersFromSearch(usersArray).map(transformDiscoverableUser)
           : [];
         setPeopleSearchResults(transformed);
       } catch (error) {

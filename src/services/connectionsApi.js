@@ -4,6 +4,7 @@
  */
 
 import axiosInstance from '../utils/axiosInstance';
+import { filterAdminUsersFromSearch } from '../utils/filterAdminUsers';
 
 /**
  * Get user's accepted connections
@@ -164,6 +165,12 @@ export const searchUsers = async (query, limit = 20, offset = 0) => {
     const response = await axiosInstance.get('/api/connections/search', {
       params: { q: query, limit, offset }
     });
+    if (response.data?.users) {
+      return {
+        ...response.data,
+        users: filterAdminUsersFromSearch(response.data.users),
+      };
+    }
     return response.data;
   } catch (error) {
     console.error('Error searching users:', error);

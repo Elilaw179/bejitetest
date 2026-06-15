@@ -6,6 +6,7 @@ import InterviewInviteModal from "./InterviewInviteModal";
 import { useNavigate } from "react-router-dom";
 import { formatDisplayPersonName, formatDisplayRole } from "../../utils/personDisplayName";
 import { formatDisplayText } from "../../utils/displayFormatUtils";
+import { filterAdminUsersFromSearch } from "../../utils/filterAdminUsers";
 
 const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
   const navigate = useNavigate();
@@ -122,7 +123,9 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
         }
 
         // Validate & format - handle different response formats
-        const candidatesData = data.data || data.candidates || [];
+        const candidatesData = filterAdminUsersFromSearch(
+          data.data || data.candidates || [],
+        );
         if (Array.isArray(candidatesData)) {
           const formatted = candidatesData.map((candidate) => {
             const bioRow = Array.isArray(candidate.user_bio)

@@ -531,6 +531,9 @@ const PostCard = ({ post, onLike, onSave, onShare, onUpdate, onDelete, currentUs
       <PostActions 
         liked={liked}
         saved={saved}
+        likesCount={post.likesCount || 0}
+        commentsCount={post.commentsCount || 0}
+        sharesCount={post.sharesCount || 0}
         onLike={handleLikeClick}
         onComment={toggleComments}
         onShare={handleShareClick}
@@ -697,8 +700,10 @@ const PostContent = ({ body }) => {
 };
 
 const PostStats = ({ likesCount, commentsCount, sharesCount }) => {
+  if (likesCount <= 0 && commentsCount <= 0 && sharesCount <= 0) return null;
+
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
+    <div className="hidden sm:flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
       {likesCount > 0 && <span>{likesCount} like{likesCount > 1 ? 's' : ''}</span>}
       {commentsCount > 0 && <span>{commentsCount} comment{commentsCount > 1 ? 's' : ''}</span>}
       {sharesCount > 0 && <span>{sharesCount} share{sharesCount > 1 ? 's' : ''}</span>}
@@ -706,38 +711,43 @@ const PostStats = ({ likesCount, commentsCount, sharesCount }) => {
   );
 };
 
-const PostActions = ({ liked, saved, onLike, onComment, onShare, onSave }) => {
+const PostActions = ({ liked, saved, likesCount, commentsCount, sharesCount, onLike, onComment, onShare, onSave }) => {
   return (
-    <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 border-t pt-4">
-      <div className="grid grid-cols-3 w-full sm:w-auto gap-3 sm:flex sm:gap-6">
-        <button 
-          onClick={onLike}
-          className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
-        >
-          <FaHeart className={liked ? 'fill-current text-red-500' : ''} />
-          <span className="text-xs sm:text-sm">{liked ? 'Liked' : 'Like'}</span>
-        </button>
-        <button 
-          onClick={onComment}
-          className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]"
-        >
-          <FaComment />
-          <span className="text-xs sm:text-sm">Comment</span>
-        </button>
-        <button 
-          onClick={onShare}
-          className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]"
-        >
-          <FaShare />
-          <span className="text-xs sm:text-sm">Share</span>
-        </button>
-      </div>
+    <div className="flex flex-row justify-start items-center gap-4 sm:gap-6 border-t pt-4">
+      <button 
+        onClick={onLike}
+        className={`flex items-center justify-center gap-1.5 p-0 ${liked ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
+        aria-label={liked ? 'Unlike' : 'Like'}
+      >
+        <FaHeart className={liked ? 'fill-current text-red-500' : ''} />
+        <span className="text-xs tabular-nums sm:hidden">{likesCount}</span>
+        <span className="hidden sm:inline text-xs sm:text-sm">{liked ? 'Liked' : 'Like'}</span>
+      </button>
+      <button 
+        onClick={onComment}
+        className="flex items-center justify-center gap-1.5 p-0 text-gray-600 hover:text-[#16730F]"
+        aria-label="Comment"
+      >
+        <FaComment />
+        <span className="text-xs tabular-nums sm:hidden">{commentsCount}</span>
+        <span className="hidden sm:inline text-xs sm:text-sm">Comment</span>
+      </button>
+      <button 
+        onClick={onShare}
+        className="flex items-center justify-center gap-1.5 p-0 text-gray-600 hover:text-[#16730F]"
+        aria-label="Share"
+      >
+        <FaShare />
+        <span className="text-xs tabular-nums sm:hidden">{sharesCount}</span>
+        <span className="hidden sm:inline text-xs sm:text-sm">Share</span>
+      </button>
       <button 
         onClick={onSave}
-        className={`flex items-center gap-2 ${saved ? 'text-[#16730F]' : 'text-gray-600 hover:text-[#16730F]'}`}
+        className={`flex items-center justify-center gap-2 p-0 ${saved ? 'text-[#16730F]' : 'text-gray-600 hover:text-[#16730F]'}`}
+        aria-label={saved ? 'Unsave post' : 'Save post'}
       >
         <FaBookmark className={saved ? 'fill-current' : ''} />
-        <span className="text-xs sm:text-sm">{saved ? 'Saved' : 'Save'}</span>
+        <span className="hidden sm:inline text-xs sm:text-sm">{saved ? 'Saved' : 'Save'}</span>
       </button>
     </div>
   );

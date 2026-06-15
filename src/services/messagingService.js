@@ -1,4 +1,5 @@
 import axiosInstance from '../utils/axiosInstance';
+import { filterAdminUsersFromSearch } from '../utils/filterAdminUsers';
 
 // Messaging API service
 const messagingService = {
@@ -19,7 +20,7 @@ const messagingService = {
       const response = await axiosInstance.get('/api/connections/search', {
         params: { q: query, limit, offset }
       });
-      return response.data.users || [];
+      return filterAdminUsersFromSearch(response.data.users || []);
     } catch (error) {
       console.error('Error searching users:', error);
       throw error;

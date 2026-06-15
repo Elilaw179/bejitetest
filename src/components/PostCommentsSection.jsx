@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { FaHeart, FaReply } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { FaHeart, FaTrash } from "react-icons/fa";
 import {
   addComment,
+  deleteComment,
   likeComment,
   unlikeComment,
 } from "../services/postsApi";
@@ -10,9 +12,27 @@ import { formatDisplayPersonName } from "../utils/personDisplayName";
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
 
+function collectDescendantCommentIds(commentId, allComments) {
+  const ids = new Set([commentId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const entry of allComments) {
+      if (
+        entry.parentCommentId &&
+        ids.has(entry.parentCommentId) &&
+        !ids.has(entry.id)
+      ) {
+        ids.add(entry.id);
+        changed = true;
+      }
+    }
+  }
+  return ids;
+}
+
 function CommentItem({
   comment,
-  postId,
   currentUserPhotoUrl,
   currentUserId,
   replyingTo,
@@ -22,56 +42,137 @@ function CommentItem({
   onCancelReply,
   onSubmitReply,
   onLike,
+  onDelete,
+  onViewProfile,
+  deletingCommentId,
   getReplies,
+  getCommentById,
   depth = 0,
 }) {
   const replies = getReplies(comment.id);
   const isReplying = replyingTo === comment.id;
+  const isReply = depth > 0;
+  const isOwner = String(comment.authorId) === String(currentUserId);
+  const parentComment = isReply ? getCommentById(comment.parentCommentId) : null;
   const authorImage =
     String(comment.authorId) === String(currentUserId)
       ? currentUserPhotoUrl
       : getAuthorProfileImageUrl(comment.author);
 
+  const goToAuthorProfile = () => {
+    if (comment.authorId) onViewProfile(comment.authorId);
+  };
+
+  const goToParentProfile = () => {
+    if (parentComment?.authorId) onViewProfile(parentComment.authorId);
+  };
+
   return (
-    <div className={depth > 0 ? "ml-8 mt-3" : ""}>
-      <div className="flex gap-2">
-        <img
-          src={authorImage}
-          alt=""
-          className="w-8 h-8 rounded-full object-cover shrink-0"
-        />
+    <div>
+      <div className="flex gap-2.5">
+        <button
+          type="button"
+          onClick={goToAuthorProfile}
+          disabled={!comment.authorId}
+          className="rounded-full shrink-0 disabled:cursor-default"
+          aria-label={`View ${getDisplayName(comment.author)}'s profile`}
+        >
+          <img
+            src={authorImage}
+            alt=""
+            className={`rounded-full object-cover ${
+              isReply ? "w-7 h-7 mt-0.5" : "w-8 h-8"
+            } ${comment.authorId ? "cursor-pointer hover:opacity-90" : ""}`}
+          />
+        </button>
         <div className="flex-1 min-w-0">
-          <div className="bg-gray-50 rounded-lg px-3 py-2">
-            <p className="font-semibold text-sm text-[#16730F]">
-              {getDisplayName(comment.author)}
+          <div
+            className={`rounded-2xl px-3 py-2 ${
+              isReply
+                ? "bg-white border border-gray-100 shadow-sm"
+                : "bg-gray-50"
+            }`}
+          >
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <button
+                type="button"
+                onClick={goToAuthorProfile}
+                disabled={!comment.authorId}
+                className="font-semibold text-sm text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
+              >
+                {getDisplayName(comment.author)}
+              </button>
+              {parentComment && depth > 1 && (
+                <p className="text-xs text-gray-500">
+                  replying to{" "}
+                  <button
+                    type="button"
+                    onClick={goToParentProfile}
+                    disabled={!parentComment.authorId}
+                    className="font-medium text-[#16730F] hover:underline disabled:cursor-default disabled:no-underline"
+                  >
+                    {getDisplayName(parentComment.author)}
+                  </button>
+                </p>
+              )}
+            </div>
+            <p className="text-sm break-words text-gray-800 mt-0.5">
+              {comment.body}
             </p>
-            <p className="text-sm break-words">{comment.body}</p>
           </div>
 
-          <div className="flex items-center gap-4 mt-1 px-1">
+          <div className="flex flex-row justify-start items-center gap-4 sm:gap-3 mt-1 px-1">
             <button
               type="button"
               onClick={() => onLike(comment)}
-              className={`flex items-center gap-1 text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
                 comment.likedByMe
                   ? "text-red-500"
                   : "text-gray-500 hover:text-red-500"
               }`}
+              aria-label={comment.likedByMe ? "Unlike comment" : "Like comment"}
             >
               <FaHeart
                 className={comment.likedByMe ? "fill-current text-red-500" : ""}
               />
-              {comment.likesCount > 0 && <span>{comment.likesCount}</span>}
-              <span>{comment.likedByMe ? "Liked" : "Like"}</span>
+              <span className="text-xs tabular-nums sm:hidden">
+                {comment.likesCount || 0}
+              </span>
+              <span className="hidden sm:inline">
+                {comment.likesCount > 0 && (
+                  <span className="tabular-nums mr-1">{comment.likesCount}</span>
+                )}
+                {comment.likedByMe ? "Liked" : "Like"}
+              </span>
             </button>
             <button
               type="button"
-              onClick={() => (isReplying ? onCancelReply() : onStartReply(comment.id))}
-              className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-[#16730F] transition-colors"
+              onClick={() =>
+                isReplying ? onCancelReply() : onStartReply(comment.id)
+              }
+              className="text-xs font-medium text-gray-500 hover:text-[#16730F] transition-colors"
+              aria-label={isReplying ? "Cancel reply" : "Reply to comment"}
             >
-              <FaReply />
-              <span>Reply</span>
+              Reply
             </button>
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => onDelete(comment)}
+                disabled={deletingCommentId === comment.id}
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
+                aria-label={
+                  deletingCommentId === comment.id
+                    ? "Deleting comment"
+                    : "Delete comment"
+                }
+              >
+                <FaTrash />
+                <span className="hidden sm:inline">
+                  {deletingCommentId === comment.id ? "Deleting..." : "Delete"}
+                </span>
+              </button>
+            )}
           </div>
 
           {isReplying && (
@@ -105,12 +206,17 @@ function CommentItem({
       </div>
 
       {replies.length > 0 && (
-        <div className="space-y-3">
+        <div
+          className={
+            depth === 0
+              ? "mt-3 ml-4 sm:ml-5 pl-3 sm:pl-4 border-l-2 border-gray-200 space-y-3"
+              : "mt-3 space-y-3"
+          }
+        >
           {replies.map((reply) => (
             <CommentItem
               key={reply.id}
               comment={reply}
-              postId={postId}
               currentUserPhotoUrl={currentUserPhotoUrl}
               currentUserId={currentUserId}
               replyingTo={replyingTo}
@@ -120,7 +226,11 @@ function CommentItem({
               onCancelReply={onCancelReply}
               onSubmitReply={onSubmitReply}
               onLike={onLike}
+              onDelete={onDelete}
+              onViewProfile={onViewProfile}
+              deletingCommentId={deletingCommentId}
               getReplies={getReplies}
+              getCommentById={getCommentById}
               depth={depth + 1}
             />
           ))}
@@ -139,13 +249,21 @@ export default function PostCommentsSection({
   currentUserPhotoUrl,
   currentUserId,
 }) {
+  const navigate = useNavigate();
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState("");
+  const [deletingCommentId, setDeletingCommentId] = useState(null);
 
   const topLevelComments = comments.filter((c) => !c.parentCommentId);
   const getReplies = (parentId) =>
     comments.filter((c) => c.parentCommentId === parentId);
+  const getCommentById = (commentId) =>
+    comments.find((c) => c.id === commentId);
+
+  const handleViewProfile = (authorId) => {
+    if (authorId) navigate(`/user-profile/${authorId}`);
+  };
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -207,6 +325,37 @@ export default function PostCommentsSection({
     }
   };
 
+  const handleDelete = async (comment) => {
+    if (deletingCommentId) return;
+
+    const idsToRemove = collectDescendantCommentIds(comment.id, comments);
+    const confirmed = window.confirm(
+      idsToRemove.size > 1
+        ? "Delete this comment and its replies?"
+        : "Delete this comment?",
+    );
+    if (!confirmed) return;
+
+    setDeletingCommentId(comment.id);
+
+    if (replyingTo && idsToRemove.has(replyingTo)) {
+      setReplyingTo(null);
+      setReplyText("");
+    }
+
+    setComments((prev) => prev.filter((entry) => !idsToRemove.has(entry.id)));
+
+    try {
+      await deleteComment(postId, comment.id);
+      await onReload();
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+      await onReload();
+    } finally {
+      setDeletingCommentId(null);
+    }
+  };
+
   return (
     <div className="border-t pt-4 mt-4">
       <form
@@ -245,7 +394,6 @@ export default function PostCommentsSection({
             <CommentItem
               key={comment.id}
               comment={comment}
-              postId={postId}
               currentUserPhotoUrl={currentUserPhotoUrl}
               currentUserId={currentUserId}
               replyingTo={replyingTo}
@@ -258,7 +406,11 @@ export default function PostCommentsSection({
               }}
               onSubmitReply={handleSubmitReply}
               onLike={handleLike}
+              onDelete={handleDelete}
+              onViewProfile={handleViewProfile}
+              deletingCommentId={deletingCommentId}
               getReplies={getReplies}
+              getCommentById={getCommentById}
             />
           ))}
         </div>

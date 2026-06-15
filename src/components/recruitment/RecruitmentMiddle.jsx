@@ -803,8 +803,8 @@ const RecruitmentPostCard = ({
         <PostMediaGallery media={post.media} />
       )}
 
-      {/* Post Stats */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
+      {/* Post Stats — numbers with labels on desktop/tablet only */}
+      <div className="hidden sm:flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
         {post.likesCount > 0 && (
           <button
             onClick={handleShowLikers}
@@ -831,40 +831,53 @@ const RecruitmentPostCard = ({
         )}
       </div>
 
-      {/* Post Actions */}
-      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 border-t pt-4">
-        <div className="grid grid-cols-3 w-full sm:w-auto gap-3 sm:flex sm:gap-6">
-          <button
-            onClick={handleLikeClick}
-            className={`flex items-center gap-2 ${liked ? "text-red-500" : "text-gray-600 hover:text-red-500"}`}
-          >
-            <FaHeart className={liked ? "fill-current text-red-500" : ""} />
-            <span className="text-xs sm:text-sm">
-              {liked ? "Liked" : "Like"}
-            </span>
-          </button>
-          <button
-            onClick={toggleComments}
-            className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]"
-          >
-            <FaComment />
-            <span className="text-xs sm:text-sm">Comment</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleShareClick}
-            className="flex items-center gap-2 text-gray-600 hover:text-[#16730F]"
-          >
-            <FaShare />
-            <span className="text-xs sm:text-sm">Share</span>
-          </button>
-        </div>
+      {/* Post Actions — mobile: icon + count; desktop: icon + label */}
+      <div className="flex flex-row justify-start items-center gap-4 sm:gap-6 border-t pt-4">
+        <button
+          onClick={handleLikeClick}
+          className={`flex items-center justify-center gap-1.5 p-0 ${liked ? "text-red-500" : "text-gray-600 hover:text-red-500"}`}
+          aria-label={liked ? "Unlike" : "Like"}
+        >
+          <FaHeart className={liked ? "fill-current text-red-500" : ""} />
+          <span className="text-xs tabular-nums sm:hidden">
+            {post.likesCount || 0}
+          </span>
+          <span className="hidden sm:inline text-xs sm:text-sm">
+            {liked ? "Liked" : "Like"}
+          </span>
+        </button>
+        <button
+          onClick={toggleComments}
+          className="flex items-center justify-center gap-1.5 p-0 text-gray-600 hover:text-[#16730F]"
+          aria-label="Comment"
+        >
+          <FaComment />
+          <span className="text-xs tabular-nums sm:hidden">
+            {post.commentsCount || 0}
+          </span>
+          <span className="hidden sm:inline text-xs sm:text-sm">Comment</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleShareClick}
+          className="flex items-center justify-center gap-1.5 p-0 text-gray-600 hover:text-[#16730F]"
+          aria-label="Share"
+        >
+          <FaShare />
+          <span className="text-xs tabular-nums sm:hidden">
+            {post.sharesCount || 0}
+          </span>
+          <span className="hidden sm:inline text-xs sm:text-sm">Share</span>
+        </button>
         <button
           onClick={handleSaveClick}
-          className={`flex items-center gap-2 ${saved ? "text-[#16730F]" : "text-gray-600 hover:text-[#16730F]"}`}
+          className={`flex items-center justify-center gap-2 p-0 ${saved ? "text-[#16730F]" : "text-gray-600 hover:text-[#16730F]"}`}
+          aria-label={saved ? "Unsave post" : "Save post"}
         >
           <FaBookmark className={saved ? "fill-current" : ""} />
-          <span className="text-xs sm:text-sm">{saved ? "Saved" : "Save"}</span>
+          <span className="hidden sm:inline text-xs sm:text-sm">
+            {saved ? "Saved" : "Save"}
+          </span>
         </button>
       </div>
 
