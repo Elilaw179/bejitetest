@@ -8,7 +8,7 @@ import { formatDisplayPersonName, formatDisplayRole } from "../../utils/personDi
 import { formatDisplayText } from "../../utils/displayFormatUtils";
 import { filterAdminUsersFromSearch } from "../../utils/filterAdminUsers";
 
-const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
+const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = false }) => {
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -196,8 +196,8 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
 
   if (loading) {
     return (
-      <div className="bg-[#1A3E32] w-full px-4 sm:px-6 py-8 rounded-2xl shadow-lg">
-        <div className="text-center">
+      <div className={`bg-[#1A3E32] w-full ${compact ? "px-4 py-6 rounded-none min-h-[50vh] flex items-center" : "px-4 sm:px-6 py-8 rounded-2xl shadow-lg"}`}>
+        <div className="text-center w-full">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
           <p className="text-white mt-4">Loading candidates...</p>
         </div>
@@ -207,8 +207,8 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
 
   if (error) {
     return (
-      <div className="bg-[#1A3E32] w-full px-4 sm:px-6 py-8 rounded-2xl shadow-lg">
-        <div className="text-center">
+      <div className={`bg-[#1A3E32] w-full ${compact ? "px-4 py-6 rounded-none min-h-[50vh] flex items-center" : "px-4 sm:px-6 py-8 rounded-2xl shadow-lg"}`}>
+        <div className="text-center w-full">
           {paymentRequired ? (
             <>
               <svg className="w-16 h-16 mx-auto text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,13 +250,13 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
   };
 
   return (
-    <div className="bg-[#1A3E32] w-full px-4 sm:px-6 py-4 rounded-2xl shadow-lg">
+    <div className={`bg-[#1A3E32] w-full ${compact ? "px-3 py-3 rounded-none min-h-full" : "px-4 sm:px-6 py-4 rounded-2xl shadow-lg"}`}>
       {inviteSuccess && (
         <div className="mb-4 p-3 bg-green-500/20 border border-green-500 rounded-lg text-green-400 text-sm text-center">
           Interview invitation sent successfully!
         </div>
       )}
-      <SearchResultsHeader count={candidates.length} />
+      <SearchResultsHeader count={candidates.length} compact={compact} />
       <div>
         {candidates.length > 0 ? (
           candidates.map((candidate) => (
@@ -265,8 +265,9 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
                 candidate={candidate} 
                 onViewProfile={onViewProfile}
                 onInvite={handleInviteClick}
+                compact={compact}
               />
-              <Divider />
+              <Divider compact={compact} />
             </React.Fragment>
           ))
         ) : (
@@ -285,17 +286,23 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {} }) => {
   );
 };
 
-const SearchResultsHeader = ({ count }) => (
-  <div className="text-center p-5">
-    <p className="text-white text-[20px] font-semibold">Search Results</p>
-    <p className="text-white">{count} Candidates found</p>
+const SearchResultsHeader = ({ count, compact }) => (
+  <div className={compact ? "px-2 py-3 border-b border-[#556B1F]/50" : "text-center p-5"}>
+    <p className={`text-white font-semibold ${compact ? "text-base" : "text-[20px]"}`}>Search Results</p>
+    <p className={`text-white/90 ${compact ? "text-xs mt-0.5" : ""}`}>{count} Candidates found</p>
   </div>
 );
 
-const CandidateProfile = ({ candidate, onViewProfile, onInvite }) => (
-  <div className="mt-4 px-2 py-2 sm:px-3">
-    <div className="flex flex-col md:flex-row items-start gap-4 md:gap-5">
-      <ProfileImage initials={candidate.initials} name={candidate.name} online={candidate.online} image={candidate.image} />
+const CandidateProfile = ({ candidate, onViewProfile, onInvite, compact }) => (
+  <div className={compact ? "px-2 py-3" : "mt-4 px-2 py-2 sm:px-3"}>
+    <div className={`flex ${compact ? "flex-row items-start gap-3" : "flex-col md:flex-row items-start gap-4 md:gap-5"}`}>
+      <ProfileImage
+        initials={candidate.initials}
+        name={candidate.name}
+        online={candidate.online}
+        image={candidate.image}
+        compact={compact}
+      />
       <ProfileDetails
         name={candidate.name}
         type={candidate.type}
@@ -307,14 +314,17 @@ const CandidateProfile = ({ candidate, onViewProfile, onInvite }) => (
           onViewProfile(candidate.id, candidate.user_id ?? candidate.userId)
         }
         onInvite={() => onInvite(candidate)}
+        compact={compact}
       />
     </div>
   </div>
 );
 
-const ProfileImage = ({ initials, name, online, image }) => (
+const ProfileImage = ({ initials, name, online, image, compact }) => (
   <div className="relative shrink-0">
-    <div className="rounded-full w-[88px] h-[88px] sm:w-[96px] sm:h-[96px] overflow-hidden bg-[#6B8E23] flex items-center justify-center">
+    <div className={`rounded-full overflow-hidden bg-[#6B8E23] flex items-center justify-center ${
+      compact ? "w-14 h-14" : "w-[88px] h-[88px] sm:w-[96px] sm:h-[96px]"
+    }`}>
 
       {image ? (
         <img src={image} alt={`${name} profile`} className="w-full h-full object-cover" />
@@ -325,65 +335,84 @@ const ProfileImage = ({ initials, name, online, image }) => (
     </div>
 
     <span
-      className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-2 right-2 ${
-        online ? "bg-[#6B8E23]" : "bg-[#828282]"
-      }`}
+      className={`absolute rounded-full border-2 border-white ${
+        compact ? "w-3 h-3 bottom-0 right-0" : "w-4 h-4 bottom-2 right-2"
+      } ${online ? "bg-[#6B8E23]" : "bg-[#828282]"}`}
     />
   </div>
 );
 
 
-const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYears, onViewProfile, onInvite }) => (
-  <div className="w-full flex-1 space-y-2">
+const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYears, onViewProfile, onInvite, compact }) => (
+  <div className="w-full flex-1 min-w-0 space-y-1">
     <div>
-      <p className="text-white text-[15px] sm:text-[16px] font-medium"><strong>Name:</strong> {name}</p>
-      <p className="text-[12px] text-white"><strong>Type:</strong> {type}</p>
+      <p className={`text-white font-medium truncate ${compact ? "text-sm" : "text-[15px] sm:text-[16px]"}`}>
+        {compact ? name : <><strong>Name:</strong> {name}</>}
+      </p>
+      <p className={`text-white/80 ${compact ? "text-[11px]" : "text-[12px]"}`}>
+        {compact ? `${type} · ${jobTitle}` : <><strong>Type:</strong> {type}</>}
+      </p>
     </div>
     <div>
-      <p className="text-white text-[13px] sm:text-[14px] font-medium"><strong>Job Title:</strong> {jobTitle}</p>
-      <p className="text-white text-[12px]"><strong>Location:</strong> {location}</p>
+      {!compact && (
+        <p className="text-white text-[13px] sm:text-[14px] font-medium"><strong>Job Title:</strong> {jobTitle}</p>
+      )}
+      <p className={`text-white/90 ${compact ? "text-[11px]" : "text-[12px]"}`}>
+        {compact ? location : <><strong>Location:</strong> {location}</>}
+        {compact && experienceYears > 0 ? ` · ${experienceYears} yr${experienceYears === 1 ? "" : "s"}` : null}
+      </p>
 
-      {experienceYears > 0 && (
+      {!compact && experienceYears > 0 && (
         <p className="text-white text-[12px]"><strong>Experience:</strong> {experienceYears} years</p>
       )}
 
       {skills.length > 0 && (
-        <div className="mt-1">
-          <p className="text-white text-[12px] font-medium"><strong>Skills:</strong></p>
+        <div className={compact ? "mt-1" : "mt-1"}>
+          {!compact && (
+            <p className="text-white text-[12px] font-medium"><strong>Skills:</strong></p>
+          )}
           <div className="flex flex-wrap gap-1 mt-1">
-            {skills.slice(0, 3).map((skill, index) => (
-              <span key={index} className="text-[10px] bg-[#556B1F] text-white px-2 py-1 rounded">
+            {skills.slice(0, compact ? 2 : 3).map((skill, index) => (
+              <span key={index} className={`bg-[#556B1F] text-white px-2 py-0.5 rounded ${compact ? "text-[9px]" : "text-[10px]"}`}>
                 {formatDisplayText(skill) ?? skill}
               </span>
             ))}
-            {skills.length > 3 && (
-              <span className="text-[10px] text-white">+{skills.length - 3} more</span>
+            {skills.length > (compact ? 2 : 3) && (
+              <span className={`text-white ${compact ? "text-[9px]" : "text-[10px]"}`}>
+                +{skills.length - (compact ? 2 : 3)} more
+              </span>
             )}
           </div>
         </div>
       )}
     </div>
-    <ProfileActions onViewProfile={onViewProfile} onInvite={onInvite} />
+    <ProfileActions onViewProfile={onViewProfile} onInvite={onInvite} compact={compact} />
   </div>
 );
 
-const ProfileActions = ({ onViewProfile, onInvite }) => (
-  <div className="mt-2 flex flex-wrap gap-2">
+const ProfileActions = ({ onViewProfile, onInvite, compact }) => (
+  <div className={`flex gap-2 ${compact ? "mt-2 flex-col sm:flex-row" : "mt-2 flex-wrap"}`}>
     <button
       onClick={onViewProfile}
-      className="px-3 py-1.5 min-w-[120px] text-[12px] rounded-3xl bg-[#556B1F] hover:bg-[#6B8E23] text-white font-medium transition-colors"
+      className={`rounded-3xl bg-[#556B1F] hover:bg-[#6B8E23] text-white font-medium transition-colors ${
+        compact ? "w-full sm:flex-1 px-3 py-2 text-[11px]" : "px-3 py-1.5 min-w-[120px] text-[12px]"
+      }`}
     >
       View Profile
     </button>
     <button
       onClick={onInvite}
-      className="px-3 py-1.5 min-w-[120px] text-[12px] rounded-3xl bg-[#6B8E23] hover:bg-[#556B1F] text-white font-medium transition-colors"
+      className={`rounded-3xl bg-[#6B8E23] hover:bg-[#556B1F] text-white font-medium transition-colors ${
+        compact ? "w-full sm:flex-1 px-3 py-2 text-[11px]" : "px-3 py-1.5 min-w-[120px] text-[12px]"
+      }`}
     >
       Invite for interview
     </button>
   </div>
 );
 
-const Divider = () => <div className="bg-[#556B1F] h-1 mt-4" />;
+const Divider = ({ compact }) => (
+  <div className={`bg-[#556B1F]/60 ${compact ? "h-px mx-2" : "h-1 mt-4"}`} />
+);
 
 export default CandidateSearchResults;
