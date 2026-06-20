@@ -655,6 +655,7 @@ const NewsFeedHeader = ({
           >
             ✕ Close
           </button>
+           
           <nav className="flex flex-col gap-4">
             {menuItems.map((name, i) => (
               <div

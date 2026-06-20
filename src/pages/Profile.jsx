@@ -23,7 +23,6 @@ import {
 
 const ABOUT_CHAR_LIMIT = 500;
 
-
 const buildAvatarCandidates = (rawPhoto) => {
   const candidates = [];
   const pushUnique = (value) => {

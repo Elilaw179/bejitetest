@@ -391,10 +391,8 @@ const Connections = () => {
 
   return (
     <NewsFeedLayout showSidebars={false}>
-
       <div className="min-h-screen bg-[#F5F5F5]">
         {/* <NewsFeedHeader /> */}
-
         <div className="max-w-4xl mx-auto px-4 py-6">
           {/* Header */}
           <div className="mb-6">
