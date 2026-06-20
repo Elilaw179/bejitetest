@@ -37,7 +37,7 @@ function JobseekerChat() {
           {/* Desktop Layout */}
           <div className="hidden lg:grid lg:grid-cols-subgrid lg:col-span-3 lg:gap-4 h-full">
             {/* Left Sidebar */}
-            <div className="bg-[#1A3E32] rounded-lg overflow-y-auto">
+            <div className="bg-[#1A3E32] rounded-lg overflow-y-auto nfl-sidebar-scroll scroll-smooth">
               <ChatsLeft 
                 onSelectChat={handleSelectChat} 
                 selectedChat={selectedChat}
@@ -45,7 +45,7 @@ function JobseekerChat() {
             </div>
 
             {/* Middle Chat Section */}
-            <div className="bg-white rounded-lg overflow-y-auto">
+            <div className="bg-white rounded-lg overflow-y-auto nfl-scroll scroll-smooth">
               <ChatsMiddle 
                 selectedChat={selectedChat} 
                 onShowChatList={showChatList}
@@ -54,7 +54,7 @@ function JobseekerChat() {
             </div>
 
             {/* Right Sidebar */}
-            <div className="bg-[#F5F5F5] rounded-lg overflow-y-auto">
+            <div className="bg-[#F5F5F5] rounded-lg overflow-y-auto nfl-scroll scroll-smooth">
               <ChatsRight 
                 selectedChat={selectedChat}
                 onBack={showChatView}
@@ -65,7 +65,7 @@ function JobseekerChat() {
           {/* Mobile Layout */}
           <div className="lg:hidden col-span-1 h-full">
             {currentView === 'chatList' && (
-              <div className="bg-[#1A3E32] rounded-lg overflow-y-auto h-full">
+              <div className="bg-[#1A3E32] rounded-lg overflow-y-auto nfl-sidebar-scroll scroll-smooth h-full">
                 <ChatsLeft 
                   onSelectChat={handleSelectChat} 
                   selectedChat={selectedChat}
@@ -74,7 +74,7 @@ function JobseekerChat() {
             )}
             
             {currentView === 'chatView' && (
-              <div className="bg-white rounded-lg overflow-y-auto h-full">
+              <div className="bg-white rounded-lg overflow-y-auto nfl-scroll scroll-smooth h-full">
                 <ChatsMiddle 
                   selectedChat={selectedChat} 
                   onShowChatList={showChatList}
@@ -84,7 +84,7 @@ function JobseekerChat() {
             )}
             
             {currentView === 'chatInfo' && (
-              <div className="bg-[#F5F5F5] rounded-lg overflow-y-auto h-full">
+              <div className="bg-[#F5F5F5] rounded-lg overflow-y-auto nfl-scroll scroll-smooth h-full">
                 <ChatsRight 
                   selectedChat={selectedChat}
                   onBack={showChatView}

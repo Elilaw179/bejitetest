@@ -1,6 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../utils/axiosInstance";
 
+const buildWorkHistoryPayload = (item) => ({
+  userId: item.userId,
+  jobTitle: item.jobTitle,
+  companyName: item.companyName,
+  responsibilities: item.responsibilities,
+  startDate: item.startDate,
+  endDate: item.isCurrentJob || !item.endDate ? null : item.endDate,
+});
+
 // ✅ Async thunk to save work history entries
 export const saveWorkHistory = createAsyncThunk(
   "workHistory/saveWorkHistory",
@@ -8,15 +17,20 @@ export const saveWorkHistory = createAsyncThunk(
     try {
       const results = [];
       for (const item of entries) {
-        const response = await axiosInstance.post("/api/cv-builder/work-history/", {
-          userId: item.userId,
-          jobTitle: item.jobTitle,
-          companyName: item.companyName,
-          responsibilities: item.responsibilities,
-          startDate: item.startDate,
-          endDate: item.endDate || null,
-        });
-        results.push(response.data);
+        const payload = buildWorkHistoryPayload(item);
+        if (item.id) {
+          const response = await axiosInstance.put(
+            `/api/cv-builder/work-history/${item.userId}/${item.id}`,
+            payload,
+          );
+          results.push(response.data);
+        } else {
+          const response = await axiosInstance.post(
+            "/api/cv-builder/work-history",
+            payload,
+          );
+          results.push(response.data);
+        }
       }
       return results;
     } catch (err) {

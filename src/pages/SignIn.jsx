@@ -9,6 +9,10 @@ const bejiteLogoUrl = "/assets/images/logo.png";
 const googleImgUrl = "/assets/images/google.png";
 import Hyperlinks from "../components/Hyperlinks";
 import { decodeToken } from "../utils/tokenManager";
+import {
+  isEmailNotVerifiedError,
+  emailVerificationPath,
+} from "../utils/authErrors";
 
 
 
@@ -94,10 +98,7 @@ function SignIn() {
 
         setTimeout(() => {
           if (!isVerified) {
-            // User not verified, redirect to email verification
-            navigate(
-              `/auth/email-sent?email=${encodeURIComponent(user.email)}`
-            );
+            navigate(emailVerificationPath(user?.email || email));
           } else if (!hasCompletedSignup) {
             // User is verified but hasn't completed signup
             navigate(
@@ -133,8 +134,9 @@ function SignIn() {
           setTimeout(() => {
             navigate("/signup");
           }, 2000);
-        } else if (errorMessage?.toLowerCase().includes("verify your email")) {
-          toast.error("Please verify your email before logging in.");
+        } else if (isEmailNotVerifiedError(err)) {
+          toast.info("Please verify your email before logging in.");
+          navigate(emailVerificationPath(email));
         } else if (
           errorMessage?.toLowerCase().includes("invalid email or password")
         ) {

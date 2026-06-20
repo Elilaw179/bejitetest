@@ -1,7 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-// import Header from "../../../components/Header";
-// import StepTabs from "../../../components/StepTabs";
-// import ProgressBar from "../../../components/ProgressBar";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
 import {
@@ -18,8 +15,13 @@ import useAuth from "../../../hooks/useAuth";
 import Loader from "../../../components/ui/Loader";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../utils/axiosInstance";
-import { SKILL_SUGGESTIONS } from "../../../utils/checksFormat";
+import { AutocompleteInput } from "../../../components/forms/AutocompleteInput";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
+import {
+  categoryOptions,
+  experienceOptions,
+} from "../../../data/skillsData";
+import { SKILL_SUGGESTIONS } from "../../../utils/checksFormat";
 
 // Skills options removed - now using text inputs
 // const skillOptions = [...];
@@ -130,7 +132,7 @@ const AutocompleteSkillInput = ({ value, onChange, placeholder, suggestions, onA
 
       {showSuggestions && (
         <div
-          className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto"
+          className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto nfl-scroll"
           style={{
             zIndex: 9999,
             position: "absolute",
@@ -334,7 +336,7 @@ function Skills() {
   const { email, firstName, lastName, role, mode, followings } =
     location.state || {};
 
-  const addMore = () => {
+  const addMore = async () => {
     if (!allFilled) {
       toast.error("Please complete all fields");
       return;
@@ -347,7 +349,6 @@ function Skills() {
       experience: skillsData.experience,
     };
 
-    // Check for duplicates
     const isDuplicate = allSkill.some(
       (item) =>
         item.skillSector.toLowerCase() === newEntry.skillSector.toLowerCase() &&
@@ -359,14 +360,25 @@ function Skills() {
       return;
     }
 
-    // Add new skill to suggestions list if it doesn't exist
-    if (!skillSuggestionsList.includes(skillsData.skillSector)) {
-      setSkillSuggestionsList(prev => [...prev, skillsData.skillSector]);
+    setIsLoading(true);
+    try {
+      const { data } = await axiosInstance.post(
+        `/api/cv-builder/skills/`,
+        newEntry,
+      );
+      const savedId = data?.data?.id;
+      setAllSkill((prev) => [...prev, { ...newEntry, id: savedId }]);
+      if (!skillSuggestionsList.includes(skillsData.skillSector)) {
+        setSkillSuggestionsList((prev) => [...prev, skillsData.skillSector]);
+      }
+      clearForm();
+      toast.success("Skill saved!");
+    } catch (err) {
+      console.error("Error saving skill:", err);
+      toast.error("Failed to save skill. Try again.");
+    } finally {
+      setIsLoading(false);
     }
-
-    setAllSkill((prev) => [...prev, newEntry]);
-    clearForm();
-    toast.success("Skill added successfully!");
   };
 
   const getCategoryIcon = (categoryName) => {
@@ -399,23 +411,23 @@ function Skills() {
       getPath={getPath}
       isEditMode={isEditMode}
     >
-      <div className="pb-20">
         <div className="max-w-3xl mx-auto mt-6 px-4 text-[#1A3E32] text-2xl font-semibold">
           Skills
         </div>
         <p className="max-w-3xl mx-auto px-4 text-[#333] text-sm mb-6">
-          Highlight what you're great at. This helps employers match you to the right role
+          Highlight what you&apos;re great at. This helps employers match you to
+          the right role
         </p>
 
         <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 overflow-visible">
           <div className="bg-[#fff] overflow-visible p-3 rounded-2xl space-y-1">
             <div className="bg-[#fff] rounded-2xl p-4">
-              <p className="font-semibold text-xs mb-1">SKILL</p>
+              <p className="font-semibold text-xs mb-1">SKILL (Enter or select a skill name and category and years of experience and use the add more button to add more skills)</p>
               <AutocompleteSkillInput
                 value={skillsData.skillSector}
                 onChange={(e) =>
                   setSkillsData((prev) => ({ ...prev, skillSector: e.target.value }))
-                } placeholder="Type a skill (e.g., Python, JavaScript, Project Management)"
+                } placeholder="Enter or select skill name"
                 suggestions={skillSuggestionsList}
               />
               {/* <InputWithIcon
@@ -430,43 +442,54 @@ function Skills() {
             <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <p className="font-semibold text-xs mb-1">CATEGORY</p>
-                <CategorySelect
+                <AutocompleteInput
                   value={skillsData.category}
                   onChange={(e) =>
-                    setSkillsData((prev) => ({ ...prev, category: e.target.value }))
+                    setSkillsData((prev) => ({
+                      ...prev,
+                      category: e.target.value,
+                    }))
                   }
+                  placeholder="Enter or select category"
+                  formName="skills"
+                  fieldName="category"
+                  staticOptions={categoryOptions}
                 />
-                {/* <InputWithIcon
-                  value={skillsData.category}
-                  onChange={(e) =>
-                    setSkillsData((prev) => ({ ...prev, category: e.target.value }))
-                  }
-                  placeholder="Enter category"
-                /> */}
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-xs mb-1">YEARS OF EXPERIENCE</p>
-                <InputWithIcon
+                <AutocompleteInput
                   value={skillsData.experience}
                   onChange={(e) =>
-                    setSkillsData((prev) => ({ ...prev, experience: e.target.value }))
+                    setSkillsData((prev) => ({
+                      ...prev,
+                      experience: e.target.value,
+                    }))
                   }
-                  placeholder="Enter years of experience"
+                  placeholder="Enter or select years of experience"
+                  formName="skills"
+                  fieldName="experience"
+                  staticOptions={experienceOptions}
                 />
               </div>
             </div>
 
-            {/* Add More Button */}
-            <button
-              onClick={addMore}
-              disabled={!allFilled}
-              className={`w-full py-3 flex items-center justify-center gap-2 text-white font-semibold rounded-xl text-sm transition-all shadow-sm ${allFilled
-                ? "bg-[#1A3E32] hover:bg-[#143026] cursor-pointer"
-                : "bg-gray-300 cursor-not-allowed"
-                }`}
-            >
-              ADD SKILL <FaPlus />
-            </button>
+            <div className="max-w-full md:max-w-2xs mx-2 bg-[#00000040] mt-3 rounded-2xl flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 flex items-end">
+                <button
+                  type="button"
+                  onClick={addMore}
+                  disabled={!allFilled}
+                  className={`flex-1 h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
+                    allFilled
+                      ? "bg-[#2A4E42] cursor-pointer border-[#2A4E42]"
+                      : "bg-transparent border-[#F5F5F5]"
+                  }`}
+                >
+                  ADD MORE <FaPlus />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -567,7 +590,14 @@ function Skills() {
 
             try {
               for (const item of skillsToSave) {
-                await axiosInstance.post(`/api/cv-builder/skills/`, item);
+                if (item.id) {
+                  await axiosInstance.put(
+                    `/api/cv-builder/skills/${user?.id}/${item.id}`,
+                    item,
+                  );
+                } else {
+                  await axiosInstance.post(`/api/cv-builder/skills/`, item);
+                }
               }
               setIsLoading(false);
               toast.success("Skills saved successfully!");
@@ -612,7 +642,6 @@ function Skills() {
         />
 
         <Loader show={isLoading} />
-      </div>
     </OnboardingLayout>
   );
 }

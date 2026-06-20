@@ -82,7 +82,7 @@ export default function EmployeeSentInvite() {
               {/* Divider*/}
               <div className=" border-t-2 border-[#16730F] mt-9 mb-5"></div>
               {/*Invites List */}
-              <div className="flex flex-col gap-3 overflow-y-auto">
+              <div className="flex flex-col gap-3 overflow-y-auto nfl-scroll scroll-smooth">
                 {
                   employers.map(employer => (
                     <div
@@ -132,7 +132,7 @@ export default function EmployeeSentInvite() {
                     </div>
                   </div>
                   {/* Messages */}
-                  <div className="flex-1 p-6 overflow-y-auto text-[#16730F]">
+                  <div className="flex-1 p-6 overflow-y-auto nfl-scroll scroll-smooth text-[#16730F]">
                     <div className="flex items-center gap-2 mt-3 text-[#556B1F]">
                       <img
                         src={activeChat.avatar}

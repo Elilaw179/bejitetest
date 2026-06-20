@@ -1,22 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
+import { FaBuilding } from "react-icons/fa";
 import NavigationButtons from "../../components/NavigationButtons";
-import ProgressBar from "../../components/ProgressBar";
-import StepTabs from "../../components/StepTabs";
-import Header from "../../components/Header";
 import useRecruiterProfile from "../../services/recruiterProfile";
+import OnboardingLayout from "../../components/layout/onboardingLayout";
+import {
+  RecruiterFormShell,
+  RecruiterPageHero,
+  RecruiterTextField,
+} from "../../components/recruiter/recruiterOnboardingUi";
+import { RECRUITER_ONBOARDING_STEPS } from "../../components/recruiter/recruiterOnboardingSteps";
 
 const CompanyDetails = () => {
   const navigate = useNavigate();
   const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
-
-  const steps = [
-    "Basic Details",
-    "Profile Setup",
-    "Business Details",
-    "Location",
-  ];
 
   const [dataLoaded, setDataLoaded] = useState(false);
   const [formData, setFormData] = useState({
@@ -25,6 +23,10 @@ const CompanyDetails = () => {
   });
 
   const { updateCompanyDetails } = useRecruiterProfile();
+
+  const handleStepClick = (path) => {
+    if (path) navigate(path);
+  };
 
   useEffect(() => {
     if (isEditMode && recruiterData && !dataLoaded) {
@@ -40,13 +42,11 @@ const CompanyDetails = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const isFormComplete = Object.values(formData).every(
-    (v) => v.trim() !== ""
-  );
+  const isFormComplete = formData.full_name.trim() !== "";
 
   const handleNextStep = async () => {
     if (!isFormComplete) {
-      toast.error("Please complete all fields.");
+      toast.error("Please enter your company name.");
       return;
     }
 
@@ -79,77 +79,73 @@ const CompanyDetails = () => {
     }
   };
 
-
   const handleSkip = () => {
     if (isEditMode) {
       navigate(getPath(currentStep + 1));
     } else {
-      navigate("/edit-profile/recruiter/company-details");
+      navigate("/corporate/location");
     }
   };
 
   return (
-    <div className="bg-white min-h-screen">
-      <Header />
+    <OnboardingLayout
+      steps={RECRUITER_ONBOARDING_STEPS}
+      currentStep={currentStep}
+      handleStepClick={handleStepClick}
+      getPath={getPath}
+      isEditMode={isEditMode}
+    >
+      <div className="pb-20">
+        <div className="max-w-3xl mx-auto px-4">
+          <RecruiterPageHero
+            icon={FaBuilding}
+            eyebrow="Your organization"
+            title="Company details"
+            description="Share your registered business name so candidates know who they're applying to."
+          />
 
-      <StepTabs steps={steps} currentStep={currentStep} />
-      <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
-
-      <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
-        Business Details
-      </section>
-      <p className="max-w-3xl mx-auto px-4 text-[#333] text-[15px]">
-        Let's get to know you
-      </p>
-
-      <div className="max-w-4xl mx-auto mt-6 lg:border-2 border-[#E0E0E0] flex flex-col lg:flex-row gap-8 lg:p-4">
-        <div className="lg:bg-[#F5F5F5] lg:w-[90%] mx-auto lg:rounded-2xl p-5 w-full ">
-          {/* FULL NAME */}
-          <div className="p-5 bg-[#82828280] lg:rounded-3xl mb-4 rounded-md">
-            <label className="font-semibold text-[12px] mb-2 block">
-              Business NAME (required) (Must match legal documents)
-            </label>
-            <input
-              type="text"
+          <RecruiterFormShell
+            icon={FaBuilding}
+            sectionTitle="Business information"
+            sectionHint="Use the legal name that matches your verification documents."
+          >
+            <RecruiterTextField
+              label="COMPANY NAME"
               name="full_name"
-              placeholder="Enter your company name"
               value={formData.full_name}
               onChange={handleChange}
-              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
+              placeholder="Enter your registered company name"
+              required
+              hint="Must match legal documents used for verification."
             />
-          </div>
-
-          {/* WEBSITE */}
-          <div className="p-5 bg-[#82828280] lg:rounded-3xl rounded-md">
-            <label className="font-semibold text-[12px] mb-2 block">
-              Business Website (Optional) (Share your official site for credibility)
-            </label>
-            <input
-              type="url"
+            <RecruiterTextField
+              label="COMPANY WEBSITE"
               name="website"
-              placeholder="Enter your company url"
+              type="url"
               value={formData.website}
               onChange={handleChange}
-              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
+              placeholder="https://www.yourcompany.com"
+              optional
+              hint="Adds credibility to your recruiter profile."
             />
-          </div>
+          </RecruiterFormShell>
         </div>
-      </div>
 
-      <NavigationButtons
-        showSkip={true}
-        onSkip={handleSkip}
-        isFormComplete={isFormComplete}
-        onBack={() => {
-          if (isEditMode) {
-            navigate(getPath(currentStep - 1));
-          } else {
-            navigate(-1);
-          }
-        }}
-        onNext={handleNextStep}
-      />
-    </div>
+        <NavigationButtons
+          showSkip={true}
+          onSkip={handleSkip}
+          isFormComplete={isFormComplete}
+          onBack={() => {
+            if (isEditMode) {
+              navigate(getPath(currentStep - 1));
+            } else {
+              navigate(-1);
+            }
+          }}
+          onNext={handleNextStep}
+        />
+      </div>
+    </OnboardingLayout>
   );
 };
 

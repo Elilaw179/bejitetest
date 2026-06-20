@@ -44,6 +44,16 @@ const CoperateUploadDoc = () => {
     }
   };
 
+
+  const handleSkip = () => {
+    if (isEditMode) {
+      navigate("/news-feed");
+    } else {
+      navigate("/news-feed");
+    }
+  };
+
+
   const isFormComplete = isUploaded;
 
   return (
@@ -56,7 +66,7 @@ const CoperateUploadDoc = () => {
           <p className="font-semibold mb-2">Instructions:</p>
           <ul className="space-y-1 list-disc list-inside">
             <li>
-              Upload an ID card (PDF/PNG) 
+              Upload an ID card (PDF/PNG)
             </li>
             <li>Supported formats: PNG, JPG, PDF (max 2MB)</li>
           </ul>
@@ -103,13 +113,12 @@ const CoperateUploadDoc = () => {
           <button
             onClick={handleUpload}
             disabled={!fileName || isUploaded}
-            className={`w-full py-3 rounded-md font-semibold transition ${
-              isUploaded
+            className={`w-full py-3 rounded-md font-semibold transition ${isUploaded
                 ? "bg-gray-500 text-white cursor-not-allowed"
                 : fileName
-                ? "bg-green-700 text-white hover:bg-green-800"
-                : "bg-gray-300 text-gray-600 cursor-not-allowed"
-            }`}
+                  ? "bg-green-700 text-white hover:bg-green-800"
+                  : "bg-gray-300 text-gray-600 cursor-not-allowed"
+              }`}
           >
             {isUploaded ? "Uploaded" : "Upload"}
           </button>
@@ -119,6 +128,8 @@ const CoperateUploadDoc = () => {
       {/* Navigation Buttons */}
       <NavigationButtons
         isFormComplete={isFormComplete}
+        showSkip={true}
+        onSkip={handleSkip}
         onBack={() => {
           if (isEditMode) {
             navigate(getPath(currentStep - 1));

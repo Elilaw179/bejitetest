@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 import MemberCard from "../../components/MemberCard";
 
 const JobSeekerOpt = () => {
@@ -13,9 +14,14 @@ const JobSeekerOpt = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const emailFromQuery = queryParams.get("email")?.trim() || "";
+  const roleFromQuery = queryParams.get("role")?.trim() || "";
 
-  // Get email & role from location.state (from SignUpRole page)
-  const { email, role } = location.state || {};
+  // Prefer URL query (survives refresh); fall back to navigation state
+  const { email: emailFromState, role: roleFromState } = location.state || {};
+  const email = emailFromQuery || emailFromState || "";
+  const role = roleFromQuery || roleFromState || "jobseeker";
 
   // Log when component mounts
   useEffect(() => {
@@ -43,10 +49,13 @@ const JobSeekerOpt = () => {
 
     if (!email || !role) {
       console.warn("⚠️ Email or role is missing. Cannot navigate.");
+      toast.error("Missing account email. Please restart signup from the verification link.");
       return;
     }
 
-    navigate(`/jobconnection?email=${email}&role=${role}&mode=${mode}`);
+    navigate(
+      `/jobconnection?email=${encodeURIComponent(email)}&role=${encodeURIComponent(role)}&mode=${encodeURIComponent(mode)}`
+    );
   };
 
   return (

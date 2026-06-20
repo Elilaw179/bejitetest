@@ -1,11 +1,96 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_URL } from "../../config";
+import axiosInstance from "../../utils/axiosInstance";
 import { pickAuthorProfilePhoto } from "../../utils/profileImageUtils";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
+import { CertificateViewLink } from "../CertificateViewerModal";
 import { formatSalaryExpectation } from "../../utils/formatSalary";
 import useCandidateConnect from "../../hooks/useCandidateConnect";
 import { fetchFullUserProfile } from "../../services/fetchFullUserProfile";
+import {
+  formatDateRange,
+  formatDateToMonthYear,
+  isOngoingCvEntry,
+} from "../../utils/checksFormat";
+import {
+  normalizeProfileSkills,
+  resolveProfileSkillSource,
+} from "../../utils/profileSkills";
+import ProfileSkillsDisplay from "../ProfileSkillsDisplay";
+
+const mergeFullProfileIntoCandidate = (base, full) => {
+  if (!full?.user) return base;
+  return {
+    ...base,
+    profile_photo:
+      base.profile_photo ||
+      full.user.profile_photo ||
+      full.user.profilePhoto ||
+      full.user.image ||
+      full.cv?.bio?.profile_photo ||
+      null,
+    profilePhoto:
+      base.profilePhoto ||
+      full.user.profilePhoto ||
+      full.user.profile_photo ||
+      full.user.image ||
+      null,
+    image:
+      base.image ||
+      full.user.image ||
+      full.user.profile_photo ||
+      full.user.profilePhoto ||
+      null,
+    _cv: full.cv,
+  };
+};
+
+const enrichCandidateWithFullProfile = async (row) => {
+  let merged = row;
+  const userId = row?.user_id ?? row?.userId ?? null;
+  if (!userId) return merged;
+
+  try {
+    const full = await fetchFullUserProfile(userId);
+    if (full?.user) {
+      merged = mergeFullProfileIntoCandidate(row, full);
+    }
+  } catch (fullProfileError) {
+    console.warn(
+      "Full profile fetch failed:",
+      fullProfileError?.message || fullProfileError,
+    );
+  }
+
+  const hasSkills =
+    normalizeProfileSkills(
+      resolveProfileSkillSource({ candidate: merged, cv: merged._cv }),
+    ).length > 0;
+
+  if (!hasSkills) {
+    try {
+      const { data: cvRes } = await axiosInstance.get(
+        `/api/cv-builder/complete/${userId}`,
+      );
+      if (cvRes?.success && cvRes.data?.skills?.length) {
+        merged = {
+          ...merged,
+          user_skills: merged.user_skills?.length
+            ? merged.user_skills
+            : cvRes.data.skills,
+          _cv: {
+            ...(merged._cv || {}),
+            skills: cvRes.data.skills,
+          },
+        };
+      }
+    } catch (cvError) {
+      console.warn("CV complete fallback failed:", cvError?.message || cvError);
+    }
+  }
+
+  return merged;
+};
 
 const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
   const [candidate, setCandidate] = useState(null);
@@ -25,176 +110,39 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
         setLoading(true);
         setError(null);
 
-        const url = `${API_URL}/api/candidates/${candidateId}`;
+        let candidateRow = null;
 
-        console.log("Fetching candidate with ID:", candidateId);
-        console.log("API URL:", url);
-
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        console.log("Response status:", response.status);
-
-        if (!response.ok) {
-          // If single candidate fetch fails, try getting from search endpoint
-          console.log(
-            "Single candidate endpoint failed, trying search endpoint..."
+        try {
+          const { data } = await axiosInstance.get(
+            `/api/candidates/${candidateId}`,
           );
-
-          const searchUrl =
-            `${API_URL}/api/candidates?search=${candidateId}`;
-          const searchResponse = await fetch(searchUrl, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-
-          if (!searchResponse.ok) {
+          candidateRow = data?.data ?? data;
+        } catch (primaryError) {
+          const { data: searchData } = await axiosInstance.get(
+            `/api/candidates?search=${candidateId}`,
+          );
+          const list = searchData?.data ?? searchData?.candidates ?? [];
+          if (!Array.isArray(list)) {
+            throw primaryError;
+          }
+          candidateRow = list.find(
+            (c) => String(c.id) === String(candidateId),
+          );
+          if (!candidateRow) {
             throw new Error(
-              `Failed to fetch candidates. Status: ${searchResponse.status}`
+              `Candidate with ID ${candidateId} not found in the database`,
             );
-          }
-
-          const searchData = await searchResponse.json();
-
-          if (
-            searchData.success &&
-            searchData.data &&
-            Array.isArray(searchData.data)
-          ) {
-            const foundCandidate = searchData.data.find(
-              (c) => c.id === parseInt(candidateId)
-            );
-
-            if (foundCandidate) {
-              console.log("Found candidate from search:", foundCandidate);
-              let mergedCandidate = foundCandidate;
-              const userId = foundCandidate?.user_id ?? foundCandidate?.userId ?? null;
-              if (userId) {
-                try {
-                  const full = await fetchFullUserProfile(userId);
-                  if (full?.user) {
-                    mergedCandidate = {
-                      ...foundCandidate,
-                      profile_photo:
-                        foundCandidate.profile_photo ||
-                        full.user.profile_photo ||
-                        full.user.profilePhoto ||
-                        full.user.image ||
-                        full.cv?.bio?.profile_photo ||
-                        null,
-                      profilePhoto:
-                        foundCandidate.profilePhoto ||
-                        full.user.profilePhoto ||
-                        full.user.profile_photo ||
-                        full.user.image ||
-                        null,
-                      image:
-                        foundCandidate.image ||
-                        full.user.image ||
-                        full.user.profile_photo ||
-                        full.user.profilePhoto ||
-                        null,
-                    };
-                  }
-                } catch (fullProfileError) {
-                  console.warn("Full profile fallback failed:", fullProfileError?.message || fullProfileError);
-                }
-              }
-              setCandidate(mergedCandidate);
-            } else {
-              throw new Error(
-                `Candidate with ID ${candidateId} not found in the database`
-              );
-            }
-          } else {
-            throw new Error("Invalid data format from search endpoint");
-          }
-        } else {
-          // Single candidate endpoint succeeded
-          const data = await response.json();
-          console.log("Received data:", data);
-
-          if (data.success && data.data) {
-            let mergedCandidate = data.data;
-            const userId = data.data?.user_id ?? data.data?.userId ?? null;
-            if (userId) {
-              try {
-                const full = await fetchFullUserProfile(userId);
-                if (full?.user) {
-                  mergedCandidate = {
-                    ...data.data,
-                    profile_photo:
-                      data.data.profile_photo ||
-                      full.user.profile_photo ||
-                      full.user.profilePhoto ||
-                      full.user.image ||
-                      full.cv?.bio?.profile_photo ||
-                      null,
-                    profilePhoto:
-                      data.data.profilePhoto ||
-                      full.user.profilePhoto ||
-                      full.user.profile_photo ||
-                      full.user.image ||
-                      null,
-                    image:
-                      data.data.image ||
-                      full.user.image ||
-                      full.user.profile_photo ||
-                      full.user.profilePhoto ||
-                      null,
-                  };
-                }
-              } catch (fullProfileError) {
-                console.warn("Full profile fallback failed:", fullProfileError?.message || fullProfileError);
-              }
-            }
-            setCandidate(mergedCandidate);
-          } else if (data.data) {
-            // Handle case where success flag might be missing but data exists
-            let mergedCandidate = data.data;
-            const userId = data.data?.user_id ?? data.data?.userId ?? null;
-            if (userId) {
-              try {
-                const full = await fetchFullUserProfile(userId);
-                if (full?.user) {
-                  mergedCandidate = {
-                    ...data.data,
-                    profile_photo:
-                      data.data.profile_photo ||
-                      full.user.profile_photo ||
-                      full.user.profilePhoto ||
-                      full.user.image ||
-                      full.cv?.bio?.profile_photo ||
-                      null,
-                    profilePhoto:
-                      data.data.profilePhoto ||
-                      full.user.profilePhoto ||
-                      full.user.profile_photo ||
-                      full.user.image ||
-                      null,
-                    image:
-                      data.data.image ||
-                      full.user.image ||
-                      full.user.profile_photo ||
-                      full.user.profilePhoto ||
-                      null,
-                  };
-                }
-              } catch (fullProfileError) {
-                console.warn("Full profile fallback failed:", fullProfileError?.message || fullProfileError);
-              }
-            }
-            setCandidate(mergedCandidate);
-          } else {
-            throw new Error("No candidate data received from API");
           }
         }
+
+        if (!candidateRow) {
+          throw new Error("No candidate data received from API");
+        }
+
+        const mergedCandidate = await enrichCandidateWithFullProfile(
+          candidateRow,
+        );
+        setCandidate(mergedCandidate);
       } catch (error) {
         console.error("Error fetching candidate details:", error);
         setError(error.message || "Failed to load candidate profile");
@@ -240,6 +188,34 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
     );
   }
 
+  const educationRows =
+    candidate._cv?.education?.length > 0
+      ? candidate._cv.education
+      : candidate.user_education?.length > 0
+        ? candidate.user_education
+        : null;
+
+  const workRows =
+    candidate._cv?.workHistory?.length > 0
+      ? candidate._cv.workHistory
+      : candidate.user_work_history?.length > 0
+        ? candidate.user_work_history
+        : null;
+
+  const certificateRows =
+    candidate._cv?.certificates?.length > 0
+      ? candidate._cv.certificates
+      : candidate.user_certificates?.length > 0
+        ? candidate.user_certificates
+        : null;
+
+  const skillItems = normalizeProfileSkills(
+    resolveProfileSkillSource({ candidate, cv: candidate._cv }),
+  );
+
+  const legacyEducation = candidate.education;
+  const legacyWork = candidate.work_history;
+
   return (
     <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F5F5F5] mt-1">
       <div className="max-w-4xl mx-auto">
@@ -253,34 +229,64 @@ const UserProfilePanel = ({ candidateId, onViewMainProfile }) => {
         />
         <Divider />
 
-        {candidate.education && candidate.education.length > 0 && (
+        {educationRows?.length > 0 ? (
           <ProfileSection title="Education">
-            {candidate.education.map((edu, index) => (
-              <EducationItem key={index} education={edu} />
+            {educationRows.map((edu, index) => (
+              <EducationItem key={edu.id ?? index} education={edu} />
             ))}
           </ProfileSection>
+        ) : (
+          legacyEducation?.length > 0 && (
+            <ProfileSection title="Education">
+              {legacyEducation.map((edu, index) => (
+                <EducationItem key={index} education={edu} legacy />
+              ))}
+            </ProfileSection>
+          )
         )}
 
-        {candidate.skills && candidate.skills.length > 0 && (
+        {skillItems.length > 0 && (
           <ProfileSection title="Skills">
-            <SkillsList skills={candidate.skills} />
+            <ProfileSkillsDisplay
+              skills={resolveProfileSkillSource({
+                candidate,
+                cv: candidate._cv,
+              })}
+              variant="panel"
+            />
           </ProfileSection>
         )}
 
-        {candidate.work_history && candidate.work_history.length > 0 && (
+        {workRows?.length > 0 ? (
           <ProfileSection title="Work History">
-            {candidate.work_history.map((work, index) => (
-              <WorkHistoryItem key={index} work={work} />
+            {workRows.map((work, index) => (
+              <WorkHistoryItem key={work.id ?? index} work={work} />
             ))}
           </ProfileSection>
+        ) : (
+          legacyWork?.length > 0 && (
+            <ProfileSection title="Work History">
+              {legacyWork.map((work, index) => (
+                <WorkHistoryItem key={index} work={work} legacy />
+              ))}
+            </ProfileSection>
+          )
         )}
 
-        {candidate.certifications && candidate.certifications.length > 0 && (
-          <ProfileSection title="Certifications">
-            {candidate.certifications.map((cert, index) => (
-              <CertificationItem key={index} certification={cert} />
+        {certificateRows?.length > 0 ? (
+          <ProfileSection title="Certificates">
+            {certificateRows.map((cert, index) => (
+              <CertificateCvItem key={cert.id ?? index} cert={cert} />
             ))}
           </ProfileSection>
+        ) : (
+          candidate.certifications?.length > 0 && (
+            <ProfileSection title="Certifications">
+              {candidate.certifications.map((cert, index) => (
+                <CertificationItem key={index} certification={cert} />
+              ))}
+            </ProfileSection>
+          )
         )}
 
         <ProfileSection title="Contact Info">
@@ -483,82 +489,105 @@ const ProfileSection = ({ title, children }) => (
   </div>
 );
 
-const EducationItem = ({ education }) => (
-  <div className="px-4 sm:px-8 pb-6 text-[#F5F5F5] flex flex-col sm:flex-row justify-between gap-3 items-start">
-    <div className="bg-gradient-to-br from-[#6B8E23] to-[#556B1F] w-16 h-16 rounded-lg flex items-center justify-center">
-      <span className="text-white text-xl font-bold">🎓</span>
-    </div>
-    <div className="flex-1">
-      <p className="text-[14px] font-semibold">{education.degree}</p>
-      <p className="text-[12px]">{education.institution}</p>
-      <p className="text-[11px] text-[#E0E0E0]">{education.field}</p>
-      <span className="text-[#FFB54780] text-[11px]">{education.year}</span>
-    </div>
-  </div>
-);
-
-const normalizeSkills = (skills) => {
-  if (Array.isArray(skills)) {
-    return skills
-      .map((skill) => (typeof skill === "string" ? skill : skill?.name || skill?.skill || ""))
-      .map((skill) => String(skill || "").trim())
-      .filter(Boolean);
-  }
-
-  if (typeof skills === "string") {
-    return skills
-      .split(",")
-      .map((skill) => skill.trim())
-      .filter(Boolean);
-  }
-
-  return [];
-};
-
-const SkillsList = ({ skills }) => {
-  const normalizedSkills = normalizeSkills(skills);
-
-  if (normalizedSkills.length === 0) {
-    return (
-      <div className="px-4 sm:px-8 pb-6">
-        <p className="text-[#E0E0E0] text-sm">No skills added yet.</p>
-      </div>
-    );
-  }
+const EducationItem = ({ education, legacy = false }) => {
+  const degree = education.degree;
+  const institution = legacy
+    ? education.institution
+    : education.institution_name ?? education.institutionName;
+  const field = legacy
+    ? education.field
+    : education.field_of_study ?? education.fieldOfStudy;
+  const period = legacy
+    ? education.year
+    : formatDateRange(
+        education.start_date ?? education.startDate,
+        education.end_date ?? education.endDate,
+        isOngoingCvEntry(education),
+      );
 
   return (
-    <div className="px-4 sm:px-8 pb-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-        {normalizedSkills.map((skill, index) => (
-          <div
-            key={`${skill}-${index}`}
-            className="bg-[#1A3E32] text-[#FFFFFF] px-3 py-2 rounded-lg text-[12px] sm:text-[13px] font-medium leading-snug break-words min-h-[42px] flex items-center"
-            title={skill}
-          >
-            {skill}
-          </div>
-        ))}
+    <div className="px-4 sm:px-8 pb-6 text-[#F5F5F5] flex flex-col sm:flex-row justify-between gap-3 items-start">
+      <div className="bg-gradient-to-br from-[#6B8E23] to-[#556B1F] w-16 h-16 rounded-lg flex items-center justify-center">
+        <span className="text-white text-xl font-bold">🎓</span>
+      </div>
+      <div className="flex-1">
+        <p className="text-[14px] font-semibold">{degree}</p>
+        <p className="text-[12px]">{institution}</p>
+        {field && <p className="text-[11px] text-[#E0E0E0]">{field}</p>}
+        {period && (
+          <span className="text-[#FFB54780] text-[11px]">{period}</span>
+        )}
       </div>
     </div>
   );
 };
 
-const WorkHistoryItem = ({ work }) => (
-  <>
-    <div className="px-4 sm:px-8 pb-6 text-[#F5F5F5] flex flex-col sm:flex-row gap-4 items-start">
-      <div className="bg-gradient-to-br from-[#6B8E23] to-[#556B1F] w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0">
-        <span className="text-white text-xl font-bold">💼</span>
+const WorkHistoryItem = ({ work, legacy = false }) => {
+  const title = legacy ? work.title : work.job_title ?? work.jobTitle;
+  const company = legacy ? work.company : work.company_name ?? work.companyName;
+  const description = legacy
+    ? work.description
+    : work.responsibilities;
+  const duration = legacy
+    ? work.duration
+    : formatDateRange(
+        work.start_date ?? work.startDate,
+        work.end_date ?? work.endDate,
+        isOngoingCvEntry(work),
+      );
+
+  return (
+    <>
+      <div className="px-4 sm:px-8 pb-6 text-[#F5F5F5] flex flex-col sm:flex-row gap-4 items-start">
+        <div className="bg-gradient-to-br from-[#6B8E23] to-[#556B1F] w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0">
+          <span className="text-white text-xl font-bold">💼</span>
+        </div>
+        <div className="flex-1">
+          <p className="text-[14px] font-semibold">{title}</p>
+          <p className="text-[13px]">{company}</p>
+          {description && (
+            <p className="text-[11px] text-[#E0E0E0] mt-1 line-clamp-3">
+              {description}
+            </p>
+          )}
+          {duration && (
+            <span className="text-[#FFB54780] text-[11px]">{duration}</span>
+          )}
+        </div>
       </div>
-      <div className="flex-1">
-        <p className="text-[14px] font-semibold">{work.title}</p>
-        <p className="text-[13px]">{work.company}</p>
-        <p className="text-[11px] text-[#E0E0E0] mt-1">{work.description}</p>
-        <span className="text-[#FFB54780] text-[11px]">{work.duration}</span>
+      <div className="w-full border-t-2 border-[#E0E0E0] mb-4"></div>
+    </>
+  );
+};
+
+const CertificateCvItem = ({ cert }) => {
+  const name = cert.cert_name ?? cert.certName;
+  const issuer = cert.issuer;
+  const issueDate = formatDateToMonthYear(cert.issue_date ?? cert.issueDate);
+
+  return (
+    <>
+      <div className="px-4 sm:px-8 pb-6 text-[#F5F5F5] flex flex-col sm:flex-row gap-4 items-start">
+        <div className="bg-gradient-to-br from-[#E09A36] to-[#6B8E23] w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0">
+          <span className="text-white text-xl font-bold">🏆</span>
+        </div>
+        <div className="flex-1">
+          {name && <p className="text-[14px] font-semibold">{name}</p>}
+          {issuer && <p className="text-[13px]">{issuer}</p>}
+          {issueDate && (
+            <span className="text-[#FFB54780] text-[11px]">{issueDate}</span>
+          )}
+          <CertificateViewLink
+            fileUrl={cert.file_url ?? cert.fileUrl}
+            title={name}
+            className="text-[11px] text-[#FFB54780] underline mt-1 inline-block text-left"
+          />
+        </div>
       </div>
-    </div>
-    <div className="w-full border-t-2 border-[#E0E0E0] mb-4"></div>
-  </>
-);
+      <div className="w-full border-t-2 border-[#E0E0E0] mb-4"></div>
+    </>
+  );
+};
 
 const CertificationItem = ({ certification }) => (
   <div className="px-4 sm:px-8 pb-6 text-[#F5F5F5] flex flex-col sm:flex-row gap-4 items-start">

@@ -40,9 +40,12 @@ export const loginUser = createAsyncThunk(
       console.error("Login API error:", err);
       if (err.response?.data) {
         console.log("Login errors from API:", err.response.data);
-        return rejectWithValue(err.response.data);
+        return rejectWithValue({
+          ...err.response.data,
+          status: err.response.status,
+        });
       }
-      return rejectWithValue({ error: "Network Error" });
+      return rejectWithValue({ error: "Network Error", status: 0 });
     }
   }
 );
@@ -93,9 +96,16 @@ const authSlice = createSlice({
             state.user = merged;
           }
         } catch {
-          localStorage.setItem("user", JSON.stringify(action.payload));
-          if (action.payload?.id || action.payload?.email) {
-            state.user = action.payload;
+          let fallback = {};
+          try {
+            fallback = JSON.parse(localStorage.getItem("user") || "{}");
+          } catch {
+            /* keep empty fallback */
+          }
+          const merged = { ...fallback, ...action.payload };
+          localStorage.setItem("user", JSON.stringify(merged));
+          if (merged?.id || merged?.email) {
+            state.user = merged;
           }
         }
       }

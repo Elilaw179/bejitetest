@@ -438,7 +438,7 @@ const NewsFeedHeader = ({
 
           {/* Search Results Dropdown */}
           {showSearchResults && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 max-h-96 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 max-h-96 overflow-y-auto nfl-scroll">
               {searchResults.map((result, index) => (
                 <div
                   key={`${result.type}-${result.id}-${index}`}
@@ -484,9 +484,8 @@ const NewsFeedHeader = ({
             <div key={i} className="relative flex items-center">
               {name === "home-icon" ? (
                 <FaHome
-                  className={`text-2xl md:text-3xl cursor-pointer transition-opacity ${
-                    isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F] hover:opacity-80"
-                  }`}
+                  className={`text-2xl md:text-3xl cursor-pointer transition-opacity ${isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F] hover:opacity-80"
+                    }`}
                   onClick={() => handleIconClick(name)}
                 />
               ) : (
@@ -494,9 +493,8 @@ const NewsFeedHeader = ({
                   <img
                     src={`/assets/images/${name}.svg`}
                     alt={name}
-                    className={`h-6 md:h-8 cursor-pointer transition-opacity ${
-                      isIconActive(name) ? "opacity-100" : "hover:opacity-80"
-                    }`}
+                    className={`h-6 md:h-8 cursor-pointer transition-opacity ${isIconActive(name) ? "opacity-100" : "hover:opacity-80"
+                      }`}
                     onClick={() => handleIconClick(name)}
                   />
                   {name === "notifications" && notificationCount > 0 && (
@@ -552,7 +550,7 @@ const NewsFeedHeader = ({
 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 left-auto mt-2 w-[min(18rem,calc(100vw-1rem))] bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden max-h-[70vh] overflow-y-auto">
+                  <div className="absolute right-0 left-auto mt-2 w-[min(18rem,calc(100vw-1rem))] bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden max-h-[70vh] overflow-y-auto nfl-scroll">
                     {/* User Info Header */}
                     <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                       <div className="flex items-center gap-3">
@@ -657,50 +655,7 @@ const NewsFeedHeader = ({
           >
             ✕ Close
           </button>
-<<<<<<< HEAD
-           <nav className="flex flex-col gap-4">
-             {menuItems.map((name, i) => (
-               <div
-                 key={i}
-                 className="flex items-center gap-2 cursor-pointer"
-                 onClick={() => {
-                   handleIconClick(name);
-                   setIsSidebarOpen(false);
-                 }}
-               >
-                 {name === "home-icon" ? (
-                   <FaHome className={isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F]"} />
-                 ) : (
-                   <div className={`relative rounded-full p-1 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}>
-                     <img
-                       src={`/assets/images/${name}.svg`}
-                       alt={name}
-                       className="h-5"
-                     />
-{name === "notifications" && notificationCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                          {notificationCount > 9 ? '9+' : notificationCount}
-                        </span>
-                      )}
-                      {name === "CHAT" && unreadMessageCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold animate-pulse">
-                          {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
-                        </span>
-                      )}
-                      {name === "connection" && connectionRequestCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                          {connectionRequestCount > 9 ? '9+' : connectionRequestCount}
-                        </span>
-                      )}
-                    </div>
-                 )}
-                 <span className={`font-medium capitalize text-sm ${isIconActive(name) ? "text-[#0f4e0a]" : "text-[#1A3E32]"}`}>
-                   {name === "home-icon" ? "News Feed" : name.toLowerCase()}
-                 </span>
-               </div>
-             ))}
-           </nav>
-=======
+           
           <nav className="flex flex-col gap-4">
             {menuItems.map((name, i) => (
               <div
@@ -712,9 +667,9 @@ const NewsFeedHeader = ({
                 }}
               >
                 {name === "home-icon" ? (
-                  <FaHome className="text-[#16730F]" />
+                  <FaHome className={isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F]"} />
                 ) : (
-                  <div className="relative">
+                  <div className={`relative rounded-full p-1 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}>
                     <img
                       src={`/assets/images/${name}.svg`}
                       alt={name}
@@ -737,13 +692,12 @@ const NewsFeedHeader = ({
                     )}
                   </div>
                 )}
-                <span className="text-[#1A3E32] font-medium capitalize text-sm">
+                <span className={`font-medium capitalize text-sm ${isIconActive(name) ? "text-[#0f4e0a]" : "text-[#1A3E32]"}`}>
                   {name === "home-icon" ? "News Feed" : name.toLowerCase()}
                 </span>
               </div>
             ))}
           </nav>
->>>>>>> 26560dc5b7a1611de1adf5bc69e69f8b47e9e48b
         </div>
       )}
     </header>

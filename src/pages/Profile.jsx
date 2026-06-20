@@ -6,6 +6,11 @@ import ProfileCvSections from '../components/ProfileCvSections';
 import axiosInstance from '../utils/axiosInstance';
 import { fetchCurrentUserProfilePhoto } from '../services/profilePhotoService';
 import { fetchFullUserProfile } from '../services/fetchFullUserProfile';
+import {
+  mergeCvWithCandidateSkills,
+  normalizeProfileSkills,
+  resolveProfileSkillSource,
+} from '../utils/profileSkills';
 import { getUser, pickProfilePhotoPath } from '../utils/tokenManager';
 import { profileAvatarSrc } from '../utils/profilePhotoUrl';
 import { pickAuthorProfilePhoto } from '../utils/profileImageUtils';
@@ -17,6 +22,41 @@ import {
 } from '../utils/profileUtils';
 
 const ABOUT_CHAR_LIMIT = 500;
+
+const buildAvatarCandidates = (rawPhoto) => {
+  const candidates = [];
+  const pushUnique = (value) => {
+    if (!value || typeof value !== 'string') return;
+    const trimmed = value.trim();
+    if (!trimmed || candidates.includes(trimmed)) return;
+    candidates.push(trimmed);
+  };
+
+  pushUnique(profileAvatarSrc(rawPhoto));
+
+  const raw = typeof rawPhoto === 'string' ? rawPhoto.trim() : '';
+  if (!raw) return candidates;
+
+  pushUnique(raw);
+
+  const isAbsolute =
+    /^https?:\/\//i.test(raw) ||
+    raw.startsWith('blob:') ||
+    raw.startsWith('data:') ||
+    raw.startsWith('/assets/') ||
+    raw.startsWith('assets/');
+
+  if (!isAbsolute) {
+    const relativePath = raw.startsWith('/') ? raw : `/${raw}`;
+    const baseUrl = String(import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+    const baseApi = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
+    pushUnique(baseUrl ? `${baseUrl}${relativePath}` : '');
+    pushUnique(baseApi ? `${baseApi}${relativePath}` : '');
+    pushUnique(`${window.location.origin}${relativePath}`);
+  }
+
+  return candidates;
+};
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -63,6 +103,31 @@ const Profile = () => {
           merged = normalizeProfileData({ ...merged, ...full.user });
           cv = full.cv;
           profileFound = true;
+        }
+
+        const hasSkillLabels =
+          normalizeProfileSkills(resolveProfileSkillSource({ cv })).length > 0;
+        if (!hasSkillLabels) {
+          try {
+            const { data: cvRes } = await axiosInstance.get(
+              `/api/cv-builder/complete/${targetUserId}`,
+            );
+            if (cvRes?.success && cvRes.data) {
+              cv = mergeCvWithCandidateSkills(
+                {
+                  bio: cv?.bio ?? cvRes.data.bio ?? null,
+                  education: cv?.education ?? cvRes.data.education ?? [],
+                  skills: cvRes.data.skills ?? [],
+                  workHistory: cv?.workHistory ?? cvRes.data.workHistory ?? [],
+                  certificates: cv?.certificates ?? cvRes.data.certificates ?? [],
+                  links: cv?.links ?? cvRes.data.links ?? null,
+                },
+                null,
+              );
+            }
+          } catch {
+            /* optional CV fallback */
+          }
         }
       }
 
@@ -231,7 +296,7 @@ const Profile = () => {
 
   if (!profileData && !loading) {
     return (
-      <NewsFeedLayout showSidebars={false}>
+      <NewsFeedLayout classes={false} scrollable={false} showSidebars={false}>
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="text-center">
             <p className="text-gray-600 mb-4">No profile data found</p>
@@ -261,7 +326,14 @@ const Profile = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <button
-            onClick={() => navigate(-1)}
+            type="button"
+            onClick={() => {
+              if (isViewingOwnProfile) {
+                navigate("/news-feed");
+              } else {
+                navigate(-1);
+              }
+            }}
             className="flex items-center gap-2 text-[#16730F] hover:text-[#145a0c] transition-colors"
           >
             <FaArrowLeft />
@@ -371,6 +443,28 @@ const Profile = () => {
 
         {isJobseekerProfile && <ProfileCvSections cv={cvData} />}
       </div>
+
+      {isPhotoViewerOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-4"
+          onClick={() => setIsPhotoViewerOpen(false)}
+        >
+          <img
+            src={activeAvatarSrc}
+            alt="Profile full view"
+            className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg"
+            onClick={(event) => event.stopPropagation()}
+          />
+          <button
+            type="button"
+            aria-label="Close photo viewer"
+            className="absolute top-4 right-4 text-white text-2xl bg-black/40 hover:bg-black/60 rounded-full w-10 h-10 flex items-center justify-center"
+            onClick={() => setIsPhotoViewerOpen(false)}
+          >
+            ×
+          </button>
+        </div>
+      )}
     </NewsFeedLayout>
   );
 };

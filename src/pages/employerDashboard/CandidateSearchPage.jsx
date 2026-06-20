@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { FaList, FaSlidersH, FaTimes, FaArrowLeft } from "react-icons/fa";
 import SearchCriteria from "../../components/candidate-search-page/SearchCriteria";
 import CandidateSearchResults from "../../components/candidate-search-page/CandidateSearchResults";
@@ -33,8 +33,16 @@ const CandidateSearchPage = () => {
   const [selectedCandidateId, setSelectedCandidateId] = useState(null);
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const mainScrollRef = useRef(null);
+  const resultsScrollRef = useRef(null);
 
   const hasAtLeastOneField = Object.values(formData).some((val) => val.trim() !== "");
+
+  const scrollSearchViewToTop = useCallback(() => {
+    window.scrollTo({ top: 0, left: 0 });
+    mainScrollRef.current?.scrollTo({ top: 0, left: 0 });
+    resultsScrollRef.current?.scrollTo({ top: 0, left: 0 });
+  }, []);
 
   const handleViewProfile = useCallback((candidateId) => {
     setSelectedCandidateId(candidateId);
@@ -47,6 +55,11 @@ const CandidateSearchPage = () => {
     setShowResults(true);
     setLeftPanelOpen(false);
   };
+
+  useEffect(() => {
+    if (!showResults) return;
+    scrollSearchViewToTop();
+  }, [showResults, scrollSearchViewToTop]);
 
   const handleBackToSearch = () => {
     setViewProfile(false);
@@ -144,7 +157,7 @@ const CandidateSearchPage = () => {
           </div>
         )}
 
-        <div className="relative flex-1 min-h-0 bg-[#FFFFFF] w-full max-w-[1440px] mx-auto">
+        <div className="relative flex-1 min-h-0 h-[calc(100vh-72px)] bg-[#FFFFFF] w-full max-w-[1440px] mx-auto">
           {(leftPanelOpen || rightPanelOpen) && (
             <button
               type="button"
@@ -182,7 +195,10 @@ const CandidateSearchPage = () => {
                   <FaTimes />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-3 sm:p-4 min-h-0">
+              <div
+                ref={resultsScrollRef}
+                className="flex-1 overflow-y-auto nfl-scroll scroll-smooth p-3 sm:p-4 min-h-0"
+              >
                 <CandidateSearchResults
                   searchCriteria={formData}
                   onViewProfile={handleViewProfile}
@@ -191,7 +207,10 @@ const CandidateSearchPage = () => {
             </aside>
 
             {/* Main content */}
-            <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-[#F5F5F5] p-3 sm:p-4 md:p-6">
+            <main
+              ref={mainScrollRef}
+              className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden nfl-scroll scroll-smooth bg-[#F5F5F5] p-3 sm:p-4 md:p-6"
+            >
               {renderMainContent()}
             </main>
 
@@ -219,7 +238,7 @@ const CandidateSearchPage = () => {
                   <FaTimes />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-3 sm:p-4 min-h-0">
+              <div className="flex-1 overflow-y-auto nfl-scroll scroll-smooth p-3 sm:p-4 min-h-0">
                 <JobSearchFormGreen
                   formData={formData}
                   setFormData={setFormData}

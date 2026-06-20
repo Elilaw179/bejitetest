@@ -5,6 +5,7 @@ import { profileAvatarSrc } from '../../utils/profilePhotoUrl';
 import { pickAuthorProfilePhoto } from '../../utils/profileImageUtils';
 import { formatSalaryExpectation } from '../../utils/formatSalary';
 import ProfileCvSections from '../ProfileCvSections';
+import { mergeCvWithCandidateSkills } from '../../utils/profileSkills';
 import { useCandidateConnect } from './useCandidateConnect';
 import CandidateJobPreferences from './CandidateJobPreferences';
 import CandidateContactInfo from './CandidateContactInfo';
@@ -39,25 +40,27 @@ const UserMainProfileCard = ({ candidateId }) => {
 
         const userId = candidateRow.user_id;
         if (userId) {
+          let cv = null;
           const full = await fetchFullUserProfile(userId);
           if (full?.user) {
             setProfileUser(full.user);
-            setCvData(full.cv);
+            cv = full.cv;
           } else {
             const { data: cvRes } = await axiosInstance.get(
               `/api/cv-builder/complete/${userId}`,
             );
             if (cvRes?.success && cvRes.data) {
-              setCvData({
+              cv = {
                 bio: cvRes.data.bio ?? null,
                 education: cvRes.data.education ?? [],
                 skills: cvRes.data.skills ?? [],
                 workHistory: cvRes.data.workHistory ?? [],
                 certificates: cvRes.data.certificates ?? [],
                 links: cvRes.data.links ?? null,
-              });
+              };
             }
           }
+          setCvData(mergeCvWithCandidateSkills(cv, candidateRow));
         }
       } catch (err) {
         console.error('Error fetching full profile:', err);
@@ -137,7 +140,7 @@ const UserMainProfileCard = ({ candidateId }) => {
         </section>
       )}
 
-      <ProfileCvSections cv={cvData} />
+      <ProfileCvSections cv={cvData} candidate={candidate} />
 
       <CandidateJobPreferences candidate={candidate} />
 

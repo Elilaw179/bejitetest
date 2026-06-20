@@ -35,30 +35,35 @@ const CoperateVerificationLayout = () => {
 
   const [recruiterData, setRecruiterData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   useEffect(() => {
-    if (isEditMode && user?.id && !initialLoadComplete) {
-      const fetchRecruiterData = async () => {
-        setIsLoading(true);
-        try {
-          const response = await axiosInstance.get('/auth/user/profile');
-          if (response.data && response.data.success) {
-            setRecruiterData(response.data.data);
-          } else if (response.data?.data) {
-            setRecruiterData(response.data.data);
-          }
-          setInitialLoadComplete(true);
-        } catch (error) {
-          console.error("Error fetching recruiter data:", error);
-          setInitialLoadComplete(true);
-        } finally {
-          setIsLoading(false);
+    if (!isEditMode || !user?.id) return;
+
+    let cancelled = false;
+
+    const fetchRecruiterData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await axiosInstance.get("/auth/user/profile");
+        if (cancelled) return;
+        if (response.data?.success && response.data?.data) {
+          setRecruiterData(response.data.data);
+        } else if (response.data?.data) {
+          setRecruiterData(response.data.data);
         }
-      };
-      fetchRecruiterData();
-    }
-  }, [isEditMode, user?.id, initialLoadComplete]);
+      } catch (error) {
+        console.error("Error fetching recruiter data:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
+    fetchRecruiterData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditMode, user?.id, location.pathname]);
 
   const getPath = (step) => {
     if (isEditMode) {

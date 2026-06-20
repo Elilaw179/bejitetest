@@ -20,6 +20,17 @@ import OnboardingLayout from "../../../components/layout/onboardingLayout";
 import { InputWithIcon } from "../../../components/forms/InputIcon";
 import FormLabel from "../../../components/forms/FormLabel";
 import { JOB_TITLES } from "../../../data/teamData";
+import { formatDateRange } from "../../../utils/checksFormat";
+import axiosInstance from "../../../utils/axiosInstance";
+
+const buildWorkHistoryApiPayload = (entry) => ({
+  userId: entry.userId,
+  jobTitle: entry.jobTitle,
+  companyName: entry.companyName,
+  responsibilities: entry.responsibilities,
+  startDate: entry.startDate,
+  endDate: entry.isCurrentJob || !entry.endDate ? null : entry.endDate,
+});
 
 // Dummy job titles for autocomplete
 
@@ -103,7 +114,7 @@ const AutocompleteJobInput = ({ value, onChange, placeholder, suggestions, onAdd
       
       {showSuggestions && (
         <div 
-          className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto"
+          className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto nfl-scroll"
           style={{ 
             zIndex: 9999,
             position: "absolute",
@@ -182,6 +193,7 @@ function WorkHistory() {
   const [allFilled, setAllFilled] = useState(false);
   const { user } = useAuth();
   const [jobTitlesList, setJobTitlesList] = useState(JOB_TITLES);
+  const [isSavingEntry, setIsSavingEntry] = useState(false);
 
   // Load existing work history data when in edit mode
   useEffect(() => {
@@ -198,8 +210,8 @@ function WorkHistory() {
         companyName: work.company_name || work.companyName,
         responsibilities: work.responsibilities,
         startDate: work.start_date || work.startDate,
-        endDate: work.end_date || work.endDate,
-        isCurrentJob: !work.end_date && !work.endDate, // If no end date, it's current job
+        endDate: work.end_date || work.endDate || null,
+        isCurrentJob: !(work.end_date || work.endDate),
       }));
       dispatch(loadExistingEntries(existingWork));
     }
@@ -239,7 +251,7 @@ function WorkHistory() {
       companyName,
       responsibilities,
       startDate,
-      endDate: isCurrentJob ? "" : endDate,
+      endDate: isCurrentJob ? null : endDate,
       isCurrentJob,
     };
 
@@ -257,14 +269,24 @@ function WorkHistory() {
       return;
     }
 
-    // Add new job title to suggestions list if it doesn't exist
     if (!jobTitlesList.includes(jobTitle)) {
-      setJobTitlesList(prev => [...prev, jobTitle]);
+      setJobTitlesList((prev) => [...prev, jobTitle]);
     }
 
-    dispatch(addEntry(newEntry));
-    clearForm();
-    toast.success("Work history added!");
+    setIsSavingEntry(true);
+    axiosInstance
+      .post("/api/cv-builder/work-history", buildWorkHistoryApiPayload(newEntry))
+      .then(({ data }) => {
+        const savedId = data?.data?.id;
+        dispatch(addEntry({ ...newEntry, id: savedId }));
+        clearForm();
+        toast.success("Work history saved!");
+      })
+      .catch((err) => {
+        console.error("Error saving work history:", err);
+        toast.error("Failed to save work history. Try again.");
+      })
+      .finally(() => setIsSavingEntry(false));
   };
 
   const location = useLocation();
@@ -408,12 +430,8 @@ function WorkHistory() {
                     </div>
                     <p className="text-sm opacity-90">@ {item.companyName}</p>
                     <p className="text-xs opacity-75 mt-2">
-                      <span className="font-medium">Duration:</span> {item.startDate} —{" "}
-                      {item.isCurrentJob ? (
-                        <span className="text-green-300 font-medium">Present</span>
-                      ) : (
-                        item.endDate
-                      )}
+                      <span className="font-medium">Duration:</span>{" "}
+                      {formatDateRange(item.startDate, item.endDate, item.isCurrentJob)}
                     </p>
                     {item.isCurrentJob && (
                       <p className="text-xs text-green-300 mt-1 flex items-center gap-1">
@@ -467,7 +485,7 @@ function WorkHistory() {
                 companyName,
                 responsibilities,
                 startDate,
-                endDate: isCurrentJob ? "" : endDate,
+                endDate: isCurrentJob ? null : endDate,
                 isCurrentJob,
               };
 
@@ -510,7 +528,7 @@ function WorkHistory() {
           }}
         />
 
-        <Loader show={isLoading} />
+        <Loader show={isLoading || isSavingEntry} />
       </div>
     </OnboardingLayout>
   );

@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { jwtDecode } from 'jwt-decode';
 import { toast } from 'react-toastify';
 import Loader from '../../components/ui/Loader';
 import axiosInstance from '../../utils/axiosInstance';
+import { hydrateAuth } from '../../features/auth/authSlice';
+import { storeUser } from '../../utils/tokenManager';
 
 /**
  * Query/JWT payloads are sometimes sparse; GET /auth/me returns the canonical session user.
@@ -20,6 +23,7 @@ function needsAuthMeHydration(u) {
 const AuthSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     let cancelled = false;
@@ -95,7 +99,8 @@ const AuthSuccess = () => {
 
         if (cancelled) return;
 
-        localStorage.setItem('user', JSON.stringify(sessionUser));
+        storeUser(sessionUser);
+        dispatch(hydrateAuth());
 
         const isVerified =
           sessionUser.verified || sessionUser.isEmailVerified;
@@ -143,7 +148,7 @@ const AuthSuccess = () => {
     return () => {
       cancelled = true;
     };
-  }, [location, navigate]);
+  }, [location, navigate, dispatch]);
 
   return (
     <div className="w-screen h-screen flex justify-center items-center">

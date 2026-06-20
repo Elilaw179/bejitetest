@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignIn from "./pages/SignIn";
 import ForgetPassword from "./pages/ForgetPassword";
@@ -91,9 +92,10 @@ const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <Router>
-        <AuthBootstrap>
-          <Routes>
+      <Sentry.ErrorBoundary fallback={<div className="min-h-screen flex items-center justify-center p-6 text-center">Something went wrong. Please refresh the page or contact support.</div>}>
+        <Router>
+          <AuthBootstrap>
+            <Routes>
             {/* Admin Routes */}
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -254,7 +256,6 @@ function App() {
                 element={<CoperateUploadDoc />}
               />
             </Route>
-            <Route path="/job-type" element={<JobType />} />
             <Route path="/post-page" element={<PostPage />} />
             <Route path="/news-feed" element={<Recruitment />} />
             <Route
@@ -309,6 +310,7 @@ function App() {
           />
         </AuthBootstrap>
       </Router>
+      </Sentry.ErrorBoundary>
     </GoogleOAuthProvider>
   );
 }

@@ -391,58 +391,42 @@ const Connections = () => {
 
   return (
     <NewsFeedLayout showSidebars={false}>
-
       <div className="min-h-screen bg-[#F5F5F5]">
         {/* <NewsFeedHeader /> */}
-
-<<<<<<< HEAD
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-            <div className="relative max-w-md w-full">
-              <input
-                type="text"
-                placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none"
-              />
-              <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1A3E32] h-5 w-5" />
-            </div>
-            <div className="flex items-center gap-2">
-              <label htmlFor="connections-page-size" className="text-sm text-gray-600 whitespace-nowrap">
-                Page size
-              </label>
-              <select
-                id="connections-page-size"
-                value={pageSize}
-                onChange={(e) => setPageSize(Number(e.target.value))}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A3E32] focus:outline-none focus:ring-2 focus:ring-[#16730F]/30"
-              >
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-              </select>
-            </div>
-=======
         <div className="max-w-4xl mx-auto px-4 py-6">
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-[#1A3E32] mb-2">Connections</h1>
             <p className="text-gray-600">Manage your professional network</p>
->>>>>>> 26560dc5b7a1611de1adf5bc69e69f8b47e9e48b
           </div>
 
           {/* Search Bar */}
           <div className="mb-6">
-            <div className="relative max-w-md">
-              <input
-                type="text"
-                placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none"
-              />
-              <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1A3E32] h-5 w-5" />
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+              <div className="relative max-w-md w-full">
+                <input
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none"
+                />
+                <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1A3E32] h-5 w-5" />
+              </div>
+              <div className="flex items-center gap-2">
+                <label htmlFor="connections-page-size" className="text-sm text-gray-600 whitespace-nowrap">
+                  Page size
+                </label>
+                <select
+                  id="connections-page-size"
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A3E32] focus:outline-none focus:ring-2 focus:ring-[#16730F]/30"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -610,11 +594,10 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
               key={item}
               type="button"
               onClick={() => onPageChange(item)}
-              className={`min-w-8 h-8 px-2 rounded-md text-sm border transition-colors ${
-                isActive
+              className={`min-w-8 h-8 px-2 rounded-md text-sm border transition-colors ${isActive
                   ? 'bg-[#16730F] border-[#16730F] text-white'
                   : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-              }`}
+                }`}
               aria-current={isActive ? 'page' : undefined}
             >
               {item}
