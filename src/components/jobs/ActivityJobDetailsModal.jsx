@@ -95,7 +95,9 @@ const ActivityJobDetailsModal = ({
     .join(", ");
 
   const skills = parseSkills(job.skills);
-  const descriptionLines = parseDescriptionLines(job.description);
+  const descriptionLines = isJobSeekerRole
+    ? parseDescriptionLines(job.bio || job.description)
+    : parseDescriptionLines(job.description);
   const salary =
     job.expected_salary && job.expected_salary !== "Any"
       ? [job.currency, job.expected_salary].filter(Boolean).join(" ")
@@ -277,16 +279,23 @@ const ActivityJobDetailsModal = ({
                   value={salary}
                 />
                 <DetailRow label="Availability" value={job.availability} />
-                <DetailRow label="Experience level" value={job.experience_level} />
-                <DetailRow label="Status" value={job.status} />
-                <DetailRow label="Company" value={job.company} />
+                {isJobSeekerRole && (
+                  <DetailRow label="Rate" value={job.rate} />
+                )}
+                {!isJobSeekerRole && (
+                  <>
+                    <DetailRow label="Experience level" value={job.experience_level} />
+                    <DetailRow label="Status" value={job.status} />
+                    <DetailRow label="Company" value={job.company} />
+                    <DetailRow
+                      label="Expires"
+                      value={formatPostedDate(job.expires_at)}
+                    />
+                  </>
+                )}
                 <DetailRow
-                  label="Posted"
+                  label={isJobSeekerRole ? "Preference set" : "Posted"}
                   value={formatPostedDate(job.created_at)}
-                />
-                <DetailRow
-                  label="Expires"
-                  value={formatPostedDate(job.expires_at)}
                 />
                 <DetailRow
                   label="Last updated"
@@ -315,7 +324,16 @@ const ActivityJobDetailsModal = ({
                 </div>
               )}
 
-              {job.description?.trim() && descriptionLines.length === 0 && (
+              {isJobSeekerRole && job.bio?.trim() && descriptionLines.length === 0 && (
+                <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5">
+                  <h3 className="font-semibold text-gray-900 mb-3">About</h3>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {job.bio}
+                  </p>
+                </div>
+              )}
+
+              {job.description?.trim() && descriptionLines.length === 0 && !isJobSeekerRole && (
                 <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5">
                   <h3 className="font-semibold text-gray-900 mb-3">
                     {isJobSeekerRole

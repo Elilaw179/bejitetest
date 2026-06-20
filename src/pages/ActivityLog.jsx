@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -51,6 +51,10 @@ import { getAuthorSubtitle } from "../utils/authorDisplay";
 import PostMediaGallery from "../components/PostMediaGallery";
 import FeedLoadMoreButton from "../components/FeedLoadMoreButton";
 import useJobsApi from "../services/useJobsApi";
+import {
+  getRecruiterJobApplications,
+  getRecruiterJobApplicationById,
+} from "../services/activityLogApi";
 import ActivityJobDetailsModal from "../components/jobs/ActivityJobDetailsModal";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -140,6 +144,21 @@ const ActivityLogPostCard = ({
   }, [post.id, post.likedByMe, post.savedByMe]);
   
   const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!showMenu) return;
+
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMenu]);
+
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(post.body || "");
   const [savingEdit, setSavingEdit] = useState(false);
@@ -369,11 +388,16 @@ const ActivityLogPostCard = ({
           </div>
         </div>
         {isOwner && (
-          <div className="relative">
-            <MoreHorizontal
-              className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
               onClick={() => setShowMenu(!showMenu)}
-            />
+              className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              aria-label="Post options"
+              aria-expanded={showMenu}
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
             {showMenu && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl py-2 w-32 border border-gray-100 z-10">
                 <button
@@ -489,10 +513,9 @@ const ActivityLogPostCard = ({
         {post.likesCount > 0 && (
           <button
             onClick={handleShowLikers}
-            className="hover:text-[#16730F] transition-colors font-medium flex items-center gap-1"
+            className="hover:text-[#16730F] transition-colors font-medium"
           >
-            <Heart className="w-3 h-3 fill-[#16730F] text-[#16730F]" />
-            {post.likesCount}
+            {post.likesCount} {post.likesCount === 1 ? "Like" : "Likes"}
           </button>
         )}
         {post.commentsCount > 0 && (
@@ -677,7 +700,7 @@ const JobCard = ({ job, onView, isRecruiterViewer }) => {
           </div>
         </div>
         <div className="text-xs text-gray-400 whitespace-nowrap shrink-0">
-          {formatDate(job.created_at)}
+          {formatDate(job.updated_at || job.created_at)}
         </div>
       </div>
     </motion.button>
@@ -735,6 +758,7 @@ export default function ActivityLog() {
   const [hasMoreJobs, setHasMoreJobs] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [loadingJobDetails, setLoadingJobDetails] = useState(false);
+  const [jobsError, setJobsError] = useState(null);
 
   const filters = [
     { value: "all", label: "All" },
@@ -752,7 +776,7 @@ export default function ActivityLog() {
     fetchPosts(true);
     fetchJobs(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mergedUser?.id, jobsPosterRole]);
+  }, [mergedUser?.id, isRecruiter]);
 
   const fetchMetrics = async () => {
     try {
@@ -789,12 +813,23 @@ export default function ActivityLog() {
     if (!mergedUser?.id) return;
     try {
       setLoadingJobs(true);
+      setJobsError(null);
       const currentPage = reset ? 1 : jobPage;
-      const data = await getJobs({
-        page: currentPage,
-        limit: 10,
-        poster_role: jobsPosterRole,
-      });
+
+      const data = isRecruiter
+        ? await getRecruiterJobApplications(
+            {
+              page: currentPage,
+              limit: 10,
+            },
+            getJobs,
+          )
+        : await getJobs({
+            page: currentPage,
+            limit: 10,
+            poster_role: jobsPosterRole,
+          });
+
       const newJobs = data?.data || [];
       if (reset) {
         setJobs(newJobs);
@@ -807,6 +842,14 @@ export default function ActivityLog() {
       }
     } catch (err) {
       console.error("Error fetching jobs:", err);
+      const message =
+        err?.response?.data?.message ||
+        (typeof err === "string" ? err : null) ||
+        "Could not load job applications. Please try again.";
+      setJobsError(message);
+      if (reset) {
+        setJobs([]);
+      }
     } finally {
       setLoadingJobs(false);
     }
@@ -892,12 +935,12 @@ export default function ActivityLog() {
     setLoadingJobDetails(true);
 
     try {
-      const response = await getJobById(job.id);
+      const response = await getRecruiterJobApplicationById(job.id, getJobById);
       if (response?.data) {
         setSelectedJob(response.data);
       }
     } catch (err) {
-      console.error("Error loading job details:", err);
+      console.error("Error loading job seeker preference:", err);
     } finally {
       setLoadingJobDetails(false);
     }
@@ -922,8 +965,10 @@ export default function ActivityLog() {
 
   const filteredJobs = useMemo(() => {
     if (filter !== "job" && filter !== "all") return [];
-    return jobs.filter(job => {
-      if (search && !job.title?.toLowerCase().includes(search.toLowerCase())) return false;
+    return jobs.filter((job) => {
+      if (search && !job.title?.toLowerCase().includes(search.toLowerCase())) {
+        return false;
+      }
       return true;
     });
   }, [jobs, filter, search]);
@@ -1007,6 +1052,11 @@ export default function ActivityLog() {
 
             {/* Content Feed */}
             <div className="space-y-4 pb-12">
+              {jobsError && (filter === "job" || filter === "all") && (
+                <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {jobsError}
+                </div>
+              )}
               <AnimatePresence>
                 {filteredPosts.length === 0 && filteredJobs.length === 0 && !loadingPosts && !loadingJobs ? (
                   <motion.div 

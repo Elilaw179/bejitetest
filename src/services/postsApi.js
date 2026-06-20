@@ -95,14 +95,16 @@ export const getSavedPosts = async (limit = 20, cursor = null) => {
 
 /**
  * Get user's timeline (posts by specific user)
- * @param {number} userId - User ID
+ * @param {string} userId - User ID
  * @param {number} limit - Number of posts to fetch
- * @param {string} cursor - Cursor for pagination
+ * @param {string|null} cursor - Cursor for pagination
+ * @param {{ mediaType?: 'image'|'video'|null }} [options]
  */
-export const getUserPosts = async (userId, limit = 20, cursor = null) => {
+export const getUserPosts = async (userId, limit = 20, cursor = null, options = {}) => {
   try {
     const params = { limit };
     if (cursor) params.cursor = cursor;
+    if (options.mediaType) params.media_type = options.mediaType;
     const response = await axiosInstance.get(`${POSTS_API_URL}/user/${userId}`, { params });
     return normalizePostsPayload(response.data);
   } catch (error) {

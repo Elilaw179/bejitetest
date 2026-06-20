@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export const ConfirmBadgeModal = ({ plan, onClose, onConfirm }) => {
+export const ConfirmBadgeModal = ({ plan, onClose, onConfirm, isLoading = false }) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -63,9 +63,10 @@ export const ConfirmBadgeModal = ({ plan, onClose, onConfirm }) => {
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-2.5 rounded-xl bg-[#1A3E32] text-white text-sm font-semibold"
+            disabled={isLoading}
+            className="flex-1 py-2.5 rounded-xl bg-[#1A3E32] text-white text-sm font-semibold disabled:opacity-60"
           >
-            Subscribe
+            {isLoading ? "Processing..." : "Subscribe"}
           </button>
         </div>
       </motion.div>
@@ -73,8 +74,24 @@ export const ConfirmBadgeModal = ({ plan, onClose, onConfirm }) => {
   );
 };
 
-export function EventModal({ event, onClose }) {
-  const [registered, setRegistered] = useState(false);
+export function EventModal({ event, onClose, onRegister, canRegister = true }) {
+  const [registered, setRegistered] = useState(Boolean(event?.isRegistered));
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleRegister = async () => {
+    if (!onRegister) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await onRegister(event.id);
+      setRegistered(true);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <motion.div
@@ -170,15 +187,25 @@ export function EventModal({ event, onClose }) {
                 </p>
               </div>
             </div>
+          ) : !canRegister ? (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+              Verified Badge subscription required to register for this event.
+            </div>
           ) : (
-            <button
-              onClick={() => setRegistered(true)}
-              className="w-full py-3.5 bg-[#1A3E32] text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-[#16362a] transition-colors"
-            >
-              <Mic className="w-4 h-4" />
-              Reserve My Spot
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            <>
+              {error && (
+                <p className="text-sm text-red-600 text-center">{error}</p>
+              )}
+              <button
+                onClick={handleRegister}
+                disabled={loading}
+                className="w-full py-3.5 bg-[#1A3E32] text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-[#16362a] transition-colors disabled:opacity-60"
+              >
+                <Mic className="w-4 h-4" />
+                {loading ? "Registering..." : "Reserve My Spot"}
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </>
           )}
         </div>
       </motion.div>

@@ -41,6 +41,7 @@ const transformConnectionUser = (user, connectedAt) => ({
   connectedAt,
   image: user?.profilePhoto ?? user?.profile_photo ?? user?.image ?? null,
   role: user?.jobTitle || 'Professional',
+  hasVerifiedBadge: Boolean(user?.hasVerifiedBadge),
 });
 
 const Connections = () => {

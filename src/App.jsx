@@ -63,6 +63,7 @@ import AuthSuccess from "./pages/auth/AuthSuccess.jsx";
 import AuthFailure from "./pages/auth/AuthFailure.jsx";
 import CompleteSignup from "./pages/CompleteSignup.jsx";
 import Profile from "./pages/Profile.jsx";
+import UserProfilePosts from "./pages/UserProfilePosts.jsx";
 import { ToastContainer } from "react-toastify";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
@@ -92,6 +93,7 @@ import BadgeStatus from "./pages/badge/BadgeStatus.jsx";
 import AccountSettings from "./pages/AccountSettings.jsx";
 import ActivityLog from "./pages/ActivityLog.jsx";
 import BadgeHolder from "./pages/badge/BadgeHolder.jsx";
+import BadgePaymentCallback from "./pages/badge/BadgePaymentCallback.jsx";
 import CreateJob from "./pages/employerDashboard/CreateJob.jsx";
 import EmployerDashboard from "./pages/employerDashboard/EmployerDashboard.jsx";
 import BulkCreateJobs from "./pages/employerDashboard/BulkCreateJobs.jsx";
@@ -257,6 +259,7 @@ function App() {
             <Route path="/post-page" element={<PostPage />} />
             <Route path="/news-feed" element={<Recruitment />} />
             <Route path="/badge" element={<BadgeStatus />} />
+            <Route path="/badge/payment-callback" element={<BadgePaymentCallback />} />
             <Route path="/activity-logs" element={<ActivityLog />} />
             <Route path="/account-settings" element={<AccountSettings />} />
             <Route path="/badge-holder" element={<BadgeHolder />} />
@@ -306,10 +309,26 @@ function App() {
             />
             <Route path="/sent-invitations" element={<SentInvitations />} />
             <Route
+              path="/profile/posts"
+              element={
+                <ProtectedRoute>
+                  <UserProfilePosts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/profile"
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user-profile/:userId/posts"
+              element={
+                <ProtectedRoute>
+                  <UserProfilePosts />
                 </ProtectedRoute>
               }
             />
