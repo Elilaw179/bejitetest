@@ -17,6 +17,20 @@ import useLocalStorage from "../../../hooks/useLocalStorage";
 import { useCreateCertificate } from "../../../services/certificateService";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
 
+const ALLOWED_CERTIFICATE_TYPES = new Set(["image/jpeg", "image/png"]);
+const ALLOWED_CERTIFICATE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png"]);
+
+const isAllowedCertificateFile = (selectedFile) => {
+  if (!selectedFile) return false;
+
+  if (ALLOWED_CERTIFICATE_TYPES.has(selectedFile.type)) {
+    return true;
+  }
+
+  const extension = `.${selectedFile.name.split(".").pop()?.toLowerCase() || ""}`;
+  return ALLOWED_CERTIFICATE_EXTENSIONS.has(extension);
+};
+
 const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
   <div className="relative w-full">
     <input
@@ -82,6 +96,19 @@ function Certificate() {
     setIssuer("");
     setIssueDate("");
     setFile(null);
+  };
+
+  const handleFileChange = (event) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (!isAllowedCertificateFile(selectedFile)) {
+      toast.error("Only JPG and PNG images are allowed.");
+      event.target.value = "";
+      return;
+    }
+
+    setFile(selectedFile);
   };
 
   const { email, firstName, lastName, role, mode, followings } =
@@ -196,11 +223,11 @@ function Certificate() {
             <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <p className="font-semibold text-xs mb-1">
-                  UPLOAD CERTIFICATE IMAGE
+                  UPLOAD CERTIFICATE IMAGE (JPG OR PNG)
                 </p>
                 <label className="flex justify-between items-center bg-black text-white h-12 rounded-[10px] px-3 cursor-pointer overflow-hidden">
                   <span className="truncate">
-                    {file ? file.name : "Upload your image"}
+                    {file ? file.name : "Upload JPG or PNG"}
                   </span>
                   {file ? (
                     <FaCheck className="ml-2 text-green-500 text-lg" />
@@ -209,11 +236,9 @@ function Certificate() {
                   )}
                   <input
                     type="file"
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                     className="hidden focus:outline-1 focus:outline-[#1A3E32]"
-                    onChange={(e) =>
-                      e.target.files[0] && setFile(e.target.files[0])
-                    }
+                    onChange={handleFileChange}
                   />
                 </label>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { FaArrowLeft, FaPhone, FaVideo, FaBars } from 'react-icons/fa';
 import messagingService from '../../services/messagingService';
@@ -13,9 +13,42 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const currentUser = useSelector((state) => state.auth.user);
+  const messagesContainerRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const stickToBottomRef = useRef(true);
+
+  const isNearBottom = useCallback((threshold = 96) => {
+    const container = messagesContainerRef.current;
+    if (!container) return true;
+    return (
+      container.scrollHeight - container.scrollTop - container.clientHeight <=
+      threshold
+    );
+  }, []);
+
+  const scrollToBottom = useCallback((behavior = 'auto') => {
+    const end = messagesEndRef.current;
+    if (end) {
+      end.scrollIntoView({ behavior, block: 'end' });
+      return;
+    }
+
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior,
+    });
+  }, []);
+
+  const handleMessagesScroll = () => {
+    stickToBottomRef.current = isNearBottom();
+  };
 
   useEffect(() => {
     if (selectedChat?.id) {
+      stickToBottomRef.current = true;
       fetchMessages(selectedChat.id);
       // Mark conversation as read when opened
       messagingService.markConversationRead(selectedChat.id).catch((err) => {
@@ -34,6 +67,15 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     return () => clearInterval(interval);
   }, [selectedChat]);
 
+  useEffect(() => {
+    if (!messages.length || loading) return;
+    if (!stickToBottomRef.current) return;
+
+    requestAnimationFrame(() => {
+      scrollToBottom('auto');
+    });
+  }, [messages, loading, scrollToBottom]);
+
   const fetchMessages = async (conversationId, silent = false) => {
     try {
       if (!silent) setLoading(true);
@@ -51,9 +93,10 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
 
     try {
       setSending(true);
+      stickToBottomRef.current = true;
       await messagingService.sendMessage(selectedChat.id, message.trim());
       setMessage('');
-      fetchMessages(selectedChat.id);
+      await fetchMessages(selectedChat.id, true);
       window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
     } catch (error) {
       console.error('Error sending message:', error);
@@ -67,9 +110,10 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
 
     try {
       setSending(true);
+      stickToBottomRef.current = true;
       await messagingService.sendMessage(selectedChat.id, caption, url);
       setMessage('');
-      fetchMessages(selectedChat.id);
+      await fetchMessages(selectedChat.id, true);
       window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
     } catch (error) {
       console.error('Error sending attachment:', error);
@@ -158,7 +202,11 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   </div>
 
   {/* Messages Area */}
-  <div className="flex-1 min-h-0 overflow-y-auto nfl-scroll scroll-smooth p-2 md:p-4">
+  <div
+    ref={messagesContainerRef}
+    onScroll={handleMessagesScroll}
+    className="flex-1 min-h-0 overflow-y-auto nfl-scroll scroll-smooth p-2 md:p-4"
+  >
     {loading ? (
       <div className="text-center text-[#16730F] py-2 md:py-4">
         Loading messages...
@@ -244,6 +292,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
             </div>
           );
         })}
+        <div ref={messagesEndRef} aria-hidden="true" />
       </div>
     )}
   </div>

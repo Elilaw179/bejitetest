@@ -23,6 +23,7 @@ import {
   deleteAdProCampaign,
   duplicateAdProCampaign,
 } from "../../services/adProApi";
+import { formatAdProCurrency, getCampaignProgress } from "../../utils/formatAdProCurrency";
 
 function FilterModal({ isOpen, onClose, onApply, currentFilter }) {
   const [selectedStatus, setSelectedStatus] = useState(currentFilter || "all");
@@ -174,7 +175,7 @@ export default function AdProDashboard() {
   const metrics = [
     {
       title: "Total Spend",
-      value: `${dashboardMetrics.totalSpend.toFixed(2)} NGN`,
+      value: formatAdProCurrency(dashboardMetrics.totalSpend),
       change: "+12%",
       icon: Wallet,
       color: "from-emerald-500 to-teal-600",
@@ -248,9 +249,11 @@ export default function AdProDashboard() {
     }
   };
 
-  const handleViewReports = (campaignId) => {
+  const handleViewReports = (campaign) => {
     setOpenMenuId(null);
-    navigate(`/adpro/campaign/${campaignId}/reports`);
+    navigate(`/adpro/campaign/${campaign.id}/reports`, {
+      state: { report: null, campaign },
+    });
   };
 
   const handleApplyFilter = (status) => {
@@ -389,8 +392,7 @@ export default function AdProDashboard() {
 
             <div className="divide-y divide-gray-100 overflow-visible">
               {filteredCampaigns.map((campaign, index) => {
-                const progress =
-                  (campaign.reachDelivered / campaign.reachPurchased) * 100;
+                const progress = getCampaignProgress(campaign);
                 const isNearBottom = index >= filteredCampaigns.length - 2;
                 return (
                   <div
@@ -402,7 +404,9 @@ export default function AdProDashboard() {
                         <div
                           className="flex-1 min-w-0 cursor-pointer"
                           onClick={() =>
-                            navigate(`/adpro/campaign/${campaign.id}`)
+                            navigate(`/adpro/campaign/${campaign.id}`, {
+                              state: { campaign },
+                            })
                           }
                         >
                           <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -445,7 +449,7 @@ export default function AdProDashboard() {
                                 Spend
                               </p>
                               <p className="text-sm sm:text-base font-semibold text-gray-900">
-                                ${campaign.spend.toFixed(2)}
+                                {formatAdProCurrency(campaign.spend)}
                               </p>
                             </div>
                             <div>
@@ -460,7 +464,7 @@ export default function AdProDashboard() {
                         </div>
                         <div className="flex items-center gap-1 self-end lg:self-center">
                           <button
-                            onClick={() => handleViewReports(campaign.id)}
+                            onClick={() => handleViewReports(campaign)}
                             className="p-2 text-gray-400 hover:text-[#1A3E32] hover:bg-gray-100 rounded-lg transition-all"
                             title="View Reports"
                           >

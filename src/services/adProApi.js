@@ -12,6 +12,26 @@ export const getAdProDashboard = async (params = {}) => {
   return response.data;
 };
 
+export const getAdProCampaign = async (campaignId) => {
+  const response = await axiosInstance.get(`/api/adpro/campaigns/${campaignId}`);
+  return response.data;
+};
+
+export const getAdProCampaignReports = async (campaignId) => {
+  const response = await axiosInstance.get(
+    `/api/adpro/campaigns/${campaignId}/reports`,
+  );
+  return response.data;
+};
+
+export const updateAdProCampaign = async (campaignId, payload) => {
+  const response = await axiosInstance.patch(
+    `/api/adpro/campaigns/${campaignId}`,
+    payload,
+  );
+  return response.data;
+};
+
 export const createAdProCampaign = async (campaignData) => {
   const formData = new FormData();
 
@@ -52,6 +72,9 @@ export const deleteAdProCampaign = async (campaignId) => {
 export default {
   getAdProFeedAds,
   getAdProDashboard,
+  getAdProCampaign,
+  getAdProCampaignReports,
+  updateAdProCampaign,
   createAdProCampaign,
   duplicateAdProCampaign,
   deleteAdProCampaign,

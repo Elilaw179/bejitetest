@@ -10,6 +10,7 @@ import {
   FaUserFriends,
   FaBriefcase,
   FaNewspaper,
+  FaBullhorn,
 } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -394,6 +395,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
     notifications: ["/notification"],
     connection: ["/connection"],
     recruitment: ["/candidate-search-page", "/ase/pricing", "/ase/dashboard"],
+    adpro: ["/adpro"],
   };
 
   const isIconActive = (name) =>
@@ -426,6 +428,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
   };
 
   // Filter menu items based on user role
+  const isRecruiterOrEmployer =
+    user?.role === "recruiter" || user?.role === "employer";
+
   const menuItems =
     user?.role === "jobseeker"
       ? ["home-icon", "CHAT", "notifications", "connection"]
@@ -718,6 +723,22 @@ const NewsFeedHeader = ({ user: propUser }) => {
                           <span>Job Postings</span>
                         </button>
                       )}
+                      {isRecruiterOrEmployer && (
+                        <button
+                          onClick={() => {
+                            navigate("/adpro");
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                            location.pathname.startsWith("/adpro")
+                              ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
+                              : "text-gray-700 hover:bg-gray-50 hover:pl-5"
+                          }`}
+                        >
+                          <FaBullhorn className="text-base" />
+                          <span>AdPro</span>
+                        </button>
+                      )}
 
                       {user?.role === "jobseeker" && (
                         <button
@@ -823,6 +844,32 @@ const NewsFeedHeader = ({ user: propUser }) => {
                     </span>
                   </div>
                 ))}
+                {isRecruiterOrEmployer && (
+                  <div
+                    className="flex items-center gap-2 cursor-pointer pt-2 mt-2 border-t border-gray-100"
+                    onClick={() => {
+                      navigate("/adpro");
+                      setIsSidebarOpen(false);
+                    }}
+                  >
+                    <div
+                      className={`relative rounded-full p-1.5 ${isIconActive("adpro") ? "bg-[#1A3E32]/10" : ""}`}
+                    >
+                      <FaBullhorn
+                        className={
+                          isIconActive("adpro")
+                            ? "text-[#0f4e0a]"
+                            : "text-[#16730F]"
+                        }
+                      />
+                    </div>
+                    <span
+                      className={`font-medium text-sm ${isIconActive("adpro") ? "text-[#0f4e0a]" : "text-[#1A3E32]"}`}
+                    >
+                      AdPro
+                    </span>
+                  </div>
+                )}
               </nav>
 
               <RecruitmentRightMobileMenu
