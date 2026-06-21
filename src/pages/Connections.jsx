@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import { ConnectionList, RequestList } from '../components/connections';
@@ -8,6 +8,8 @@ import * as connectionsApi from '../services/connectionsApi';
 import { getAuthorProfileImageUrl } from '../utils/profileImageUtils';
 import useSyncProfilePhoto from '../hooks/useSyncProfilePhoto';
 import NewsFeedLayout from '../components/layout/NewsFeedLayout';
+import { formatDisplayPersonName } from '../utils/personDisplayName';
+import { filterAdminUsersFromSearch } from '../utils/filterAdminUsers';
 
 const shuffleArray = (arr) => {
   const shuffled = [...arr];
@@ -18,20 +20,7 @@ const shuffleArray = (arr) => {
   return shuffled;
 };
 
-const formatUserName = (user) => {
-  if (!user) return 'Unknown User';
-  const toTitleCase = (value) =>
-    String(value || '')
-      .toLowerCase()
-      .replace(/\b\w/g, (char) => char.toUpperCase())
-      .trim();
-  const first = user.firstName ?? user.first_name ?? '';
-  const last = user.lastName ?? user.last_name ?? '';
-  const full = `${first} ${last}`.trim();
-  if (full) return toTitleCase(full);
-  if (user.name) return toTitleCase(user.name);
-  return user.email || 'Unknown User';
-};
+const formatUserName = (user) => formatDisplayPersonName(user, 'Unknown User');
 
 const transformDiscoverableUser = (user) => ({
   id: user.id,
@@ -52,6 +41,7 @@ const transformConnectionUser = (user, connectedAt) => ({
   connectedAt,
   image: user?.profilePhoto ?? user?.profile_photo ?? user?.image ?? null,
   role: user?.jobTitle || 'Professional',
+  hasVerifiedBadge: Boolean(user?.hasVerifiedBadge),
 });
 
 const Connections = () => {
@@ -74,6 +64,7 @@ const Connections = () => {
   const [networkMeta, setNetworkMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
   const [incomingMeta, setIncomingMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
   const [outgoingMeta, setOutgoingMeta] = useState({ total: 0, pages: 1, page: 1, limit: DEFAULT_PAGE_SIZE });
+  const tabContentRef = useRef(null);
 
   const loadConnectionsData = useCallback(async () => {
     setLoading(true);
@@ -172,6 +163,13 @@ const Connections = () => {
     loadConnectionsData();
   }, [loadConnectionsData]);
 
+  // Pagination controls sit below the list; without this, the scroll container stays at the bottom.
+  useEffect(() => {
+    if (loading) return;
+    tabContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [networkPage, invitationsPage, sentPage, loading]);
+
   useEffect(() => {
     const query = searchQuery.trim();
     if (!query) {
@@ -186,7 +184,7 @@ const Connections = () => {
         const searchRes = await connectionsApi.searchUsers(query);
         const usersArray = searchRes?.users || searchRes || [];
         const transformed = Array.isArray(usersArray)
-          ? usersArray.map(transformDiscoverableUser)
+          ? filterAdminUsersFromSearch(usersArray).map(transformDiscoverableUser)
           : [];
         setPeopleSearchResults(transformed);
       } catch (error) {
@@ -379,10 +377,10 @@ const Connections = () => {
       <NewsFeedLayout showSidebars={false}>
 
         {/* <NewsFeedHeader /> */}
-        <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
-          <div className="text-center">
+        <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center px-4">
+          <div className="text-center max-w-sm">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F] mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading connections...</p>
+            <p className="mt-4 text-gray-600 text-sm sm:text-base">Loading connections...</p>
           </div>
         </div>
       </NewsFeedLayout>
@@ -400,28 +398,27 @@ const Connections = () => {
             <p className="text-gray-600">Manage your professional network</p>
           </div>
 
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-              <div className="relative max-w-md w-full">
+          <div className="mb-4 sm:mb-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative w-full sm:max-w-md min-w-0">
                 <input
                   type="text"
                   placeholder="Search by name or email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none"
+                  className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none text-sm sm:text-base"
                 />
-                <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1A3E32] h-5 w-5" />
+                <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1A3E32] h-5 w-5 pointer-events-none" />
               </div>
-              <div className="flex items-center gap-2">
-                <label htmlFor="connections-page-size" className="text-sm text-gray-600 whitespace-nowrap">
+              <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                <label htmlFor="connections-page-size" className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                   Page size
                 </label>
                 <select
                   id="connections-page-size"
                   value={pageSize}
                   onChange={(e) => setPageSize(Number(e.target.value))}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A3E32] focus:outline-none focus:ring-2 focus:ring-[#16730F]/30"
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A3E32] focus:outline-none focus:ring-2 focus:ring-[#16730F]/30 min-h-[44px]"
                 >
                   <option value={10}>10</option>
                   <option value={20}>20</option>
@@ -430,27 +427,34 @@ const Connections = () => {
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="flex border-b border-gray-200">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm overflow-hidden min-w-0">
+            <div className="flex w-full border-b border-gray-200">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
+                    type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 transition-colors ${activeTab === tab.id
-                      ? 'bg-[#16730F] text-white'
-                      : 'text-gray-600 hover:bg-gray-50'
-                      }`}
+                    className={`flex flex-1 min-w-0 flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-3 px-1 sm:py-4 sm:px-4 md:px-5 transition-colors ${
+                      isActive
+                        ? 'bg-[#16730F] text-white'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
                   >
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{tab.label}</span>
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                    <span className="font-medium text-[10px] sm:text-sm leading-tight text-center w-full min-w-0 truncate px-0.5">
+                      {tab.label}
+                    </span>
                     {tab.count > 0 && (
-                      <span className={`px-2 py-1 rounded-full text-xs ${activeTab === tab.id
-                        ? 'bg-white text-[#16730F]'
-                        : 'bg-[#16730F] text-white'
-                        }`}>
+                      <span
+                        className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[10px] sm:text-xs leading-none ${
+                          isActive
+                            ? 'bg-white text-[#16730F]'
+                            : 'bg-[#16730F] text-white'
+                        }`}
+                      >
                         {tab.count}
                       </span>
                     )}
@@ -459,8 +463,7 @@ const Connections = () => {
               })}
             </div>
 
-            {/* Tab Content */}
-            <div className="p-6">
+            <div ref={tabContentRef} className="p-3 sm:p-4 md:p-6 scroll-mt-20 min-w-0">
               {tabs.find(tab => tab.id === activeTab)?.content}
             </div>
           </div>
@@ -484,21 +487,21 @@ const PeopleList = ({ users, onSendRequest, onViewProfile, searchQuery, isSearch
 
   if (searchLoading) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-8 sm:py-12 px-2">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#16730F] mx-auto"></div>
-        <p className="mt-4 text-gray-600">Searching...</p>
+        <p className="mt-4 text-gray-600 text-sm sm:text-base">Searching...</p>
       </div>
     );
   }
 
   if (filteredUsers.length === 0) {
     return (
-      <div className="text-center py-12">
-        <FaUserFriends className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-600 mb-2">
+      <div className="text-center py-8 sm:py-12 px-2">
+        <FaUserFriends className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
+        <h3 className="text-base sm:text-lg font-medium text-gray-600 mb-2">
           {isSearching || usersArray.length === 0 ? 'No people found' : 'No people to connect with'}
         </h3>
-        <p className="text-gray-500">
+        <p className="text-gray-500 text-sm sm:text-base px-2">
           {isSearching
             ? 'Try a different name or email'
             : usersArray.length === 0
@@ -511,28 +514,33 @@ const PeopleList = ({ users, onSendRequest, onViewProfile, searchQuery, isSearch
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {filteredUsers.map((user) => (
-        <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-          <div className="flex items-center gap-4">
+        <div
+          key={user.id}
+          className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-xl min-w-0"
+        >
+          <button
+            type="button"
+            onClick={() => onViewProfile(user.id)}
+            className="flex items-center gap-3 sm:gap-4 min-w-0 text-left hover:opacity-90 w-full sm:w-auto"
+          >
             <img
               src={getAuthorProfileImageUrl(user)}
               alt={user.name}
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-full object-cover"
             />
-            <div>
-              <h3
-                className="font-semibold text-[#1A3E32] cursor-pointer hover:text-[#16730F] transition-colors"
-                onClick={() => onViewProfile(user.id)}
-              >
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-[#1A3E32] text-sm sm:text-base truncate hover:text-[#16730F] transition-colors">
                 {user.name}
               </h3>
-              <p className="text-sm text-gray-600">{user.role || 'Professional'}</p>
+              <p className="text-xs sm:text-sm text-gray-600 truncate">{user.role || 'Professional'}</p>
             </div>
-          </div>
+          </button>
           <button
+            type="button"
             onClick={() => onSendRequest(user.id, user.name)}
-            className="px-4 py-2 bg-[#16730F] text-white rounded-lg hover:bg-[#145a0c] transition-colors"
+            className="w-full sm:w-auto shrink-0 px-4 py-2.5 min-h-[44px] bg-[#16730F] text-white rounded-lg hover:bg-[#145a0c] transition-colors text-sm font-medium"
           >
             Connect
           </button>
@@ -566,53 +574,56 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
   const pageItems = buildPageItems();
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
-      <button
-        type="button"
-        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-        disabled={currentPage <= 1}
-        className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-      >
-        Previous
-      </button>
-      <span className="text-sm text-gray-600">
+    <div className="flex flex-col items-stretch sm:items-center gap-3 mt-4 sm:mt-6 min-w-0">
+      <span className="text-xs sm:text-sm text-gray-600 text-center order-first sm:order-none">
         Page {currentPage} of {totalPages}
       </span>
-      <div className="flex items-center gap-1">
-        {pageItems.map((item, index) => {
-          if (typeof item !== 'number') {
-            return (
-              <span key={`${item}-${index}`} className="px-2 text-gray-500 select-none">
-                …
-              </span>
-            );
-          }
+      <div className="flex flex-wrap items-center justify-center gap-2 w-full">
+        <button
+          type="button"
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage <= 1}
+          className="flex-1 sm:flex-none min-h-[44px] px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+        >
+          Previous
+        </button>
+        <div className="hidden sm:flex items-center gap-1 flex-wrap justify-center">
+          {pageItems.map((item, index) => {
+            if (typeof item !== 'number') {
+              return (
+                <span key={`${item}-${index}`} className="px-2 text-gray-500 select-none">
+                  …
+                </span>
+              );
+            }
 
-          const isActive = item === currentPage;
-          return (
-            <button
-              key={item}
-              type="button"
-              onClick={() => onPageChange(item)}
-              className={`min-w-8 h-8 px-2 rounded-md text-sm border transition-colors ${isActive
-                  ? 'bg-[#16730F] border-[#16730F] text-white'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+            const isActive = item === currentPage;
+            return (
+              <button
+                key={item}
+                type="button"
+                onClick={() => onPageChange(item)}
+                className={`min-w-8 h-8 px-2 rounded-md text-sm border transition-colors ${
+                  isActive
+                    ? 'bg-[#16730F] border-[#16730F] text-white'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {item}
-            </button>
-          );
-        })}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                {item}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage >= totalPages}
+          className="flex-1 sm:flex-none min-h-[44px] px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+        >
+          Next
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-        disabled={currentPage >= totalPages}
-        className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-      >
-        Next
-      </button>
     </div>
   );
 };

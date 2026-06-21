@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
 import axiosPublic from '../services/axiosPublic';
 import { toast } from 'react-toastify';
 
@@ -38,12 +37,12 @@ function ForgetPassword() {
   };
 
   return (
-    <div className="bg-white min-h-screen flex flex-col items-center">
-    
-    <Header/>
+    <div className="relative flex h-screen min-h-screen items-center justify-center bg-white px-4">
+      <div className="absolute inset-x-0 top-0 px-4 py-6 max-w-screen-xl mx-auto">
+        <img src="/assets/images/logo.png" alt="logo" className="h-10" />
+      </div>
 
-      <div className="flex flex-col items-center justify-center w-full px-4 mt-6 sm:mt-16 flex-1">
-        <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-6">
           <h2 className="text-2xl sm:text-3xl font-norican font-semibold text-[#16730F] text-center">
             Forgot your password?
           </h2>
@@ -72,7 +71,6 @@ function ForgetPassword() {
               {loading ? "Sending..." : "Send Reset Link"}
             </button>
           </div>
-        </div>
       </div>
     </div>
   );

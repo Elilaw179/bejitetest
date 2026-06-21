@@ -1,12 +1,15 @@
 import React from 'react';
 import { formatSalaryExpectation } from '../../utils/formatSalary';
+import { formatDisplayText } from '../../utils/displayFormatUtils';
 
 const PreferenceItem = ({ label, value }) => {
   if (value == null || value === '') return null;
   return (
     <div className="rounded-lg border border-gray-100 bg-[#F9FAF8] px-4 py-3">
       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-[#1A3E32] capitalize">{String(value)}</p>
+      <p className="mt-1 text-sm font-semibold text-[#1A3E32]">
+        {formatDisplayText(value) ?? String(value)}
+      </p>
     </div>
   );
 };

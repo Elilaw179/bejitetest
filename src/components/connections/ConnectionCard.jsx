@@ -1,27 +1,34 @@
 import React from 'react';
 import { getAuthorProfileImageUrl } from '../../utils/profileImageUtils';
+import VerifiedBadge from '../VerifiedBadge';
 
 const ConnectionCard = ({ user, onRemove, onViewProfile, showRemoveButton = false }) => (
-  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-xl min-w-0">
     <button
       type="button"
       onClick={() => onViewProfile?.(user?.id)}
-      className="flex items-center gap-4 text-left hover:opacity-90"
+      className="flex items-center gap-3 sm:gap-4 min-w-0 text-left hover:opacity-90 w-full sm:w-auto"
     >
       <img
         src={getAuthorProfileImageUrl(user)}
         alt={user.name}
-        className="w-12 h-12 rounded-full object-cover"
+        className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-full object-cover"
       />
-      <div>
-        <h3 className="font-semibold text-[#1A3E32] hover:text-[#16730F]">{user.name}</h3>
-        <p className="text-sm text-gray-600">{user.jobTitle || user.role || 'Professional'}</p>
+      <div className="min-w-0 flex-1">
+        <h3 className="font-semibold text-[#1A3E32] text-sm sm:text-base truncate hover:text-[#16730F] flex items-center gap-1">
+          <span className="truncate">{user.name}</span>
+          {user.hasVerifiedBadge && <VerifiedBadge size="xs" />}
+        </h3>
+        <p className="text-xs sm:text-sm text-gray-600 truncate">
+          {user.jobTitle || user.role || 'Professional'}
+        </p>
       </div>
     </button>
     {showRemoveButton && (
       <button
+        type="button"
         onClick={onRemove}
-        className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        className="w-full sm:w-auto shrink-0 px-4 py-2.5 min-h-[44px] text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium border border-red-200 sm:border-0"
       >
         Remove
       </button>

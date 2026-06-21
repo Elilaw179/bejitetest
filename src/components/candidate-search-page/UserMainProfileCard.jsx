@@ -6,11 +6,15 @@ import { pickAuthorProfilePhoto } from '../../utils/profileImageUtils';
 import { formatSalaryExpectation } from '../../utils/formatSalary';
 import ProfileCvSections from '../ProfileCvSections';
 import { mergeCvWithCandidateSkills } from '../../utils/profileSkills';
-import { useCandidateConnect } from './useCandidateConnect';
+import { useCandidateConnect } from '../../hooks/useCandidateConnect';
+import { resolveCandidateUserId } from '../../utils/resolveCandidateUserId';
 import CandidateJobPreferences from './CandidateJobPreferences';
 import CandidateContactInfo from './CandidateContactInfo';
+import { formatDisplayPersonName, formatDisplayRole } from '../../utils/personDisplayName';
+import VerifiedBadge from '../VerifiedBadge';
+import { getFormattedCandidateProfileFields } from '../../utils/displayFormatUtils';
 
-const UserMainProfileCard = ({ candidateId }) => {
+const UserMainProfileCard = ({ candidateId, connectUserId: connectUserIdProp }) => {
   const [candidate, setCandidate] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
   const [cvData, setCvData] = useState(null);
@@ -90,10 +94,15 @@ const UserMainProfileCard = ({ candidateId }) => {
     );
   }
 
-  const displayName =
-    `${candidate?.first_name || profileUser?.first_name || profileUser?.firstName || ''} ${candidate?.last_name || profileUser?.last_name || profileUser?.lastName || ''}`.trim() ||
-    profileUser?.nickname ||
-    'Candidate';
+  const displayName = formatDisplayPersonName(
+    {
+      first_name: candidate?.first_name ?? profileUser?.first_name ?? profileUser?.firstName,
+      last_name: candidate?.last_name ?? profileUser?.last_name ?? profileUser?.lastName,
+      nickname: profileUser?.nickname,
+      name: profileUser?.name,
+    },
+    'Candidate',
+  );
 
   const photoPath =
     pickAuthorProfilePhoto(candidate) ||
@@ -103,17 +112,13 @@ const UserMainProfileCard = ({ candidateId }) => {
       : candidate?.user_bio?.profile_photo) ||
     cvData?.bio?.profile_photo;
 
-  const aboutText =
-    profileUser?.bio ||
-    profileUser?.summary ||
-    cvData?.bio?.bio ||
-    candidate?.bio;
-
-  const title = candidate?.title || profileUser?.title;
-  const location =
-    candidate?.location ||
-    profileUser?.location ||
-    [cvData?.bio?.city, cvData?.bio?.country].filter(Boolean).join(', ');
+  const profileFields = getFormattedCandidateProfileFields(
+    { ...candidate, ...profileUser },
+    { cvBio: cvData?.bio },
+  );
+  const aboutText = profileFields.bio;
+  const title = profileFields.title;
+  const location = profileFields.location;
 
   const salaryPreview = formatSalaryExpectation(
     candidate?.salary_expectation,
@@ -124,12 +129,14 @@ const UserMainProfileCard = ({ candidateId }) => {
     <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-6">
       <ProfileHeaderCard
         displayName={displayName}
+        hasVerifiedBadge={Boolean(profileUser?.hasVerifiedBadge)}
         title={title}
         location={location}
         experienceYears={candidate?.experience_years}
         salaryPreview={salaryPreview}
         photoPath={photoPath}
         candidate={candidate}
+        connectUserIdProp={connectUserIdProp}
         onOpenPhotoViewer={() => setIsPhotoViewerOpen(true)}
       />
 
@@ -173,16 +180,20 @@ const UserMainProfileCard = ({ candidateId }) => {
 
 const ProfileHeaderCard = ({
   displayName,
+  hasVerifiedBadge = false,
   title,
   location,
   experienceYears,
   salaryPreview,
   photoPath,
   candidate,
+  connectUserIdProp,
   onOpenPhotoViewer,
 }) => {
+  const connectUserId =
+    resolveCandidateUserId(candidate) || connectUserIdProp || null;
   const { sendRequest, connectLabel, connectDisabled } = useCandidateConnect(
-    candidate?.user_id,
+    connectUserId,
     displayName,
   );
 
@@ -196,14 +207,19 @@ const ProfileHeaderCard = ({
           onClick={onOpenPhotoViewer}
         />
         <div className="flex-1 text-center sm:text-left w-full">
-          <h1 className="text-2xl font-bold text-[#1A3E32]">{displayName}</h1>
-          <p className="text-[#16730F] font-medium capitalize mt-1">Jobseeker</p>
+          <h1 className="text-2xl font-bold text-[#1A3E32] flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
+            {displayName}
+            {hasVerifiedBadge && <VerifiedBadge size="md" />}
+          </h1>
+          <p className="text-[#16730F] font-medium mt-1">{formatDisplayRole('jobseeker')}</p>
           {title && <p className="text-gray-600 mt-1">{title}</p>}
           {location && (
             <p className="text-sm text-gray-500 mt-1">📍 {location}</p>
           )}
           {experienceYears > 0 && (
-            <p className="text-sm text-gray-500">💼 {experienceYears} years experience</p>
+            <p className="text-sm text-gray-500">
+              💼 {experienceYears} Years Experience
+            </p>
           )}
           {salaryPreview && (
             <p className="text-sm text-gray-500">💰 Expected: {salaryPreview}</p>

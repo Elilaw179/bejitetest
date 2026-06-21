@@ -1,0 +1,511 @@
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, ChevronRight, CheckCircle, X } from "lucide-react";
+import {
+  MapPin,
+  Users,
+  Briefcase,
+  GraduationCap,
+  Activity,
+} from "lucide-react";
+import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
+import StepIndicator from "../../components/Ads/StepIndicator";
+import MediaUploader from "../../components/Ads/MediaUploader";
+import AudienceEstimator from "../../components/Ads/AudienceEstimator";
+import AudienceFilterSection from "../../components/Ads/AudienceFilterSection";
+import { createAdProCampaign } from "../../services/adProApi";
+
+const steps = [
+  { number: 1, label: "Ad Content" },
+  { number: 2, label: "Target Audience" },
+  { number: 3, label: "Budget & Review" },
+];
+
+const targetingSections = [
+  { key: "geographic", title: "Geographic Targeting", icon: MapPin },
+  { key: "demographic", title: "Demographic Targeting", icon: Users },
+  { key: "professional", title: "Professional Targeting", icon: Briefcase },
+  { key: "educational", title: "Educational Targeting", icon: GraduationCap },
+  { key: "behavioral", title: "Behavioral Targeting", icon: Activity },
+];
+
+const COST_PER_USER = 0.01;
+
+export default function CreateCampaign() {
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [campaignData, setCampaignData] = useState({
+    name: "",
+    headline: "",
+    description: "",
+    landingType: "website",
+    landingDestination: "",
+    media: null,
+    mediaPreview: null,
+    mediaType: null,
+    audience: {
+      countries: [],
+      states: [],
+      cities: [],
+      lgas: [],
+      gender: "any",
+      ageRange: [],
+      maritalStatus: "any",
+      jobTitles: [],
+      industries: [],
+      yearsExperience: [],
+      companySize: [],
+      qualifications: [],
+      activity: [],
+      jobSeekingStatus: [],
+    },
+  });
+
+  const [audienceEstimate, setAudienceEstimate] = useState({
+    reach: 0,
+    cost: 0,
+    loading: false,
+  });
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState(null);
+
+  const calculateAudienceEstimate = useCallback(() => {
+    setAudienceEstimate((prev) => ({ ...prev, loading: true }));
+    setTimeout(() => {
+      let multiplier = 1;
+      if (campaignData.audience.gender !== "any") multiplier *= 0.5;
+      if (campaignData.audience.ageRange.length > 0) multiplier *= 0.4;
+      if (campaignData.audience.jobTitles.length > 0) multiplier *= 0.3;
+      if (campaignData.audience.industries.length > 0) multiplier *= 0.4;
+      const reach = Math.floor(100000 * Math.max(0.1, multiplier));
+      const cost = reach * COST_PER_USER;
+      setAudienceEstimate({
+        reach,
+        cost: parseFloat(cost.toFixed(2)),
+        loading: false,
+      });
+      setCampaignData((prev) => ({
+        ...prev,
+        budget: parseFloat(cost.toFixed(2)),
+      }));
+    }, 500);
+  }, [campaignData.audience]);
+
+  useEffect(() => {
+    calculateAudienceEstimate();
+  }, [calculateAudienceEstimate]);
+
+  const handleMediaUpload = (file, error, type) => {
+    if (error) {
+      setErrors((prev) => ({ ...prev, media: error }));
+      return;
+    }
+    setCampaignData((prev) => ({
+      ...prev,
+      media: file,
+      mediaPreview: URL.createObjectURL(file),
+      mediaType: type,
+    }));
+    setErrors((prev) => ({ ...prev, media: null }));
+  };
+
+  const handleAudienceUpdate = (filter, value) => {
+    setCampaignData((prev) => ({
+      ...prev,
+      audience: { ...prev.audience, [filter]: value },
+    }));
+  };
+
+  const validateCampaign = () => {
+    const newErrors = {};
+    if (!campaignData.name.trim()) newErrors.name = "Campaign name required";
+    if (!campaignData.headline.trim())
+      newErrors.headline = "Headline required";
+    if (campaignData.headline.length > 100)
+      newErrors.headline = "Max 100 characters";
+    if (!campaignData.description.trim())
+      newErrors.description = "Description required";
+    if (campaignData.description.length > 500)
+      newErrors.description = "Max 500 characters";
+    if (!campaignData.media) newErrors.media = "Please upload an ad";
+    if (!campaignData.landingDestination.trim()) {
+      newErrors.landingDestination = "Landing destination required";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep = () => {
+    if (currentStep !== 1) return true;
+    return validateCampaign();
+  };
+
+  const handleSubmit = async () => {
+    if (!validateCampaign()) {
+      setCurrentStep(1);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const response = await createAdProCampaign({
+        name: campaignData.name.trim(),
+        headline: campaignData.headline.trim(),
+        description: campaignData.description.trim(),
+        landingType: campaignData.landingType,
+        landingDestination: campaignData.landingDestination.trim(),
+        media: campaignData.media,
+        mediaType: campaignData.mediaType,
+        audience: campaignData.audience,
+        budget: audienceEstimate.cost,
+        reachPurchased: audienceEstimate.reach,
+        status: "pending_review",
+      });
+
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to create campaign");
+      }
+
+      navigate("/adpro");
+    } catch (err) {
+      console.error("Create campaign error:", err);
+      setSubmitError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to create campaign",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const renderStepContent = () => {
+    if (currentStep === 1) {
+      return (
+        <div className="space-y-5 sm:space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Campaign Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={campaignData.name}
+              onChange={(e) =>
+                setCampaignData((prev) => ({ ...prev, name: e.target.value }))
+              }
+              placeholder="e.g., Lagos SME Tax Consulting Campaign"
+              className={`w-full px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent outline-none text-sm sm:text-base ${
+                errors.name ? "border-red-500" : "border-gray-200"
+              }`}
+            />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Ad Media <span className="text-red-500">*</span>
+            </label>
+            <MediaUploader
+              value={
+                campaignData.mediaPreview
+                  ? {
+                      preview: campaignData.mediaPreview,
+                      type: campaignData.mediaType,
+                    }
+                  : null
+              }
+              onUpload={handleMediaUpload}
+              onRemove={() =>
+                setCampaignData((prev) => ({
+                  ...prev,
+                  media: null,
+                  mediaPreview: null,
+                  mediaType: null,
+                }))
+              }
+              error={errors.media}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Headline <span className="text-red-500">*</span>
+              <span className="text-xs text-gray-400 ml-2">
+                ({campaignData.headline.length}/100)
+              </span>
+            </label>
+            <input
+              type="text"
+              value={campaignData.headline}
+              onChange={(e) =>
+                setCampaignData((prev) => ({
+                  ...prev,
+                  headline: e.target.value,
+                }))
+              }
+              placeholder="Catchy headline that grabs attention"
+              maxLength={100}
+              className={`w-full px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent outline-none text-sm sm:text-base ${
+                errors.headline ? "border-red-500" : "border-gray-200"
+              }`}
+            />
+            {errors.headline && (
+              <p className="text-red-500 text-xs mt-1">{errors.headline}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Description <span className="text-red-500">*</span>
+              <span className="text-xs text-gray-400 ml-2">
+                ({campaignData.description.length}/500)
+              </span>
+            </label>
+            <textarea
+              rows={4}
+              value={campaignData.description}
+              onChange={(e) =>
+                setCampaignData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              placeholder="Describe your product, service, or opportunity..."
+              maxLength={500}
+              className={`w-full px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent outline-none text-sm sm:text-base resize-none ${
+                errors.description ? "border-red-500" : "border-gray-200"
+              }`}
+            />
+            {errors.description && (
+              <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Landing Destination <span className="text-red-500">*</span>
+            </label>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {["website", "whatsapp", "bejite", "email"].map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() =>
+                    setCampaignData((prev) => ({ ...prev, landingType: type }))
+                  }
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg capitalize text-sm transition-all ${
+                    campaignData.landingType === type
+                      ? "bg-[#1A3E32] text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {type === "bejite" ? "Bejite Message" : type}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              value={campaignData.landingDestination}
+              onChange={(e) =>
+                setCampaignData((prev) => ({
+                  ...prev,
+                  landingDestination: e.target.value,
+                }))
+              }
+              placeholder={
+                campaignData.landingType === "website"
+                  ? "https://yourwebsite.com"
+                  : campaignData.landingType === "whatsapp"
+                    ? "https://wa.me/234xxxxxxxxxx"
+                    : campaignData.landingType === "email"
+                      ? "you@example.com"
+                      : "Users will be directed to your Bejite inbox"
+              }
+              className={`w-full px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent outline-none text-sm sm:text-base ${
+                errors.landingDestination ? "border-red-500" : "border-gray-200"
+              }`}
+            />
+            {errors.landingDestination && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.landingDestination}
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (currentStep === 2) {
+      return (
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex-1 space-y-4">
+            {targetingSections.map((section) => (
+              <AudienceFilterSection
+                key={section.key}
+                title={section.title}
+                icon={section.icon}
+                audience={campaignData.audience}
+                onUpdate={handleAudienceUpdate}
+              />
+            ))}
+          </div>
+          <div className="lg:w-80 xl:w-96">
+            <div className="sticky top-24">
+              <AudienceEstimator
+                estimate={audienceEstimate}
+                loading={audienceEstimate.loading}
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
+          <h3 className="font-semibold text-gray-900 mb-4 text-base sm:text-lg">
+            Campaign Summary
+          </h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b">
+              <span className="text-gray-500 text-xs sm:text-sm">
+                Campaign Name
+              </span>
+              <span className="font-medium text-gray-900 text-sm sm:text-base break-all">
+                {campaignData.name || "Not specified"}
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b">
+              <span className="text-gray-500 text-xs sm:text-sm">Headline</span>
+              <span className="font-medium text-gray-900 text-sm sm:text-base break-all">
+                {campaignData.headline || "Not specified"}
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b">
+              <span className="text-gray-500 text-xs sm:text-sm">
+                Landing URL
+              </span>
+              <span className="font-medium text-[#1A3E32] text-sm sm:text-base break-all">
+                {campaignData.landingDestination || "Not specified"}
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b">
+              <span className="text-gray-500 text-xs sm:text-sm">
+                Target Audience
+              </span>
+              <span className="font-medium text-gray-900 text-sm sm:text-base">
+                {audienceEstimate.reach.toLocaleString()} users
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between py-3 bg-[#1A3E32]/5 rounded-lg px-3 -mx-1">
+              <span className="text-gray-700 text-sm font-medium">
+                Total Cost
+              </span>
+              <span className="font-bold text-xl sm:text-2xl text-[#1A3E32]">
+                ${audienceEstimate.cost.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-blue-50 rounded-xl p-4 flex items-start gap-3">
+          <CheckCircle className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-blue-800">
+            You only pay for guaranteed reach. No extra charges for clicks or
+            impressions.
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <NewsFeedLayout classes={false} showSidebars={false}>
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="py-3 sm:py-4">
+              <button
+                onClick={() => navigate("/adpro")}
+                className="flex items-center gap-2 text-gray-500 hover:text-[#1A3E32] transition-colors text-sm sm:text-base"
+              >
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+              Create New Campaign
+            </h1>
+            <p className="text-sm sm:text-base text-gray-500 mt-1 sm:mt-2">
+              Reach your ideal audience with precision targeting
+            </p>
+          </div>
+
+          <StepIndicator currentStep={currentStep} steps={steps} />
+
+          {submitError && (
+            <div className="mt-6 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+              {submitError}
+            </div>
+          )}
+
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8 mt-6 sm:mt-8">
+            {renderStepContent()}
+
+            {/* Navigation Buttons */}
+            <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 mt-6 sm:mt-8 pt-6 border-t border-gray-100">
+              {currentStep > 1 && (
+                <button
+                  onClick={() => setCurrentStep((prev) => prev - 1)}
+                  className="px-5 py-2.5 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
+                >
+                  Back
+                </button>
+              )}
+              {currentStep < 3 ? (
+                <button
+                  onClick={() => {
+                    if (validateStep()) {
+                      setCurrentStep((prev) => prev + 1);
+                    }
+                  }}
+                  className="px-5 py-2.5 bg-[#1A3E32] text-white rounded-xl hover:bg-[#2d6a54] transition-colors flex items-center justify-center gap-2 text-sm font-medium sm:ml-auto"
+                >
+                  Continue <ChevronRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 bg-[#1A3E32] text-white rounded-xl hover:bg-[#2d6a54] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 text-sm font-medium sm:ml-auto"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Launch Campaign <ChevronRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </NewsFeedLayout>
+  );
+}

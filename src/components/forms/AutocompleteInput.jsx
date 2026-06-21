@@ -5,6 +5,7 @@ import axiosInstance from "../../utils/axiosInstance";
 export function AutocompleteInput({
   value,
   onChange,
+  onOptionSelect,
   placeholder,
   formName,
   fieldName,
@@ -71,6 +72,7 @@ export function AutocompleteInput({
 
   const selectOption = (option) => {
     onChange({ target: { value: option } });
+    onOptionSelect?.(option);
     setOpen(false);
   };
 
@@ -78,7 +80,10 @@ export function AutocompleteInput({
     open && (filteredOptions.length > 0 || showAddOption) && type === "text";
 
   return (
-    <div className="relative w-full" ref={containerRef}>
+    <div
+      className={`relative w-full ${open ? "z-[200]" : "z-0"}`}
+      ref={containerRef}
+    >
       <input
         type={type}
         value={value}
@@ -95,26 +100,26 @@ export function AutocompleteInput({
       )}
 
       {showDropdown && (
-        <ul className="absolute z-20 left-0 right-0 mt-1 max-h-52 overflow-y-auto nfl-scroll bg-white border border-gray-200 rounded-xl shadow-lg">
+        <ul className="absolute z-[9999] left-0 right-0 mt-1 max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl isolate">
           {filteredOptions.map((option) => (
-            <li key={option}>
+            <li key={option} className="bg-white">
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => selectOption(option)}
-                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 bg-white hover:bg-gray-50"
               >
                 {option}
               </button>
             </li>
           ))}
           {showAddOption && (
-            <li>
+            <li className="bg-white">
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => selectOption(trimmedValue)}
-                className="w-full text-left px-4 py-2.5 text-sm text-[#1A3E32] font-medium hover:bg-green-50 flex items-center gap-2 border-t border-gray-100"
+                className="w-full text-left px-4 py-2.5 text-sm text-[#1A3E32] font-medium bg-white hover:bg-green-50 flex items-center gap-2 border-t border-gray-100"
               >
                 <FaPlus className="text-xs" />
                 Add &quot;{trimmedValue}&quot;

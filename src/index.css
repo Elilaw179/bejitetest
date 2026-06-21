@@ -3,13 +3,12 @@
 /* .custom-scroll::-webkit-scrollbar {
   display: none;
 } */
- 
+
 /* 
 .custom-scroll {
   -ms-overflow-style: none;
   scrollbar-width: none;
 } */
-
 
 body {
   font-family: "Montserrat";
@@ -19,8 +18,7 @@ input[type="date"].hide-calendar-icon::-webkit-calendar-picker-indicator {
   opacity: 0;
 }
 
-
-body{
+body {
   overflow-x: hidden;
 }
 
@@ -116,28 +114,71 @@ input:disabled,
 
 /* Nunito Regular */
 @font-face {
-    font-family: "NunitoRegular";
-    src: url("./assets/font/Nunito-Regular.ttf") format("truetype");
-    font-weight: 400;
-    font-style: normal;
+  font-family: "NunitoRegular";
+  src: url("./assets/font/Nunito-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
 }
 
 /* Nunito Medium */
 @font-face {
-    font-family: "NunitoSemi";
-    src: url("./assets/font/Nunito-SemiBold.ttf") format("truetype");
-    font-weight: 600;
-    font-style: normal;
+  font-family: "NunitoSemi";
+  src: url("./assets/font/Nunito-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
 }
 
 /* Nunito Bold */
 @font-face {
-    font-family: "NunitoBold";
-    src: url("./assets/font/Nunito-Bold.ttf") format("truetype");
-    font-weight: 700;
-    font-style: normal;
+  font-family: "NunitoBold";
+  src: url("./assets/font/Nunito-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
 }
 
 /* font-nunito-regular (for NunitoRegular)
 font-nunito-semi (for NunitoSemi)
 font-nunito-bold (for NunitoBold) */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+.active\\:scale-98:active {
+  transform: scale(0.98);
+}

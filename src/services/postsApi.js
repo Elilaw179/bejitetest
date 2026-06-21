@@ -5,6 +5,7 @@
  */
 
 import axiosInstance from '../utils/axiosInstance';
+import { normalizePostsPayload } from '../utils/authorDisplay';
 
 const POSTS_API_URL = '/api/posts';
 
@@ -55,7 +56,7 @@ export const getFeed = async (limit = 20, cursor = null) => {
     const params = { limit };
     if (cursor) params.cursor = cursor;
     const response = await axiosInstance.get(`${POSTS_API_URL}/feed`, { params });
-    return response.data;
+    return normalizePostsPayload(response.data);
   } catch (error) {
     console.error('Error fetching feed:', error);
     throw error;
@@ -68,7 +69,7 @@ export const getFeed = async (limit = 20, cursor = null) => {
 export const getDrafts = async () => {
   try {
     const response = await axiosInstance.get(`${POSTS_API_URL}/drafts`);
-    return response.data;
+    return normalizePostsPayload(response.data);
   } catch (error) {
     console.error('Error fetching drafts:', error);
     throw error;
@@ -85,7 +86,7 @@ export const getSavedPosts = async (limit = 20, cursor = null) => {
     const params = { limit };
     if (cursor) params.cursor = cursor;
     const response = await axiosInstance.get(`${POSTS_API_URL}/saved`, { params });
-    return response.data;
+    return normalizePostsPayload(response.data);
   } catch (error) {
     console.error('Error fetching saved posts:', error);
     throw error;
@@ -94,16 +95,18 @@ export const getSavedPosts = async (limit = 20, cursor = null) => {
 
 /**
  * Get user's timeline (posts by specific user)
- * @param {number} userId - User ID
+ * @param {string} userId - User ID
  * @param {number} limit - Number of posts to fetch
- * @param {string} cursor - Cursor for pagination
+ * @param {string|null} cursor - Cursor for pagination
+ * @param {{ mediaType?: 'image'|'video'|null }} [options]
  */
-export const getUserPosts = async (userId, limit = 20, cursor = null) => {
+export const getUserPosts = async (userId, limit = 20, cursor = null, options = {}) => {
   try {
     const params = { limit };
     if (cursor) params.cursor = cursor;
+    if (options.mediaType) params.media_type = options.mediaType;
     const response = await axiosInstance.get(`${POSTS_API_URL}/user/${userId}`, { params });
-    return response.data;
+    return normalizePostsPayload(response.data);
   } catch (error) {
     console.error('Error fetching user posts:', error);
     throw error;
@@ -127,7 +130,7 @@ export const getUserPosts = async (userId, limit = 20, cursor = null) => {
 export const createPost = async (postData) => {
   try {
     const response = await axiosInstance.post(POSTS_API_URL, postData);
-    return response.data;
+    return normalizePostsPayload(response.data);
   } catch (error) {
     console.error('Error creating post:', error);
     throw error;
@@ -141,7 +144,7 @@ export const createPost = async (postData) => {
 export const getPost = async (postId) => {
   try {
     const response = await axiosInstance.get(`${POSTS_API_URL}/${postId}`);
-    return response.data;
+    return normalizePostsPayload(response.data);
   } catch (error) {
     console.error('Error fetching post:', error);
     throw error;
@@ -156,7 +159,7 @@ export const getPost = async (postId) => {
 export const updatePost = async (postId, postData) => {
   try {
     const response = await axiosInstance.patch(`${POSTS_API_URL}/${postId}`, postData);
-    return response.data;
+    return normalizePostsPayload(response.data);
   } catch (error) {
     console.error('Error updating post:', error);
     throw error;
@@ -384,6 +387,36 @@ export const deleteComment = async (postId, commentId) => {
     return response.data;
   } catch (error) {
     console.error('Error deleting comment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Like a comment
+ * @param {string} postId - Post UUID
+ * @param {string} commentId - Comment UUID
+ */
+export const likeComment = async (postId, commentId) => {
+  try {
+    const response = await axiosInstance.post(`${POSTS_API_URL}/${postId}/comments/${commentId}/like`);
+    return response.data;
+  } catch (error) {
+    console.error('Error liking comment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Unlike a comment
+ * @param {string} postId - Post UUID
+ * @param {string} commentId - Comment UUID
+ */
+export const unlikeComment = async (postId, commentId) => {
+  try {
+    const response = await axiosInstance.delete(`${POSTS_API_URL}/${postId}/comments/${commentId}/like`);
+    return response.data;
+  } catch (error) {
+    console.error('Error unliking comment:', error);
     throw error;
   }
 };

@@ -60,6 +60,7 @@ export function RecruiterTextField({
   type = "text",
   value,
   onChange,
+  onBlur,
   placeholder,
   required = false,
   optional = false,
@@ -74,6 +75,7 @@ export function RecruiterTextField({
         name={name}
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
         placeholder={placeholder}
         disabled={disabled}
         className={inputClass}

@@ -1,0 +1,58 @@
+import axiosInstance from "../utils/axiosInstance";
+
+export const getAdProFeedAds = async (limit = 5) => {
+  const response = await axiosInstance.get("/api/adpro/feed", {
+    params: { limit },
+  });
+  return response.data;
+};
+
+export const getAdProDashboard = async (params = {}) => {
+  const response = await axiosInstance.get("/api/adpro/dashboard", { params });
+  return response.data;
+};
+
+export const createAdProCampaign = async (campaignData) => {
+  const formData = new FormData();
+
+  formData.append("name", campaignData.name);
+  formData.append("headline", campaignData.headline);
+  formData.append("description", campaignData.description);
+  formData.append("landingType", campaignData.landingType);
+  formData.append("landingDestination", campaignData.landingDestination);
+  formData.append("audience", JSON.stringify(campaignData.audience || {}));
+  formData.append("budget", String(campaignData.budget ?? 0));
+  formData.append("reachPurchased", String(campaignData.reachPurchased ?? 0));
+  formData.append("status", campaignData.status || "pending_review");
+
+  if (campaignData.mediaType) {
+    formData.append("mediaType", campaignData.mediaType);
+  }
+
+  if (campaignData.media) {
+    formData.append("media", campaignData.media);
+  }
+
+  const response = await axiosInstance.post("/api/adpro/campaigns", formData);
+  return response.data;
+};
+
+export const duplicateAdProCampaign = async (campaignId) => {
+  const response = await axiosInstance.post(
+    `/api/adpro/campaigns/${campaignId}/duplicate`,
+  );
+  return response.data;
+};
+
+export const deleteAdProCampaign = async (campaignId) => {
+  const response = await axiosInstance.delete(`/api/adpro/campaigns/${campaignId}`);
+  return response.data;
+};
+
+export default {
+  getAdProFeedAds,
+  getAdProDashboard,
+  createAdProCampaign,
+  duplicateAdProCampaign,
+  deleteAdProCampaign,
+};

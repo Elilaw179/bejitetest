@@ -1,6 +1,18 @@
 import React from "react";
 import FormLabel from "../forms/FormLabel";
 
+const countWords = (text) => {
+  const trimmed = String(text ?? "").trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).filter(Boolean).length;
+};
+
+const truncateToWordLimit = (text, limit) => {
+  const words = String(text ?? "").trim().split(/\s+/).filter(Boolean);
+  if (words.length <= limit) return text;
+  return words.slice(0, limit).join(" ");
+};
+
 /**
  * Field groups styled like the jobseeker Bio page (FieldGroup.jsx).
  */
@@ -53,13 +65,24 @@ const RecruiterFieldGroup = ({ formData, handleChange, fieldGroups }) => (
                 <textarea
                   name={f.name}
                   value={formData[f.name] ?? ""}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    if (f.maxWords != null) {
+                      value = truncateToWordLimit(value, f.maxWords);
+                    }
+                    handleChange({ target: { name: f.name, value } });
+                  }}
                   placeholder={f.placeholder}
                   rows={f.rows || 5}
-                  maxLength={f.maxLength}
+                  maxLength={f.maxWords == null ? f.maxLength : undefined}
                   className="w-full min-h-[120px] bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm resize-none"
                 />
-                {f.maxLength != null && (
+                {f.maxWords != null && (
+                  <p className="text-xs text-gray-400 text-right mt-1">
+                    {countWords(formData[f.name])}/{f.maxWords} words
+                  </p>
+                )}
+                {f.maxWords == null && f.maxLength != null && (
                   <p className="text-xs text-gray-400 text-right mt-1">
                     {String(formData[f.name] ?? "").length}/{f.maxLength}
                   </p>

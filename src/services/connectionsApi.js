@@ -4,6 +4,7 @@
  */
 
 import axiosInstance from '../utils/axiosInstance';
+import { filterAdminUsersFromSearch } from '../utils/filterAdminUsers';
 
 /**
  * Get user's accepted connections
@@ -27,7 +28,9 @@ export const getConnections = async (page = 1, limit = 10) => {
  */
 export const getConnectionStatus = async (otherUserId) => {
   try {
-    const response = await axiosInstance.get(`/api/connections/status/${otherUserId}`);
+    const response = await axiosInstance.get(
+      `/api/connections/status/${encodeURIComponent(String(otherUserId))}`,
+    );
     return response.data;
   } catch (error) {
     console.error('Error fetching connection status:', error);
@@ -40,7 +43,9 @@ export const getConnectionStatus = async (otherUserId) => {
  */
 export const sendConnectionRequest = async (toUserId) => {
   try {
-    const response = await axiosInstance.post('/api/connections/requests', { toUserId });
+    const response = await axiosInstance.post('/api/connections/requests', {
+      toUserId: toUserId != null && toUserId !== '' ? String(toUserId) : toUserId,
+    });
     return response.data;
   } catch (error) {
     console.error('Error sending connection request:', error);
@@ -160,6 +165,12 @@ export const searchUsers = async (query, limit = 20, offset = 0) => {
     const response = await axiosInstance.get('/api/connections/search', {
       params: { q: query, limit, offset }
     });
+    if (response.data?.users) {
+      return {
+        ...response.data,
+        users: filterAdminUsersFromSearch(response.data.users),
+      };
+    }
     return response.data;
   } catch (error) {
     console.error('Error searching users:', error);

@@ -1,25 +1,42 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { FaHome, FaList, FaSearch, FaChevronDown, FaSignOutAlt, FaUserEdit, FaUser, FaCreditCard, FaUserFriends, FaBriefcase, FaNewspaper } from "react-icons/fa";
+import {
+  FaHome,
+  FaList,
+  FaSearch,
+  FaChevronDown,
+  FaUserEdit,
+  FaUser,
+  FaCreditCard,
+  FaUserFriends,
+  FaBriefcase,
+  FaNewspaper,
+} from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { logout as logoutAction } from "../features/auth/authSlice";
+import { useSelector } from "react-redux";
 import {
   getUser,
   mergeAuthUsers,
   pickProfilePhotoPath,
 } from "../utils/tokenManager";
-import { profileAvatarSrc, PROFILE_PHOTO_PLACEHOLDER } from "../utils/profilePhotoUrl";
+import {
+  profileAvatarSrc,
+  PROFILE_PHOTO_PLACEHOLDER,
+} from "../utils/profilePhotoUrl";
 import { pickAuthorProfilePhoto } from "../utils/profileImageUtils";
 import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
 import messagingService from "../services/messagingService";
 import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
+import {
+  formatDisplayPersonName,
+  formatDisplayRole,
+} from "../utils/personDisplayName";
+import { formatDisplayText } from "../utils/displayFormatUtils";
+import { filterAdminUsersFromSearch, filterAdminSearchResults } from "../utils/filterAdminUsers";
+import RecruitmentRightMobileMenu from "./recruitment/RecruitmentRightMobileMenu";
 
-const NewsFeedHeader = ({
-  user: propUser,
-}) => {
+const NewsFeedHeader = ({ user: propUser }) => {
   useSyncProfilePhoto();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -27,13 +44,14 @@ const NewsFeedHeader = ({
   const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [connectionRequestCount, setConnectionRequestCount] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
+  const searchRequestIdRef = useRef(0);
 
   // Get user from Redux store first (most up-to-date after login), fallback to prop or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
@@ -55,9 +73,7 @@ const NewsFeedHeader = ({
         pickProfilePhotoPath(merged) ||
         pickProfilePhotoPath(primaryUser) ||
         "/assets/images/photo_placeholder.png";
-      const displayName =
-        merged.name ||
-        (`${merged.firstName || ""} ${merged.lastName || ""}`.trim() || null);
+      const displayName = formatDisplayPersonName(merged, "Guest");
       return {
         ...merged,
         name: displayName || "Guest",
@@ -86,54 +102,35 @@ const NewsFeedHeader = ({
     };
   }, [propUser, reduxUser, location.pathname]);
 
-  // Get display name
-  const getDisplayName = () => {
-    if (user?.name) return user.name;
-    if (user?.firstName || user?.lastName) {
-      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
-    }
-    return "Guest";
-  };
+  const getDisplayName = () => formatDisplayPersonName(user);
 
-  // Get display role (capitalize first letter)
-  const getDisplayRole = () => {
-    if (!user?.role) return "User";
-    return user.role.charAt(0).toUpperCase() + user.role.slice(1);
-  };
+  const getDisplayRole = () => formatDisplayRole(user?.role);
 
   const avatarSrc = (stored) => profileAvatarSrc(stored);
 
   // Fetch notification count
   const fetchNotificationCount = async () => {
     try {
-      const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+      const token =
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("authToken") ||
+        localStorage.getItem("token");
       if (!token) return;
 
-      const response = await fetch(`${API_URL}/api/notifications`, {
+      const response = await fetch(`${API_URL}/api/notifications/unread-count`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        credentials: 'include'
+        credentials: "include",
       });
 
       const data = await response.json();
-      if (response.ok && data.data) {
-        const unreadCount = data.data.filter(notification => !notification.is_read).length;
-        setNotificationCount(unreadCount);
+      if (response.ok) {
+        setNotificationCount(data.unread_count ?? 0);
       }
     } catch (err) {
-      console.error('Error fetching notification count:', err);
+      console.error("Error fetching notification count:", err);
     }
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    dispatch(logoutAction());
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    navigate("/");
   };
 
   // Global search function
@@ -144,90 +141,107 @@ const NewsFeedHeader = ({
       return;
     }
 
+    const requestId = ++searchRequestIdRef.current;
     setIsSearching(true);
     try {
       const searchPromises = [];
 
       // Search users (connections — includes recruiters + resolved photos)
       searchPromises.push(
-        axiosInstance.get(`/api/connections/search?q=${encodeURIComponent(query)}&limit=5`)
+        axiosInstance
+          .get(`/api/connections/search?q=${encodeURIComponent(query)}&limit=5`)
           .then((response) => ({
-            type: 'people',
-            results: (response.data.users || []).map((u) => ({
-              type: 'people',
+            type: "people",
+            results: filterAdminUsersFromSearch(response.data.users || []).map((u) => ({
+              type: "people",
               id: u.id,
-              name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Unknown User',
+              name: formatDisplayPersonName(u, "Unknown User"),
               firstName: u.firstName,
               lastName: u.lastName,
               email: u.email,
-              subtitle: u.jobTitle || 'Professional',
+              username: u.username,
+              subtitle: u.jobTitle || "Professional",
               image: pickAuthorProfilePhoto(u),
               url: `/user-profile/${u.id}`,
             })),
           }))
-          .catch(() => ({ type: 'people', results: [] }))
+          .catch(() => ({ type: "people", results: [] })),
       );
 
       // Search jobseeker candidates (CV / candidates table)
       searchPromises.push(
-        axiosInstance.get(`/api/candidates/search?q=${encodeURIComponent(query)}&limit=5`)
-          .then(response => ({
-            type: 'people',
-            results: response.data.success ? response.data.data.map(candidate => {
-              const userId = candidate.user_id ?? candidate.userId ?? candidate.id;
-              return {
-                type: 'people',
-                id: userId,
-                name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Unknown User',
-                firstName: candidate.first_name,
-                lastName: candidate.last_name,
-                email: candidate.email,
-                subtitle: candidate.title || 'Professional',
-                image: pickAuthorProfilePhoto(candidate),
-                url: `/user-profile/${userId}`,
-              };
-            }) : []
+        axiosInstance
+          .get(`/api/candidates/search?q=${encodeURIComponent(query)}&limit=5`)
+          .then((response) => ({
+            type: "people",
+            results: response.data.success
+              ? filterAdminUsersFromSearch(response.data.data).map((candidate) => {
+                  const userId =
+                    candidate.user_id ?? candidate.userId ?? candidate.id;
+                  return {
+                    type: "people",
+                    id: userId,
+                    name: formatDisplayPersonName(candidate, "Unknown User"),
+                    firstName: candidate.first_name,
+                    lastName: candidate.last_name,
+                    email: candidate.email,
+                    username: candidate.username,
+                    subtitle:
+                      formatDisplayText(candidate.title) || "Professional",
+                    image: pickAuthorProfilePhoto(candidate),
+                    url: `/user-profile/${userId}`,
+                  };
+                })
+              : [],
           }))
-          .catch(() => ({ type: 'people', results: [] }))
+          .catch(() => ({ type: "people", results: [] })),
       );
 
       // Search jobs
       searchPromises.push(
-        axiosInstance.get(`/api/jobs/search?q=${encodeURIComponent(query)}&limit=5`)
-          .then(response => ({
-            type: 'jobs',
-            results: response.data.success ? response.data.data.map(job => ({
-              type: 'jobs',
-              id: job.id,
-              name: job.job_title || job.title,
-              subtitle: job.company_name || job.industry_sector,
-              image: null,
-              url: `/candidate-search-page` // Navigate to search page with job filter
-            })) : []
+        axiosInstance
+          .get(`/api/jobs/search?q=${encodeURIComponent(query)}&limit=5`)
+          .then((response) => ({
+            type: "jobs",
+            results: response.data.success
+              ? response.data.data.map((job) => ({
+                  type: "jobs",
+                  id: job.id,
+                  name: job.job_title || job.title,
+                  subtitle: job.company_name || job.industry_sector,
+                  image: null,
+                  url: `/candidate-search-page`, // Navigate to search page with job filter
+                }))
+              : [],
           }))
-          .catch(() => ({ type: 'jobs', results: [] }))
+          .catch(() => ({ type: "jobs", results: [] })),
       );
 
       // Note: Posts search API not implemented yet
       // When available, add posts search here
 
       const results = await Promise.all(searchPromises);
-      const combinedResults = results.flatMap(result => result.results);
+      if (requestId !== searchRequestIdRef.current) return;
+
+      const combinedResults = results.flatMap((result) => result.results);
       const seen = new Set();
       const deduped = combinedResults.filter((item) => {
         if (!item?.id || seen.has(String(item.id))) return false;
         seen.add(String(item.id));
         return true;
       });
-      setSearchResults(deduped.slice(0, 10));
-      if (combinedResults.length > 0) {
-        setShowSearchResults(true);
-      }
+      const publicResults = filterAdminSearchResults(deduped);
+      setSearchResults(publicResults.slice(0, 10));
+      setShowSearchResults(publicResults.length > 0);
     } catch (error) {
-      console.error('Global search error:', error);
+      if (requestId !== searchRequestIdRef.current) return;
+      console.error("Global search error:", error);
       setSearchResults([]);
+      setShowSearchResults(false);
     } finally {
-      setIsSearching(false);
+      if (requestId === searchRequestIdRef.current) {
+        setIsSearching(false);
+      }
     }
   };
 
@@ -269,7 +283,7 @@ const NewsFeedHeader = ({
     }
 
     setShowSearchResults(false);
-    setSearchQuery('');
+    setSearchQuery("");
     setSearchResults([]);
     setIsSearching(false);
     navigate(result.url, {
@@ -311,12 +325,15 @@ const NewsFeedHeader = ({
   // Fetch unread message count on mount and periodically
   const fetchUnreadMessageCount = async () => {
     try {
-      const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+      const token =
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("authToken") ||
+        localStorage.getItem("token");
       if (!token) return;
       const count = await messagingService.getUnreadCount();
       setUnreadMessageCount(count);
     } catch (err) {
-      console.error('Error fetching unread message count:', err);
+      console.error("Error fetching unread message count:", err);
     }
   };
 
@@ -329,16 +346,30 @@ const NewsFeedHeader = ({
   // Fetch connection request count on mount and periodically
   const fetchConnectionRequestCount = async () => {
     try {
-      const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+      const token =
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("authToken") ||
+        localStorage.getItem("token");
       if (!token) return;
 
-      const response = await axiosInstance.get('/api/connections/requests/incoming');
+      // Backend paginates (default limit 10); use pagination.total, not requests.length
+      const response = await axiosInstance.get(
+        "/api/connections/requests/incoming",
+        {
+          params: { page: 1, limit: 1 },
+        },
+      );
       const data = response.data;
-      // Handle both {requests: [...]} and direct array responses
+      if (typeof data?.pagination?.total === "number") {
+        setConnectionRequestCount(data.pagination.total);
+        return;
+      }
       const requestsArray = data?.requests || data || [];
-      setConnectionRequestCount(requestsArray.length);
+      setConnectionRequestCount(
+        Array.isArray(requestsArray) ? requestsArray.length : 0,
+      );
     } catch (err) {
-      console.error('Error fetching connection request count:', err);
+      console.error("Error fetching connection request count:", err);
     }
   };
 
@@ -346,7 +377,7 @@ const NewsFeedHeader = ({
     fetchConnectionRequestCount();
     const interval = setInterval(fetchConnectionRequestCount, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [location.pathname]);
 
   // Cleanup search timeout on unmount
   useEffect(() => {
@@ -366,8 +397,10 @@ const NewsFeedHeader = ({
   };
 
   const isIconActive = (name) =>
-    (iconToPathsMap[name] || []).some((basePath) =>
-      location.pathname === basePath || location.pathname.startsWith(`${basePath}/`),
+    (iconToPathsMap[name] || []).some(
+      (basePath) =>
+        location.pathname === basePath ||
+        location.pathname.startsWith(`${basePath}/`),
     );
 
   const handleIconClick = (name) => {
@@ -393,11 +426,32 @@ const NewsFeedHeader = ({
   };
 
   // Filter menu items based on user role
-  const menuItems = user?.role === 'jobseeker'
-    ? ["home-icon", "CHAT", "notifications", "connection"]
-    : ["home-icon", "CHAT", "notifications", "recruitment", "connection"];
+  const menuItems =
+    user?.role === "jobseeker"
+      ? ["home-icon", "CHAT", "notifications", "connection"]
+      : ["home-icon", "CHAT", "notifications", "recruitment", "connection"];
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+
+  const formatNavCount = (count, compact = false) => {
+    if (count > 99) return "99+";
+    if (compact && count > 9) return "9+";
+    return String(count);
+  };
+
+  const countBadgeClass = (count, compact = false) => {
+    const position = compact
+      ? "absolute -top-1 -right-1 z-10"
+      : "absolute -top-1.5 -right-1.5 z-10";
+    const base = `${position} bg-red-500 text-white font-bold rounded-full inline-flex items-center justify-center leading-none shadow-sm`;
+    if (count > 99) {
+      return `${base} ${compact ? "px-1.5 py-0.5 text-[8px] min-h-4" : "px-2 py-0.5 text-[9px] min-h-[20px]"}`;
+    }
+    if (count > 9) {
+      return `${base} ${compact ? "px-1 py-0.5 text-[9px] min-h-4 min-w-4" : "px-1.5 py-0.5 text-[10px] min-h-[20px] min-w-[20px]"}`;
+    }
+    return `${base} ${compact ? "h-4 min-w-4 px-0.5 text-[9px]" : "h-5 min-w-5 px-1 text-[10px]"}`;
+  };
 
   useEffect(() => {
     document.body.style.overflow = isSidebarOpen ? "hidden" : "auto";
@@ -446,10 +500,10 @@ const NewsFeedHeader = ({
                   className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                 >
                   <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {result.type === 'jobs' || result.type === 'posts' ? (
+                    {result.type === "jobs" || result.type === "posts" ? (
                       <div className="text-gray-500">
-                        {result.type === 'jobs' && <FaBriefcase />}
-                        {result.type === 'posts' && <FaNewspaper />}
+                        {result.type === "jobs" && <FaBriefcase />}
+                        {result.type === "posts" && <FaNewspaper />}
                       </div>
                     ) : (
                       <img
@@ -464,9 +518,15 @@ const NewsFeedHeader = ({
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-[#1A3E32] truncate">{result.name}</div>
-                    <div className="text-sm text-gray-500 truncate">{result.subtitle}</div>
-                    <div className="text-xs text-[#16730F] capitalize">{result.type}</div>
+                    <div className="font-medium text-[#1A3E32] truncate">
+                      {result.name}
+                    </div>
+                    <div className="text-sm text-gray-500 truncate">
+                      {result.subtitle}
+                    </div>
+                    <div className="text-xs text-[#16730F] capitalize">
+                      {result.type}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -481,44 +541,53 @@ const NewsFeedHeader = ({
 
         <div className="hidden lg:flex gap-3 md:gap-4 items-center">
           {menuItems.map((name, i) => (
-            <div key={i} className="relative flex items-center">
+            <div key={i} className="relative flex items-center gap-1">
               {name === "home-icon" ? (
                 <FaHome
-                  className={`text-2xl md:text-3xl cursor-pointer transition-opacity ${isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F] hover:opacity-80"
-                    }`}
+                  className={`text-2xl md:text-3xl cursor-pointer transition-opacity ${
+                    isIconActive(name)
+                      ? "text-[#0f4e0a]"
+                      : "text-[#16730F] hover:opacity-80"
+                  }`}
                   onClick={() => handleIconClick(name)}
                 />
               ) : (
-                <div className={`relative rounded-full p-1 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}>
+                <div
+                  className={`relative rounded-full p-1.5 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}
+                >
                   <img
                     src={`/assets/images/${name}.svg`}
                     alt={name}
-                    className={`h-6 md:h-8 cursor-pointer transition-opacity ${isIconActive(name) ? "opacity-100" : "hover:opacity-80"
-                      }`}
+                    className={`h-6 md:h-8 cursor-pointer transition-opacity ${
+                      isIconActive(name) ? "opacity-100" : "hover:opacity-80"
+                    }`}
                     onClick={() => handleIconClick(name)}
                   />
                   {name === "notifications" && notificationCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                      {notificationCount > 99 ? '99+' : notificationCount}
+                    <span className={countBadgeClass(notificationCount)}>
+                      {formatNavCount(notificationCount)}
                     </span>
                   )}
                   {name === "CHAT" && unreadMessageCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
-                      {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                    <span
+                      className={`${countBadgeClass(unreadMessageCount)} animate-pulse`}
+                    >
+                      {formatNavCount(unreadMessageCount)}
                     </span>
                   )}
                   {name === "connection" && connectionRequestCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                      {connectionRequestCount > 99 ? '99+' : connectionRequestCount}
+                    <span className={countBadgeClass(connectionRequestCount)}>
+                      {formatNavCount(connectionRequestCount)}
                     </span>
                   )}
                 </div>
               )}
               {isIconActive(name) && (
-                <span className="px-2 py-1 text-xs bg-[#1A3E32] rounded-r-2xl text-white rounded">
+                <span className="px-3 py-1.5 text-xs bg-[#1A3E32] rounded-r-2xl text-white font-medium whitespace-nowrap">
                   {name === "home-icon"
                     ? "News Feed"
-                    : name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()}
+                    : name.charAt(0).toUpperCase() +
+                      name.slice(1).toLowerCase()}
                 </span>
               )}
             </div>
@@ -538,14 +607,16 @@ const NewsFeedHeader = ({
                 {getDisplayName()}
               </p>
 
-              {/* Custom Dropdown for Role & Logout */}
+              {/* Custom Dropdown for Role */}
               <div className="relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center gap-1 bg-[#16730F] text-white rounded-full px-3 py-1 mt-0.5 text-xs sm:text-sm md:text-base focus:outline-none hover:bg-[#145a0c] transition-colors"
                 >
                   <span>{getDisplayRole()}</span>
-                  <FaChevronDown className={`text-xs transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <FaChevronDown
+                    className={`text-xs transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 {/* Dropdown Menu */}
@@ -572,16 +643,20 @@ const NewsFeedHeader = ({
 
                     {/* Section 1: Profile */}
                     <div className="py-1">
-
                       <button
                         onClick={() => {
-                          navigate(user?.role === 'recruiter' ? '/edit-profile/recruiter/basic-details' : '/edit-profile/bio');
+                          navigate(
+                            user?.role === "recruiter"
+                              ? "/edit-profile/recruiter/basic-details"
+                              : "/edit-profile/bio",
+                          );
                           setIsDropdownOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${location.pathname.startsWith('/edit-profile')
-                          ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
-                          : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
-                          }`}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                          location.pathname.startsWith("/edit-profile")
+                            ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
+                            : "text-gray-700 hover:bg-gray-50 hover:pl-5"
+                        }`}
                       >
                         <FaUserEdit className="text-base" />
                         <span>Edit Profile</span>
@@ -593,50 +668,73 @@ const NewsFeedHeader = ({
 
                     {/* Section 2: Navigation */}
                     <div className="py-1">
-                      {user?.role !== 'jobseeker' && (
+                      {user?.role !== "jobseeker" && (
                         <button
                           onClick={() => {
-                            navigate('/candidate-search-page');
+                            navigate("/candidate-search-page");
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${location.pathname === '/candidate-search-page'
-                            ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
-                            : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
-                            }`}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                            location.pathname === "/candidate-search-page"
+                              ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
+                              : "text-gray-700 hover:bg-gray-50 hover:pl-5"
+                          }`}
                         >
                           <FaSearch className="text-base" />
                           <span>Candidate Search</span>
                         </button>
                       )}
-                      {user?.role !== 'jobseeker' && (
+                      {user?.role !== "jobseeker" && (
                         <button
                           onClick={() => {
-                            navigate('/ase/dashboard');
+                            navigate("/ase/dashboard");
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${['/ase/dashboard', '/ase/pricing'].includes(location.pathname)
-                            ? 'bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]'
-                            : 'text-gray-700 hover:bg-gray-50 hover:pl-5'
-                            }`}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                            ["/ase/dashboard", "/ase/pricing"].includes(
+                              location.pathname,
+                            )
+                              ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
+                              : "text-gray-700 hover:bg-gray-50 hover:pl-5"
+                          }`}
                         >
                           <FaCreditCard className="text-base" />
                           <span>My Subscription</span>
                         </button>
                       )}
-                    </div>
+                      {user?.role !== "jobseeker" && (
+                        <button
+                          onClick={() => {
+                            navigate("/employer/dashboard");
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                            location.pathname.startsWith("/employer/")
+                              ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
+                              : "text-gray-700 hover:bg-gray-50 hover:pl-5"
+                          }`}
+                        >
+                          <FaBriefcase className="text-base" />
+                          <span>Job Postings</span>
+                        </button>
+                      )}
 
-                    {/* Divider */}
-                    <div className="border-t border-gray-100 my-1"></div>
-
-                    {/* Section 3: Account */}
-                    <div className="py-1">
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-all duration-200 hover:pl-5"
-                      >
-                        <FaSignOutAlt className="text-base" />
-                        <span>Logout</span>
-                      </button>
+                      {user?.role === "jobseeker" && (
+                        <button
+                          onClick={() => {
+                            navigate("/job-vacancy");
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                            ["/job-vacancy"].includes(location.pathname)
+                              ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
+                              : "text-gray-700 hover:bg-gray-50 hover:pl-5"
+                          }`}
+                        >
+                          <FaBriefcase className="text-base" />
+                          <span>Job Vacancy</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -648,8 +746,11 @@ const NewsFeedHeader = ({
 
       {/* Mobile Sidebar */}
       {isSidebarOpen && (
-        <div className="fixed top-0 left-0 w-3/4 max-w-[250px] h-full bg-white shadow-lg z-50 p-4 transition-transform lg:hidden block">
+        <>
           <button
+            type="button"
+            aria-label="Close menu"
+            className="fixed inset-0 bg-black/40 z-40 lg:hidden"
             onClick={toggleSidebar}
             className="text-[#16730F] font-bold text-lg mb-4"
           >
@@ -666,39 +767,77 @@ const NewsFeedHeader = ({
                   setIsSidebarOpen(false);
                 }}
               >
-                {name === "home-icon" ? (
-                  <FaHome className={isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F]"} />
-                ) : (
-                  <div className={`relative rounded-full p-1 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}>
-                    <img
-                      src={`/assets/images/${name}.svg`}
-                      alt={name}
-                      className="h-5"
-                    />
-                    {name === "notifications" && notificationCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                        {notificationCount > 9 ? '9+' : notificationCount}
-                      </span>
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto nfl-scroll p-4 pt-2">
+              <nav className="flex flex-col gap-4">
+                {menuItems.map((name, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={() => {
+                      handleIconClick(name);
+                      setIsSidebarOpen(false);
+                    }}
+                  >
+                    {name === "home-icon" ? (
+                      <FaHome
+                        className={
+                          isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F]"
+                        }
+                      />
+                    ) : (
+                      <div
+                        className={`relative rounded-full p-1.5 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}
+                      >
+                        <img
+                          src={`/assets/images/${name}.svg`}
+                          alt={name}
+                          className="h-5"
+                        />
+                        {name === "notifications" && notificationCount > 0 && (
+                          <span
+                            className={countBadgeClass(notificationCount, true)}
+                          >
+                            {formatNavCount(notificationCount, true)}
+                          </span>
+                        )}
+                        {name === "CHAT" && unreadMessageCount > 0 && (
+                          <span
+                            className={`${countBadgeClass(unreadMessageCount, true)} animate-pulse`}
+                          >
+                            {formatNavCount(unreadMessageCount, true)}
+                          </span>
+                        )}
+                        {name === "connection" && connectionRequestCount > 0 && (
+                          <span
+                            className={countBadgeClass(
+                              connectionRequestCount,
+                              true,
+                            )}
+                          >
+                            {formatNavCount(connectionRequestCount, true)}
+                          </span>
+                        )}
+                      </div>
                     )}
-                    {name === "CHAT" && unreadMessageCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold animate-pulse">
-                        {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
-                      </span>
-                    )}
-                    {name === "connection" && connectionRequestCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                        {connectionRequestCount > 9 ? '9+' : connectionRequestCount}
-                      </span>
-                    )}
+                    <span
+                      className={`font-medium capitalize text-sm ${isIconActive(name) ? "text-[#0f4e0a]" : "text-[#1A3E32]"}`}
+                    >
+                      {name === "home-icon" ? "News Feed" : name.toLowerCase()}
+                    </span>
                   </div>
-                )}
-                <span className={`font-medium capitalize text-sm ${isIconActive(name) ? "text-[#0f4e0a]" : "text-[#1A3E32]"}`}>
-                  {name === "home-icon" ? "News Feed" : name.toLowerCase()}
-                </span>
-              </div>
-            ))}
-          </nav>
-        </div>
+                ))}
+              </nav>
+
+              <RecruitmentRightMobileMenu
+                onNavigate={() => setIsSidebarOpen(false)}
+              />
+            </div>
+          </div>
+        </>
       )}
     </header>
   );

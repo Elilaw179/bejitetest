@@ -64,13 +64,14 @@ import AuthSuccess from "./pages/auth/AuthSuccess.jsx";
 import AuthFailure from "./pages/auth/AuthFailure.jsx";
 import CompleteSignup from "./pages/CompleteSignup.jsx";
 import Profile from "./pages/Profile.jsx";
-import { ToastContainer } from 'react-toastify';
-import ProtectedRoute from './components/ProtectedRoute.jsx';
+import UserProfilePosts from "./pages/UserProfilePosts.jsx";
+import { ToastContainer } from "react-toastify";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import ASEPricingPage from "./pages/employerDashboard/ASEPricingPage.jsx";
 import ASEPaymentCallback from "./pages/employerDashboard/ASEPaymentCallback.jsx";
 import ASESubscriptionDashboard from "./pages/employerDashboard/ASESubscriptionDashboard.jsx";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 
 // Admin imports
 import AdminLogin from "./pages/admin/AdminLogin.jsx";
@@ -82,87 +83,63 @@ import AdminEngagement from "./pages/admin/AdminEngagement.jsx";
 import AdminRecruitment from "./pages/admin/AdminRecruitment.jsx";
 import AdminDemographics from "./pages/admin/AdminDemographics.jsx";
 import AdminList from "./pages/admin/AdminList.jsx";
+import AdminAdPro from "./pages/admin/AdminAdPro.jsx";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute.jsx";
+import AdminLayout from "./components/admin/AdminLayout.jsx";
+import PushNotificationBootstrap from "./components/PushNotificationBootstrap.jsx";
 import AuthBootstrap from "./components/AuthBootstrap.jsx";
 import ProfileCompletionReminder from "./components/ProfileCompletionReminder.jsx";
 import { Navigate } from "react-router-dom";
+import BadgeStatus from "./pages/badge/BadgeStatus.jsx";
+import AccountSettings from "./pages/AccountSettings.jsx";
+import ActivityLog from "./pages/ActivityLog.jsx";
+import BadgeHolder from "./pages/badge/BadgeHolder.jsx";
+import BadgePaymentCallback from "./pages/badge/BadgePaymentCallback.jsx";
+import CreateJob from "./pages/employerDashboard/CreateJob.jsx";
+import EmployerDashboard from "./pages/employerDashboard/EmployerDashboard.jsx";
+import BulkCreateJobs from "./pages/employerDashboard/BulkCreateJobs.jsx";
+import ExtendJob from "./pages/employerDashboard/ExtendJob.jsx";
+import JobExtendCallback from "./pages/employerDashboard/JobExtendCallback.jsx";
+import JobApplications from "./pages/employerDashboard/JobApplications.jsx";
+import RecruitWithASE from "./pages/employerDashboard/RecruitWithASE.jsx";
+import RepostJob from "./pages/employerDashboard/RepostJob.jsx";
+import JobVacancyListing from "./pages/jobseekerSignup/Jobs/JobVacancyListing.jsx";
+import AdProDashboard from "./pages/ads/AdProDashboard.jsx";
+import CampaignReports from "./pages/ads/CampaignReports.jsx";
+import CampaignDetails from "./pages/ads/CampaignDetails.jsx";
+import CreateCampaign from "./pages/ads/CreateCampaign.jsx";
+import EditCampaign from "./pages/ads/EditCampaign.jsx";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
 function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <Sentry.ErrorBoundary fallback={<div className="min-h-screen flex items-center justify-center p-6 text-center">Something went wrong. Please refresh the page or contact support.</div>}>
-        <Router>
-          <AuthBootstrap>
-            <Routes>
+      <Router>
+        <AuthBootstrap>
+          <PushNotificationBootstrap />
+          <Routes>
             {/* Admin Routes */}
-            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
-              path="/admin/dashboard"
+              path="/admin"
               element={
                 <AdminProtectedRoute>
-                  <AdminDashboard />
+                  <AdminLayout />
                 </AdminProtectedRoute>
               }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <AdminProtectedRoute>
-                  <AdminUsers />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/jobs"
-              element={
-                <AdminProtectedRoute>
-                  <AdminJobs />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/revenue"
-              element={
-                <AdminProtectedRoute>
-                  <AdminRevenue />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/engagement"
-              element={
-                <AdminProtectedRoute>
-                  <AdminEngagement />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/recruitment "
-              element={
-                <AdminProtectedRoute>
-                  <AdminRecruitment />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/demographics"
-              element={
-                <AdminProtectedRoute>
-                  <AdminDemographics />
-                </AdminProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/admins"
-              element={
-                <AdminProtectedRoute>
-                  <AdminList />
-                </AdminProtectedRoute>
-              }
-            />
+            >
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="jobs" element={<AdminJobs />} />
+              <Route path="revenue" element={<AdminRevenue />} />
+              <Route path="engagement" element={<AdminEngagement />} />
+              <Route path="recruitment" element={<AdminRecruitment />} />
+              <Route path="demographics" element={<AdminDemographics />} />
+              <Route path="admins" element={<AdminList />} />
+              <Route path="adpro" element={<AdminAdPro />} />
+            </Route>
 
             <Route path="/auth/email-sent" element={<EmailSent />} />
             <Route path="/auth/success" element={<AuthSuccess />} />
@@ -180,7 +157,13 @@ function App() {
             <Route path="/resume" element={<Resume />} />
             <Route path="/save-progress" element={<SaveProgress />} />
 
-            <Route element={<ProtectedRoute><ResumeLayout /></ProtectedRoute>}>
+            <Route
+              element={
+                <ProtectedRoute>
+                  <ResumeLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route path="/bio" element={<Bio />} />
               <Route path="/education" element={<Education />} />
               <Route path="/skills" element={<Skills />} />
@@ -190,12 +173,24 @@ function App() {
               <Route path="/links" element={<Link />} />
             </Route>
 
-            <Route element={<ProtectedRoute><ResumeLayout /></ProtectedRoute>}>
+            <Route
+              element={
+                <ProtectedRoute>
+                  <ResumeLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route path="/edit-profile/bio" element={<Bio />} />
               <Route path="/edit-profile/education" element={<Education />} />
               <Route path="/edit-profile/skills" element={<Skills />} />
-              <Route path="/edit-profile/work-history" element={<WorkHistory />} />
-              <Route path="/edit-profile/certificate" element={<Certificate />} />
+              <Route
+                path="/edit-profile/work-history"
+                element={<WorkHistory />}
+              />
+              <Route
+                path="/edit-profile/certificate"
+                element={<Certificate />}
+              />
               <Route path="/edit-profile/links" element={<Link />} />
               <Route path="/edit-profile/job-type" element={<JobType />} />
             </Route>
@@ -227,10 +222,16 @@ function App() {
                 path="/corporate/company-details"
                 element={<CompanyDetails />}
               />
-              <Route path="/corporate/location" element={<CoperateLocation />} />
+              <Route
+                path="/corporate/location"
+                element={<CoperateLocation />}
+              />
               <Route path="/corporate/verify" element={<CoperateVerify />} />
               <Route path="/corporate/upload" element={<CoperateUploadDoc />} />
-              <Route path="/corporate/inreview" element={<CoperateInReview />} />
+              <Route
+                path="/corporate/inreview"
+                element={<CoperateInReview />}
+              />
               <Route
                 path="/edit-profile/recruiter/basic-details"
                 element={<CoperateBasicDetails />}
@@ -258,9 +259,36 @@ function App() {
             </Route>
             <Route path="/post-page" element={<PostPage />} />
             <Route path="/news-feed" element={<Recruitment />} />
+            <Route path="/badge" element={<BadgeStatus />} />
+            <Route path="/badge/payment-callback" element={<BadgePaymentCallback />} />
+            <Route path="/activity-logs" element={<ActivityLog />} />
+            <Route path="/account-settings" element={<AccountSettings />} />
+            <Route path="/badge-holder" element={<BadgeHolder />} />
+
+            {/* ads */}
+            <Route path="/adpro" element={<AdProDashboard />} />
+            <Route
+              path="/ad-pro-dashboard"
+              element={<Navigate to="/adpro" replace />}
+            />
+            <Route path="/adpro/campaign/:id" element={<CampaignDetails />} />
+            <Route
+              path="/adpro/campaign/:id/reports"
+              element={<CampaignReports />}
+            />
+            <Route path="/adpro/create" element={<CreateCampaign />} />
+            <Route path="/adpro/campaign/:id/edit" element={<EditCampaign />} />
+
+            {/* jobseeker */}
+            <Route path="/job-vacancy" element={<JobVacancyListing />} />
+
             <Route
               path="/candidate-search-page"
-              element={<ProtectedRoute redirectMessage="Your session has expired. Please log in again."><CandidateSearchPage /></ProtectedRoute>}
+              element={
+                <ProtectedRoute redirectMessage="Your session has expired. Please log in again.">
+                  <CandidateSearchPage />
+                </ProtectedRoute>
+              }
             />
             <Route path="/chats" element={<Chat />} />
             <Route path="/connection" element={<Connections />} />
@@ -276,13 +304,43 @@ function App() {
               element={<EmployeeSentInvite />}
             />
             <Route path="/interview-invite" element={<InterviewInvite />} />
-            <Route path="/my-invitations" element={<InterviewNotifications />} />
+            <Route
+              path="/my-invitations"
+              element={<InterviewNotifications />}
+            />
             <Route path="/sent-invitations" element={<SentInvitations />} />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>} />
-            <Route path="/user-profile/:userId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route
+              path="/profile/posts"
+              element={
+                <ProtectedRoute>
+                  <UserProfilePosts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user-profile/:userId/posts"
+              element={
+                <ProtectedRoute>
+                  <UserProfilePosts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user-profile/:userId"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/about" element={<About />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/security-advice" element={<SecurityAdvice />} />
@@ -291,9 +349,37 @@ function App() {
             <Route path="/help" element={<Help />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/ase/pricing" element={<ASEPricingPage />} />
-            <Route path="/ase/payment-callback" element={<ASEPaymentCallback />} />
-            <Route path="/ase/subscription-callback" element={<ASEPaymentCallback />} />
-            <Route path="/ase/dashboard" element={<ASESubscriptionDashboard />} />
+            <Route
+              path="/ase/payment-callback"
+              element={<ASEPaymentCallback />}
+            />
+            <Route
+              path="/ase/subscription-callback"
+              element={<ASEPaymentCallback />}
+            />
+            <Route
+              path="/ase/dashboard"
+              element={<ASESubscriptionDashboard />}
+            />
+            <Route path="/employer/create-job" element={<CreateJob />} />
+
+            <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+
+            <Route path="/employer/bulk-create" element={<BulkCreateJobs />} />
+            <Route
+              path="/employer/extend/callback"
+              element={<JobExtendCallback />}
+            />
+            <Route path="/employer/job/:id/extend" element={<ExtendJob />} />
+            <Route
+              path="/employer/job/:id/applications"
+              element={<JobApplications />}
+            />
+            <Route
+              path="employer/job/:id/recruit"
+              element={<RecruitWithASE />}
+            />
+            <Route path="employer/job/:id/repost" element={<RepostJob />} />
           </Routes>
           <ProfileCompletionReminder />
           <ToastContainer

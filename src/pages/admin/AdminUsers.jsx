@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
-import AdminLayout from '../../components/admin/AdminLayout';
 import { Search, Mail, Shield, CheckCircle, XCircle, MoreVertical, X } from 'lucide-react';
 
 const AdminUsers = () => {
@@ -88,8 +87,7 @@ const AdminUsers = () => {
   const endIndex = Math.min(currentPage * itemsPerPage, totalUsers);
 
   return (
-    <AdminLayout>
-      <div className="max-w-7xl mx-auto w-full space-y-6">
+    <div className="max-w-7xl mx-auto w-full space-y-6">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -413,7 +411,6 @@ const AdminUsers = () => {
          </div>
 
        </div>
-     </AdminLayout>
    );
  };
 

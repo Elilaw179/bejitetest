@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { FaList, FaSlidersH, FaTimes, FaArrowLeft } from "react-icons/fa";
+import { FaSlidersH, FaTimes, FaArrowLeft } from "react-icons/fa";
 import SearchCriteria from "../../components/candidate-search-page/SearchCriteria";
 import CandidateSearchResults from "../../components/candidate-search-page/CandidateSearchResults";
 import NewsFeedHeader from "../../components/NewsFeedHeader";
@@ -31,7 +31,7 @@ const CandidateSearchPage = () => {
   const [viewProfile, setViewProfile] = useState(false);
   const [showMainProfile, setShowMainProfile] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState(null);
-  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const mainScrollRef = useRef(null);
   const resultsScrollRef = useRef(null);
@@ -44,16 +44,26 @@ const CandidateSearchPage = () => {
     resultsScrollRef.current?.scrollTo({ top: 0, left: 0 });
   }, []);
 
-  const handleViewProfile = useCallback((candidateId) => {
+  const handleViewProfile = useCallback((candidateId, userId = null) => {
     setSelectedCandidateId(candidateId);
+    setSelectedUserId(userId != null && userId !== '' ? String(userId) : null);
     setViewProfile(true);
     setShowMainProfile(false);
-    setLeftPanelOpen(false);
+    setRightPanelOpen(false);
   }, []);
 
   const handleSearch = () => {
     setShowResults(true);
-    setLeftPanelOpen(false);
+    setViewProfile(false);
+    setShowMainProfile(false);
+    setRightPanelOpen(false);
+  };
+
+  const handleBackToSearchForm = () => {
+    setShowResults(false);
+    setViewProfile(false);
+    setShowMainProfile(false);
+    setRightPanelOpen(false);
   };
 
   useEffect(() => {
@@ -74,7 +84,6 @@ const CandidateSearchPage = () => {
   useEffect(() => {
     const onKeyDown = (e) => {
       if (e.key === "Escape") {
-        setLeftPanelOpen(false);
         setRightPanelOpen(false);
       }
     };
@@ -84,6 +93,27 @@ const CandidateSearchPage = () => {
 
   const renderMainContent = () => {
     if (!viewProfile) {
+      if (showResults) {
+        return (
+          <>
+            <div className="lg:hidden">
+              <CandidateSearchResults
+                searchCriteria={formData}
+                onViewProfile={handleViewProfile}
+                compact
+              />
+            </div>
+            <div className="hidden lg:block">
+              <SearchCriteria
+                formData={formData}
+                setFormData={setFormData}
+                isFormComplete={hasAtLeastOneField}
+                onSearch={handleSearch}
+              />
+            </div>
+          </>
+        );
+      }
       return (
         <SearchCriteria
           formData={formData}
@@ -97,31 +127,34 @@ const CandidateSearchPage = () => {
       return (
         <UserProfilePanel
           candidateId={selectedCandidateId}
+          connectUserId={selectedUserId}
           onViewMainProfile={() => setShowMainProfile(true)}
         />
       );
     }
-    return <UserMainProfileCard candidateId={selectedCandidateId} />;
+    return (
+      <UserMainProfileCard
+        candidateId={selectedCandidateId}
+        connectUserId={selectedUserId}
+      />
+    );
   };
 
   const showMobileToolbar = showResults || viewProfile;
 
   return (
     <NewsFeedLayout scrollable={false} classes={false} showSidebars={false}>
-
-      <div>
-        {/* <NewsFeedHeader />  */}
-
+      <div className="flex flex-col h-[calc(100vh-72px)] min-h-0 w-full max-w-[1440px] mx-auto bg-[#FFFFFF]">
         {showMobileToolbar && (
           <div className="lg:hidden shrink-0 flex flex-wrap items-center gap-2 px-3 py-2 bg-white border-b border-gray-200">
-            {showResults && (
+            {showResults && !viewProfile && (
               <button
                 type="button"
-                onClick={() => setLeftPanelOpen(true)}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full bg-[#1A3E32] text-white"
+                onClick={handleBackToSearchForm}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border border-[#16730F] text-[#16730F]"
               >
-                <FaList className="w-3.5 h-3.5" />
-                Results
+                <FaArrowLeft className="w-3 h-3" />
+                Edit search
               </button>
             )}
             {viewProfile && (
@@ -132,7 +165,7 @@ const CandidateSearchPage = () => {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border border-[#16730F] text-[#16730F]"
                 >
                   <FaArrowLeft className="w-3 h-3" />
-                  Search
+                  {showResults ? "Results" : "Search"}
                 </button>
                 {showMainProfile && (
                   <button
@@ -157,44 +190,28 @@ const CandidateSearchPage = () => {
           </div>
         )}
 
-        <div className="relative flex-1 min-h-0 h-[calc(100vh-72px)] bg-[#FFFFFF] w-full max-w-[1440px] mx-auto">
-          {(leftPanelOpen || rightPanelOpen) && (
+        <div className="relative flex-1 min-h-0">
+          {(rightPanelOpen) && (
             <button
               type="button"
               aria-label="Close panel"
-              className="lg:hidden fixed inset-0 z-30 bg-black/40"
+              className="lg:hidden absolute inset-0 z-30 bg-black/40"
               onClick={() => {
-                setLeftPanelOpen(false);
                 setRightPanelOpen(false);
               }}
             />
           )}
 
           <div className="h-full flex min-h-0">
-            {/* Left sidebar — search results */}
+            {/* Left sidebar — search results (desktop only) */}
             <aside
               className={`
-              shrink-0 flex flex-col bg-[#F5F5F5] border-r border-gray-200
-              w-[min(100vw,360px)] sm:w-[min(90vw,380px)]
+              ${showResults ? "hidden lg:flex" : "hidden"}
+              shrink-0 flex-col bg-[#F5F5F5] border-r border-gray-200
               lg:w-[min(360px,28vw)] lg:max-w-[400px]
               overflow-hidden
-              fixed lg:static inset-y-0 left-0 z-40 lg:z-auto
-              transition-transform duration-300 ease-in-out
-              ${showResults ? "" : "hidden"}
-              ${leftPanelOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
             `}
             >
-              <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white shrink-0">
-                <span className="text-sm font-semibold text-[#1A3E32]">Search results</span>
-                <button
-                  type="button"
-                  onClick={() => setLeftPanelOpen(false)}
-                  className="p-1.5 rounded-full text-[#1A3E32] hover:bg-gray-100"
-                  aria-label="Close results"
-                >
-                  <FaTimes />
-                </button>
-              </div>
               <div
                 ref={resultsScrollRef}
                 className="flex-1 overflow-y-auto nfl-scroll scroll-smooth p-3 sm:p-4 min-h-0"
@@ -209,7 +226,9 @@ const CandidateSearchPage = () => {
             {/* Main content */}
             <main
               ref={mainScrollRef}
-              className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden nfl-scroll scroll-smooth bg-[#F5F5F5] p-3 sm:p-4 md:p-6"
+              className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden nfl-scroll scroll-smooth bg-[#F5F5F5] ${
+                showResults && !viewProfile ? "p-0 lg:p-3 lg:sm:p-4 lg:md:p-6" : "p-3 sm:p-4 md:p-6"
+              }`}
             >
               {renderMainContent()}
             </main>
@@ -218,10 +237,10 @@ const CandidateSearchPage = () => {
             <aside
               className={`
               shrink-0 flex flex-col bg-[#F5F5F5] border-l border-gray-200
-              w-[min(100vw,400px)] sm:w-[min(92vw,420px)]
+              w-full sm:w-[min(92vw,420px)]
               lg:w-[min(400px,30vw)] lg:max-w-[440px]
               overflow-hidden
-              fixed lg:static inset-y-0 right-0 z-40 lg:z-auto
+              absolute lg:static inset-y-0 right-0 z-40 lg:z-auto
               transition-transform duration-300 ease-in-out
               ${viewProfile ? "" : "hidden"}
               ${rightPanelOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
