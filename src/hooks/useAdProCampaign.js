@@ -4,15 +4,13 @@ import {
   getAdProCampaign,
   updateAdProCampaign,
 } from "../services/adProApi";
-
-const isSameCampaign = (campaign, campaignId) =>
-  campaign && String(campaign.id) === String(campaignId);
+import { isAdProCampaignCacheValid } from "../utils/formatAdProCurrency";
 
 export function useAdProCampaign(campaignId, { initialData } = {}) {
   const location = useLocation();
   const cachedCampaign =
     initialData ??
-    (isSameCampaign(location.state?.campaign, campaignId)
+    (isAdProCampaignCacheValid(location.state?.campaign, campaignId)
       ? location.state.campaign
       : null);
 

@@ -25,6 +25,7 @@ import {
 import { useAdProCampaign } from "../../hooks/useAdProCampaign";
 import {
   formatAdProCurrency,
+  formatAdProNumber,
   getCampaignProgress,
 } from "../../utils/formatAdProCurrency";
 
@@ -134,7 +135,7 @@ export default function CampaignDetails() {
                     <FaBullseye className="w-4 h-4 sm:w-5 sm:h-5 text-[#1A3E32]" />
                   </div>
                   <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                    {campaign.reachDelivered.toLocaleString()}
+                    {formatAdProNumber(campaign.reachDelivered)}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-500">
                     Reach Delivered
@@ -191,11 +192,11 @@ export default function CampaignDetails() {
                 <div className="flex justify-between mt-3 text-xs sm:text-sm text-gray-500">
                   <span className="flex items-center gap-1">
                     <div className="w-2 h-2 rounded-full bg-[#1A3E32]" />
-                    {campaign.reachDelivered.toLocaleString()} delivered
+                    {formatAdProNumber(campaign.reachDelivered)} delivered
                   </span>
                   <span className="flex items-center gap-1">
                     <div className="w-2 h-2 rounded-full bg-gray-300" />
-                    {campaign.reachPurchased.toLocaleString()} purchased
+                    {formatAdProNumber(campaign.reachPurchased)} purchased
                   </span>
                 </div>
               </div>

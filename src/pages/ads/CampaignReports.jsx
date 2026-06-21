@@ -50,11 +50,7 @@ export default function CampaignReports() {
         <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
             <button
-              onClick={() =>
-                navigate(`/adpro/campaign/${id}`, {
-                  state: report ? { campaign: { id: report.id, name: report.name } } : undefined,
-                })
-              }
+              onClick={() => navigate(`/adpro/campaign/${id}`)}
               className="flex items-center gap-2 text-gray-600 hover:text-[#1A3E32] transition-colors text-sm sm:text-base"
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> Back to Campaign
