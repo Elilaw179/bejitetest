@@ -9,7 +9,7 @@ const ProgressBar = ({ currentStep, totalSteps }) => {
           className="absolute top-0 left-0 h-1 bg-[#1A3E32] rounded-full transition-all duration-300"
           style={{ width: `${width}%` }}
         />
-        <div className="absolute -top-4 w-full flex justify-between px-1">
+        <div className="absolute -top-4 w-full flex justify-between px-1 pointer-events-none">
           {Array.from({ length: totalSteps }, (_, i) => (
             <div
               key={i}

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { getUserProfileImage } from "../../utils/profileImageUtils";
-import { formatDisplayPersonName } from "../../utils/personDisplayName";
+import { formatDisplayPersonName, formatDisplayHandle } from "../../utils/personDisplayName";
 import useRecruitmentRightStats from "../../hooks/useRecruitmentRightStats";
 import { RECRUITMENT_RIGHT_LINKS } from "./recruitmentRightLinks";
 
@@ -14,9 +14,7 @@ export default function RecruitmentRightMobileMenu({ onNavigate }) {
   };
 
   const displayName = formatDisplayPersonName(userData, "User");
-  const username = userData?.username
-    ? `@${userData.username}`
-    : "@nd_creations";
+  const username = formatDisplayHandle(userData);
 
   return (
     <div className="mt-4 pt-4 border-t border-gray-200">
@@ -28,7 +26,9 @@ export default function RecruitmentRightMobileMenu({ onNavigate }) {
             className="w-14 h-14 rounded-full object-cover border-2 border-white/30"
           />
           <p className="text-sm font-bold mt-2">{displayName}</p>
-          <p className="text-[11px] font-semibold text-white/80">{username}</p>
+          {username && (
+            <p className="text-[11px] font-semibold text-white/80">{username}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-2 mt-4">

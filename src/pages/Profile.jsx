@@ -33,6 +33,7 @@ import {
 import {
   formatDisplayPersonName,
   formatDisplayRole,
+  formatDisplayHandle,
 } from '../utils/personDisplayName';
 import { formatDisplayText } from '../utils/displayFormatUtils';
 import { truncateText } from '../utils/checksFormat';
@@ -293,6 +294,7 @@ const Profile = () => {
   const viewedRole = profileData?.role || user?.role;
   const isJobseekerProfile = viewedRole === 'jobseeker';
   const isRecruiterProfile = viewedRole === 'recruiter';
+  const displayHandle = formatDisplayHandle(profileData);
 
   useEffect(() => {
     const nextCandidates = buildAvatarCandidates(profileAvatarStored);
@@ -457,9 +459,9 @@ const Profile = () => {
                   {formatDisplayText(profileData.job_title || profileData.title)}
                 </p>
               )}
-              {isRecruiterProfile && profileData.nickname && (
+              {displayHandle && (
                 <p className="text-gray-500 mt-1 text-sm break-words">
-                  @{formatDisplayText(profileData.nickname).replace(/^@/, '')}
+                  {displayHandle}
                 </p>
               )}
               {isRecruiterProfile && recruiterPublicLocation && (

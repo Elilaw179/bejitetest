@@ -48,10 +48,10 @@ const OnboardingLayout = ({
         <img
           src="/assets/images/logo.png"
           alt="logo"
-          className="h-12 sm:h-16 "
+          className="h-10"
         />
       </button>
-      <div className="bg-white">
+      <div className="bg-white relative z-10">
         {steps && (
           <>
             <StepTabs

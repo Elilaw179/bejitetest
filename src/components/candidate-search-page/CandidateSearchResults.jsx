@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { formatDisplayPersonName, formatDisplayRole } from "../../utils/personDisplayName";
 import { formatDisplayText } from "../../utils/displayFormatUtils";
 import { filterAdminUsersFromSearch } from "../../utils/filterAdminUsers";
+import AvailabilityStatusDot from "./AvailabilityStatusDot";
 
 const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = false }) => {
   const navigate = useNavigate();
@@ -152,7 +153,6 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = 
               availability: candidate.availability || "Unknown",
               experienceYears: candidate.experience_years || 0,
               initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
-              online: candidate.availability === "Available",
               image: profilePhotoUrl(photoPath) ?? null,
             };
           });
@@ -271,9 +271,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = 
             </React.Fragment>
           ))
         ) : (
-          <div className="text-center p-5">
-            <p className="text-white text-[20px] font-semibold">No candidates found</p>
-          </div>
+          <NoCandidatesFound navigate={navigate} compact={compact} />
         )}
       </div>
       <InterviewInviteModal
@@ -293,13 +291,49 @@ const SearchResultsHeader = ({ count, compact }) => (
   </div>
 );
 
+const NoCandidatesFound = ({ navigate, compact }) => (
+  <div className={`text-center w-full min-w-0 ${compact ? "px-3 py-6" : "p-6"}`}>
+    <p className={`text-white font-semibold ${compact ? "text-base" : "text-[20px]"}`}>
+      No candidates found
+    </p>
+    <p
+      className={`text-white/85 mt-3 mx-auto leading-relaxed ${
+        compact ? "text-xs max-w-sm" : "text-sm max-w-lg"
+      }`}
+    >
+      Try adjusting your search filters, or post a job so candidates can discover your
+      opening and apply.
+    </p>
+    <div
+      className={`mt-5 flex w-full max-w-md mx-auto flex-col gap-3 ${
+        compact ? "text-xs" : "text-sm"
+      }`}
+    >
+      <button
+        type="button"
+        onClick={() => navigate("/employer/create-job")}
+        className="w-full rounded-3xl bg-[#6B8E23] hover:bg-[#556B1F] text-white font-medium px-4 py-2.5 transition-colors cursor-pointer"
+      >
+        Post a job
+      </button>
+      <button
+        type="button"
+        onClick={() => navigate("/activity-logs")}
+        className="w-full rounded-3xl border border-white/40 text-white hover:bg-white/10 font-medium px-4 py-2.5 transition-colors cursor-pointer whitespace-normal leading-snug"
+      >
+        View applications in Activity Log
+      </button>
+    </div>
+  </div>
+);
+
 const CandidateProfile = ({ candidate, onViewProfile, onInvite, compact }) => (
   <div className={compact ? "px-2 py-3" : "mt-4 px-2 py-2 sm:px-3"}>
     <div className={`flex ${compact ? "flex-row items-start gap-3" : "flex-col md:flex-row items-start gap-4 md:gap-5"}`}>
       <ProfileImage
         initials={candidate.initials}
         name={candidate.name}
-        online={candidate.online}
+        availability={candidate.availability}
         image={candidate.image}
         compact={compact}
       />
@@ -320,7 +354,7 @@ const CandidateProfile = ({ candidate, onViewProfile, onInvite, compact }) => (
   </div>
 );
 
-const ProfileImage = ({ initials, name, online, image, compact }) => (
+const ProfileImage = ({ initials, name, availability, image, compact }) => (
   <div className="relative shrink-0">
     <div className={`rounded-full overflow-hidden bg-[#6B8E23] flex items-center justify-center ${
       compact ? "w-14 h-14" : "w-[88px] h-[88px] sm:w-[96px] sm:h-[96px]"
@@ -334,10 +368,10 @@ const ProfileImage = ({ initials, name, online, image, compact }) => (
 
     </div>
 
-    <span
-      className={`absolute rounded-full border-2 border-white ${
-        compact ? "w-3 h-3 bottom-0 right-0" : "w-4 h-4 bottom-2 right-2"
-      } ${online ? "bg-[#6B8E23]" : "bg-[#828282]"}`}
+    <AvailabilityStatusDot
+      availability={availability}
+      compact={compact}
+      className={compact ? "bottom-0 right-0" : "bottom-2 right-2"}
     />
   </div>
 );

@@ -1,7 +1,36 @@
 import { useState, useEffect } from "react";
+import axiosInstance from "../utils/axiosInstance";
 import { getUser } from "../utils/tokenManager";
 import { getUserPosts } from "../services/postsApi";
 import { getConnections } from "../services/connectionsApi";
+import { fetchFullUserProfile } from "../services/fetchFullUserProfile";
+import { unwrapAuthProfileBody } from "../utils/profileUtils";
+
+async function resolveUserNickname(user) {
+  if (!user?.id) return user;
+
+  const existing = String(user.nickname ?? user.username ?? "").trim();
+  if (existing) return user;
+
+  try {
+    if (user.role === "recruiter") {
+      const { data } = await axiosInstance.get("/auth/user/profile");
+      const row = unwrapAuthProfileBody(data);
+      if (row?.nickname) {
+        return { ...user, nickname: row.nickname };
+      }
+    }
+
+    const full = await fetchFullUserProfile(user.id);
+    if (full?.user?.nickname) {
+      return { ...user, nickname: full.user.nickname };
+    }
+  } catch (err) {
+    console.error("Error resolving nickname:", err);
+  }
+
+  return user;
+}
 
 export default function useRecruitmentRightStats() {
   const [userData, setUserData] = useState(null);
@@ -13,6 +42,10 @@ export default function useRecruitmentRightStats() {
     if (!user) return;
 
     setUserData(user);
+
+    resolveUserNickname(user).then((enriched) => {
+      setUserData(enriched);
+    });
 
     getUserPosts(user.id, 100)
       .then((data) => {

@@ -47,7 +47,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
       },
       {
         name: "age",
-        label: "AGE (optional)",
+        label: "AGE",
         optional: true,
         type: "select",
         options: bioAges,
@@ -81,7 +81,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
       },
       {
         name: "tribe",
-        label: "TRIBE (optional)",
+        label: "TRIBE",
         type: "datalist",
         options: ["Yoruba", "Hausa", "Igbo", "Ibibio"],
         placeholder: "Enter or select your tribe",

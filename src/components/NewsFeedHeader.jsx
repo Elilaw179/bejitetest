@@ -470,7 +470,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
             onClick={() => navigate("/news-feed")}
             src="/assets/images/logo.png"
             alt="Logo"
-            className="h-10 md:h-14 lg:h-16 cursor-pointer"
+            className="h-10 cursor-pointer"
           />
           <FaList
             className="text-2xl text-[#333] block lg:hidden cursor-pointer"

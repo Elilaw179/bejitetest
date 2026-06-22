@@ -25,7 +25,7 @@ const Resume = () => {
         <img
           src="/assets/images/logo.png"
           alt="logo"
-          className="h-10 sm:h-12 md:h-14"
+          className="h-10"
         />
       </div>
 

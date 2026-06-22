@@ -1,7 +1,7 @@
 import { API_URL } from "../config";
 import { Eye, EyeOff } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, clearErrors } from "../features/auth/authSlice";
 import { toast } from "react-toastify";
@@ -162,18 +162,15 @@ function SignIn() {
       <div className="w-full lg:w-[70%] px-4 py-6 mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 lg:absolute lg:right-4 lg:left-4 lg:top-1/12 lg:transform lg:-translate-y-1/2 lg:z-10">
         <img src={bejiteLogoUrl} alt="Logo" className="h-10" />
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-3">
-          <h1 className="text-[#828282] text-base sm:text-xl font-medium text-center sm:text-left">
+          <h1 className="text-[#828282] text-base sm:text-base font-medium text-center sm:text-left">
             Don't have an account?
           </h1>
-          <button
-            className="bg-[#16730F] py-2 px-5 sm:py-3 sm:px-7 rounded-2xl shadow text-white cursor-pointer"
-            onClick={() => {
-              console.log("Navigating to signup page");
-              navigate("/signup");
-            }}
+          <Link
+            className="text-[#16730F] text-base sm:text-base font-medium text-center sm:text-left hover:underline"
+            to="/signup"
           >
             Register
-          </button>
+          </Link>
         </div>
       </div>
 

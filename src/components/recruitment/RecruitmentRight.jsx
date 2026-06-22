@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserProfileImage } from "../../utils/profileImageUtils";
-import { formatDisplayPersonName } from "../../utils/personDisplayName";
+import { formatDisplayPersonName, formatDisplayHandle } from "../../utils/personDisplayName";
 import useRecruitmentRightStats from "../../hooks/useRecruitmentRightStats";
 import { RECRUITMENT_RIGHT_LINKS } from "./recruitmentRightLinks";
 
@@ -12,9 +12,7 @@ function RecruitmentRight() {
   const displayName = userData
     ? formatDisplayPersonName(userData, "User")
     : "Osakwe Prisca";
-  const username = userData?.username
-    ? `@${userData.username}`
-    : "@nd_creations";
+  const username = formatDisplayHandle(userData);
 
   return (
     <div className="bg-[#F5F5F5] px-2 py-2 lg:h-full">
@@ -33,7 +31,9 @@ function RecruitmentRight() {
             </div>
             <div className="text-[#FFFFFF] text-center mt-[-40px]">
               <p className="text-[16px] font-bold">{displayName}</p>
-              <p className="text-[11px] font-bold">{username}</p>
+              {username && (
+                <p className="text-[11px] font-bold">{username}</p>
+              )}
             </div>
           </div>
           <div className="mt-6 px-1">

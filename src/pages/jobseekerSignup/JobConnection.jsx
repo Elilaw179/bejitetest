@@ -163,13 +163,13 @@ const JobConnection = () => {
   const isEnabled = addedUsers.length >= 10;
 
   return (
-    <div className="bg-white min-h-screen relative">
-      <div className="w-full px-4 py-6 flex justify-start items-center max-w-screen-xl mx-auto">
-        <img src="/assets/images/logo.png" alt="logo" className="h-12 sm:h-16" />
+    <div className="bg-white min-h-screen flex flex-col">
+      <div className="w-full px-4 py-6 flex justify-start items-center max-w-screen-xl mx-auto shrink-0">
+        <img src="/assets/images/logo.png" alt="logo" className="h-10" />
       </div>
 
-      <div className="flex flex-col items-center justify-start px-4 mx-auto w-full max-w-4xl pb-12">
-        <div className="w-full max-w-3xl text-center mb-10 mt-12">
+      <div className="flex flex-1 flex-col items-center justify-center w-full px-4 mx-auto max-w-4xl pb-12">
+        <div className="w-full max-w-3xl text-center mb-8">
           <p className="text-3xl sm:text-4xl md:text-5xl font-sarina font-semibold text-[#16730F]">
             Connect With Recruiters
           </p>

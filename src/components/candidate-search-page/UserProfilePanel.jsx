@@ -23,6 +23,7 @@ import {
   getFormattedEducationFields,
 } from "../../utils/displayFormatUtils";
 import { formatDisplayPersonName, formatDisplayRole } from "../../utils/personDisplayName";
+import AvailabilityStatusDot from "./AvailabilityStatusDot";
 import {
   getFormattedCandidateProfileFields,
   getFormattedWorkHistoryFields,
@@ -345,7 +346,6 @@ const ProfileHeader = ({ candidate, onOpenPhotoViewer }) => {
   const initials = `${candidate.first_name?.[0] || ""}${
     candidate.last_name?.[0] || ""
   }`;
-  const isAvailable = candidate.availability === "Available";
   const bioRow = Array.isArray(candidate.user_bio)
     ? candidate.user_bio[0]
     : candidate.user_bio;
@@ -364,22 +364,23 @@ const ProfileHeader = ({ candidate, onOpenPhotoViewer }) => {
         <div className="h-32"></div>
       </div>
       <div className="relative left-8 sm:left-20 bottom-15 sm:bottom-16">
-        <div className="relative rounded-full w-[80px] sm:w-[100px] h-[80px] sm:h-[100px] bg-[#6B8E23] flex items-center justify-center border-4 border-white overflow-hidden">
-          {profileImage ? (
-            <img 
-              src={profileImage} 
-              alt={`${candidate.first_name} ${candidate.last_name}`}
-              className="w-full h-full object-cover cursor-zoom-in"
-              onClick={onOpenPhotoViewer}
-            />
-          ) : (
-            <span className="text-white text-3xl font-bold">{initials}</span>
-          )}
-          <span
-            className={`absolute w-4 h-4 rounded-full border-2 border-white bottom-0 right-0 z-99 ${
-              isAvailable ? "bg-[#6B8E23]" : "bg-[#828282]"
-            }`}
-          ></span>
+        <div className="relative w-[80px] sm:w-[100px] h-[80px] sm:h-[100px]">
+          <div className="rounded-full w-full h-full bg-[#6B8E23] flex items-center justify-center border-4 border-white overflow-hidden">
+            {profileImage ? (
+              <img 
+                src={profileImage} 
+                alt={`${candidate.first_name} ${candidate.last_name}`}
+                className="w-full h-full object-cover cursor-zoom-in"
+                onClick={onOpenPhotoViewer}
+              />
+            ) : (
+              <span className="text-white text-3xl font-bold">{initials}</span>
+            )}
+          </div>
+          <AvailabilityStatusDot
+            availability={candidate.availability}
+            className="bottom-0 right-0"
+          />
         </div>
       </div>
     </div>
@@ -467,7 +468,7 @@ const ActionButtons = ({ onViewMainProfile, connectLabel, connectDisabled, handl
       onClick={handleConnectClick}
       disabled={connectDisabled}
     />
-    <Button icon="/assets/images/Send_Submit.svg" text="Reviews" />
+    {/* <Button icon="/assets/images/Send_Submit.svg" text="Reviews" /> */}
     <button 
       className="text-[#6B8E23] text-[12px] hover:underline"
       onClick={onViewMainProfile}

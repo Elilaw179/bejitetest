@@ -172,8 +172,8 @@ const EmployerOpt = () => {
     }, []);
 
     return (
-        <div className="bg-white min-h-screen flex flex-col items-center">
-            <div className="w-full px-4 py-6 flex items-center max-w-screen-xl">
+        <div className="bg-white min-h-screen flex flex-col">
+            <div className="w-full px-4 py-6 flex items-center max-w-screen-xl mx-auto shrink-0">
                 <img
                     src="/assets/images/logo.png"
                     alt="logo"
@@ -181,7 +181,7 @@ const EmployerOpt = () => {
                 />
             </div>
 
-            <div className="flex flex-col items-center justify-center w-full px-4 py-10 sm:py-20 mt-[5%]">
+            <div className="flex flex-1 flex-col items-center justify-center w-full px-4 py-10 relative z-10">
                 <h1 className="lg:text-5xl text-2xl text-[#16730F] font-[500] leading-relaxed font-norican">
                     As an Employer
                 </h1>
@@ -189,7 +189,7 @@ const EmployerOpt = () => {
                     Choose the account type that fits your hiring needs
                 </p>
 
-                <div className="lg:w-[50%] w-full px-4 mt-12 flex flex-wrap justify-center gap-6 py-10 bg-[#E0E0E01A] rounded-2xl border border-[#82828226]">
+                <div className="lg:w-[50%] w-full px-4 mt-8 sm:mt-12 flex flex-wrap justify-center gap-6 py-10 bg-[#E0E0E01A] rounded-2xl border border-[#82828226]">
                     <MemberCard
                         label="INDIVIDUAL"
                         iconSrc="/assets/images/user.svg"

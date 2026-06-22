@@ -33,3 +33,18 @@ export function formatDisplayRole(role, fallback = 'User') {
   if (role == null || !String(role).trim()) return fallback;
   return toTitleCaseWords(String(role).replace(/[_-]+/g, ' '));
 }
+
+/** Format @handle from nickname/username on a user object or raw string. */
+export function formatDisplayHandle(input, fallback = null) {
+  if (input == null) return fallback;
+
+  const raw =
+    typeof input === 'string'
+      ? input
+      : input.nickname ?? input.username ?? null;
+
+  const trimmed = String(raw ?? '').trim().replace(/^@+/, '');
+  if (!trimmed) return fallback;
+
+  return `@${trimmed}`;
+}

@@ -57,7 +57,7 @@ const JobConnection = () => {
   return (
     <div className="bg-white min-h-screen relative">
       <div className="w-full px-4 py-6 flex justify-start items-center max-w-screen-xl mx-auto">
-        <img src="/assets/images/logo.png" alt="logo" className="h-12 sm:h-16" />
+        <img src="/assets/images/logo.png" alt="logo" className="h-10" />
       </div>
 
       <div className="flex flex-col items-center justify-start px-4 mx-auto w-full max-w-4xl pb-12">
