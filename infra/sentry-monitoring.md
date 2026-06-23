@@ -40,22 +40,6 @@ Current contents:
 ```js
 import './sentry';
 
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import './index.css';
-import App from './App.jsx';
-import { Provider } from 'react-redux';
-import { store } from './store/store.js'; 
-
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
-  </StrictMode>
-);
-```
-
 Purpose:
 - Ensures Sentry initialization runs before React renders the app.
 - Keeps entry-point side-effect import separate from app logic.
@@ -84,9 +68,7 @@ Modified to integrate the Sentry Vite plugin and enable source maps.
 
 Current contents:
 ```js
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from "@tailwindcss/vite";
+
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 export default defineConfig({
@@ -121,13 +103,6 @@ Updated automatically by npm when installing the Sentry packages.
 Contains:
 - Added lock entries for `@sentry/react` and its dependency tree.
 - Ensures reproducible installs for the newly added packages.
-
-## Environment variable support
-
-This branch introduces environment-based DSN configuration through:
-- `import.meta.env.VITE_SENTRY_DSN`
-
-That means the Sentry DSN must be provided through Vite environment variables, typically by adding it to a `.env` file or the Vercel environment settings.
 
 ## Summary
 
