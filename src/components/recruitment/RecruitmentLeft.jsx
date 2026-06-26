@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
-import { FaArrowLeft, FaHome, FaUserPlus } from "react-icons/fa";
+import React, { useMemo, useState } from "react";
+import { FaHome, FaUserPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getUser } from "../../utils/tokenManager";
+import InviteFriendsModal from "../InviteFriendsModal";
 
 const navItems = [
   { icon: FaHome, label: "News Feed" },
@@ -14,6 +15,7 @@ const navItems = [
 
 export default function RecruitmentLeft() {
   const navigate = useNavigate();
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   // Get user from Redux store or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
@@ -77,12 +79,8 @@ export default function RecruitmentLeft() {
         {/* Invite Friends Button */}
         <div className="  p-2">
           <button
-            onClick={() => {
-              const message = encodeURIComponent(
-                "Hey! Join me on Bejite - the best platform for job seekers and recruiters! Sign up here: https://bejite.com",
-              );
-              window.open(`https://wa.me/?text=${message}`, "_blank");
-            }}
+            type="button"
+            onClick={() => setShowInviteModal(true)}
             className="flex items-center cursor-pointer space-x-3 w-full px-4 py-2 bg-[#15600b] hover:bg-[#0f4a08] rounded-lg transition-colors"
           >
             <FaUserPlus className="text-[#F5F5F5]" />
@@ -91,6 +89,11 @@ export default function RecruitmentLeft() {
             </span>
           </button>
         </div>
+        <InviteFriendsModal
+          isOpen={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          user={user}
+        />
         {(user?.role === "recruiter" || user?.role === "employer") && (
           <div className="bg-[#1A3E32] flex-1 rounded-b-2xl mt-4 flex flex-col items-center pt-8 pb-6 space-y-5">
             <button

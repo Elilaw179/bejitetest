@@ -323,6 +323,18 @@ export const recordImpression = async (postId) => {
   }
 };
 
+export const voteOnPoll = async (postId, optionId) => {
+  try {
+    const response = await axiosInstance.post(`${POSTS_API_URL}/${postId}/poll/vote`, {
+      optionId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error voting on poll:', error);
+    throw error;
+  }
+};
+
 // ============================================
 // COMMENT ENDPOINTS
 // ============================================

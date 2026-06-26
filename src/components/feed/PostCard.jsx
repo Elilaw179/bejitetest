@@ -18,6 +18,7 @@ import { getUserProfileImage, getProfileImageUrl } from "../../utils/profileImag
 import ConfirmModal from "../ConfirmModal";
 import SharePostModal from "../SharePostModal";
 import PostMediaGallery from "../PostMediaGallery";
+import PostPoll from "./PostPoll";
 import PostCommentsSection from "../PostCommentsSection";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import { getAuthorSubtitle } from "../../utils/authorDisplay";
@@ -309,6 +310,7 @@ const PostCard = ({
   onShare,
   onUpdate,
   onDelete,
+  onVotePoll,
   currentUserId,
 }) => {
   const isOwner = String(post.authorId) === String(currentUserId);
@@ -451,6 +453,15 @@ const PostCard = ({
       )}
       {post.media && post.media.length > 0 && (
         <PostMediaGallery media={post.media} />
+      )}
+      {post.poll && (
+        <PostPoll
+          poll={post.poll}
+          onVote={async (optionId) => {
+            if (!onVotePoll) return;
+            await onVotePoll(post.id, optionId);
+          }}
+        />
       )}
       <PostStats
         likesCount={post.likesCount || 0}

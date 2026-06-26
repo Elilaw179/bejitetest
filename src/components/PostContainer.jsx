@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaImage, FaVideo, FaPoll } from 'react-icons/fa';
-import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost } from '../services/postsApi';
+import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, voteOnPoll } from '../services/postsApi';
 import { recordPostShare } from '../utils/postShare';
 import { getUser } from '../utils/tokenManager';
 import { getUserProfileImage, getProfileImageUrl } from '../utils/profileImageUtils';
@@ -32,6 +32,7 @@ const PostContainer = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState('post');
   const user = getUser();
   const currentUserImage = getUserProfileImage();
 
@@ -129,6 +130,19 @@ const PostContainer = () => {
     }
   };
 
+  const handleVotePoll = async (postId, optionId) => {
+    const data = await voteOnPoll(postId, optionId);
+    if (data?.poll) {
+      patchPost(postId, { poll: data.poll });
+    }
+    return data;
+  };
+
+  const openCreateModal = (mode = 'post') => {
+    setModalMode(mode);
+    setShowModal(true);
+  };
+
   const handleDeletePost = async (postId) => {
     try {
       await deletePost(postId);
@@ -143,7 +157,7 @@ const PostContainer = () => {
     <div className="max-w-3xl m-auto px-4 py-6 bg-[#F5F5F5] mt-3">
       {/* Create Post Button */}
       <div className="max-w-3xl mx-auto rounded-2xl p-4 bg-[#ffffff]">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setShowModal(true)}>
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => openCreateModal('post')}>
           <img
             src={currentUserImage}
             alt="profile"
@@ -155,21 +169,21 @@ const PostContainer = () => {
         </div>
         <div className="flex items-center justify-around mt-3 pt-3 border-t border-gray-200">
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => openCreateModal('post')}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
             <FaImage className="text-[#16730F] text-lg" />
             <span className="text-sm">Image</span>
           </button>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => openCreateModal('post')}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
             <FaVideo className="text-[#16730F] text-lg" />
             <span className="text-sm">Video</span>
           </button>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => openCreateModal('poll')}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
             <FaPoll className="text-[#16730F] text-lg" />
@@ -197,6 +211,7 @@ const PostContainer = () => {
               onShare={handleShare}
               onUpdate={handleUpdatePost}
               onDelete={handleDeletePost}
+              onVotePoll={handleVotePoll}
             />
           ))}
           <FeedLoadMoreButton
@@ -208,7 +223,11 @@ const PostContainer = () => {
       )}
       <PostCreationModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setModalMode('post');
+        }}
+        initialMode={modalMode}
         onPost={async (postData) => {
           await createPost(postData);
           fetchFeed();

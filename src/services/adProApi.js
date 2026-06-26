@@ -69,6 +69,14 @@ export const deleteAdProCampaign = async (campaignId) => {
   return response.data;
 };
 
+export const trackAdCampaignEvent = async (campaignId, type) => {
+  const response = await axiosInstance.post(
+    `/api/adpro/campaigns/${campaignId}/events`,
+    { type },
+  );
+  return response.data;
+};
+
 export default {
   getAdProFeedAds,
   getAdProDashboard,
@@ -78,4 +86,5 @@ export default {
   createAdProCampaign,
   duplicateAdProCampaign,
   deleteAdProCampaign,
+  trackAdCampaignEvent,
 };

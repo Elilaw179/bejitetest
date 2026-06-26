@@ -24,6 +24,7 @@ import {
   getSavedPosts,
   getPostLikes,
   getPostShares,
+  voteOnPoll,
 } from "../../services/postsApi";
 import {
   copyPostLink,
@@ -47,10 +48,11 @@ import UsersListModal from "../UsersListModal";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import PostMediaGallery from "../PostMediaGallery";
+import PostPoll from "../feed/PostPoll";
 import FeedLoadMoreButton from "../FeedLoadMoreButton";
 import PostCommentsSection from "../PostCommentsSection";
 import AdCard from "../Ads/AdCard";
-import { getAdProFeedAds } from "../../services/adProApi";
+import { getAdProFeedAds, trackAdCampaignEvent } from "../../services/adProApi";
 
 const FEED_PAGE_SIZE = 20;
 
@@ -128,8 +130,29 @@ export default function RecruitmentMiddle() {
     }
   };
 
-  const handleAdInteraction = (type, adId) => {
-    console.log(`Ad ${adId} ${type}`);
+  const handleAdInteraction = async (type, adId) => {
+    try {
+      await trackAdCampaignEvent(adId, type);
+    } catch (err) {
+      console.error(`Failed to track ad ${adId} ${type}:`, err);
+    }
+  };
+
+  const handleVotePoll = async (postId, optionId) => {
+    const data = await voteOnPoll(postId, optionId);
+    if (data?.poll) {
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId ? { ...post, poll: data.poll } : post,
+        ),
+      );
+    }
+    return data;
+  };
+
+  const openCreateModal = (mode = "post") => {
+    setModalMode(mode);
+    setShowModal(true);
   };
 
   const handleDismissAd = (adId) => {
@@ -144,6 +167,7 @@ export default function RecruitmentMiddle() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState("post");
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -311,7 +335,7 @@ export default function RecruitmentMiddle() {
       <div className="max-w-3xl p-6 mx-auto bg-white shadow rounded-2xl">
         <div
           className="flex items-center gap-3 cursor-pointer"
-          onClick={() => setShowModal(true)}
+          onClick={() => openCreateModal("post")}
         >
           <img
             src={currentUserImage}
@@ -324,7 +348,7 @@ export default function RecruitmentMiddle() {
         </div>
         <div className="flex items-center justify-around mt-3 pt-3 border-t border-gray-200">
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => openCreateModal("post")}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
             <img
@@ -335,7 +359,7 @@ export default function RecruitmentMiddle() {
             <span className="text-sm">Image</span>
           </button>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => openCreateModal("post")}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
             <img
@@ -346,7 +370,7 @@ export default function RecruitmentMiddle() {
             <span className="text-sm">Video</span>
           </button>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => openCreateModal("poll")}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"
           >
             <img
@@ -401,6 +425,7 @@ export default function RecruitmentMiddle() {
                 onShare={handleShare}
                 onUpdate={handleUpdatePost}
                 onDelete={handleDeletePost}
+                onVotePoll={handleVotePoll}
               />
               {/* this is ads so is just dummy for now  */}
               {/* it will display after three posts u can use it */}
@@ -427,7 +452,11 @@ export default function RecruitmentMiddle() {
       )}
       <PostCreationModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setModalMode("post");
+        }}
+        initialMode={modalMode}
         onPost={async (postData) => {
           await createPost(postData);
           refreshPosts();
@@ -444,6 +473,7 @@ const RecruitmentPostCard = ({
   onShare,
   onUpdate,
   onDelete,
+  onVotePoll,
   currentUserId,
   currentUserPhotoUrl,
 }) => {
@@ -801,6 +831,16 @@ const RecruitmentPostCard = ({
 
       {post.media && post.media.length > 0 && (
         <PostMediaGallery media={post.media} />
+      )}
+
+      {post.poll && (
+        <PostPoll
+          poll={post.poll}
+          onVote={async (optionId) => {
+            if (!onVotePoll) return;
+            await onVotePoll(post.id, optionId);
+          }}
+        />
       )}
 
       {/* Post Stats — numbers with labels on desktop/tablet only */}

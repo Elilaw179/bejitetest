@@ -24,8 +24,18 @@ function formatScheduledLabel(dateStr, timeStr) {
   });
 }
 
-const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'public' }) => {
+const PostCreationModal = ({
+  isOpen,
+  onClose,
+  onPost,
+  initialVisibility = 'public',
+  initialMode = 'post',
+}) => {
+  const isPollMode = initialMode === 'poll';
   const [postBody, setPostBody] = useState('');
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState(['', '']);
+  const [pollDurationDays, setPollDurationDays] = useState(7);
   const [visibility, setVisibility] = useState(initialVisibility);
   const [mediaFiles, setMediaFiles] = useState([]);
   const [uploadingMedia, setUploadingMedia] = useState(false);
@@ -46,9 +56,12 @@ const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'publi
     setScheduleDate(defaults.date);
     setScheduleTime(defaults.time);
     setPostMode('now');
+    setPollQuestion('');
+    setPollOptions(['', '']);
+    setPollDurationDays(7);
     setError(null);
     setSuccess(null);
-  }, [isOpen]);
+  }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 
@@ -90,8 +103,33 @@ const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'publi
     return scheduled.toISOString();
   };
 
+  const updatePollOption = (index, value) => {
+    setPollOptions((prev) => prev.map((option, i) => (i === index ? value : option)));
+  };
+
+  const addPollOption = () => {
+    setPollOptions((prev) => (prev.length >= 4 ? prev : [...prev, '']));
+  };
+
+  const removePollOption = (index) => {
+    setPollOptions((prev) =>
+      prev.length <= 2 ? prev : prev.filter((_, i) => i !== index),
+    );
+  };
+
   const handlePost = async () => {
-    if (!postBody.trim() && mediaFiles.length === 0) {
+    if (isPollMode) {
+      const trimmedQuestion = pollQuestion.trim();
+      const trimmedOptions = pollOptions.map((option) => option.trim()).filter(Boolean);
+      if (!trimmedQuestion) {
+        setError('Please enter a poll question.');
+        return;
+      }
+      if (trimmedOptions.length < 2) {
+        setError('Please provide at least two poll options.');
+        return;
+      }
+    } else if (!postBody.trim() && mediaFiles.length === 0) {
       setError('Please write something or add media to your post.');
       return;
     }
@@ -104,8 +142,16 @@ const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'publi
       const payload = {
         body: postBody,
         visibility,
-        media: mediaFiles,
+        media: isPollMode ? [] : mediaFiles,
       };
+
+      if (isPollMode) {
+        payload.poll = {
+          question: pollQuestion.trim(),
+          options: pollOptions.map((option) => option.trim()).filter(Boolean),
+          durationDays: pollDurationDays,
+        };
+      }
 
       if (postMode === 'schedule') {
         payload.status = 'scheduled';
@@ -138,6 +184,9 @@ const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'publi
     const nextDefault = getDefaultSchedule();
     setPostBody('');
     setMediaFiles([]);
+    setPollQuestion('');
+    setPollOptions(['', '']);
+    setPollDurationDays(7);
     setError(null);
     setSuccess(null);
     setPostMode('now');
@@ -147,13 +196,17 @@ const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'publi
   };
 
   const isScheduleMode = postMode === 'schedule';
-  const canSubmit = postBody.trim() || mediaFiles.length > 0;
+  const canSubmit = isPollMode
+    ? pollQuestion.trim() && pollOptions.filter((option) => option.trim()).length >= 2
+    : postBody.trim() || mediaFiles.length > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg w-full max-w-xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold text-[#1A3E32]">Create Post</h2>
+          <h2 className="text-lg font-semibold text-[#1A3E32]">
+            {isPollMode ? 'Create Poll' : 'Create Post'}
+          </h2>
           <button
             onClick={handleClose}
             className="text-gray-500 hover:text-gray-700 p-2"
@@ -164,15 +217,97 @@ const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'publi
         </div>
 
         <div className="flex-1 overflow-y-auto nfl-scroll scroll-smooth p-4">
-          <textarea
-            value={postBody}
-            onChange={(e) => setPostBody(e.target.value)}
-            placeholder="What do you want to talk about?"
-            className="w-full min-h-[150px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#16730F] resize-none text-base"
-            autoFocus
-          />
+          {isPollMode ? (
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-[#1A3E32]">
+                  Poll question
+                </label>
+                <input
+                  type="text"
+                  value={pollQuestion}
+                  onChange={(e) => setPollQuestion(e.target.value)}
+                  placeholder="Ask something..."
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:outline-none focus:border-[#16730F]"
+                  autoFocus
+                />
+              </div>
 
-          {mediaFiles.length > 0 && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#1A3E32]">
+                  Options
+                </label>
+                {pollOptions.map((option, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={option}
+                      onChange={(e) => updatePollOption(index, e.target.value)}
+                      placeholder={`Option ${index + 1}`}
+                      className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#16730F]"
+                    />
+                    {pollOptions.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => removePollOption(index)}
+                        className="rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {pollOptions.length < 4 && (
+                  <button
+                    type="button"
+                    onClick={addPollOption}
+                    className="text-sm font-medium text-[#16730F] hover:underline"
+                  >
+                    + Add option
+                  </button>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-[#1A3E32]">
+                  Poll duration
+                </label>
+                <select
+                  value={pollDurationDays}
+                  onChange={(e) => setPollDurationDays(Number(e.target.value))}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#16730F] bg-white"
+                >
+                  <option value={1}>1 day</option>
+                  <option value={3}>3 days</option>
+                  <option value={7}>7 days</option>
+                  <option value={14}>14 days</option>
+                  <option value={30}>30 days</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-[#1A3E32]">
+                  Additional context (optional)
+                </label>
+                <textarea
+                  value={postBody}
+                  onChange={(e) => setPostBody(e.target.value)}
+                  placeholder="Add more details about your poll..."
+                  className="w-full min-h-[100px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#16730F] resize-none text-sm"
+                />
+              </div>
+            </div>
+          ) : (
+            <textarea
+              value={postBody}
+              onChange={(e) => setPostBody(e.target.value)}
+              placeholder="What do you want to talk about?"
+              className="w-full min-h-[150px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#16730F] resize-none text-base"
+              autoFocus
+            />
+          )}
+
+          {!isPollMode && mediaFiles.length > 0 && (
             <div className="mt-4">
               <div className="flex flex-wrap gap-2">
                 {mediaFiles.map((media, index) => (
@@ -277,44 +412,50 @@ const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'publi
         </div>
 
         <div className="p-4 border-t">
-          <div className="flex items-center gap-4 mb-4">
-            <button
-              type="button"
-              onClick={() => imageInputRef.current?.click()}
-              disabled={uploadingMedia}
-              className="flex items-center gap-2 text-[#16730F] hover:bg-gray-100 px-3 py-2 rounded-lg disabled:opacity-50"
-            >
-              <FaImage className="text-lg" />
-              <span className="text-sm">Add Image</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => videoInputRef.current?.click()}
-              disabled={uploadingMedia}
-              className="flex items-center gap-2 text-[#16730F] hover:bg-gray-100 px-3 py-2 rounded-lg disabled:opacity-50"
-            >
-              <FaVideo className="text-lg" />
-              <span className="text-sm">Add Video</span>
-            </button>
-            {uploadingMedia && (
-              <span className="text-sm text-gray-500">Uploading...</span>
-            )}
-          </div>
+          {!isPollMode && (
+            <div className="flex items-center gap-4 mb-4">
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={uploadingMedia}
+                className="flex items-center gap-2 text-[#16730F] hover:bg-gray-100 px-3 py-2 rounded-lg disabled:opacity-50"
+              >
+                <FaImage className="text-lg" />
+                <span className="text-sm">Add Image</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => videoInputRef.current?.click()}
+                disabled={uploadingMedia}
+                className="flex items-center gap-2 text-[#16730F] hover:bg-gray-100 px-3 py-2 rounded-lg disabled:opacity-50"
+              >
+                <FaVideo className="text-lg" />
+                <span className="text-sm">Add Video</span>
+              </button>
+              {uploadingMedia && (
+                <span className="text-sm text-gray-500">Uploading...</span>
+              )}
+            </div>
+          )}
 
-          <input
-            type="file"
-            ref={imageInputRef}
-            accept="image/*"
-            onChange={handleMediaSelect}
-            className="hidden"
-          />
-          <input
-            type="file"
-            ref={videoInputRef}
-            accept="video/*"
-            onChange={handleMediaSelect}
-            className="hidden"
-          />
+          {!isPollMode && (
+            <>
+              <input
+                type="file"
+                ref={imageInputRef}
+                accept="image/*"
+                onChange={handleMediaSelect}
+                className="hidden"
+              />
+              <input
+                type="file"
+                ref={videoInputRef}
+                accept="video/*"
+                onChange={handleMediaSelect}
+                className="hidden"
+              />
+            </>
+          )}
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -339,7 +480,9 @@ const PostCreationModal = ({ isOpen, onClose, onPost, initialVisibility = 'publi
                   : 'Posting...'
                 : isScheduleMode
                   ? 'Schedule post'
-                  : 'Post'}
+                  : isPollMode
+                    ? 'Post poll'
+                    : 'Post'}
             </button>
           </div>
         </div>

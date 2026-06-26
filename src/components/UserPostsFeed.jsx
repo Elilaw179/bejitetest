@@ -8,6 +8,7 @@ import {
   unsavePost,
   updatePost,
   deletePost,
+  voteOnPoll,
 } from "../services/postsApi";
 import { recordPostShare } from "../utils/postShare";
 import PostCard from "./feed/PostCard";
@@ -164,6 +165,14 @@ const UserPostsFeed = ({
     setPosts((prev) => prev.filter((post) => post.id !== postId));
   };
 
+  const handleVotePoll = async (postId, optionId) => {
+    const data = await voteOnPoll(postId, optionId);
+    if (data?.poll) {
+      patchPost(postId, { poll: data.poll });
+    }
+    return data;
+  };
+
   const visiblePosts = useMemo(() => {
     if (!isPreview) return posts;
     return posts.slice(0, previewLimit);
@@ -242,6 +251,7 @@ const UserPostsFeed = ({
               onShare={handleShare}
               onUpdate={handleUpdatePost}
               onDelete={handleDeletePost}
+              onVotePoll={handleVotePoll}
             />
           ))}
 
