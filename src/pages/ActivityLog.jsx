@@ -44,7 +44,7 @@ import { profileAvatarSrc } from "../utils/profilePhotoUrl";
 import { getAuthorProfileImageUrl } from "../utils/profileImageUtils";
 import ConfirmModal from "../components/ConfirmModal";
 import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
-import SharePostModal from "../components/SharePostModal";
+import PostActionIcon from "../components/feed/PostActionIcon";
 import UsersListModal from "../components/UsersListModal";
 import { formatDisplayPersonName } from "../utils/personDisplayName";
 import { getAuthorSubtitle } from "../utils/authorDisplay";
@@ -356,8 +356,8 @@ const ActivityLogPostCard = ({
       exit={{ opacity: 0, scale: 0.95 }}
       className="max-w-3xl p-4 sm:p-6 mx-auto space-y-4 sm:space-y-6 bg-white shadow-sm border border-gray-100 rounded-2xl mb-4"
     >
-      <div className="flex flex-col items-start justify-between gap-3 sm:gap-4 sm:flex-row">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-row items-start justify-between gap-3 w-full">
+        <div className="flex items-center gap-4 min-w-0 flex-1">
           <button
             type="button"
             onClick={goToAuthorProfile}
@@ -388,18 +388,18 @@ const ActivityLogPostCard = ({
           </div>
         </div>
         {isOwner && (
-          <div className="relative" ref={menuRef}>
+          <div className="relative shrink-0 self-start" ref={menuRef}>
             <button
               type="button"
               onClick={() => setShowMenu(!showMenu)}
-              className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              className="p-2 -mr-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
               aria-label="Post options"
               aria-expanded={showMenu}
             >
               <MoreHorizontal className="w-5 h-5" />
             </button>
             {showMenu && (
-              <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl py-2 w-32 border border-gray-100 z-10">
+              <div className="absolute right-0 mt-1 bg-white shadow-lg rounded-xl py-2 w-32 border border-[#D3D3D3] z-20">
                 <button
                   onClick={() => {
                     setShowMenu(false);
@@ -546,14 +546,14 @@ const ActivityLogPostCard = ({
                 : "text-gray-500 hover:text-red-500 hover:bg-red-50"
             }`}
           >
-            <Heart className={`w-5 h-5 ${liked ? "fill-current text-red-500" : ""}`} />
+            <PostActionIcon type="like" active={liked} />
             <span className="text-xs sm:text-sm font-medium">{liked ? "Liked" : "Like"}</span>
           </button>
           <button
             onClick={toggleComments}
             className="flex items-center justify-center sm:justify-start gap-2 py-1.5 px-3 rounded-lg text-gray-500 hover:text-[#16730F] hover:bg-green-50 transition-colors"
           >
-            <MessageCircle className="w-5 h-5" />
+            <PostActionIcon type="comment" />
             <span className="text-xs sm:text-sm font-medium">Comment</span>
           </button>
           <button
@@ -561,7 +561,7 @@ const ActivityLogPostCard = ({
             onClick={handleShareClick}
             className="flex items-center justify-center sm:justify-start gap-2 py-1.5 px-3 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
           >
-            <Share2 className="w-5 h-5" />
+            <PostActionIcon type="share" />
             <span className="text-xs sm:text-sm font-medium">Share</span>
           </button>
         </div>
@@ -573,7 +573,7 @@ const ActivityLogPostCard = ({
               : "text-gray-500 hover:text-[#16730F] hover:bg-green-50"
           }`}
         >
-          <Bookmark className={`w-5 h-5 ${saved ? "fill-current" : ""}`} />
+          <PostActionIcon type="save" active={saved} />
           <span className="text-xs sm:text-sm font-medium">{saved ? "Saved" : "Save"}</span>
         </button>
       </div>

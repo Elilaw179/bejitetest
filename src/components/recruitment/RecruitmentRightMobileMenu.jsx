@@ -57,9 +57,13 @@ export default function RecruitmentRightMobileMenu({ onNavigate }) {
             key={item.path}
             type="button"
             onClick={() => go(item.path)}
-            className="flex items-center gap-3 w-full px-2 py-2.5 rounded-lg text-[#1A3E32] hover:bg-gray-50 transition-colors text-left"
+            className="flex items-center gap-2 w-full px-2 py-2.5 rounded-lg text-[#1A3E32] hover:bg-gray-50 transition-colors text-left"
           >
-            <img src={item.icon} alt="" className="w-5 h-5 object-contain" />
+            <img
+              src={item.mobileIcon ?? item.icon}
+              alt=""
+              className="h-7 w-7 object-contain shrink-0"
+            />
             <span className="font-medium text-sm">{item.label}</span>
             {item.secondaryIcon && (
               <img

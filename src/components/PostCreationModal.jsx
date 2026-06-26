@@ -203,7 +203,7 @@ const PostCreationModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg w-full max-w-xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b border-[#A9A9A9]">
           <h2 className="text-lg font-semibold text-[#1A3E32]">
             {isPollMode ? 'Create Poll' : 'Create Post'}
           </h2>
@@ -338,64 +338,17 @@ const PostCreationModal = ({
           )}
 
           <div className="mt-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-              When to publish
-            </p>
-            <div className="inline-flex rounded-full border border-gray-200 p-1 bg-gray-50">
-              <button
-                type="button"
-                onClick={() => setPostMode('now')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  !isScheduleMode
-                    ? 'bg-[#16730F] text-white'
-                    : 'text-gray-600 hover:text-[#1A3E32]'
-                }`}
+            <div className="flex items-center gap-2">
+              <img src="/assets/images/public-icon.svg" alt="Public" className="w-4 h-4" />
+              <select
+                value={visibility}
+                onChange={(e) => setVisibility(e.target.value)}
+                className="text-sm rounded-md border border-gray-300 px-2 py-1 text-[#1A3E32] bg-white"
               >
-                Post now
-              </button>
-              <button
-                type="button"
-                onClick={() => setPostMode('schedule')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isScheduleMode
-                    ? 'bg-[#16730F] text-white'
-                    : 'text-gray-600 hover:text-[#1A3E32]'
-                }`}
-              >
-                <FaClock className="text-xs" />
-                Schedule
-              </button>
+                <option value="public">Public</option>
+                <option value="connections">Connections Only</option>
+              </select>
             </div>
-
-            {isScheduleMode && (
-              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="text-sm text-gray-600 mb-1 block">Date</span>
-                  <input
-                    type="date"
-                    value={scheduleDate}
-                    min={minDate}
-                    onChange={(e) => setScheduleDate(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#16730F]"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-sm text-gray-600 mb-1 block">Time</span>
-                  <input
-                    type="time"
-                    value={scheduleTime}
-                    onChange={(e) => setScheduleTime(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#16730F]"
-                  />
-                </label>
-                <p className="sm:col-span-2 text-xs text-gray-500">
-                  Will publish on{' '}
-                  <span className="font-medium text-[#1A3E32]">
-                    {formatScheduledLabel(scheduleDate, scheduleTime) || '—'}
-                  </span>
-                </p>
-              </div>
-            )}
           </div>
 
           {error && (
@@ -411,9 +364,9 @@ const PostCreationModal = ({
           )}
         </div>
 
-        <div className="p-4 border-t">
+        <div className="p-4 border-t border-[#A9A9A9]">
           {!isPollMode && (
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4">
               <button
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
@@ -457,22 +410,71 @@ const PostCreationModal = ({
             </>
           )}
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src="/assets/images/public-icon.svg" alt="Public" className="w-4 h-4" />
-              <select
-                value={visibility}
-                onChange={(e) => setVisibility(e.target.value)}
-                className="text-sm rounded-md border border-gray-300 px-2 py-1 text-[#1A3E32] bg-white"
-              >
-                <option value="public">Public</option>
-                <option value="connections">Connections Only</option>
-              </select>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="w-full sm:min-w-0 sm:flex-1">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                When to publish
+              </p>
+              <div className="flex w-full sm:w-auto rounded-full border border-gray-200 p-1 bg-gray-50">
+                <button
+                  type="button"
+                  onClick={() => setPostMode('now')}
+                  className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                    !isScheduleMode
+                      ? 'bg-[#16730F] text-white'
+                      : 'text-gray-600 hover:text-[#1A3E32]'
+                  }`}
+                >
+                  Post now
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPostMode('schedule')}
+                  className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
+                    isScheduleMode
+                      ? 'bg-[#16730F] text-white'
+                      : 'text-gray-600 hover:text-[#1A3E32]'
+                  }`}
+                >
+                  <FaClock className="text-xs shrink-0" />
+                  Schedule
+                </button>
+              </div>
+
+              {isScheduleMode && (
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className="block">
+                    <span className="text-sm text-gray-600 mb-1 block">Date</span>
+                    <input
+                      type="date"
+                      value={scheduleDate}
+                      min={minDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#16730F]"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm text-gray-600 mb-1 block">Time</span>
+                    <input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#16730F]"
+                    />
+                  </label>
+                  <p className="sm:col-span-2 text-xs text-gray-500">
+                    Will publish on{' '}
+                    <span className="font-medium text-[#1A3E32]">
+                      {formatScheduledLabel(scheduleDate, scheduleTime) || '—'}
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
             <button
               onClick={handlePost}
               disabled={submitting || !canSubmit}
-              className="bg-[#16730F] text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-[#145a0c] disabled:opacity-50 transition-colors"
+              className="w-full sm:w-auto bg-[#16730F] text-white px-6 py-2.5 sm:py-2 rounded-full text-sm font-medium hover:bg-[#145a0c] disabled:opacity-50 transition-colors shrink-0"
             >
               {submitting
                 ? isScheduleMode

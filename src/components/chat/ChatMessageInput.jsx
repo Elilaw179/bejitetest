@@ -149,7 +149,7 @@ function ChatMessageInput({
         <p className="text-gray-500 text-xs mb-2 px-1">Uploading attachment…</p>
       )}
 
-      <div className="flex flex-col gap-1 md:gap-2 border border-gray-300 rounded-2xl px-3 md:px-4 py-2 md:py-3 bg-gray-100 shadow-sm">
+      <div className="flex flex-col gap-1 md:gap-2 border border-[#D3D3D3] rounded-2xl px-3 md:px-4 py-2 md:py-3 bg-gray-100 shadow-sm">
         <input
           type="text"
           value={message}

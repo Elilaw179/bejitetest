@@ -281,7 +281,7 @@ const ASEPricingPage = () => {
             )}
 
             {/* Currency Toggle */}
-            <div className="px-6 py-4 border-b bg-gray-50">
+            <div className="px-6 py-4 border-b border-[#D3D3D3] bg-gray-50">
               <div className="flex items-center justify-center gap-4">
                 <span
                   className={`text-sm font-medium ${currency === "USD" ? "text-[#1A3E32]" : "text-gray-400"}`}
@@ -323,7 +323,7 @@ const ASEPricingPage = () => {
                         ? "border-[#16730F] bg-green-50"
                         : plan.id === "jumbo"
                           ? "border-[#1A3E32] bg-[#1A3E32]/5"
-                          : "border-gray-200 hover:border-[#1A3E32]"
+                          : "border-[#D3D3D3] hover:border-[#1A3E32]"
                     }`}
                   >
                     {plan.id === "premium" && (
@@ -446,7 +446,7 @@ const ASEPricingPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b">
+                    <tr className="border-b border-[#D3D3D3]">
                       <td className="py-3 text-gray-600">
                         Candidates per search
                       </td>
@@ -456,13 +456,13 @@ const ASEPricingPage = () => {
                         30
                       </td>
                     </tr>
-                    <tr className="border-b">
+                    <tr className="border-b border-[#D3D3D3]">
                       <td className="py-3 text-gray-600">Payment type</td>
                       <td className="py-3 text-center">One-time</td>
                       <td className="py-3 text-center">Monthly</td>
                       <td className="py-3 text-center">Monthly</td>
                     </tr>
-                    <tr className="border-b">
+                    <tr className="border-b border-[#D3D3D3]">
                       <td className="py-3 text-gray-600">
                         Save card for future
                       </td>

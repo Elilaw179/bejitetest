@@ -267,7 +267,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
                     {senderName}
                   </div>
                 )}
-                <div className={`p-2 md:p-3 rounded-2xl shadow-sm ${isOwnMessage ? 'bg-green-500 text-white ml-8 md:ml-16 rounded-r-none' : 'bg-white text-gray-900 mr-8 md:mr-16 rounded-l-none border'}`}>
+                <div className={`p-2 md:p-3 rounded-2xl shadow-sm ${isOwnMessage ? 'bg-green-500 text-white ml-8 md:ml-16 rounded-r-none' : 'bg-white text-gray-900 mr-8 md:mr-16 rounded-l-none border border-[#D3D3D3]'}`}>
                   {msg.image_url && (
                     <MessageAttachment url={msg.image_url} caption={msg.content} />
                   )}

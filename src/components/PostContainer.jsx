@@ -167,7 +167,7 @@ const PostContainer = () => {
             Start a post
           </div>
         </div>
-        <div className="flex items-center justify-around mt-3 pt-3 border-t border-gray-200">
+        <div className="flex items-center justify-around mt-3 pt-3 border-t border-[#D3D3D3]">
           <button
             onClick={() => openCreateModal('post')}
             className="flex items-center gap-2 text-[#1A3E32] hover:bg-gray-100 px-4 py-2 rounded-lg"

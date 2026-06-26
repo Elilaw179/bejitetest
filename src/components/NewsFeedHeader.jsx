@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
-  FaHome,
   FaList,
   FaSearch,
   FaChevronDown,
@@ -35,12 +34,14 @@ import {
 import { formatDisplayText } from "../utils/displayFormatUtils";
 import { filterAdminUsersFromSearch, filterAdminSearchResults } from "../utils/filterAdminUsers";
 import RecruitmentRightMobileMenu from "./recruitment/RecruitmentRightMobileMenu";
+import InviteFriendsModal from "./InviteFriendsModal";
 
 const NewsFeedHeader = ({ user: propUser }) => {
   useSyncProfilePhoto();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
@@ -438,6 +439,64 @@ const NewsFeedHeader = ({ user: propUser }) => {
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
+  const getNavIconSrc = (name) => {
+    if (name === "home-icon") return "/assets/images/home-nav.svg";
+    if (name === "invite-friends") return "/assets/images/invite-friends-nav.svg";
+    if (name === "adpro") return "/assets/images/adpro-nav.svg";
+    return `/assets/images/${name}.svg`;
+  };
+
+  const renderNavIcon = (name, { onClick, compact = false } = {}) => (
+    <div
+      className={`relative flex h-7 w-7 lg:h-8 lg:w-8 shrink-0 items-center justify-center rounded-full ${
+        isIconActive(name) ? "bg-[#1A3E32]/10" : ""
+      } ${onClick ? "cursor-pointer" : ""}`}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
+      <img
+        src={getNavIconSrc(name)}
+        alt=""
+        className="h-7 w-7 lg:h-8 lg:w-8 object-contain"
+      />
+      {name === "notifications" && notificationCount > 0 && (
+        <span className={countBadgeClass(notificationCount, compact)}>
+          {formatNavCount(notificationCount, compact)}
+        </span>
+      )}
+      {name === "CHAT" && unreadMessageCount > 0 && (
+        <span
+          className={`${countBadgeClass(unreadMessageCount, compact)} animate-pulse`}
+        >
+          {formatNavCount(unreadMessageCount, compact)}
+        </span>
+      )}
+      {name === "connection" && connectionRequestCount > 0 && (
+        <span className={countBadgeClass(connectionRequestCount, compact)}>
+          {formatNavCount(connectionRequestCount, compact)}
+        </span>
+      )}
+    </div>
+  );
+
+  const getNavLabel = (name) => {
+    if (name === "home-icon") return "News Feed";
+    if (name === "invite-friends") return "Invite Friends";
+    if (name === "adpro") return "AdPro";
+    return name.toLowerCase();
+  };
+
   const formatNavCount = (count, compact = false) => {
     if (count > 99) return "99+";
     if (compact && count > 9) return "9+";
@@ -547,52 +606,10 @@ const NewsFeedHeader = ({ user: propUser }) => {
         <div className="hidden lg:flex gap-3 md:gap-4 items-center">
           {menuItems.map((name, i) => (
             <div key={i} className="relative flex items-center gap-1">
-              {name === "home-icon" ? (
-                <FaHome
-                  className={`text-2xl md:text-3xl cursor-pointer transition-opacity ${
-                    isIconActive(name)
-                      ? "text-[#0f4e0a]"
-                      : "text-[#16730F] hover:opacity-80"
-                  }`}
-                  onClick={() => handleIconClick(name)}
-                />
-              ) : (
-                <div
-                  className={`relative rounded-full p-1.5 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}
-                >
-                  <img
-                    src={`/assets/images/${name}.svg`}
-                    alt={name}
-                    className={`h-6 md:h-8 cursor-pointer transition-opacity ${
-                      isIconActive(name) ? "opacity-100" : "hover:opacity-80"
-                    }`}
-                    onClick={() => handleIconClick(name)}
-                  />
-                  {name === "notifications" && notificationCount > 0 && (
-                    <span className={countBadgeClass(notificationCount)}>
-                      {formatNavCount(notificationCount)}
-                    </span>
-                  )}
-                  {name === "CHAT" && unreadMessageCount > 0 && (
-                    <span
-                      className={`${countBadgeClass(unreadMessageCount)} animate-pulse`}
-                    >
-                      {formatNavCount(unreadMessageCount)}
-                    </span>
-                  )}
-                  {name === "connection" && connectionRequestCount > 0 && (
-                    <span className={countBadgeClass(connectionRequestCount)}>
-                      {formatNavCount(connectionRequestCount)}
-                    </span>
-                  )}
-                </div>
-              )}
+              {renderNavIcon(name, { onClick: () => handleIconClick(name) })}
               {isIconActive(name) && (
                 <span className="px-3 py-1.5 text-xs bg-[#1A3E32] rounded-r-2xl text-white font-medium whitespace-nowrap">
-                  {name === "home-icon"
-                    ? "News Feed"
-                    : name.charAt(0).toUpperCase() +
-                      name.slice(1).toLowerCase()}
+                  {getNavLabel(name)}
                 </span>
               )}
             </div>
@@ -796,73 +813,35 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       setIsSidebarOpen(false);
                     }}
                   >
-                    {name === "home-icon" ? (
-                      <FaHome
-                        className={
-                          isIconActive(name) ? "text-[#0f4e0a]" : "text-[#16730F]"
-                        }
-                      />
-                    ) : (
-                      <div
-                        className={`relative rounded-full p-1.5 ${isIconActive(name) ? "bg-[#1A3E32]/10" : ""}`}
-                      >
-                        <img
-                          src={`/assets/images/${name}.svg`}
-                          alt={name}
-                          className="h-5"
-                        />
-                        {name === "notifications" && notificationCount > 0 && (
-                          <span
-                            className={countBadgeClass(notificationCount, true)}
-                          >
-                            {formatNavCount(notificationCount, true)}
-                          </span>
-                        )}
-                        {name === "CHAT" && unreadMessageCount > 0 && (
-                          <span
-                            className={`${countBadgeClass(unreadMessageCount, true)} animate-pulse`}
-                          >
-                            {formatNavCount(unreadMessageCount, true)}
-                          </span>
-                        )}
-                        {name === "connection" && connectionRequestCount > 0 && (
-                          <span
-                            className={countBadgeClass(
-                              connectionRequestCount,
-                              true,
-                            )}
-                          >
-                            {formatNavCount(connectionRequestCount, true)}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    {renderNavIcon(name, { compact: true })}
                     <span
                       className={`font-medium capitalize text-sm ${isIconActive(name) ? "text-[#0f4e0a]" : "text-[#1A3E32]"}`}
                     >
-                      {name === "home-icon" ? "News Feed" : name.toLowerCase()}
+                      {getNavLabel(name)}
                     </span>
                   </div>
                 ))}
+                <div
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => {
+                    setShowInviteModal(true);
+                    setIsSidebarOpen(false);
+                  }}
+                >
+                  {renderNavIcon("invite-friends", { compact: true })}
+                  <span className="font-medium text-sm text-[#1A3E32]">
+                    Invite Friends
+                  </span>
+                </div>
                 {isRecruiterOrEmployer && (
                   <div
-                    className="flex items-center gap-2 cursor-pointer pt-2 mt-2 border-t border-gray-100"
+                    className="flex items-center gap-2 cursor-pointer"
                     onClick={() => {
                       navigate("/adpro");
                       setIsSidebarOpen(false);
                     }}
                   >
-                    <div
-                      className={`relative rounded-full p-1.5 ${isIconActive("adpro") ? "bg-[#1A3E32]/10" : ""}`}
-                    >
-                      <FaBullhorn
-                        className={
-                          isIconActive("adpro")
-                            ? "text-[#0f4e0a]"
-                            : "text-[#16730F]"
-                        }
-                      />
-                    </div>
+                    {renderNavIcon("adpro", { compact: true })}
                     <span
                       className={`font-medium text-sm ${isIconActive("adpro") ? "text-[#0f4e0a]" : "text-[#1A3E32]"}`}
                     >
@@ -879,6 +858,11 @@ const NewsFeedHeader = ({ user: propUser }) => {
           </div>
         </>
       )}
+      <InviteFriendsModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        user={user}
+      />
     </header>
   );
 };

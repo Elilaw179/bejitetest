@@ -1,12 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FaBookmark,
-  FaComment,
   FaEllipsisH,
-  FaHeart,
-  FaShare,
 } from "react-icons/fa";
+import PostActions from "./PostActions";
 import { getComments } from "../../services/postsApi";
 import {
   copyPostLink,
@@ -96,8 +93,8 @@ const PostHeader = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 sm:items-center">
-      <div className="flex items-center gap-4">
+    <div className="flex flex-row items-start justify-between gap-3 w-full">
+      <div className="flex items-center gap-4 min-w-0 flex-1">
         <button
           type="button"
           onClick={goToAuthorProfile}
@@ -126,18 +123,18 @@ const PostHeader = ({
         </div>
       </div>
       {isOwner && (
-        <div className="relative" ref={menuRef}>
+        <div className="relative shrink-0 self-start" ref={menuRef}>
           <button
             type="button"
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            className="p-2 -mr-1 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             aria-label="Post options"
             aria-expanded={showMenu}
           >
-            <FaEllipsisH />
+            <FaEllipsisH className="text-base" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg py-2 w-32 border z-10">
+            <div className="absolute right-0 mt-1 bg-white shadow-lg rounded-lg py-2 w-32 border border-[#D3D3D3] z-20">
               <button
                 onClick={() => {
                   setShowMenu(false);
@@ -243,62 +240,6 @@ const PostStats = ({ likesCount, commentsCount, sharesCount }) => {
           {sharesCount} share{sharesCount > 1 ? "s" : ""}
         </span>
       )}
-    </div>
-  );
-};
-
-const PostActions = ({
-  liked,
-  saved,
-  likesCount,
-  commentsCount,
-  sharesCount,
-  onLike,
-  onComment,
-  onShare,
-  onSave,
-}) => {
-  return (
-    <div className="flex flex-row justify-start items-center gap-4 sm:gap-6 border-t pt-4">
-      <button
-        onClick={onLike}
-        className={`flex items-center justify-center gap-1.5 p-0 ${liked ? "text-red-500" : "text-gray-600 hover:text-red-500"}`}
-        aria-label={liked ? "Unlike" : "Like"}
-      >
-        <FaHeart className={liked ? "fill-current text-red-500" : ""} />
-        <span className="text-xs tabular-nums sm:hidden">{likesCount}</span>
-        <span className="hidden sm:inline text-xs sm:text-sm">
-          {liked ? "Liked" : "Like"}
-        </span>
-      </button>
-      <button
-        onClick={onComment}
-        className="flex items-center justify-center gap-1.5 p-0 text-gray-600 hover:text-[#16730F]"
-        aria-label="Comment"
-      >
-        <FaComment />
-        <span className="text-xs tabular-nums sm:hidden">{commentsCount}</span>
-        <span className="hidden sm:inline text-xs sm:text-sm">Comment</span>
-      </button>
-      <button
-        onClick={onShare}
-        className="flex items-center justify-center gap-1.5 p-0 text-gray-600 hover:text-[#16730F]"
-        aria-label="Share"
-      >
-        <FaShare />
-        <span className="text-xs tabular-nums sm:hidden">{sharesCount}</span>
-        <span className="hidden sm:inline text-xs sm:text-sm">Share</span>
-      </button>
-      <button
-        onClick={onSave}
-        className={`flex items-center justify-center gap-2 p-0 ${saved ? "text-[#16730F]" : "text-gray-600 hover:text-[#16730F]"}`}
-        aria-label={saved ? "Unsave post" : "Save post"}
-      >
-        <FaBookmark className={saved ? "fill-current" : ""} />
-        <span className="hidden sm:inline text-xs sm:text-sm">
-          {saved ? "Saved" : "Save"}
-        </span>
-      </button>
     </div>
   );
 };

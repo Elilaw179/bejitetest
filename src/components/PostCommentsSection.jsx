@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaHeart, FaTrash } from "react-icons/fa";
+import PostActionIcon from "./feed/PostActionIcon";
 import {
   addComment,
   deleteComment,
@@ -81,7 +81,7 @@ function CommentItem({
             src={authorImage}
             alt=""
             className={`rounded-full object-cover ${
-              isReply ? "w-7 h-7 mt-0.5" : "w-8 h-8"
+              isReply ? "w-6 h-6 sm:w-7 sm:h-7 mt-0.5" : "w-7 h-7 sm:w-8 sm:h-8"
             } ${comment.authorId ? "cursor-pointer hover:opacity-90" : ""}`}
           />
         </button>
@@ -121,19 +121,21 @@ function CommentItem({
             </p>
           </div>
 
-          <div className="flex flex-row justify-start items-center gap-4 sm:gap-3 mt-1 px-1">
+          <div className="flex flex-row justify-start items-center gap-3 sm:gap-3 mt-1 px-1">
             <button
               type="button"
               onClick={() => onLike(comment)}
-              className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1 sm:gap-1.5 text-xs font-medium transition-colors ${
                 comment.likedByMe
                   ? "text-red-500"
                   : "text-gray-500 hover:text-red-500"
               }`}
               aria-label={comment.likedByMe ? "Unlike comment" : "Like comment"}
             >
-              <FaHeart
-                className={comment.likedByMe ? "fill-current text-red-500" : ""}
+              <PostActionIcon
+                type="like"
+                active={comment.likedByMe}
+                compact
               />
               <span className="text-xs tabular-nums sm:hidden">
                 {comment.likesCount || 0}
@@ -160,14 +162,18 @@ function CommentItem({
                 type="button"
                 onClick={() => onDelete(comment)}
                 disabled={deletingCommentId === comment.id}
-                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1 sm:gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
                 aria-label={
                   deletingCommentId === comment.id
                     ? "Deleting comment"
                     : "Delete comment"
                 }
               >
-                <FaTrash />
+                <PostActionIcon
+                  type="delete"
+                  compact
+                  active={deletingCommentId === comment.id}
+                />
                 <span className="hidden sm:inline">
                   {deletingCommentId === comment.id ? "Deleting..." : "Delete"}
                 </span>
@@ -183,14 +189,14 @@ function CommentItem({
               <img
                 src={currentUserPhotoUrl}
                 alt=""
-                className="w-7 h-7 rounded-full object-cover shrink-0"
+                className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover shrink-0"
               />
               <input
                 type="text"
                 placeholder={`Reply to ${getDisplayName(comment.author)}...`}
                 value={replyText}
                 onChange={(e) => onReplyTextChange(e.target.value)}
-                className="flex-1 min-w-[140px] border rounded-full px-3 py-1.5 text-sm focus:outline-none focus:border-[#16730F]"
+                className="flex-1 min-w-[120px] sm:min-w-[140px] border border-[#D3D3D3] rounded-full px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:border-[#16730F]"
                 autoFocus
               />
               <button
@@ -357,7 +363,7 @@ export default function PostCommentsSection({
   };
 
   return (
-    <div className="border-t pt-4 mt-4">
+    <div className="border-t border-[#A9A9A9] pt-4 mt-4">
       <form
         onSubmit={handleAddComment}
         className="flex flex-wrap sm:flex-nowrap gap-2 mb-4 items-center"
@@ -366,7 +372,7 @@ export default function PostCommentsSection({
           <img
             src={currentUserPhotoUrl}
             alt="Your profile"
-            className="w-8 h-8 rounded-full object-cover shrink-0"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shrink-0"
           />
         )}
         <input
@@ -374,7 +380,7 @@ export default function PostCommentsSection({
           placeholder="Write a comment..."
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          className="flex-1 min-w-[180px] border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#16730F]"
+          className="flex-1 min-w-[180px] border border-[#D3D3D3] rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#16730F]"
         />
         <button
           type="submit"
