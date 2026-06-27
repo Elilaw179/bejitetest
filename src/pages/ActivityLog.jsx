@@ -43,6 +43,7 @@ import {
 import { profileAvatarSrc } from "../utils/profilePhotoUrl";
 import { getAuthorProfileImageUrl } from "../utils/profileImageUtils";
 import ConfirmModal from "../components/ConfirmModal";
+import SharePostModal from "../components/SharePostModal";
 import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
 import PostActionIcon from "../components/feed/PostActionIcon";
 import UsersListModal from "../components/UsersListModal";
@@ -1012,7 +1013,7 @@ export default function ActivityLog() {
                   <div className={`w-8 h-8 rounded-lg ${stat.color} flex items-center justify-center mb-3`}>
                     <stat.icon className="w-4 h-4" />
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-gray-900">{(Number(stat.value) || 0).toLocaleString()}</p>
                   <p className="text-xs text-gray-500 mt-1 font-medium">{stat.label}</p>
                 </div>
               ))}

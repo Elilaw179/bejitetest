@@ -24,7 +24,7 @@ export default function NewsFeedLayout({
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F5F5]">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-[#F5F5F5] border-b border-[#D3D3D3]">
+      <div className="sticky top-0 z-50 bg-[#F5F5F5] border-b border-[#A9A9A9]">
         <NewsFeedHeader />
       </div>
 

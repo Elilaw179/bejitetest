@@ -84,7 +84,7 @@ const InviteFriendsModal = ({ isOpen, onClose, user }) => {
         className="w-full max-w-md rounded-2xl bg-white shadow-xl share-sheet-enter max-h-full sm:max-h-[min(90vh,calc(100vh-4rem))] overflow-y-auto nfl-scroll scroll-smooth"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[#D9D9D9] px-5 py-4">
           <h3 className="text-lg font-semibold text-[#1A3E32]">Invite Friends</h3>
           <button
             type="button"
@@ -106,7 +106,7 @@ const InviteFriendsModal = ({ isOpen, onClose, user }) => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={4}
-              className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm text-[#1A3E32] outline-none focus:ring-2 focus:ring-green-300"
+              className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-[#1A3E32] outline-none focus:border-[#16730F]"
               placeholder="Write a personal invite message..."
             />
           </div>
@@ -124,7 +124,7 @@ const InviteFriendsModal = ({ isOpen, onClose, user }) => {
                   key={id}
                   type="button"
                   onClick={() => handleShare(id)}
-                  className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#16730F] hover:bg-[#F5F9F4]"
+                  className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-300 p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#16730F] hover:bg-[#F5F9F4]"
                 >
                   <span className={`flex h-11 w-11 items-center justify-center rounded-full ${bg}`}>
                     {React.createElement(icon, { className: `text-xl ${color}` })}

@@ -34,7 +34,7 @@ const SharePostModal = ({ isOpen, onClose, onShare }) => {
         <div className="pt-3 sm:hidden">
           <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-300" />
         </div>
-        <div className="flex items-center justify-between border-b px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[#D9D9D9] px-5 py-4">
           <h3 className="text-lg font-semibold text-[#1A3E32]">Share post</h3>
           <button
             type="button"
@@ -56,7 +56,7 @@ const SharePostModal = ({ isOpen, onClose, onShare }) => {
               key={id}
               type="button"
               onClick={() => onShare(id)}
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#16730F] hover:bg-[#F5F9F4]"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-300 p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#16730F] hover:bg-[#F5F9F4]"
             >
               <span className={`flex h-11 w-11 items-center justify-center rounded-full ${bg}`}>
                 {React.createElement(icon, { className: `text-xl ${color}` })}
