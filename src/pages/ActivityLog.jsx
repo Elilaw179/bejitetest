@@ -45,7 +45,7 @@ import { getAuthorProfileImageUrl } from "../utils/profileImageUtils";
 import ConfirmModal from "../components/ConfirmModal";
 import SharePostModal from "../components/SharePostModal";
 import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
-import PostActionIcon from "../components/feed/PostActionIcon";
+import PostActions from "../components/feed/PostActions";
 import UsersListModal from "../components/UsersListModal";
 import { formatDisplayPersonName } from "../utils/personDisplayName";
 import { getAuthorSubtitle } from "../utils/authorDisplay";
@@ -537,47 +537,17 @@ const ActivityLogPostCard = ({
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 border-t border-gray-100 pt-4">
-        <div className="grid grid-cols-3 w-full sm:w-auto gap-3 sm:flex sm:gap-6">
-          <button
-            onClick={handleLikeClick}
-            className={`flex items-center justify-center sm:justify-start gap-2 py-1.5 px-3 rounded-lg transition-colors ${
-              liked 
-                ? "text-red-500 bg-red-50" 
-                : "text-gray-500 hover:text-red-500 hover:bg-red-50"
-            }`}
-          >
-            <PostActionIcon type="like" active={liked} />
-            <span className="text-xs sm:text-sm font-medium">{liked ? "Liked" : "Like"}</span>
-          </button>
-          <button
-            onClick={toggleComments}
-            className="flex items-center justify-center sm:justify-start gap-2 py-1.5 px-3 rounded-lg text-gray-500 hover:text-[#16730F] hover:bg-green-50 transition-colors"
-          >
-            <PostActionIcon type="comment" />
-            <span className="text-xs sm:text-sm font-medium">Comment</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleShareClick}
-            className="flex items-center justify-center sm:justify-start gap-2 py-1.5 px-3 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-          >
-            <PostActionIcon type="share" />
-            <span className="text-xs sm:text-sm font-medium">Share</span>
-          </button>
-        </div>
-        <button
-          onClick={handleSaveClick}
-          className={`flex items-center justify-center sm:justify-start gap-2 py-1.5 px-3 rounded-lg w-full sm:w-auto transition-colors ${
-            saved 
-              ? "text-[#16730F] bg-green-50" 
-              : "text-gray-500 hover:text-[#16730F] hover:bg-green-50"
-          }`}
-        >
-          <PostActionIcon type="save" active={saved} />
-          <span className="text-xs sm:text-sm font-medium">{saved ? "Saved" : "Save"}</span>
-        </button>
-      </div>
+      <PostActions
+        liked={liked}
+        saved={saved}
+        likesCount={post.likesCount || 0}
+        commentsCount={post.commentsCount || 0}
+        sharesCount={post.sharesCount || 0}
+        onLike={handleLikeClick}
+        onComment={toggleComments}
+        onShare={handleShareClick}
+        onSave={handleSaveClick}
+      />
 
       <SharePostModal
         isOpen={showShareModal}
