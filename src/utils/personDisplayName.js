@@ -46,5 +46,7 @@ export function formatDisplayHandle(input, fallback = null) {
   const trimmed = String(raw ?? '').trim().replace(/^@+/, '');
   if (!trimmed) return fallback;
 
-  return `@${trimmed}`;
+  const handle = trimmed.toLowerCase().replace(/\s+/g, '_');
+
+  return `@${handle}`;
 }

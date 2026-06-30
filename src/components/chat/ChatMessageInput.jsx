@@ -136,7 +136,7 @@ function ChatMessageInput({
   const busy = sending || uploading || disabled;
 
   return (
-    <div className="shrink-0 p-2 md:p-4 bg-gray-100">
+    <div className="shrink-0 z-20 p-2 md:p-4 bg-gray-100 border-t border-gray-200 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       {recordError && (
         <p className="text-red-500 text-xs mb-2 px-1">{recordError}</p>
       )}

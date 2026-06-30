@@ -22,15 +22,19 @@ export default function NewsFeedLayout({
   classes = `overflow-y-auto overflow-x-hidden max-h-[calc(100vh-72px)] nfl-scroll scroll-smooth`
 }) {
   return (
-    <div className="flex flex-col min-h-screen bg-[#F5F5F5]">
+    <div
+      className={`flex flex-col bg-[#F5F5F5] ${
+        scrollable ? "min-h-screen" : "h-screen max-h-[100dvh] overflow-hidden"
+      }`}
+    >
       {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-[#F5F5F5] border-b border-[#A9A9A9]">
+      <div className="shrink-0 sticky top-0 z-50 bg-[#F5F5F5] border-b border-[#A9A9A9]">
         <NewsFeedHeader />
       </div>
 
       {/* Main Content */}
       {showSidebars ? (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-[260px_1fr_280px] gap-0 max-w-screen-xl w-full mx-auto">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[260px_1fr_280px] gap-0 max-w-screen-xl w-full mx-auto">
           {/* Left Sidebar */}
           <div className="hidden lg:block sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto nfl-sidebar-scroll">
             {leftSidebar || <RecruitmentLeft />}
@@ -38,7 +42,11 @@ export default function NewsFeedLayout({
 
           {/* Middle — scrollable children (conditional scrolling) */}
           <div
-            className={`${scrollable ? 'overflow-y-auto overflow-x-hidden max-h-[calc(100vh-72px)] nfl-scroll scroll-smooth' : 'overflow-hidden'}`}
+            className={`min-h-0 ${
+              scrollable
+                ? "overflow-y-auto overflow-x-hidden max-h-[calc(100vh-72px)] nfl-scroll scroll-smooth"
+                : "flex flex-col overflow-hidden"
+            }`}
           >
             {children}
             {/* Bottom spacer - only show if scrollable */}
@@ -53,7 +61,11 @@ export default function NewsFeedLayout({
       ) : (
         /* No sidebars — conditional scrolling */
         <div
-          className={`flex-1 ${scrollable ? classes : 'overflow-hidden'}`}
+          className={`flex-1 min-h-0 flex flex-col ${
+            scrollable
+              ? classes
+              : "overflow-hidden"
+          }`}
         >
           {children}
           {scrollable && <div className="h-8" />}

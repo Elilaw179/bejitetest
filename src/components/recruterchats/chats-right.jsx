@@ -112,7 +112,6 @@ function ChatsRight({ selectedChat, onBack }) {
         <div className="bg-[#16730F] px-6 py-6 space-y-6 h-full">
           {[
             { label: 'Email', value: otherUser.email || 'Not provided' },
-            { label: 'Phone', value: otherUser.phone || otherUser.phone_number || 'Not provided' },
             { label: 'Website', value: otherUser.website || 'Not provided' },
           ].map((item) => (
             <div key={item.label}>
