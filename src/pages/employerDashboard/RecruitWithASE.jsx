@@ -59,7 +59,6 @@ const RecruitWithASE = () => {
   const [job, setJob] = useState(null);
   const [applicantCount, setApplicantCount] = useState(0);
   const [eligibility, setEligibility] = useState(null);
-  const selectedCurrency = "NGN";
 
   const [searching, setSearching] = useState(false);
   const [candidates, setCandidates] = useState([]);
