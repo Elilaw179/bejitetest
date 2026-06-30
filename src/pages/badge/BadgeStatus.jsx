@@ -93,10 +93,10 @@ export default function BadgeStatus() {
     ? {
         id: badgePlan.id,
         label: badgePlan.name,
-        price: String(badgePlan.priceUSD),
-        currency: "US$",
+        price: Number(badgePlan.priceNGN || 10000).toLocaleString("en-NG"),
+        currency: "₦",
         period: "/month",
-        amount: badgePlan.priceUSD * 100,
+        amount: (badgePlan.priceNGN || 10000) * 100,
       }
     : null;
 
@@ -118,7 +118,7 @@ export default function BadgeStatus() {
     setPaying(true);
     setError(null);
     try {
-      const init = await initializeBadgeSubscription("USD");
+      const init = await initializeBadgeSubscription("NGN");
       const checkoutUrl = init?.data?.authorization_url;
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
@@ -180,7 +180,7 @@ export default function BadgeStatus() {
                     ? "Go to Badge Dashboard"
                     : isRecruiter
                       ? "View ASE Plans"
-                      : `Subscribe — US$${uiPlan?.price || "10"}/month`}
+                      : `Subscribe — ₦${uiPlan?.price || "10,000"}/month`}
                 </button>
               )}
               {error && <p className="text-red-200 text-sm mt-3">{error}</p>}

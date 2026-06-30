@@ -18,7 +18,6 @@ const ASEPricingPage = () => {
   const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [eligibility, setEligibility] = useState(null);
-  const [currency, setCurrency] = useState("USD");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -125,8 +124,8 @@ const ASEPricingPage = () => {
 
       const paymentData = {
         email: userData.email,
-        amount: currency === "USD" ? plan.price : plan.priceNaira,
-        currency: currency,
+        amount: plan.priceNaira,
+        currency: "NGN",
         employerId: userId,
         planType: plan.id,
       };
@@ -280,7 +279,7 @@ const ASEPricingPage = () => {
               </div>
             )}
 
-            {/* Currency Toggle */}
+            {/* USD payments not activated yet — NGN only
             <div className="px-6 py-4 border-b border-[#A9A9A9] bg-gray-50">
               <div className="flex items-center justify-center gap-4">
                 <span
@@ -305,6 +304,7 @@ const ASEPricingPage = () => {
                 </span>
               </div>
             </div>
+            */}
 
             {/* Plans */}
             <div className="p-6">
@@ -345,13 +345,9 @@ const ASEPricingPage = () => {
 
                       <div className="mt-4 flex flex-col items-center gap-1 min-w-0 w-full px-1">
                         <span
-                          className={`font-bold text-[#1A3E32] leading-tight break-words text-center ${
-                            currency === "NGN"
-                              ? "text-2xl sm:text-3xl"
-                              : "text-3xl sm:text-4xl"
-                          }`}
+                          className="font-bold text-[#1A3E32] leading-tight break-words text-center text-2xl sm:text-3xl"
                         >
-                          {formatPlanPrice(plan, currency)}
+                          {formatPlanPrice(plan, "NGN")}
                         </span>
                         <span className="text-gray-500 text-xs sm:text-sm">
                           /{plan.billingPeriod || "search"}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
+import { toast } from "react-toastify";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
 import ScrollToTop from "../../components/Ads/ScrollTOTOP";
 import {
@@ -16,6 +17,8 @@ const EDITABLE_STATUSES = new Set([
   "paused",
   "active",
 ]);
+
+const REAPPROVAL_STATUSES = new Set(["active", "paused"]);
 
 export default function EditCampaign() {
   const { id } = useParams();
@@ -42,6 +45,7 @@ export default function EditCampaign() {
   }, [campaign]);
 
   const canEdit = campaign && EDITABLE_STATUSES.has(campaign.status);
+  const needsReapproval = campaign && REAPPROVAL_STATUSES.has(campaign.status);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,6 +53,16 @@ export default function EditCampaign() {
 
     try {
       const updated = await updateCampaign(formData);
+      if (
+        updated?.status === "pending_review" ||
+        REAPPROVAL_STATUSES.has(campaign?.status)
+      ) {
+        toast.info(
+          "Changes saved. Your campaign is pending admin review before it can go live again.",
+        );
+      } else {
+        toast.success("Campaign updated successfully.");
+      }
       navigate(`/adpro/campaign/${id}`, { state: { campaign: updated } });
     } catch (err) {
       setSaveError(
@@ -102,6 +116,14 @@ export default function EditCampaign() {
               onSubmit={handleSubmit}
               className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 shadow-sm space-y-5 sm:space-y-6"
             >
+              {needsReapproval && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  This campaign was already approved. Saving changes will send it
+                  back to admin for review and it will not appear in feeds until
+                  approved again.
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Campaign Name

@@ -129,6 +129,13 @@ export default function CampaignDetails() {
                 </div>
               </div>
 
+              {campaign.status === "pending_review" && (
+                <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  This campaign is awaiting admin approval. It will not appear in
+                  feeds until an admin reviews and approves it.
+                </div>
+              )}
+
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-[#1A3E32]/10 flex items-center justify-center mb-2 group-hover:bg-[#1A3E32]/20 transition-colors">

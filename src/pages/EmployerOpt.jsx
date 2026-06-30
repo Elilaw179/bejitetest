@@ -191,7 +191,7 @@ const EmployerOpt = () => {
 
                 <div className="lg:w-[50%] w-full px-4 mt-8 sm:mt-12 flex flex-wrap justify-center gap-6 py-10 bg-[#E0E0E01A] rounded-2xl border border-[#82828226]">
                     <MemberCard
-                        label="INDIVIDUAL"
+                        label="Individual"
                         iconSrc="/assets/images/user.svg"
                         infoText="Individual employers are people whose businesses are not registered with the federal, state, or local governments. 
                       They are micro, small, and medium scale enterprises (SMEs). They also include people who are HR consultants (they recruit for other companies); 

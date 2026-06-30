@@ -163,7 +163,8 @@ export default function PaymentPage() {
               <p className={`${planSubtitleClass} mt-2`}>{plan.subtitle}</p>
               <p className={priceClass}>
                 {plan.price}
-                <span className={priceUnitClass}>us$</span>
+                {/* USD not activated yet — <span className={priceUnitClass}>us$</span> */}
+                <span className={priceUnitClass}>₦</span>
               </p>
               <p className={descriptionClass}>{plan.description}</p>
               <button

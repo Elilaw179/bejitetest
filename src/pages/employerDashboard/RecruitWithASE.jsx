@@ -59,7 +59,7 @@ const RecruitWithASE = () => {
   const [job, setJob] = useState(null);
   const [applicantCount, setApplicantCount] = useState(0);
   const [eligibility, setEligibility] = useState(null);
-  const [selectedCurrency, setSelectedCurrency] = useState("USD");
+  const selectedCurrency = "NGN";
 
   const [searching, setSearching] = useState(false);
   const [candidates, setCandidates] = useState([]);
@@ -219,15 +219,14 @@ const RecruitWithASE = () => {
     try {
       const userData = JSON.parse(localStorage.getItem("user") || "{}");
       const userId = localStorage.getItem("userId");
-      const amount =
-        selectedCurrency === "USD" ? ASE_PRICING.USD : ASE_PRICING.NGN;
+      const amount = ASE_PRICING.NGN;
 
       localStorage.setItem(RECRUIT_RETURN_KEY, jobId);
 
       const response = await initializeOneTimePayment({
         email: userData.email,
         amount,
-        currency: selectedCurrency,
+        currency: "NGN",
         employerId: userId,
         planType: "standard",
       });
@@ -345,10 +344,7 @@ const RecruitWithASE = () => {
 
   if (!showResults) {
     const isEligible = eligibility?.eligible;
-    const priceLabel =
-      selectedCurrency === "USD"
-        ? `$${ASE_PRICING.USD}`
-        : `₦${ASE_PRICING.NGN.toLocaleString()}`;
+    const priceLabel = `₦${ASE_PRICING.NGN.toLocaleString()}`;
 
     return (
       <NewsFeedLayout showSidebars={false}>
@@ -402,6 +398,7 @@ const RecruitWithASE = () => {
                     <span>ASE Fee:</span>
                     <span className="text-2xl font-bold">{priceLabel}</span>
                   </div>
+                  {/* USD payments not activated yet — NGN only
                   <div className="flex gap-2 justify-center pt-2">
                     {["USD", "NGN"].map((currency) => (
                       <button
@@ -418,6 +415,7 @@ const RecruitWithASE = () => {
                       </button>
                     ))}
                   </div>
+                  */}
                 </>
               )}
             </div>
