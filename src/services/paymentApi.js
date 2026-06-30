@@ -14,7 +14,10 @@ export const getSubscriptionPlans = async () => {
 
 export const checkASEEligibility = async () => {
   try {
-    const response = await axiosInstance.get(`${PAYSTACK_API_URL}/ase/eligibility`);
+    const employerId = localStorage.getItem('userId');
+    const response = await axiosInstance.get(`${PAYSTACK_API_URL}/ase/eligibility`, {
+      params: employerId ? { employer_id: employerId } : {},
+    });
     return response.data;
   } catch (error) {
     console.error('Error checking ASE eligibility:', error);
@@ -112,6 +115,32 @@ export const getSubscriptionStatus = async () => {
   }
 };
 
+export const recordASESearch = async (payload = {}) => {
+  try {
+    const response = await axiosInstance.post(
+      `${PAYSTACK_API_URL}/ase/record-search`,
+      payload,
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error recording ASE search:', error);
+    throw error;
+  }
+};
+
+export const completeASESearch = async (payload = {}) => {
+  try {
+    const response = await axiosInstance.post(
+      `${PAYSTACK_API_URL}/ase/complete-search`,
+      payload,
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error completing ASE search:', error);
+    throw error;
+  }
+};
+
 export default {
   getSubscriptionPlans,
   checkASEEligibility,
@@ -124,4 +153,6 @@ export default {
   deleteSavedCard,
   chargeSavedCard,
   getSubscriptionStatus,
+  recordASESearch,
+  completeASESearch,
 };

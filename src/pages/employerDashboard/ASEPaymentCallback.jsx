@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { verifyOneTimePayment, verifySubscriptionPayment, checkASEEligibility } from "../../services/paymentApi";
+import { verifyOneTimePayment, verifySubscriptionPayment } from "../../services/paymentApi";
 
 const ASEPaymentCallback = () => {
   const [searchParams] = useSearchParams();
@@ -34,16 +34,15 @@ const ASEPaymentCallback = () => {
           setStatus("success");
           setMessage("Payment verified! Redirecting...");
           
-          // Check eligibility and redirect
-          setTimeout(async () => {
-            try {
-              const elig = await checkASEEligibility();
-              if (elig.eligible) {
-                navigate("/candidate-search-page", { replace: true });
-              } else {
-                navigate("/candidate-search-page", { replace: true });
-              }
-            } catch {
+          const recruitJobId = localStorage.getItem("aseRecruitReturnJobId");
+          localStorage.removeItem("aseRecruitReturnJobId");
+
+          setTimeout(() => {
+            if (recruitJobId) {
+              navigate(`/employer/job/${recruitJobId}/recruit?paid=1`, {
+                replace: true,
+              });
+            } else {
               navigate("/candidate-search-page", { replace: true });
             }
           }, 2000);
