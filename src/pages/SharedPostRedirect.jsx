@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 /**
- * Local dev / non-Vercel fallback: /p/:postId → news feed with post query.
- * On Vercel, /p/:postId is rewritten to the OG proxy before this route runs.
+ * Local dev fallback: /p/:postId → news feed with post query.
+ * On Vercel, vercel.json rewrites /p/:postId to the backend OG HTML endpoint.
  */
 export default function SharedPostRedirect() {
   const { postId } = useParams();
