@@ -4,6 +4,8 @@ let cachedCountryNames = null;
 
 const DELIMITER = "|";
 
+export const NIGERIA_COUNTRY_NAME = "Nigeria";
+
 /** All country display names, sorted alphabetically. */
 export function getAllCountryNames() {
   if (!cachedCountryNames) {
@@ -134,4 +136,54 @@ export function cityKeyBelongsToState(cityKey, stateKey) {
   const city = parseCityKey(cityKey);
   const state = parseStateKey(stateKey);
   return city.country === state.country && city.state === state.state;
+}
+
+export function buildLgaKey(countryName, stateName, lgaName) {
+  return `${countryName}${DELIMITER}${stateName}${DELIMITER}${lgaName}`;
+}
+
+export function parseLgaKey(lgaKey = "") {
+  const parts = String(lgaKey).split(DELIMITER);
+  return {
+    country: parts[0] || "",
+    state: parts[1] || "",
+    lga: parts.slice(2).join(DELIMITER) || "",
+  };
+}
+
+export function lgaKeyBelongsToState(lgaKey, stateKey) {
+  const lga = parseLgaKey(lgaKey);
+  const state = parseStateKey(stateKey);
+  return lga.country === state.country && lga.state === state.state;
+}
+
+export function hasNigeriaSelected(countryNames = []) {
+  return countryNames.some(
+    (country) => country.trim().toLowerCase() === "nigeria",
+  );
+}
+
+/** LGAs for selected Nigerian states (state keys: country|state). */
+export function getLgaOptionsForStates(stateKeys = [], getLgas) {
+  if (typeof getLgas !== "function") return [];
+
+  const options = [];
+
+  for (const stateKey of stateKeys) {
+    const { country, state } = parseStateKey(stateKey);
+    if (country !== NIGERIA_COUNTRY_NAME || !state) continue;
+
+    const lgas = getLgas(state) || [];
+    for (const lgaName of lgas) {
+      options.push({
+        country,
+        state,
+        lga: lgaName,
+        key: buildLgaKey(country, state, lgaName),
+        label: `${lgaName} (${state})`,
+      });
+    }
+  }
+
+  return options.sort((a, b) => a.label.localeCompare(b.label));
 }

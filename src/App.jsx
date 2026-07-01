@@ -37,6 +37,7 @@ import CoperateVerify from "./pages/corporate/Verify.jsx";
 import CoperateUploadDoc from "./pages/corporate/UploadDoc.jsx";
 import CoperateInReview from "./pages/corporate/InReview.jsx";
 import Recruitment from "./pages/employerDashboard/Recruitment.jsx";
+import SharedPostRedirect from "./pages/SharedPostRedirect.jsx";
 import CandidateSearchPage from "./pages/employerDashboard/CandidateSearchPage.jsx";
 import Chat from "./pages/employerDashboard/Chat.jsx";
 import Connections from "./pages/Connections.jsx";
@@ -108,6 +109,7 @@ import CampaignReports from "./pages/ads/CampaignReports.jsx";
 import CampaignDetails from "./pages/ads/CampaignDetails.jsx";
 import CreateCampaign from "./pages/ads/CreateCampaign.jsx";
 import EditCampaign from "./pages/ads/EditCampaign.jsx";
+import EditCampaignAudience from "./pages/ads/EditCampaignAudience.jsx";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
@@ -257,6 +259,7 @@ function App() {
               />
             </Route>
             <Route path="/post-page" element={<PostPage />} />
+            <Route path="/p/:postId" element={<SharedPostRedirect />} />
             <Route path="/news-feed" element={<Recruitment />} />
             <Route path="/badge" element={<BadgeStatus />} />
             <Route path="/badge/payment-callback" element={<BadgePaymentCallback />} />
@@ -277,6 +280,10 @@ function App() {
             />
             <Route path="/adpro/create" element={<CreateCampaign />} />
             <Route path="/adpro/campaign/:id/edit" element={<EditCampaign />} />
+            <Route
+              path="/adpro/campaign/:id/edit-audience"
+              element={<EditCampaignAudience />}
+            />
 
             {/* jobseeker */}
             <Route path="/job-vacancy" element={<JobVacancyListing />} />

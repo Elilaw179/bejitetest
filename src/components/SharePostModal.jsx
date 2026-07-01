@@ -18,7 +18,7 @@ const OPTIONS = [
   { id: 'copy', label: 'Copy link', icon: FaLink, bg: 'bg-[#E8F5E6]', color: 'text-[#16730F]' },
 ];
 
-const SharePostModal = ({ isOpen, onClose, onShare }) => {
+const SharePostModal = ({ isOpen, onClose, onShare, title = "Share post" }) => {
   if (!isOpen) return null;
 
   return (
@@ -35,7 +35,7 @@ const SharePostModal = ({ isOpen, onClose, onShare }) => {
           <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-300" />
         </div>
         <div className="flex items-center justify-between border-b border-[#D9D9D9] px-5 py-4">
-          <h3 className="text-lg font-semibold text-[#1A3E32]">Share post</h3>
+          <h3 className="text-lg font-semibold text-[#1A3E32]">{title}</h3>
           <button
             type="button"
             onClick={onClose}

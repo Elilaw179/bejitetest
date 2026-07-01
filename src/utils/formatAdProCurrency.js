@@ -1,5 +1,16 @@
+/** NGN per reached user until USD payments are activated. */
+export const ADPRO_COST_PER_USER_NGN = 10;
+
 export function formatAdProCurrency(amount) {
   const value = Number(amount) || 0;
+  return `₦${value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+export function formatAdProCostPerUser(amount = ADPRO_COST_PER_USER_NGN) {
+  const value = Number(amount) || ADPRO_COST_PER_USER_NGN;
   return `₦${value.toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,

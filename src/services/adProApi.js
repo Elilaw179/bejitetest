@@ -32,6 +32,13 @@ export const updateAdProCampaign = async (campaignId, payload) => {
   return response.data;
 };
 
+export const estimateAdProAudience = async (audience) => {
+  const response = await axiosInstance.post("/api/adpro/audience/estimate", {
+    audience,
+  });
+  return response.data;
+};
+
 export const createAdProCampaign = async (campaignData) => {
   const formData = new FormData();
 
@@ -77,14 +84,55 @@ export const trackAdCampaignEvent = async (campaignId, type) => {
   return response.data;
 };
 
+export const likeAdCampaign = async (campaignId) => {
+  const response = await axiosInstance.post(
+    `/api/adpro/campaigns/${campaignId}/like`,
+  );
+  return response.data;
+};
+
+export const unlikeAdCampaign = async (campaignId) => {
+  const response = await axiosInstance.delete(
+    `/api/adpro/campaigns/${campaignId}/like`,
+  );
+  return response.data;
+};
+
+export const saveAdCampaign = async (campaignId) => {
+  const response = await axiosInstance.post(
+    `/api/adpro/campaigns/${campaignId}/save`,
+  );
+  return response.data;
+};
+
+export const unsaveAdCampaign = async (campaignId) => {
+  const response = await axiosInstance.delete(
+    `/api/adpro/campaigns/${campaignId}/save`,
+  );
+  return response.data;
+};
+
+export const shareAdCampaign = async (campaignId) => {
+  const response = await axiosInstance.post(
+    `/api/adpro/campaigns/${campaignId}/share`,
+  );
+  return response.data;
+};
+
 export default {
   getAdProFeedAds,
   getAdProDashboard,
   getAdProCampaign,
   getAdProCampaignReports,
   updateAdProCampaign,
+  estimateAdProAudience,
   createAdProCampaign,
   duplicateAdProCampaign,
   deleteAdProCampaign,
   trackAdCampaignEvent,
+  likeAdCampaign,
+  unlikeAdCampaign,
+  saveAdCampaign,
+  unsaveAdCampaign,
+  shareAdCampaign,
 };

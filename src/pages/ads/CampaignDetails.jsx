@@ -4,6 +4,7 @@ import {
   Play,
   Pause,
   Edit2,
+  Users,
   Calendar,
   Clock,
   ExternalLink,
@@ -40,6 +41,13 @@ const formatDate = (value) => {
   });
 };
 
+const EDITABLE_STATUSES = new Set([
+  "draft",
+  "pending_review",
+  "paused",
+  "active",
+]);
+
 export default function CampaignDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -47,6 +55,7 @@ export default function CampaignDetails() {
     useAdProCampaign(id);
 
   const progress = getCampaignProgress(campaign);
+  const canEditContent = campaign && EDITABLE_STATUSES.has(campaign.status);
 
   const handlePauseResume = async () => {
     if (!campaign || mutating) return;
@@ -95,17 +104,31 @@ export default function CampaignDetails() {
                     Campaign ID: {campaign.id}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() =>
-                      navigate(`/adpro/campaign/${id}/edit`, {
-                        state: { campaign },
-                      })
-                    }
-                    className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#1A3E32] flex items-center gap-2 text-sm transition-all"
-                  >
-                    <Edit2 className="w-4 h-4" /> Edit
-                  </button>
+                <div className="flex flex-wrap gap-2">
+                  {canEditContent && (
+                    <>
+                      <button
+                        onClick={() =>
+                          navigate(`/adpro/campaign/${id}/edit`, {
+                            state: { campaign },
+                          })
+                        }
+                        className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#1A3E32] flex items-center gap-2 text-sm transition-all"
+                      >
+                        <Edit2 className="w-4 h-4" /> Edit Content
+                      </button>
+                      <button
+                        onClick={() =>
+                          navigate(`/adpro/campaign/${id}/edit-audience`, {
+                            state: { campaign },
+                          })
+                        }
+                        className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#1A3E32] flex items-center gap-2 text-sm transition-all"
+                      >
+                        <Users className="w-4 h-4" /> Edit Audience
+                      </button>
+                    </>
+                  )}
                   {campaign.status === "active" && (
                     <button
                       onClick={handlePauseResume}

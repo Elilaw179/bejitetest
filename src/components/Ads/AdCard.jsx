@@ -10,22 +10,47 @@ import {
   ChevronUp,
   Play,
 } from "lucide-react";
+import SharePostModal from "../SharePostModal";
 import { getLandingHref } from "../../utils/landingDestination";
+import { nativeShareAd, shareAdToPlatform } from "../../utils/adShare";
 
 export default function AdCard({
   ad,
   onInteraction,
+  onLike,
+  onSave,
+  onShare,
   onClose,
   isSponsored = true,
 }) {
-  const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [liked, setLiked] = useState(ad.likedByMe === true);
+  const [saved, setSaved] = useState(ad.savedByMe === true);
+  const [likesCount, setLikesCount] = useState(Number(ad.likesCount) || 0);
+  const [savesCount, setSavesCount] = useState(Number(ad.savesCount) || 0);
+  const [sharesCount, setSharesCount] = useState(Number(ad.sharesCount) || 0);
   const [expanded, setExpanded] = useState(false);
   const [mediaFailed, setMediaFailed] = useState(false);
   const [mediaExpanded, setMediaExpanded] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
   const cardRef = useRef(null);
   const impressionTracked = useRef(false);
   const playTracked = useRef(false);
+
+  useEffect(() => {
+    setLiked(ad.likedByMe === true);
+    setSaved(ad.savedByMe === true);
+    setLikesCount(Number(ad.likesCount) || 0);
+    setSavesCount(Number(ad.savesCount) || 0);
+    setSharesCount(Number(ad.sharesCount) || 0);
+  }, [
+    ad.id,
+    ad.likedByMe,
+    ad.savedByMe,
+    ad.likesCount,
+    ad.savesCount,
+    ad.sharesCount,
+  ]);
 
   useEffect(() => {
     const node = cardRef.current;
@@ -70,34 +95,77 @@ export default function AdCard({
     }
   };
 
-  const handleLike = (e) => {
+  const handleLike = async (e) => {
     e.stopPropagation();
+    if (pendingAction === "like") return;
+
     const nextLiked = !liked;
+    setPendingAction("like");
     setLiked(nextLiked);
-    if (nextLiked) {
-      onInteraction?.("like", ad.id);
+    setLikesCount((count) => Math.max(0, count + (nextLiked ? 1 : -1)));
+
+    try {
+      await onLike?.(ad.id, liked);
+    } catch {
+      setLiked(liked);
+      setLikesCount(Number(ad.likesCount) || 0);
+    } finally {
+      setPendingAction(null);
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.stopPropagation();
+    if (pendingAction === "save") return;
+
     const nextSaved = !saved;
+    setPendingAction("save");
     setSaved(nextSaved);
-    if (nextSaved) {
-      onInteraction?.("save", ad.id);
+    setSavesCount((count) => Math.max(0, count + (nextSaved ? 1 : -1)));
+
+    try {
+      await onSave?.(ad.id, saved);
+    } catch {
+      setSaved(saved);
+      setSavesCount(Number(ad.savesCount) || 0);
+    } finally {
+      setPendingAction(null);
     }
   };
 
-  const handleShare = (e) => {
+  const handleShareClick = async (e) => {
     e.stopPropagation();
-    onInteraction?.("share", ad.id);
-    navigator
-      .share?.({
-        title: ad.headline,
-        text: ad.description,
-        url: ad.landingDestination,
-      })
-      .catch(() => {});
+    try {
+      const { usedNative, counted } = await nativeShareAd(ad);
+      if (usedNative) {
+        if (counted) {
+          setSharesCount((count) => {
+            const next = count + 1;
+            onShare?.(ad.id, next);
+            return next;
+          });
+        }
+        return;
+      }
+    } catch (err) {
+      if (err?.name === "AbortError") return;
+    }
+    setShowShareModal(true);
+  };
+
+  const handleShareOption = async (platform) => {
+    try {
+      const result = await shareAdToPlatform(ad, platform);
+      if (result?.counted !== false) {
+        setSharesCount((count) => {
+          const next = count + 1;
+          onShare?.(ad.id, next);
+          return next;
+        });
+      }
+    } finally {
+      setShowShareModal(false);
+    }
   };
 
   const handlePlay = (e) => {
@@ -125,12 +193,13 @@ export default function AdCard({
   };
 
   return (
-    <div
-      ref={cardRef}
-      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300"
-    >
-      <div className="px-4 py-3 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+    <>
+      <div
+        ref={cardRef}
+        className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300"
+      >
+        <div className="px-4 py-3 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
           {isSponsored && (
             <>
               <span className="text-xs text-gray-500 font-medium">
@@ -139,177 +208,194 @@ export default function AdCard({
               <span className="text-xs bg-[#1A3E32]/10 text-[#1A3E32] px-2 py-0.5 rounded-full font-medium">
                 AdPro
               </span>
+              {ad.isOwnCampaign && (
+                <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium">
+                  Your campaign
+                </span>
+              )}
             </>
           )}
-        </div>
-        {onClose && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose(ad.id);
-            }}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-
-      <div className="p-4 cursor-pointer" onClick={handleClick}>
-        <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">
-          {ad.headline}
-        </h3>
-
-        {ad.mediaUrl && !mediaFailed && (
-          <button
-            type="button"
-            onClick={openMediaPreview}
-            className={mediaPreviewButtonClass}
-            aria-label={
-              ad.mediaType === "video" ? "Play ad video" : "View ad image"
-            }
-          >
-            {ad.mediaType === "image" ? (
-              <img
-                src={ad.mediaUrl}
-                alt={ad.headline}
-                className={mediaPreviewFitClass}
-                loading="lazy"
-                onError={() => setMediaFailed(true)}
-              />
-            ) : (
-              <>
-                {ad.posterUrl ? (
-                  <img
-                    src={ad.posterUrl}
-                    alt={ad.headline}
-                    className={mediaPreviewFitClass}
-                  />
-                ) : (
-                  <video
-                    src={ad.mediaUrl}
-                    className={mediaPreviewFitClass}
-                    muted
-                    playsInline
-                    preload="metadata"
-                    aria-hidden
-                  />
-                )}
-                <span className="absolute inset-0 flex items-center justify-center bg-black/25">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-white">
-                    <Play className="ml-1 h-6 w-6 fill-current" />
-                  </span>
-                </span>
-              </>
-            )}
-          </button>
-        )}
-
-        <p className="text-gray-600 text-sm leading-relaxed">
-          {displayDescription}
-          {shouldTruncate && (
+          </div>
+          {onClose && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setExpanded(!expanded);
+                onClose(ad.id);
               }}
-              className="text-[#1A3E32] font-medium ml-1 hover:underline inline-flex items-center gap-0.5"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
             >
-              {expanded ? "See less" : "See more"}
-              {expanded ? (
-                <ChevronUp className="w-3 h-3" />
-              ) : (
-                <ChevronDown className="w-3 h-3" />
-              )}
+              <X className="w-4 h-4" />
             </button>
           )}
-        </p>
-
-        <div className="mt-4">
-          <button
-            onClick={handleClick}
-            className="bg-[#1A3E32] text-white px-5 py-2 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-[#2d6a54] transition-all hover:gap-3"
-          >
-            Learn More <ExternalLink className="w-3.5 h-3.5" />
-          </button>
         </div>
-      </div>
 
-      {mediaExpanded &&
-        ad.mediaUrl &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4"
-            onClick={() => setMediaExpanded(false)}
-            role="dialog"
-            aria-modal="true"
-            aria-label={ad.mediaType === "video" ? "Ad video player" : "Ad image viewer"}
-          >
-            <div
-              className="relative w-full max-w-4xl max-h-[92vh] flex items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
+        <div className="p-4 cursor-pointer" onClick={handleClick}>
+          <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">
+            {ad.headline}
+          </h3>
+
+          {ad.mediaUrl && !mediaFailed && (
+            <button
+              type="button"
+              onClick={openMediaPreview}
+              className={mediaPreviewButtonClass}
+              aria-label={
+                ad.mediaType === "video" ? "Play ad video" : "View ad image"
+              }
             >
               {ad.mediaType === "image" ? (
                 <img
                   src={ad.mediaUrl}
                   alt={ad.headline}
-                  className="max-w-full max-h-[85vh] w-full h-full object-contain rounded-lg"
+                  className={mediaPreviewFitClass}
+                  loading="lazy"
+                  onError={() => setMediaFailed(true)}
                 />
               ) : (
-                <video
-                  src={ad.mediaUrl}
-                  className="max-w-full max-h-[85vh] w-full object-contain rounded-lg bg-black"
-                  controls
-                  autoPlay
-                  playsInline
-                  onPlay={handlePlay}
-                  poster={ad.posterUrl}
-                />
+                <>
+                  {ad.posterUrl ? (
+                    <img
+                      src={ad.posterUrl}
+                      alt={ad.headline}
+                      className={mediaPreviewFitClass}
+                    />
+                  ) : (
+                    <video
+                      src={ad.mediaUrl}
+                      className={mediaPreviewFitClass}
+                      muted
+                      playsInline
+                      preload="metadata"
+                      aria-hidden
+                    />
+                  )}
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/25">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-white">
+                      <Play className="ml-1 h-6 w-6 fill-current" />
+                    </span>
+                  </span>
+                </>
               )}
-              <button
-                type="button"
-                aria-label="Close media preview"
-                className="absolute -top-2 right-0 sm:top-0 text-white text-2xl bg-black/50 hover:bg-black/70 rounded-full w-10 h-10 flex items-center justify-center"
-                onClick={() => setMediaExpanded(false)}
-              >
-                ×
-              </button>
-            </div>
-          </div>,
-          document.body,
-        )}
+            </button>
+          )}
 
-      <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-around bg-gray-50/50">
-        <button
-          onClick={handleLike}
-          className={`flex items-center gap-2 text-sm transition-all duration-200 ${
-            liked ? "text-red-500" : "text-gray-500 hover:text-red-500"
-          }`}
-        >
-          <Heart
-            className={`w-4 h-4 transition-transform ${liked ? "fill-current scale-110" : ""}`}
-          />
-          <span>Like</span>
-        </button>
-        <button
-          onClick={handleShare}
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#1A3E32] transition-colors"
-        >
-          <Share2 className="w-4 h-4" />
-          <span>Share</span>
-        </button>
-        <button
-          onClick={handleSave}
-          className={`flex items-center gap-2 text-sm transition-all duration-200 ${
-            saved ? "text-[#1A3E32]" : "text-gray-500 hover:text-[#1A3E32]"
-          }`}
-        >
-          <Bookmark
-            className={`w-4 h-4 transition-transform ${saved ? "fill-current" : ""}`}
-          />
-          <span>{saved ? "Saved" : "Save"}</span>
-        </button>
+          <p className="text-gray-600 text-sm leading-relaxed">
+            {displayDescription}
+            {shouldTruncate && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpanded(!expanded);
+                }}
+                className="text-[#1A3E32] font-medium ml-1 hover:underline inline-flex items-center gap-0.5"
+              >
+                {expanded ? "See less" : "See more"}
+                {expanded ? (
+                  <ChevronUp className="w-3 h-3" />
+                ) : (
+                  <ChevronDown className="w-3 h-3" />
+                )}
+              </button>
+            )}
+          </p>
+
+          <div className="mt-4">
+            <button
+              onClick={handleClick}
+              className="bg-[#1A3E32] text-white px-5 py-2 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-[#2d6a54] transition-all hover:gap-3"
+            >
+              Learn More <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {mediaExpanded &&
+          ad.mediaUrl &&
+          createPortal(
+            <div
+              className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4"
+              onClick={() => setMediaExpanded(false)}
+              role="dialog"
+              aria-modal="true"
+              aria-label={
+                ad.mediaType === "video" ? "Ad video player" : "Ad image viewer"
+              }
+            >
+              <div
+                className="relative w-full max-w-4xl max-h-[92vh] flex items-center justify-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {ad.mediaType === "image" ? (
+                  <img
+                    src={ad.mediaUrl}
+                    alt={ad.headline}
+                    className="max-w-full max-h-[85vh] w-full h-full object-contain rounded-lg"
+                  />
+                ) : (
+                  <video
+                    src={ad.mediaUrl}
+                    className="max-w-full max-h-[85vh] w-full object-contain rounded-lg bg-black"
+                    controls
+                    autoPlay
+                    playsInline
+                    onPlay={handlePlay}
+                    poster={ad.posterUrl}
+                  />
+                )}
+                <button
+                  type="button"
+                  aria-label="Close media preview"
+                  className="absolute -top-2 right-0 sm:top-0 text-white text-2xl bg-black/50 hover:bg-black/70 rounded-full w-10 h-10 flex items-center justify-center"
+                  onClick={() => setMediaExpanded(false)}
+                >
+                  ×
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )}
+
+        <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-around bg-gray-50/50">
+          <button
+            onClick={handleLike}
+            disabled={pendingAction === "like"}
+            className={`flex items-center gap-2 text-sm transition-all duration-200 ${
+              liked ? "text-red-500" : "text-gray-500 hover:text-red-500"
+            }`}
+          >
+            <Heart
+              className={`w-4 h-4 transition-transform ${liked ? "fill-current scale-110" : ""}`}
+            />
+            <span>{likesCount > 0 ? likesCount : "Like"}</span>
+          </button>
+          <button
+            onClick={handleShareClick}
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#1A3E32] transition-colors"
+          >
+            <Share2 className="w-4 h-4" />
+            <span>{sharesCount > 0 ? sharesCount : "Share"}</span>
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={pendingAction === "save"}
+            className={`flex items-center gap-2 text-sm transition-all duration-200 ${
+              saved ? "text-[#1A3E32]" : "text-gray-500 hover:text-[#1A3E32]"
+            }`}
+          >
+            <Bookmark
+              className={`w-4 h-4 transition-transform ${saved ? "fill-current" : ""}`}
+            />
+            <span>{saved ? "Saved" : savesCount > 0 ? savesCount : "Save"}</span>
+          </button>
+        </div>
       </div>
-    </div>
+
+      <SharePostModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onShare={handleShareOption}
+        title="Share ad"
+      />
+    </>
   );
 }

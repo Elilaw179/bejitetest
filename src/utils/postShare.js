@@ -2,7 +2,7 @@ import { toast } from 'react-toastify';
 import { sharePost } from '../services/postsApi';
 
 export function getPostShareUrl(postId) {
-  return `${window.location.origin}/news-feed?post=${encodeURIComponent(postId)}`;
+  return `${window.location.origin}/p/${encodeURIComponent(postId)}`;
 }
 
 /**

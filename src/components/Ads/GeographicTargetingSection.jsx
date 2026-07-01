@@ -4,8 +4,11 @@ import {
   getAllCountryNames,
   getStateOptionsForCountries,
   getCityOptionsForStates,
+  getLgaOptionsForStates,
+  hasNigeriaSelected,
   stateKeyBelongsToCountry,
   cityKeyBelongsToState,
+  lgaKeyBelongsToState,
 } from "../../utils/countryStateData";
 
 const SearchableMultiSelect = ({
@@ -145,6 +148,7 @@ export default function GeographicTargetingSection({ audience, onUpdate }) {
   );
   const states = useMemo(() => audience.states || [], [audience.states]);
   const cities = useMemo(() => audience.cities || [], [audience.cities]);
+  const lgas = useMemo(() => audience.lgas || [], [audience.lgas]);
 
   const countryOptions = useMemo(() => getAllCountryNames(), []);
 
@@ -158,6 +162,44 @@ export default function GeographicTargetingSection({ audience, onUpdate }) {
     [states],
   );
 
+  const nigerianStateKeys = useMemo(
+    () =>
+      states.filter(
+        (stateKey) => stateKeyBelongsToCountry(stateKey, "Nigeria"),
+      ),
+    [states],
+  );
+
+  const [getLgas, setGetLgas] = useState(null);
+
+  useEffect(() => {
+    if (!hasNigeriaSelected(countries) || nigerianStateKeys.length === 0) {
+      setGetLgas(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    import("nigeria-state-lga-data")
+      .then((module) => {
+        if (cancelled) return;
+        const loader = module.getLgas || module.default?.getLgas;
+        setGetLgas(() => loader);
+      })
+      .catch(() => {
+        if (!cancelled) setGetLgas(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [countries, nigerianStateKeys.length]);
+
+  const lgaOptions = useMemo(
+    () => getLgaOptionsForStates(nigerianStateKeys, getLgas),
+    [nigerianStateKeys, getLgas],
+  );
+
   const handleCountriesChange = (nextCountries) => {
     const nextStates = states.filter((stateKey) =>
       nextCountries.some((country) => stateKeyBelongsToCountry(stateKey, country)),
@@ -165,25 +207,31 @@ export default function GeographicTargetingSection({ audience, onUpdate }) {
     const nextCities = cities.filter((cityKey) =>
       nextStates.some((stateKey) => cityKeyBelongsToState(cityKey, stateKey)),
     );
+    const nextLgas = lgas.filter((lgaKey) =>
+      nextStates.some((stateKey) => lgaKeyBelongsToState(lgaKey, stateKey)),
+    );
 
-    onUpdate("countries", nextCountries);
-    if (nextStates.length !== states.length) {
-      onUpdate("states", nextStates);
-    }
-    if (nextCities.length !== cities.length) {
-      onUpdate("cities", nextCities);
-    }
+    onUpdate({
+      countries: nextCountries,
+      states: nextStates,
+      cities: nextCities,
+      lgas: nextLgas,
+    });
   };
 
   const handleStatesChange = (nextStates) => {
     const nextCities = cities.filter((cityKey) =>
       nextStates.some((stateKey) => cityKeyBelongsToState(cityKey, stateKey)),
     );
+    const nextLgas = lgas.filter((lgaKey) =>
+      nextStates.some((stateKey) => lgaKeyBelongsToState(lgaKey, stateKey)),
+    );
 
-    onUpdate("states", nextStates);
-    if (nextCities.length !== cities.length) {
-      onUpdate("cities", nextCities);
-    }
+    onUpdate({
+      states: nextStates,
+      cities: nextCities,
+      lgas: nextLgas,
+    });
   };
 
   return (
@@ -201,12 +249,12 @@ export default function GeographicTargetingSection({ audience, onUpdate }) {
 
       {countries.length > 0 ? (
         <SearchableMultiSelect
-          label="States / Provinces"
-          placeholder="Search states..."
+          label="State / City / Town"
+          placeholder="Search state, city, or town..."
           emptyMessage={
             stateOptions.length
-              ? "No states match your search."
-              : "No states available for the selected countries."
+              ? "No locations match your search."
+              : "No locations available for the selected countries."
           }
           options={stateOptions}
           selectedValues={states}
@@ -216,18 +264,18 @@ export default function GeographicTargetingSection({ audience, onUpdate }) {
         />
       ) : (
         <p className="text-sm text-gray-500 mb-5">
-          Select at least one country to choose states or provinces.
+          Select at least one country to choose a state, city, or town.
         </p>
       )}
 
       {states.length > 0 ? (
         <SearchableMultiSelect
-          label="Cities / Areas"
-          placeholder="Search cities..."
+          label="City / Town / Area"
+          placeholder="Search city, town, or area..."
           emptyMessage={
             cityOptions.length
-              ? "No cities match your search."
-              : "No cities available for the selected states."
+              ? "No areas match your search."
+              : "No areas available for the selected locations."
           }
           options={cityOptions}
           selectedValues={cities}
@@ -237,7 +285,28 @@ export default function GeographicTargetingSection({ audience, onUpdate }) {
         />
       ) : countries.length > 0 ? (
         <p className="text-sm text-gray-500">
-          Select at least one state to choose cities or areas.
+          Select at least one state, city, or town to narrow by area.
+        </p>
+      ) : null}
+
+      {hasNigeriaSelected(countries) && nigerianStateKeys.length > 0 ? (
+        <SearchableMultiSelect
+          label="Local Government Areas (LGA)"
+          placeholder="Search LGAs..."
+          emptyMessage={
+            lgaOptions.length
+              ? "No LGAs match your search."
+              : "No LGAs available for the selected Nigerian states."
+          }
+          options={lgaOptions}
+          selectedValues={lgas}
+          onChange={(nextLgas) => onUpdate("lgas", nextLgas)}
+          getOptionValue={(option) => option.key}
+          getOptionLabel={(option) => option.label}
+        />
+      ) : hasNigeriaSelected(countries) && states.length > 0 ? (
+        <p className="text-sm text-gray-500">
+          Select at least one Nigerian state to target LGAs.
         </p>
       ) : null}
     </>

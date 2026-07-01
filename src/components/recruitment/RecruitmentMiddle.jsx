@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -20,6 +20,7 @@ import {
   getSavedPosts,
   getPostLikes,
   getPostShares,
+  getPost,
   voteOnPoll,
 } from "../../services/postsApi";
 import {
@@ -49,7 +50,7 @@ import PostActions from "../feed/PostActions";
 import FeedLoadMoreButton from "../FeedLoadMoreButton";
 import PostCommentsSection from "../PostCommentsSection";
 import AdCard from "../Ads/AdCard";
-import { getAdProFeedAds, trackAdCampaignEvent } from "../../services/adProApi";
+import { getAdProFeedAds, trackAdCampaignEvent, likeAdCampaign, unlikeAdCampaign, saveAdCampaign, unsaveAdCampaign } from "../../services/adProApi";
 
 const FEED_PAGE_SIZE = 20;
 
@@ -135,6 +136,42 @@ export default function RecruitmentMiddle() {
     }
   };
 
+  const patchAd = (adId, patch) => {
+    setAds((prev) =>
+      prev.map((ad) => (String(ad.id) === String(adId) ? { ...ad, ...patch } : ad)),
+    );
+  };
+
+  const handleAdLike = async (adId, isLiked) => {
+    if (isLiked) {
+      await unlikeAdCampaign(adId);
+    } else {
+      await likeAdCampaign(adId);
+    }
+    const ad = ads.find((item) => String(item.id) === String(adId));
+    patchAd(adId, {
+      likedByMe: !isLiked,
+      likesCount: Math.max(0, (Number(ad?.likesCount) || 0) + (isLiked ? -1 : 1)),
+    });
+  };
+
+  const handleAdSave = async (adId, isSaved) => {
+    if (isSaved) {
+      await unsaveAdCampaign(adId);
+    } else {
+      await saveAdCampaign(adId);
+    }
+    const ad = ads.find((item) => String(item.id) === String(adId));
+    patchAd(adId, {
+      savedByMe: !isSaved,
+      savesCount: Math.max(0, (Number(ad?.savesCount) || 0) + (isSaved ? -1 : 1)),
+    });
+  };
+
+  const handleAdShareCount = (adId, sharesCount) => {
+    patchAd(adId, { sharesCount });
+  };
+
   const handleVotePoll = async (postId, optionId) => {
     const data = await voteOnPoll(postId, optionId);
     if (data?.poll) {
@@ -167,8 +204,11 @@ export default function RecruitmentMiddle() {
   const [modalMode, setModalMode] = useState("post");
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const feedMode = searchParams.get("feed") === "saved" ? "saved" : "home";
+  const sharedPostId =
+    searchParams.get("post") || searchParams.get("postId") || null;
+  const handledSharedPostRef = useRef(null);
   const reduxUser = useSelector((state) => state.auth?.user);
 
   const mergedUser = useMemo(() => {
@@ -195,6 +235,48 @@ export default function RecruitmentMiddle() {
       fetchFeed();
     }
   }, [feedMode]);
+
+  useEffect(() => {
+    if (!sharedPostId || loading) return;
+    if (handledSharedPostRef.current === sharedPostId) return;
+
+    let cancelled = false;
+    handledSharedPostRef.current = sharedPostId;
+
+    const openSharedPost = async () => {
+      const alreadyInFeed = posts.some((post) => post.id === sharedPostId);
+      if (!alreadyInFeed) {
+        try {
+          const data = await getPost(sharedPostId);
+          if (!cancelled && data?.post) {
+            setPosts((prev) => {
+              if (prev.some((post) => post.id === sharedPostId)) return prev;
+              return [data.post, ...prev];
+            });
+          }
+        } catch (err) {
+          console.error("Failed to load shared post:", err);
+        }
+      }
+
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`post-${sharedPostId}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("post");
+      nextParams.delete("postId");
+      setSearchParams(nextParams, { replace: true });
+    };
+
+    openSharedPost();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sharedPostId, loading, posts, searchParams, setSearchParams]);
 
   const fetchSavedPosts = async (silent = false) => {
     try {
@@ -412,9 +494,10 @@ export default function RecruitmentMiddle() {
         <>
           {posts.map((post, index) => (
             <React.Fragment key={post.id}>
-              <RecruitmentPostCard
-                key={post.id}
-                post={post}
+              <div id={`post-${post.id}`}>
+                <RecruitmentPostCard
+                  key={post.id}
+                  post={post}
                 currentUserId={mergedUser?.id}
                 currentUserPhotoUrl={currentUserImage}
                 onLike={handleLike}
@@ -424,12 +507,16 @@ export default function RecruitmentMiddle() {
                 onDelete={handleDeletePost}
                 onVotePoll={handleVotePoll}
               />
+              </div>
               {/* this is ads so is just dummy for now  */}
               {/* it will display after three posts u can use it */}
               {(index + 1) % 3 === 0 && visibleAds.length > 0 && (
                 <AdCard
                   ad={visibleAds[Math.floor(index / 3) % visibleAds.length]}
                   onInteraction={handleAdInteraction}
+                  onLike={handleAdLike}
+                  onSave={handleAdSave}
+                  onShare={handleAdShareCount}
                   onClose={handleDismissAd}
                 />
               )}

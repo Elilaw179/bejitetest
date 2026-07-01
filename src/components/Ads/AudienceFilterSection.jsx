@@ -5,6 +5,10 @@ import GeographicTargetingSection from "./GeographicTargetingSection";
 import ProfessionalTargetingSection from "./ProfessionalTargetingSection";
 
 const filterOptions = {
+  targetRoles: [
+    { value: "jobseeker", label: "Jobseekers" },
+    { value: "recruiter", label: "Recruiters & employers" },
+  ],
   // Demographic
   gender: [
     { value: "any", label: "Any" },
@@ -30,13 +34,6 @@ const filterOptions = {
     { value: "3-5", label: "3-5 years" },
     { value: "6-10", label: "6-10 years" },
     { value: "10+", label: "10+ years" },
-  ],
-  companySize: [
-    { value: "1-10", label: "1-10 employees" },
-    { value: "11-50", label: "11-50 employees" },
-    { value: "51-200", label: "51-200 employees" },
-    { value: "201-500", label: "201-500 employees" },
-    { value: "500+", label: "500+ employees" },
   ],
   // Educational
   qualifications: [
@@ -128,7 +125,10 @@ export default function AudienceFilterSection({
     switch (title) {
       case "Geographic Targeting":
         return (
-          <GeographicTargetingSection audience={audience} onUpdate={onUpdate} />
+          <>
+            {renderFilter("targetRoles", "Show ads to", true)}
+            <GeographicTargetingSection audience={audience} onUpdate={onUpdate} />
+          </>
         );
       case "Demographic Targeting":
         return (
@@ -146,7 +146,6 @@ export default function AudienceFilterSection({
               onUpdate={onUpdate}
             />
             {renderFilter("yearsExperience", "Years of Experience", true)}
-            {renderFilter("companySize", "Company Size", true)}
           </>
         );
       case "Educational Targeting":

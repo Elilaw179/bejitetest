@@ -13,7 +13,10 @@ import StepIndicator from "../../components/Ads/StepIndicator";
 import MediaUploader from "../../components/Ads/MediaUploader";
 import AudienceEstimator from "../../components/Ads/AudienceEstimator";
 import AudienceFilterSection from "../../components/Ads/AudienceFilterSection";
-import { createAdProCampaign } from "../../services/adProApi";
+import AudienceSummary from "../../components/Ads/AudienceSummary";
+import { createAdProCampaign, estimateAdProAudience } from "../../services/adProApi";
+import { DEFAULT_CAMPAIGN_AUDIENCE } from "../../utils/campaignAudience";
+import { formatAdProCurrency } from "../../utils/formatAdProCurrency";
 
 const steps = [
   { number: 1, label: "Ad Content" },
@@ -29,8 +32,6 @@ const targetingSections = [
   { key: "behavioral", title: "Behavioral Targeting", icon: Activity },
 ];
 
-const COST_PER_USER = 0.01;
-
 export default function CreateCampaign() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -44,22 +45,7 @@ export default function CreateCampaign() {
     media: null,
     mediaPreview: null,
     mediaType: null,
-    audience: {
-      countries: [],
-      states: [],
-      cities: [],
-      lgas: [],
-      gender: "any",
-      ageRange: [],
-      maritalStatus: "any",
-      jobTitles: [],
-      industries: [],
-      yearsExperience: [],
-      companySize: [],
-      qualifications: [],
-      activity: [],
-      jobSeekingStatus: [],
-    },
+    audience: { ...DEFAULT_CAMPAIGN_AUDIENCE },
   });
 
   const [audienceEstimate, setAudienceEstimate] = useState({
@@ -67,33 +53,51 @@ export default function CreateCampaign() {
     cost: 0,
     loading: false,
   });
+  const [estimateError, setEstimateError] = useState(null);
   const [errors, setErrors] = useState({});
+  const [audienceError, setAudienceError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
 
   const calculateAudienceEstimate = useCallback(() => {
+    const audience = campaignData.audience;
     setAudienceEstimate((prev) => ({ ...prev, loading: true }));
-    setTimeout(() => {
-      let multiplier = 1;
-      if (campaignData.audience.gender !== "any") multiplier *= 0.5;
-      if (campaignData.audience.ageRange.length > 0) multiplier *= 0.4;
-      if (campaignData.audience.jobTitles.length > 0) multiplier *= 0.3;
-      if (campaignData.audience.industries.length > 0) multiplier *= 0.4;
-      const reach = Math.floor(100000 * Math.max(0.1, multiplier));
-      const cost = reach * COST_PER_USER;
-      setAudienceEstimate({
-        reach,
-        cost: parseFloat(cost.toFixed(2)),
-        loading: false,
-      });
-      setCampaignData((prev) => ({
-        ...prev,
-        budget: parseFloat(cost.toFixed(2)),
-      }));
+    setEstimateError(null);
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await estimateAdProAudience(audience);
+        if (!response?.success) {
+          throw new Error(response?.message || "Failed to estimate audience");
+        }
+
+        const reach = Number(response.data?.reach) || 0;
+        const cost = Number(response.data?.cost) || 0;
+
+        setAudienceEstimate({
+          reach,
+          cost,
+          loading: false,
+        });
+        setCampaignData((prev) => ({
+          ...prev,
+          budget: cost,
+        }));
+      } catch (err) {
+        console.error("Audience estimate error:", err);
+        setEstimateError(
+          err.response?.data?.message ||
+            err.message ||
+            "Could not load audience estimate",
+        );
+        setAudienceEstimate((prev) => ({ ...prev, loading: false }));
+      }
     }, 500);
+
+    return () => clearTimeout(timeoutId);
   }, [campaignData.audience]);
 
   useEffect(() => {
-    calculateAudienceEstimate();
+    return calculateAudienceEstimate();
   }, [calculateAudienceEstimate]);
 
   const handleMediaUpload = (file, error, type) => {
@@ -111,9 +115,13 @@ export default function CreateCampaign() {
   };
 
   const handleAudienceUpdate = (filter, value) => {
+    setAudienceError(null);
     setCampaignData((prev) => ({
       ...prev,
-      audience: { ...prev.audience, [filter]: value },
+      audience:
+        typeof filter === "object" && filter !== null && !Array.isArray(filter)
+          ? { ...prev.audience, ...filter }
+          : { ...prev.audience, [filter]: value },
     }));
   };
 
@@ -136,14 +144,47 @@ export default function CreateCampaign() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const validateAudienceStep = () => {
+    if (audienceEstimate.loading) {
+      setAudienceError(
+        "Please wait for the audience estimate to finish loading.",
+      );
+      return false;
+    }
+    if (estimateError) {
+      setAudienceError(estimateError);
+      return false;
+    }
+    if (audienceEstimate.reach <= 0) {
+      setAudienceError(
+        "Your targeting matches no users. Broaden your filters to continue.",
+      );
+      return false;
+    }
+    setAudienceError(null);
+    return true;
+  };
+
   const validateStep = () => {
-    if (currentStep !== 1) return true;
-    return validateCampaign();
+    if (currentStep === 1) return validateCampaign();
+    if (currentStep === 2) return validateAudienceStep();
+    return true;
+  };
+
+  const validateLaunch = () => {
+    if (!validateCampaign()) {
+      setCurrentStep(1);
+      return false;
+    }
+    if (!validateAudienceStep()) {
+      setCurrentStep(2);
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async () => {
-    if (!validateCampaign()) {
-      setCurrentStep(1);
+    if (!validateLaunch()) {
       return;
     }
 
@@ -355,11 +396,21 @@ export default function CreateCampaign() {
             ))}
           </div>
           <div className="lg:w-80 xl:w-96">
-            <div className="sticky top-24">
+            <div className="sticky top-24 space-y-3">
               <AudienceEstimator
                 estimate={audienceEstimate}
                 loading={audienceEstimate.loading}
               />
+              {estimateError && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                  {estimateError}
+                </p>
+              )}
+              {audienceError && (
+                <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                  {audienceError}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -408,11 +459,13 @@ export default function CreateCampaign() {
                 Total Cost
               </span>
               <span className="font-bold text-xl sm:text-2xl text-[#1A3E32]">
-                ${audienceEstimate.cost.toFixed(2)}
+                {formatAdProCurrency(audienceEstimate.cost)}
               </span>
             </div>
           </div>
         </div>
+
+        <AudienceSummary audience={campaignData.audience} />
 
         <div className="bg-blue-50 rounded-xl p-4 flex items-start gap-3">
           <CheckCircle className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
@@ -480,7 +533,8 @@ export default function CreateCampaign() {
                       setCurrentStep((prev) => prev + 1);
                     }
                   }}
-                  className="px-5 py-2.5 bg-[#1A3E32] text-white rounded-xl hover:bg-[#2d6a54] transition-colors flex items-center justify-center gap-2 text-sm font-medium sm:ml-auto"
+                  disabled={currentStep === 2 && audienceEstimate.loading}
+                  className="px-5 py-2.5 bg-[#1A3E32] text-white rounded-xl hover:bg-[#2d6a54] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 text-sm font-medium sm:ml-auto"
                 >
                   Continue <ChevronRight className="w-4 h-4" />
                 </button>
