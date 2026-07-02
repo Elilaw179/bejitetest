@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { getPostDetailPath } from "../utils/postNavigation";
 
 /**
- * Local dev fallback: /p/:postId → news feed with post query.
- * On Vercel, vercel.json rewrites /p/:postId to the backend OG HTML endpoint.
+ * Local dev fallback: /p/:postId → post detail page.
+ * On Vercel, vercel.json rewrites /p/:postId to the backend OG HTML endpoint for crawlers.
  */
 export default function SharedPostRedirect() {
   const { postId } = useParams();
@@ -14,7 +15,7 @@ export default function SharedPostRedirect() {
       navigate("/news-feed", { replace: true });
       return;
     }
-    navigate(`/news-feed?post=${encodeURIComponent(postId)}`, { replace: true });
+    navigate(getPostDetailPath(postId), { replace: true });
   }, [postId, navigate]);
 
   return (

@@ -37,6 +37,7 @@ import CoperateVerify from "./pages/corporate/Verify.jsx";
 import CoperateUploadDoc from "./pages/corporate/UploadDoc.jsx";
 import CoperateInReview from "./pages/corporate/InReview.jsx";
 import Recruitment from "./pages/employerDashboard/Recruitment.jsx";
+import PostDetailPage from "./pages/PostDetailPage.jsx";
 import SharedPostRedirect from "./pages/SharedPostRedirect.jsx";
 import CandidateSearchPage from "./pages/employerDashboard/CandidateSearchPage.jsx";
 import Chat from "./pages/employerDashboard/Chat.jsx";
@@ -259,6 +260,7 @@ function App() {
               />
             </Route>
             <Route path="/post-page" element={<PostPage />} />
+            <Route path="/post/:postId" element={<PostDetailPage />} />
             <Route path="/p/:postId" element={<SharedPostRedirect />} />
             <Route path="/news-feed" element={<Recruitment />} />
             <Route path="/badge" element={<BadgeStatus />} />

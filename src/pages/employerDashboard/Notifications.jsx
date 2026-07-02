@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import NewsFeedHeader from '../../components/NewsFeedHeader'
 import { API_URL } from '../../config'
 import NewsFeedLayout from '../../components/layout/NewsFeedLayout'
+import { getPostDetailPath } from '../../utils/postNavigation'
 
 const Notifications = () => {
   const navigate = useNavigate()
@@ -126,7 +127,7 @@ const Notifications = () => {
     if (notification.type === 'connection_post') {
       const postId = parsedData?.postId
       if (postId) {
-        navigate(`/news-feed?postId=${postId}`)
+        navigate(getPostDetailPath(postId))
         return
       }
       navigate('/news-feed')
@@ -142,7 +143,7 @@ const Notifications = () => {
     ) {
       const postId = parsedData?.postId
       if (postId) {
-        navigate(`/news-feed?postId=${postId}`)
+        navigate(getPostDetailPath(postId))
         return
       }
       navigate('/news-feed')
