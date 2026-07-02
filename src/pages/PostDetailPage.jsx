@@ -122,16 +122,7 @@ export default function PostDetailPage() {
           <span>Back</span>
         </button>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] break-words">
-            {loading ? "Post" : `${authorName}'s post`}
-          </h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1 break-words">
-            {loading
-              ? "Loading post and comments..."
-              : `View post and comments · ${commentsLabel}`}
-          </p>
-        </div>
+      
 
         {loading && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 sm:p-10 text-center">

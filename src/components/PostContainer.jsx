@@ -229,8 +229,13 @@ const PostContainer = () => {
         }}
         initialMode={modalMode}
         onPost={async (postData) => {
-          await createPost(postData);
-          fetchFeed();
+          const data = await createPost(postData);
+          const newPost = data?.post;
+          if (newPost?.status === 'published') {
+            setPosts((prev) =>
+              prev.some((p) => p.id === newPost.id) ? prev : [newPost, ...prev],
+            );
+          }
         }}
       />
     </div>

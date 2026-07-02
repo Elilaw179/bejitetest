@@ -502,8 +502,13 @@ export default function RecruitmentMiddle() {
         }}
         initialMode={modalMode}
         onPost={async (postData) => {
-          await createPost(postData);
-          refreshPosts();
+          const data = await createPost(postData);
+          const newPost = data?.post;
+          if (feedMode === "home" && newPost?.status === "published") {
+            setPosts((prev) =>
+              prev.some((p) => p.id === newPost.id) ? prev : [newPost, ...prev],
+            );
+          }
         }}
       />
     </main>
