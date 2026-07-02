@@ -16,7 +16,6 @@ import {
 } from "../services/postsApi";
 import { recordPostShare } from "../utils/postShare";
 import { getUser, mergeAuthUsers } from "../utils/tokenManager";
-import { formatDisplayPersonName } from "../utils/personDisplayName";
 
 export default function PostDetailPage() {
   const { postId } = useParams();
@@ -103,12 +102,6 @@ export default function PostDetailPage() {
       patchPost({ poll: data.poll });
     }
   };
-
-  const authorName = post ? formatDisplayPersonName(post.author, "User") : "User";
-  const commentsLabel =
-    post?.commentsCount > 0
-      ? `${post.commentsCount} comment${post.commentsCount === 1 ? "" : "s"}`
-      : "No comments yet";
 
   return (
     <NewsFeedLayout showSidebars={false}>
