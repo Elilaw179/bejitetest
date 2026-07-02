@@ -21,6 +21,7 @@
     "jwt-decode": "^4.0.0",
     "libphonenumber-js": "^1.13.5",
     "lucide-react": "^0.511.0",
+    "nigeria-state-lga-data": "^1.1.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.6.0",
@@ -33,6 +34,7 @@
     "socket.io-client": "^4.8.3",
     "tailwind-scrollbar-hide": "^4.0.0",
     "tailwindcss": "^4.1.8",
+    "xlsx": "^0.18.5",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
