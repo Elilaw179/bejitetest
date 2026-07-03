@@ -152,6 +152,20 @@ export const getPost = async (postId) => {
 };
 
 /**
+ * Get a post for shared links — works for public posts without login.
+ * @param {string} postId - Post UUID
+ */
+export const getPublicPost = async (postId) => {
+  try {
+    const response = await axiosInstance.get(`${POSTS_API_URL}/public/${postId}`);
+    return normalizePostsPayload(response.data);
+  } catch (error) {
+    console.error('Error fetching public post:', error);
+    throw error;
+  }
+};
+
+/**
  * Update a post
  * @param {string} postId - Post UUID
  * @param {Object} postData - Updated post data

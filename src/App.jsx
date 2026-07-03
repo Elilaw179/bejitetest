@@ -40,6 +40,8 @@ import CoperateInReview from "./pages/corporate/InReview.jsx";
 import Recruitment from "./pages/employerDashboard/Recruitment.jsx";
 import PostDetailPage from "./pages/PostDetailPage.jsx";
 import SharedPostRedirect from "./pages/SharedPostRedirect.jsx";
+import SharedJobRedirect from "./pages/SharedJobRedirect.jsx";
+import SharedAdRedirect from "./pages/SharedAdRedirect.jsx";
 import CandidateSearchPage from "./pages/employerDashboard/CandidateSearchPage.jsx";
 import Chat from "./pages/employerDashboard/Chat.jsx";
 import Connections from "./pages/Connections.jsx";
@@ -264,6 +266,8 @@ function App() {
               <Route path="/post-page" element={<PostPage />} />
               <Route path="/post/:postId" element={<PostDetailPage />} />
               <Route path="/p/:postId" element={<SharedPostRedirect />} />
+              <Route path="/j/:jobId" element={<SharedJobRedirect />} />
+              <Route path="/a/:campaignId" element={<SharedAdRedirect />} />
               <Route path="/news-feed" element={<Recruitment />} />
               <Route path="/badge" element={<BadgeStatus />} />
               <Route path="/badge/payment-callback" element={<BadgePaymentCallback />} />

@@ -6,7 +6,7 @@ import NewsFeedLayout from "../components/layout/NewsFeedLayout";
 import PostCard from "../components/feed/PostCard";
 import {
   deletePost,
-  getPost,
+  getPublicPost,
   likePost,
   unlikePost,
   savePost,
@@ -35,7 +35,7 @@ export default function PostDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await getPost(postId);
+      const data = await getPublicPost(postId);
       setPost(data?.post || null);
       if (!data?.post) {
         setError("Post not found");
