@@ -2,7 +2,6 @@ import { toast } from "react-toastify";
 import {
   getSocialShareUrl,
   openExternalShare,
-  openShareWindow,
 } from "./postShare";
 
 export function getJobShareUrl(jobId) {
