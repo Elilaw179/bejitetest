@@ -69,11 +69,11 @@ export function getSocialShareUrl(platform, postUrl, { text, title } = {}) {
   const encodedUrl = encodeURIComponent(postUrl);
   const shareText = text || title || 'Check out this post on Bejite';
   const encodedText = encodeURIComponent(shareText);
-  const encodedFull = encodeURIComponent(`${shareText}\n\n${postUrl}`);
 
   switch (platform) {
     case 'whatsapp':
-      return `https://wa.me/?text=${encodedFull}`;
+      // URL only — WhatsApp builds the preview card from OG tags on the link.
+      return `https://wa.me/?text=${encodedUrl}`;
     case 'facebook':
       return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
     case 'x':
