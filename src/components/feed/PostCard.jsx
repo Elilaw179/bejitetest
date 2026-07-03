@@ -20,6 +20,7 @@ import PostCommentsSection from "../PostCommentsSection";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import VerifiedBadge from "../VerifiedBadge";
+import { getPostDetailPath } from "../../utils/postNavigation";
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
 
@@ -161,7 +162,7 @@ const PostHeader = ({
   );
 };
 
-const PostContent = ({ body }) => {
+const PostContent = ({ body, onOpenDetail, isDetailView }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState("");
@@ -184,7 +185,23 @@ const PostContent = ({ body }) => {
   };
 
   return (
-    <div>
+    <div
+      role={!isDetailView && onOpenDetail ? "button" : undefined}
+      tabIndex={!isDetailView && onOpenDetail ? 0 : undefined}
+      onClick={(e) => {
+        if (isDetailView || !onOpenDetail) return;
+        if (e.target.closest("a, button")) return;
+        onOpenDetail();
+      }}
+      onKeyDown={(e) => {
+        if (isDetailView || !onOpenDetail) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpenDetail();
+        }
+      }}
+      className={!isDetailView && onOpenDetail ? "cursor-pointer rounded-lg" : undefined}
+    >
       <ConfirmModal
         isOpen={linkModalOpen}
         title="Leaving Bejite"
@@ -220,20 +237,32 @@ const PostContent = ({ body }) => {
   );
 };
 
-const PostStats = ({ likesCount, commentsCount, sharesCount }) => {
+const PostStats = ({
+  likesCount,
+  commentsCount,
+  sharesCount,
+  onCommentsClick,
+  isDetailView = false,
+}) => {
   if (likesCount <= 0 && commentsCount <= 0 && sharesCount <= 0) return null;
 
   return (
-    <div className="hidden sm:flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
+    <div
+      className={`${isDetailView ? "flex" : "hidden sm:flex"} flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500`}
+    >
       {likesCount > 0 && (
         <span>
           {likesCount} like{likesCount > 1 ? "s" : ""}
         </span>
       )}
       {commentsCount > 0 && (
-        <span>
+        <button
+          type="button"
+          onClick={onCommentsClick}
+          className="hover:underline font-medium"
+        >
           {commentsCount} comment{commentsCount > 1 ? "s" : ""}
-        </span>
+        </button>
       )}
       {sharesCount > 0 && (
         <span>
@@ -253,9 +282,12 @@ const PostCard = ({
   onDelete,
   onVotePoll,
   currentUserId,
+  isDetailView = false,
+  defaultShowComments = false,
 }) => {
+  const navigate = useNavigate();
   const isOwner = String(post.authorId) === String(currentUserId);
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(defaultShowComments);
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [liked, setLiked] = useState(post.likedByMe === true);
@@ -265,6 +297,12 @@ const PostCard = ({
     setLiked(post.likedByMe === true);
     setSaved(post.savedByMe === true);
   }, [post.id, post.likedByMe, post.savedByMe]);
+
+  const openPostDetail = () => {
+    if (!isDetailView) {
+      navigate(getPostDetailPath(post.id));
+    }
+  };
 
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -290,6 +328,40 @@ const PostCard = ({
       fetchComments();
     }
     setShowComments(!showComments);
+  };
+
+  useEffect(() => {
+    if (!defaultShowComments) return;
+
+    let cancelled = false;
+
+    const loadComments = async () => {
+      try {
+        setLoadingComments(true);
+        const data = await getComments(post.id);
+        if (!cancelled) {
+          setComments(data.comments || []);
+          setShowComments(true);
+        }
+      } catch (err) {
+        console.error("Error fetching comments:", err);
+      } finally {
+        if (!cancelled) setLoadingComments(false);
+      }
+    };
+
+    loadComments();
+    return () => {
+      cancelled = true;
+    };
+  }, [post.id, defaultShowComments]);
+
+  const handleCommentAction = () => {
+    if (isDetailView) {
+      toggleComments();
+      return;
+    }
+    navigate(getPostDetailPath(post.id));
   };
 
   const handleLikeClick = () => {
@@ -354,7 +426,14 @@ const PostCard = ({
   };
 
   return (
-    <div className="bg-white p-4 sm:p-6 max-w-3xl mx-auto rounded-2xl space-y-4 sm:space-y-6 mb-6">
+    <div
+      id={isDetailView ? undefined : `post-${post.id}`}
+      className={
+        isDetailView
+          ? "space-y-4 sm:space-y-6"
+          : "bg-white p-4 sm:p-6 max-w-3xl mx-auto rounded-2xl space-y-4 sm:space-y-6 mb-6"
+      }
+    >
       <PostHeader
         author={post.author}
         authorId={post.authorId}
@@ -390,10 +469,30 @@ const PostCard = ({
           </div>
         </div>
       ) : (
-        <PostContent body={post.body} />
+        <PostContent
+          body={post.body}
+          onOpenDetail={openPostDetail}
+          isDetailView={isDetailView}
+        />
       )}
       {post.media && post.media.length > 0 && (
-        <PostMediaGallery media={post.media} />
+        <div
+          role={!isDetailView ? "button" : undefined}
+          tabIndex={!isDetailView ? 0 : undefined}
+          onClick={() => {
+            if (!isDetailView) openPostDetail();
+          }}
+          onKeyDown={(e) => {
+            if (isDetailView) return;
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openPostDetail();
+            }
+          }}
+          className={!isDetailView ? "cursor-pointer" : undefined}
+        >
+          <PostMediaGallery media={post.media} />
+        </div>
       )}
       {post.poll && (
         <PostPoll
@@ -408,6 +507,8 @@ const PostCard = ({
         likesCount={post.likesCount || 0}
         commentsCount={post.commentsCount || 0}
         sharesCount={post.sharesCount || 0}
+        onCommentsClick={handleCommentAction}
+        isDetailView={isDetailView}
       />
       <PostActions
         liked={liked}
@@ -416,7 +517,7 @@ const PostCard = ({
         commentsCount={post.commentsCount || 0}
         sharesCount={post.sharesCount || 0}
         onLike={handleLikeClick}
-        onComment={toggleComments}
+        onComment={handleCommentAction}
         onShare={handleShareClick}
         onSave={handleSaveClick}
       />

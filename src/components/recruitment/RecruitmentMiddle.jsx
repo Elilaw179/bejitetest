@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -16,13 +16,12 @@ import {
   unlikePost,
   savePost,
   unsavePost,
-  getComments,
   getSavedPosts,
   getPostLikes,
   getPostShares,
-  getPost,
   voteOnPoll,
 } from "../../services/postsApi";
+import { getPostDetailPath } from "../../utils/postNavigation";
 import {
   copyPostLink,
   getPostShareUrl,
@@ -48,7 +47,6 @@ import PostMediaGallery from "../PostMediaGallery";
 import PostPoll from "../feed/PostPoll";
 import PostActions from "../feed/PostActions";
 import FeedLoadMoreButton from "../FeedLoadMoreButton";
-import PostCommentsSection from "../PostCommentsSection";
 import AdCard from "../Ads/AdCard";
 import { getAdProFeedAds, trackAdCampaignEvent, likeAdCampaign, unlikeAdCampaign, saveAdCampaign, unsaveAdCampaign } from "../../services/adProApi";
 
@@ -204,11 +202,10 @@ export default function RecruitmentMiddle() {
   const [modalMode, setModalMode] = useState("post");
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const feedMode = searchParams.get("feed") === "saved" ? "saved" : "home";
   const sharedPostId =
     searchParams.get("post") || searchParams.get("postId") || null;
-  const handledSharedPostRef = useRef(null);
   const reduxUser = useSelector((state) => state.auth?.user);
 
   const mergedUser = useMemo(() => {
@@ -237,46 +234,9 @@ export default function RecruitmentMiddle() {
   }, [feedMode]);
 
   useEffect(() => {
-    if (!sharedPostId || loading) return;
-    if (handledSharedPostRef.current === sharedPostId) return;
-
-    let cancelled = false;
-    handledSharedPostRef.current = sharedPostId;
-
-    const openSharedPost = async () => {
-      const alreadyInFeed = posts.some((post) => post.id === sharedPostId);
-      if (!alreadyInFeed) {
-        try {
-          const data = await getPost(sharedPostId);
-          if (!cancelled && data?.post) {
-            setPosts((prev) => {
-              if (prev.some((post) => post.id === sharedPostId)) return prev;
-              return [data.post, ...prev];
-            });
-          }
-        } catch (err) {
-          console.error("Failed to load shared post:", err);
-        }
-      }
-
-      requestAnimationFrame(() => {
-        document
-          .getElementById(`post-${sharedPostId}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.delete("post");
-      nextParams.delete("postId");
-      setSearchParams(nextParams, { replace: true });
-    };
-
-    openSharedPost();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [sharedPostId, loading, posts, searchParams, setSearchParams]);
+    if (!sharedPostId) return;
+    navigate(getPostDetailPath(sharedPostId), { replace: true });
+  }, [sharedPostId, navigate]);
 
   const fetchSavedPosts = async (silent = false) => {
     try {
@@ -542,8 +502,13 @@ export default function RecruitmentMiddle() {
         }}
         initialMode={modalMode}
         onPost={async (postData) => {
-          await createPost(postData);
-          refreshPosts();
+          const data = await createPost(postData);
+          const newPost = data?.post;
+          if (feedMode === "home" && newPost?.status === "published") {
+            setPosts((prev) =>
+              prev.some((p) => p.id === newPost.id) ? prev : [newPost, ...prev],
+            );
+          }
         }}
       />
     </main>
@@ -572,13 +537,15 @@ const RecruitmentPostCard = ({
     return raw ? profileAvatarSrc(raw) : currentUserPhotoUrl;
   }, [reduxUser, currentUserPhotoUrl]);
 
+  const navigate = useNavigate();
+
+  const openPostDetail = () => {
+    navigate(getPostDetailPath(post.id));
+  };
+
   const isOwner = String(post.authorId) === String(currentUserId);
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState([]);
-  const [loadingComments, setLoadingComments] = useState(false);
   const [liked, setLiked] = useState(post.likedByMe === true);
   const [saved, setSaved] = useState(post.savedByMe === true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     setLiked(post.likedByMe === true);
@@ -611,24 +578,8 @@ const RecruitmentPostCard = ({
     setLinkModalOpen(false);
   };
 
-  const fetchComments = async (force = false) => {
-    if (!force && comments.length > 0) return;
-    try {
-      setLoadingComments(true);
-      const data = await getComments(post.id);
-      setComments(data.comments || []);
-    } catch (err) {
-      console.error("Error fetching comments:", err);
-    } finally {
-      setLoadingComments(false);
-    }
-  };
-
-  const toggleComments = () => {
-    if (!showComments) {
-      fetchComments();
-    }
-    setShowComments(!showComments);
+  const handleCommentAction = () => {
+    openPostDetail();
   };
 
   const handleLikeClick = () => {
@@ -873,7 +824,21 @@ const RecruitmentPostCard = ({
           </div>
         </div>
       ) : (
-        <div>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={(e) => {
+            if (e.target.closest("a, button")) return;
+            openPostDetail();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openPostDetail();
+            }
+          }}
+          className="cursor-pointer rounded-lg"
+        >
           <p className="text-black text-sm sm:text-base whitespace-pre-wrap break-words">
             {(() => {
               const body = post.body || "";
@@ -919,7 +884,20 @@ const RecruitmentPostCard = ({
       />
 
       {post.media && post.media.length > 0 && (
-        <PostMediaGallery media={post.media} />
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={openPostDetail}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openPostDetail();
+            }
+          }}
+          className="cursor-pointer"
+        >
+          <PostMediaGallery media={post.media} />
+        </div>
       )}
 
       {post.poll && (
@@ -944,7 +922,8 @@ const RecruitmentPostCard = ({
         )}
         {post.commentsCount > 0 && (
           <button
-            onClick={toggleComments}
+            type="button"
+            onClick={handleCommentAction}
             className="hover:underline font-medium"
           >
             {post.commentsCount} comment{post.commentsCount > 1 ? "s" : ""}
@@ -967,7 +946,7 @@ const RecruitmentPostCard = ({
         commentsCount={post.commentsCount || 0}
         sharesCount={post.sharesCount || 0}
         onLike={handleLikeClick}
-        onComment={toggleComments}
+        onComment={handleCommentAction}
         onShare={handleShareClick}
         onSave={handleSaveClick}
       />
@@ -978,19 +957,6 @@ const RecruitmentPostCard = ({
         onClose={() => setShowShareModal(false)}
         onShare={handleShareOption}
       />
-
-      {/* Comments Section */}
-      {showComments && (
-        <PostCommentsSection
-          postId={post.id}
-          comments={comments}
-          setComments={setComments}
-          loading={loadingComments}
-          onReload={() => fetchComments(true)}
-          currentUserPhotoUrl={syncedCurrentUserPhoto}
-          currentUserId={currentUserId}
-        />
-      )}
 
       {/* Users List Modal */}
       <UsersListModal
