@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
   FaEllipsisH,
 } from "react-icons/fa";
 import PostActions from "./PostActions";
 import { getComments } from "../../services/postsApi";
 import {
+  buildPostShareText,
   copyPostLink,
   getPostShareUrl,
   getSocialShareUrl,
+  isPublicShareablePost,
   openShareWindow,
 } from "../../utils/postShare";
 import { getUserProfileImage, getProfileImageUrl } from "../../utils/profileImageUtils";
@@ -380,12 +383,20 @@ const PostCard = ({
 
   const handleShareOption = async (platform) => {
     try {
+      if (!isPublicShareablePost(post)) {
+        toast.info(
+          "Only public posts show a rich preview on social media. Connections-only posts can still be shared as a link.",
+        );
+      }
+
       await onShare(post.id);
       const postUrl = getPostShareUrl(post.id);
+      const shareText = buildPostShareText(post);
+
       if (platform === "copy") {
         await copyPostLink(post.id);
       } else {
-        openShareWindow(getSocialShareUrl(platform, postUrl));
+        openShareWindow(getSocialShareUrl(platform, postUrl, { text: shareText }));
       }
     } finally {
       setShowShareModal(false);

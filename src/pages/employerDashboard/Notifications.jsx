@@ -4,11 +4,17 @@ import NewsFeedHeader from '../../components/NewsFeedHeader'
 import { API_URL } from '../../config'
 import NewsFeedLayout from '../../components/layout/NewsFeedLayout'
 import { getPostDetailPath } from '../../utils/postNavigation'
+import FeedLoadMoreButton from '../../components/FeedLoadMoreButton'
+
+const NOTIFICATIONS_PAGE_SIZE = 20
 
 const Notifications = () => {
   const navigate = useNavigate()
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [page, setPage] = useState(1)
   const [error, setError] = useState('')
   const [selectedNotification, setSelectedNotification] = useState(null)
   const [invitations, setInvitations] = useState([])
@@ -42,23 +48,30 @@ const Notifications = () => {
     }
   }
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (pageNum = 1, append = false) => {
     try {
-      setLoading(true)
+      if (append) {
+        setLoadingMore(true)
+      } else {
+        setLoading(true)
+      }
+
       const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token')
 
       if (!token) {
         setError('Please log in to view notifications')
-        setLoading(false)
         return
       }
 
-      const response = await fetch(`${API_URL}/api/notifications`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      })
+      const response = await fetch(
+        `${API_URL}/api/notifications?page=${pageNum}&limit=${NOTIFICATIONS_PAGE_SIZE}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          credentials: 'include'
+        }
+      )
 
       const data = await response.json()
 
@@ -66,12 +79,23 @@ const Notifications = () => {
         throw new Error(data.error || 'Failed to fetch notifications')
       }
 
-      setNotifications(data.data || [])
+      const newNotifications = data.data || []
+      setNotifications((prev) => (append ? [...prev, ...newNotifications] : newNotifications))
+
+      const pagination = data.pagination
+      setHasMore(Boolean(pagination && pagination.page < pagination.pages))
+      setPage(pageNum)
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
+      setLoadingMore(false)
     }
+  }
+
+  const loadMoreNotifications = () => {
+    if (loadingMore || !hasMore) return
+    fetchNotifications(page + 1, true)
   }
 
   const markAsRead = async (notificationId) => {
@@ -450,6 +474,12 @@ const Notifications = () => {
                       </div>
                     </div>
                   ))}
+                  <FeedLoadMoreButton
+                    hasMore={hasMore}
+                    loading={loadingMore}
+                    onLoadMore={loadMoreNotifications}
+                    label="Load more"
+                  />
                 </div>
               )}
             </>

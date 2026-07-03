@@ -5,6 +5,29 @@ export function getPostShareUrl(postId) {
   return `${window.location.origin}/p/${encodeURIComponent(postId)}`;
 }
 
+export function isPublicShareablePost(post) {
+  return post?.visibility === 'public' && post?.status === 'published';
+}
+
+export function buildPostShareText(post) {
+  const authorName =
+    post?.author?.name?.trim() ||
+    [post?.author?.firstName, post?.author?.lastName].filter(Boolean).join(' ').trim() ||
+    'Someone on Bejite';
+
+  const body = String(post?.body || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (body) {
+    const snippet = body.length > 120 ? `${body.slice(0, 117).trimEnd()}...` : body;
+    return `${authorName}: ${snippet}`;
+  }
+
+  return `Check out ${authorName}'s post on Bejite`;
+}
+
 /**
  * Record a share on the server.
  */
@@ -42,19 +65,23 @@ export function openShareWindow(url) {
   window.open(url, '_blank', 'noopener,noreferrer,width=600,height=600');
 }
 
-export function getSocialShareUrl(platform, postUrl) {
-  const encoded = encodeURIComponent(postUrl);
+export function getSocialShareUrl(platform, postUrl, { text, title } = {}) {
+  const encodedUrl = encodeURIComponent(postUrl);
+  const shareText = text || title || 'Check out this post on Bejite';
+  const encodedText = encodeURIComponent(shareText);
+  const encodedFull = encodeURIComponent(`${shareText}\n\n${postUrl}`);
+
   switch (platform) {
     case 'whatsapp':
-      return `https://wa.me/?text=${encoded}`;
+      return `https://wa.me/?text=${encodedFull}`;
     case 'facebook':
-      return `https://www.facebook.com/sharer/sharer.php?u=${encoded}`;
+      return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
     case 'x':
-      return `https://twitter.com/intent/tweet?url=${encoded}`;
+      return `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`;
     case 'linkedin':
-      return `https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`;
+      return `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
     case 'telegram':
-      return `https://t.me/share/url?url=${encoded}`;
+      return `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
     default:
       return postUrl;
   }

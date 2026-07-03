@@ -7,6 +7,23 @@ export const getJobVacancies = async (params = {}) => {
   return response.data;
 };
 
+export const getNewJobVacancyCount = async (since) => {
+  const response = await axiosInstance.get(
+    "/api/job-board/vacancies/new-count",
+    { params: { since } },
+  );
+  return response.data;
+};
+
+const JOB_VACANCY_LAST_SEEN_KEY = "jobVacancyLastSeenAt";
+
+export const getJobVacancyLastSeenAt = () =>
+  localStorage.getItem(JOB_VACANCY_LAST_SEEN_KEY);
+
+export const markJobVacanciesSeen = () => {
+  localStorage.setItem(JOB_VACANCY_LAST_SEEN_KEY, new Date().toISOString());
+};
+
 export const getJobVacancyById = async (jobId) => {
   const response = await axiosInstance.get(`/api/job-board/vacancies/${jobId}`);
   return response.data;
@@ -44,5 +61,8 @@ export const submitJobApplication = async (jobId, applicationData) => {
 export default {
   getJobVacancies,
   getJobVacancyById,
+  getNewJobVacancyCount,
+  getJobVacancyLastSeenAt,
+  markJobVacanciesSeen,
   submitJobApplication,
 };

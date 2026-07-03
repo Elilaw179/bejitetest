@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -23,9 +24,11 @@ import {
 } from "../../services/postsApi";
 import { getPostDetailPath } from "../../utils/postNavigation";
 import {
+  buildPostShareText,
   copyPostLink,
   getPostShareUrl,
   getSocialShareUrl,
+  isPublicShareablePost,
   openShareWindow,
   recordPostShare,
 } from "../../utils/postShare";
@@ -598,12 +601,20 @@ const RecruitmentPostCard = ({
 
   const handleShareOption = async (platform) => {
     try {
+      if (!isPublicShareablePost(post)) {
+        toast.info(
+          "Only public posts show a rich preview on social media. Connections-only posts can still be shared as a link.",
+        );
+      }
+
       await onShare(post.id);
       const postUrl = getPostShareUrl(post.id);
+      const shareText = buildPostShareText(post);
+
       if (platform === "copy") {
         await copyPostLink(post.id);
       } else {
-        openShareWindow(getSocialShareUrl(platform, postUrl));
+        openShareWindow(getSocialShareUrl(platform, postUrl, { text: shareText }));
       }
     } finally {
       setShowShareModal(false);

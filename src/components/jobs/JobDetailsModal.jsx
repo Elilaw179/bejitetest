@@ -17,10 +17,13 @@ import { MdLocationOn, MdWork, MdVerified } from "react-icons/md";
 import { formatTimeRemaining, formatSalary } from "../../utils/checksFormat";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { ApplicationForm } from "./ApplicationForm";
+import SharePostModal from "../SharePostModal";
+import { nativeShareJob, shareJobToPlatform } from "../../utils/jobShare";
 
 export const JobDetailsModal = ({ job, onClose, onApply }) => {
   const [isApplying, setIsApplying] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
+  const [showShareModal, setShowShareModal] = useState(false);
   const modalRef = useRef(null);
 
   const salary = formatSalary(job);
@@ -67,16 +70,19 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
     };
   }, [onClose]);
 
-  const shareJob = () => {
+  const shareJob = async () => {
     if (navigator.share) {
-      navigator.share({
-        title: job.title,
-        text: `Check out this job: ${job.title} at ${job.company}`,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
+      const usedNative = await nativeShareJob(job);
+      if (usedNative) return;
+    }
+    setShowShareModal(true);
+  };
+
+  const handleShareOption = async (platform) => {
+    try {
+      await shareJobToPlatform(job, platform);
+    } finally {
+      setShowShareModal(false);
     }
   };
 
@@ -528,6 +534,13 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
           </div>
         )}
       </div>
+
+      <SharePostModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onShare={handleShareOption}
+        title="Share job"
+      />
     </div>
   );
 };

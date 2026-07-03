@@ -26,6 +26,11 @@ import { pickAuthorProfilePhoto } from "../utils/profileImageUtils";
 import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
 import messagingService from "../services/messagingService";
+import {
+  getNewJobVacancyCount,
+  getJobVacancyLastSeenAt,
+  markJobVacanciesSeen,
+} from "../services/jobVacancyApi";
 import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
 import {
   formatDisplayPersonName,
@@ -46,6 +51,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [connectionRequestCount, setConnectionRequestCount] = useState(0);
+  const [newJobVacancyCount, setNewJobVacancyCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -381,6 +387,50 @@ const NewsFeedHeader = ({ user: propUser }) => {
     return () => clearInterval(interval);
   }, [location.pathname]);
 
+  const clearNewJobVacancyCount = () => {
+    markJobVacanciesSeen();
+    setNewJobVacancyCount(0);
+  };
+
+  useEffect(() => {
+    if (location.pathname === "/job-vacancy") {
+      clearNewJobVacancyCount();
+      return;
+    }
+
+    if (user?.role !== "jobseeker") {
+      setNewJobVacancyCount(0);
+      return;
+    }
+
+    const fetchNewJobVacancyCount = async () => {
+      try {
+        const token =
+          localStorage.getItem("accessToken") ||
+          localStorage.getItem("authToken") ||
+          localStorage.getItem("token");
+        if (!token) return;
+
+        const lastSeenAt = getJobVacancyLastSeenAt();
+        if (!lastSeenAt) {
+          setNewJobVacancyCount(0);
+          return;
+        }
+
+        const response = await getNewJobVacancyCount(lastSeenAt);
+        if (response?.success) {
+          setNewJobVacancyCount(response.count || 0);
+        }
+      } catch (err) {
+        console.error("Error fetching new job vacancy count:", err);
+      }
+    };
+
+    fetchNewJobVacancyCount();
+    const interval = setInterval(fetchNewJobVacancyCount, 30000);
+    return () => clearInterval(interval);
+  }, [location.pathname, user?.role]);
+
   // Cleanup search timeout on unmount
   useEffect(() => {
     return () => {
@@ -395,6 +445,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
     CHAT: ["/chats"],
     notifications: ["/notification"],
     connection: ["/connection"],
+    "job-vacancy": ["/job-vacancy"],
     recruitment: ["/candidate-search-page", "/ase/pricing", "/ase/dashboard"],
     adpro: ["/adpro"],
   };
@@ -423,6 +474,10 @@ const NewsFeedHeader = ({ user: propUser }) => {
       case "connection":
         navigate("/connection");
         break;
+      case "job-vacancy":
+        clearNewJobVacancyCount();
+        navigate("/job-vacancy");
+        break;
       default:
         console.log("Icon not defined");
     }
@@ -434,7 +489,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
 
   const menuItems =
     user?.role === "jobseeker"
-      ? ["home-icon", "CHAT", "notifications", "connection"]
+      ? ["home-icon", "CHAT", "notifications", "job-vacancy", "connection"]
       : ["home-icon", "CHAT", "notifications", "recruitment", "connection"];
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -443,6 +498,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
     if (name === "home-icon") return "/assets/images/home-nav.svg";
     if (name === "invite-friends") return "/assets/images/invite-friends-nav.svg";
     if (name === "adpro") return "/assets/images/adpro-nav.svg";
+    if (name === "job-vacancy") return "/assets/images/job-vacancy-nav.svg";
     return `/assets/images/${name}.svg`;
   };
 
@@ -487,6 +543,11 @@ const NewsFeedHeader = ({ user: propUser }) => {
           {formatNavCount(connectionRequestCount, compact)}
         </span>
       )}
+      {name === "job-vacancy" && newJobVacancyCount > 0 && (
+        <span className={countBadgeClass(newJobVacancyCount, compact)}>
+          {formatNavCount(newJobVacancyCount, compact)}
+        </span>
+      )}
     </div>
   );
 
@@ -494,6 +555,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
     if (name === "home-icon") return "News Feed";
     if (name === "invite-friends") return "Invite Friends";
     if (name === "adpro") return "AdPro";
+    if (name === "job-vacancy") return "Job Vacancy";
     return name.toLowerCase();
   };
 
@@ -757,22 +819,6 @@ const NewsFeedHeader = ({ user: propUser }) => {
                         </button>
                       )}
 
-                      {user?.role === "jobseeker" && (
-                        <button
-                          onClick={() => {
-                            navigate("/job-vacancy");
-                            setIsDropdownOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
-                            ["/job-vacancy"].includes(location.pathname)
-                              ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
-                              : "text-gray-700 hover:bg-gray-50 hover:pl-5"
-                          }`}
-                        >
-                          <FaBriefcase className="text-base" />
-                          <span>Job Vacancy</span>
-                        </button>
-                      )}
                     </div>
                   </div>
                 )}
