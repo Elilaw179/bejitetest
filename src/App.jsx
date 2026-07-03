@@ -111,6 +111,7 @@ import CampaignReports from "./pages/ads/CampaignReports.jsx";
 import CampaignDetails from "./pages/ads/CampaignDetails.jsx";
 import CreateCampaign from "./pages/ads/CreateCampaign.jsx";
 import EditCampaign from "./pages/ads/EditCampaign.jsx";
+import EditCampaignAudience from "./pages/ads/EditCampaignAudience.jsx";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
@@ -261,6 +262,8 @@ function App() {
                 />
               </Route>
               <Route path="/post-page" element={<PostPage />} />
+              <Route path="/post/:postId" element={<PostDetailPage />} />
+              <Route path="/p/:postId" element={<SharedPostRedirect />} />
               <Route path="/news-feed" element={<Recruitment />} />
               <Route path="/badge" element={<BadgeStatus />} />
               <Route path="/badge/payment-callback" element={<BadgePaymentCallback />} />
@@ -281,6 +284,10 @@ function App() {
               />
               <Route path="/adpro/create" element={<CreateCampaign />} />
               <Route path="/adpro/campaign/:id/edit" element={<EditCampaign />} />
+              <Route
+                path="/adpro/campaign/:id/edit-audience"
+                element={<EditCampaignAudience />}
+              />
 
               {/* jobseeker */}
               <Route path="/job-vacancy" element={<JobVacancyListing />} />
@@ -382,134 +389,6 @@ function App() {
                 path="employer/job/:id/recruit"
                 element={<RecruitWithASE />}
               />
-            </Route>
-            <Route path="/post-page" element={<PostPage />} />
-            <Route path="/post/:postId" element={<PostDetailPage />} />
-            <Route path="/p/:postId" element={<SharedPostRedirect />} />
-            <Route path="/news-feed" element={<Recruitment />} />
-            <Route path="/badge" element={<BadgeStatus />} />
-            <Route path="/badge/payment-callback" element={<BadgePaymentCallback />} />
-            <Route path="/activity-logs" element={<ActivityLog />} />
-            <Route path="/account-settings" element={<AccountSettings />} />
-            <Route path="/badge-holder" element={<BadgeHolder />} />
-
-            {/* ads */}
-            <Route path="/adpro" element={<AdProDashboard />} />
-            <Route
-              path="/ad-pro-dashboard"
-              element={<Navigate to="/adpro" replace />}
-            />
-            <Route path="/adpro/campaign/:id" element={<CampaignDetails />} />
-            <Route
-              path="/adpro/campaign/:id/reports"
-              element={<CampaignReports />}
-            />
-            <Route path="/adpro/create" element={<CreateCampaign />} />
-            <Route path="/adpro/campaign/:id/edit" element={<EditCampaign />} />
-            <Route
-              path="/adpro/campaign/:id/edit-audience"
-              element={<EditCampaignAudience />}
-            />
-
-            {/* jobseeker */}
-            <Route path="/job-vacancy" element={<JobVacancyListing />} />
-
-            <Route
-              path="/candidate-search-page"
-              element={
-                <ProtectedRoute redirectMessage="Your session has expired. Please log in again.">
-                  <CandidateSearchPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/chats" element={<Chat />} />
-            <Route path="/connection" element={<Connections />} />
-            <Route path="/notification" element={<Notifications />} />
-            <Route path="/payment" element={<PaymentPage />} />
-            <Route path="/payment-type" element={<PaymentType />} />
-            <Route path="/add-card" element={<AddCard />} />
-            <Route path="/payment-processing" element={<PaymentProcessing />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/sent-invite" element={<SentInvite />} />
-            <Route
-              path="/employee-sent-invite"
-              element={<EmployeeSentInvite />}
-            />
-            <Route path="/interview-invite" element={<InterviewInvite />} />
-            <Route
-              path="/my-invitations"
-              element={<InterviewNotifications />}
-            />
-            <Route path="/sent-invitations" element={<SentInvitations />} />
-            <Route
-              path="/profile/posts"
-              element={
-                <ProtectedRoute>
-                  <UserProfilePosts />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/user-profile/:userId/posts"
-              element={
-                <ProtectedRoute>
-                  <UserProfilePosts />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/user-profile/:userId"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/about" element={<About />} />
-            <Route path="/teams" element={<Teams />} />
-            <Route path="/security-advice" element={<SecurityAdvice />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/help" element={<Help />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/ase/pricing" element={<ASEPricingPage />} />
-            <Route
-              path="/ase/payment-callback"
-              element={<ASEPaymentCallback />}
-            />
-            <Route
-              path="/ase/subscription-callback"
-              element={<ASEPaymentCallback />}
-            />
-            <Route
-              path="/ase/dashboard"
-              element={<ASESubscriptionDashboard />}
-            />
-            <Route path="/employer/create-job" element={<CreateJob />} />
-
-            <Route path="/employer/dashboard" element={<EmployerDashboard />} />
-
-            <Route path="/employer/bulk-create" element={<BulkCreateJobs />} />
-            <Route
-              path="/employer/extend/callback"
-              element={<JobExtendCallback />}
-            />
-            <Route path="/employer/job/:id/extend" element={<ExtendJob />} />
-            <Route
-              path="/employer/job/:id/applications"
-              element={<JobApplications />}
-            />
-            <Route
-              path="employer/job/:id/recruit"
-              element={<RecruitWithASE />}
               <Route path="employer/job/:id/repost" element={<RepostJob />} />
             </Routes>
             <ProfileCompletionReminder />
