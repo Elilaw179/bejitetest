@@ -1,8 +1,8 @@
 import { toast } from "react-toastify";
 import {
   getSocialShareUrl,
+  openExternalShare,
   openShareWindow,
-  openWhatsAppShare,
 } from "./postShare";
 
 export function getJobShareUrl(jobId) {
@@ -23,6 +23,26 @@ export function buildJobShareText(job) {
   return `${JOB_VACANCY_ALERT_HEADING} ${title}`;
 }
 
+export function getJobWhatsAppShareHref(job) {
+  const url = getJobShareUrl(job.id);
+  const text = buildJobShareText(job);
+  return `https://api.whatsapp.com/send?text=${encodeURIComponent(`${text}\n${url}`)}`;
+}
+
+/** Direct href for share modal links — avoids popup blockers on mobile. */
+export function getJobPlatformHref(job, platform) {
+  if (!job || platform === "copy") return null;
+
+  const url = getJobShareUrl(job.id);
+  const text = buildJobShareText(job);
+
+  if (platform === "whatsapp") {
+    return getJobWhatsAppShareHref(job);
+  }
+
+  return getSocialShareUrl(platform, url, { text, title: job.title });
+}
+
 export async function copyJobLink(jobId) {
   const url = getJobShareUrl(jobId);
   try {
@@ -38,26 +58,13 @@ export async function copyJobLink(jobId) {
   return url;
 }
 
-export function getJobWhatsAppShareHref(job) {
-  const url = getJobShareUrl(job.id);
-  const text = buildJobShareText(job);
-  return `https://api.whatsapp.com/send?text=${encodeURIComponent(`${text}\n${url}`)}`;
-}
-
 export function shareJobToPlatform(job, platform) {
-  const url = getJobShareUrl(job.id);
-  const text = buildJobShareText(job);
-
+  const href = getJobPlatformHref(job, platform);
+  if (href) {
+    openExternalShare(href);
+    return;
+  }
   if (platform === "copy") {
     copyJobLink(job.id);
-    return;
   }
-
-  if (platform === "whatsapp") {
-    openWhatsAppShare(`${text}\n${url}`);
-    return;
-  }
-
-  openShareWindow(getSocialShareUrl(platform, url, { text, title: job.title }));
 }
-

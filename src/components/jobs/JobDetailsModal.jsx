@@ -19,7 +19,7 @@ import { formatTimeRemaining, formatSalary } from "../../utils/checksFormat";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { ApplicationForm } from "./ApplicationForm";
 import SharePostModal from "../SharePostModal";
-import { getJobWhatsAppShareHref, shareJobToPlatform } from "../../utils/jobShare";
+import { getJobPlatformHref, copyJobLink } from "../../utils/jobShare";
 
 export const JobDetailsModal = ({ job, onClose, onApply }) => {
   const [isApplying, setIsApplying] = useState(false);
@@ -48,6 +48,8 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (showShareModal) return;
+      if (event.target.closest("[data-share-modal]")) return;
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         onClose();
       }
@@ -55,6 +57,10 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
 
     const handleEscapeKey = (event) => {
       if (event.key === "Escape") {
+        if (showShareModal) {
+          setShowShareModal(false);
+          return;
+        }
         onClose();
       }
     };
@@ -69,14 +75,16 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
       document.removeEventListener("keydown", handleEscapeKey);
       document.body.style.overflow = "unset";
     };
-  }, [onClose]);
+  }, [onClose, showShareModal]);
 
   const shareJob = () => {
     setShowShareModal(true);
   };
 
   const handleShareOption = (platform) => {
-    shareJobToPlatform(job, platform);
+    if (platform === "copy") {
+      copyJobLink(job.id);
+    }
     setShowShareModal(false);
   };
 
@@ -534,9 +542,7 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
           onShare={handleShareOption}
-          getPlatformHref={(platform) =>
-            platform === "whatsapp" ? getJobWhatsAppShareHref(job) : null
-          }
+          getPlatformHref={(platform) => getJobPlatformHref(job, platform)}
           title="Share job"
         />,
         document.body,

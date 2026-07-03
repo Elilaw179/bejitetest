@@ -33,15 +33,22 @@ const SharePostModal = ({
 
   const mobile = isMobileDevice();
 
+  const stopParentDismiss = (event) => {
+    event.stopPropagation();
+  };
+
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 px-0 sm:px-4 share-backdrop-enter"
+      data-share-modal
+      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/40 px-0 sm:px-4 share-backdrop-enter"
       onClick={onClose}
+      onMouseDown={stopParentDismiss}
       role="presentation"
     >
       <div
         className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-white shadow-xl share-sheet-enter"
         onClick={(e) => e.stopPropagation()}
+        onMouseDown={stopParentDismiss}
       >
         <div className="pt-3 sm:hidden">
           <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-300" />
@@ -80,7 +87,11 @@ const SharePostModal = ({
                   key={id}
                   href={href}
                   {...(mobile ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
-                  onClick={onClose}
+                  onMouseDown={stopParentDismiss}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onClose();
+                  }}
                   className={optionClassName}
                 >
                   {content}
@@ -92,6 +103,7 @@ const SharePostModal = ({
               <button
                 key={id}
                 type="button"
+                onMouseDown={stopParentDismiss}
                 onClick={() => onShare(id)}
                 className={optionClassName}
               >
