@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   FaArrowLeft,
   FaShareAlt,
@@ -18,7 +19,7 @@ import { formatTimeRemaining, formatSalary } from "../../utils/checksFormat";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { ApplicationForm } from "./ApplicationForm";
 import SharePostModal from "../SharePostModal";
-import { nativeShareJob, shareJobToPlatform } from "../../utils/jobShare";
+import { getJobWhatsAppShareHref, shareJobToPlatform } from "../../utils/jobShare";
 
 export const JobDetailsModal = ({ job, onClose, onApply }) => {
   const [isApplying, setIsApplying] = useState(false);
@@ -70,20 +71,13 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
     };
   }, [onClose]);
 
-  const shareJob = async () => {
-    if (navigator.share) {
-      const usedNative = await nativeShareJob(job);
-      if (usedNative) return;
-    }
+  const shareJob = () => {
     setShowShareModal(true);
   };
 
-  const handleShareOption = async (platform) => {
-    try {
-      await shareJobToPlatform(job, platform);
-    } finally {
-      setShowShareModal(false);
-    }
+  const handleShareOption = (platform) => {
+    shareJobToPlatform(job, platform);
+    setShowShareModal(false);
   };
 
   const jobSummaryCard = (
@@ -535,12 +529,18 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
         )}
       </div>
 
-      <SharePostModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        onShare={handleShareOption}
-        title="Share job"
-      />
+      {createPortal(
+        <SharePostModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          onShare={handleShareOption}
+          getPlatformHref={(platform) =>
+            platform === "whatsapp" ? getJobWhatsAppShareHref(job) : null
+          }
+          title="Share job"
+        />,
+        document.body,
+      )}
     </div>
   );
 };

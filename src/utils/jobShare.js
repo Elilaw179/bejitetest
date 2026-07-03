@@ -1,17 +1,26 @@
 import { toast } from "react-toastify";
-import { getSocialShareUrl, openShareWindow } from "./postShare";
+import {
+  getSocialShareUrl,
+  openShareWindow,
+  openWhatsAppShare,
+} from "./postShare";
 
 export function getJobShareUrl(jobId) {
+  if (jobId == null || jobId === "") {
+    return `${window.location.origin}/job-vacancy`;
+  }
   return `${window.location.origin}/j/${encodeURIComponent(jobId)}`;
 }
+
+export const JOB_VACANCY_ALERT_HEADING = "Job vacancy alert:";
 
 export function buildJobShareText(job) {
   const title = job?.title?.trim() || "Job opportunity";
   const company = job?.company?.trim();
   if (company) {
-    return `${title} at ${company} on Bejite`;
+    return `${JOB_VACANCY_ALERT_HEADING} ${title} at ${company}`;
   }
-  return `${title} on Bejite`;
+  return `${JOB_VACANCY_ALERT_HEADING} ${title}`;
 }
 
 export async function copyJobLink(jobId) {
@@ -29,26 +38,26 @@ export async function copyJobLink(jobId) {
   return url;
 }
 
-export async function shareJobToPlatform(job, platform) {
+export function getJobWhatsAppShareHref(job) {
+  const url = getJobShareUrl(job.id);
+  const text = buildJobShareText(job);
+  return `https://api.whatsapp.com/send?text=${encodeURIComponent(`${text}\n${url}`)}`;
+}
+
+export function shareJobToPlatform(job, platform) {
   const url = getJobShareUrl(job.id);
   const text = buildJobShareText(job);
 
   if (platform === "copy") {
-    await copyJobLink(job.id);
+    copyJobLink(job.id);
+    return;
+  }
+
+  if (platform === "whatsapp") {
+    openWhatsAppShare(`${text}\n${url}`);
     return;
   }
 
   openShareWindow(getSocialShareUrl(platform, url, { text, title: job.title }));
 }
 
-export async function nativeShareJob(job) {
-  if (!navigator.share) return false;
-
-  const url = getJobShareUrl(job.id);
-  await navigator.share({
-    title: job.title,
-    text: buildJobShareText(job),
-    url,
-  });
-  return true;
-}

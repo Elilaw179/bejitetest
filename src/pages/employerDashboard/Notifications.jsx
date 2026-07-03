@@ -158,6 +158,17 @@ const Notifications = () => {
       return
     }
 
+    // Connection or platform job listing — open job vacancy page
+    if (notification.type === 'connection_job' || notification.type === 'new_job') {
+      const jobId = parsedData?.jobId
+      if (jobId) {
+        navigate(`/job-vacancy?jobId=${encodeURIComponent(jobId)}`)
+        return
+      }
+      navigate('/job-vacancy')
+      return
+    }
+
     // Post engagement — open news feed at the post
     if (
       notification.type === 'post_liked' ||
@@ -284,6 +295,9 @@ const Notifications = () => {
         return '❌'
       case 'connection_post':
         return '📝'
+      case 'connection_job':
+      case 'new_job':
+        return '💼'
       case 'post_liked':
         return '❤️'
       case 'post_commented':

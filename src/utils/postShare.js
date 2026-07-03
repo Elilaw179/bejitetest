@@ -61,8 +61,39 @@ export async function copyPostLink(postId) {
   return url;
 }
 
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(
+    navigator.userAgent || "",
+  );
+}
+
+export { isMobileDevice };
+
+/** Open an external share/intent URL (WhatsApp, Facebook, etc.). */
+export function openExternalShare(url) {
+  if (!url) return;
+
+  if (isMobileDevice()) {
+    window.location.assign(url);
+    return;
+  }
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 export function openShareWindow(url) {
-  window.open(url, '_blank', 'noopener,noreferrer,width=600,height=600');
+  openExternalShare(url);
+}
+
+export function openWhatsAppShare(message) {
+  const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+  openExternalShare(shareUrl);
 }
 
 export function getSocialShareUrl(platform, postUrl, { text, title } = {}) {
@@ -72,8 +103,7 @@ export function getSocialShareUrl(platform, postUrl, { text, title } = {}) {
 
   switch (platform) {
     case 'whatsapp':
-      // URL only — WhatsApp builds the preview card from OG tags on the link.
-      return `https://wa.me/?text=${encodedUrl}`;
+      return `https://api.whatsapp.com/send?text=${encodedUrl}`;
     case 'facebook':
       return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
     case 'x':
