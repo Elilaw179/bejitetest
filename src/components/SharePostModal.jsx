@@ -8,6 +8,7 @@ import {
   FaTelegramPlane,
   FaLink,
 } from 'react-icons/fa';
+import { isMobileDevice } from '../utils/postShare';
 
 const OPTIONS = [
   { id: 'whatsapp', label: 'WhatsApp', icon: FaWhatsapp, bg: 'bg-green-100', color: 'text-green-600' },
@@ -18,8 +19,19 @@ const OPTIONS = [
   { id: 'copy', label: 'Copy link', icon: FaLink, bg: 'bg-[#E8F5E6]', color: 'text-[#16730F]' },
 ];
 
-const SharePostModal = ({ isOpen, onClose, onShare, title = "Share post" }) => {
+const optionClassName =
+  'flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-300 p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#16730F] hover:bg-[#F5F9F4]';
+
+const SharePostModal = ({
+  isOpen,
+  onClose,
+  onShare,
+  getPlatformHref,
+  title = 'Share post',
+}) => {
   if (!isOpen) return null;
+
+  const mobile = isMobileDevice();
 
   return (
     <div
@@ -51,19 +63,42 @@ const SharePostModal = ({ isOpen, onClose, onShare, title = "Share post" }) => {
         </div>
 
         <div className="grid grid-cols-3 gap-4 p-5 pt-3 pb-7 sm:pb-5">
-          {OPTIONS.map(({ id, label, icon, color, bg }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => onShare(id)}
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-300 p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#16730F] hover:bg-[#F5F9F4]"
-            >
-              <span className={`flex h-11 w-11 items-center justify-center rounded-full ${bg}`}>
-                {React.createElement(icon, { className: `text-xl ${color}` })}
-              </span>
-              <span className="text-xs font-medium text-[#1A3E32]">{label}</span>
-            </button>
-          ))}
+          {OPTIONS.map(({ id, label, icon, color, bg }) => {
+            const href = getPlatformHref?.(id);
+            const content = (
+              <>
+                <span className={`flex h-11 w-11 items-center justify-center rounded-full ${bg}`}>
+                  {React.createElement(icon, { className: `text-xl ${color}` })}
+                </span>
+                <span className="text-xs font-medium text-[#1A3E32]">{label}</span>
+              </>
+            );
+
+            if (href) {
+              return (
+                <a
+                  key={id}
+                  href={href}
+                  {...(mobile ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+                  onClick={onClose}
+                  className={optionClassName}
+                >
+                  {content}
+                </a>
+              );
+            }
+
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => onShare(id)}
+                className={optionClassName}
+              >
+                {content}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
