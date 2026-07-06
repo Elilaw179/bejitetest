@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useLocation, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import Header from "../../components/Header";
 import { FaArrowLeft } from "react-icons/fa";
@@ -12,7 +12,10 @@ const btnSecondary =
 
 const CoperateVerify = () => {
   const navigate = useNavigate();
-  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
+  const { currentStep, isEditMode, recruiterData, getPath } =
+    useOutletContext();
+  const location = useLocation();
+  const isIndividual = location.pathname.includes("individual");
 
   const [showConsent, setShowConsent] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -44,7 +47,7 @@ const CoperateVerify = () => {
       return;
     }
 
-    navigate("/corporate/upload");
+    navigate(isIndividual ? "/individual/selectid" : "/corporate/upload");
   };
 
   const handleSkip = () => {
@@ -67,20 +70,20 @@ const CoperateVerify = () => {
         {!showConsent ? (
           <div className="w-full max-w-lg mx-auto flex flex-col gap-5 sm:gap-6 items-center text-center">
             <p className="text-base sm:text-xl font-medium text-[#16730F] italic">
-              Almost there!
+              {isIndividual ? "Almost there" : "Almost there!"}
             </p>
 
-            <h1 className="text-[#16730F] font-semibold text-xl sm:text-2xl md:text-3xl leading-snug px-1">
-              Confirm your Identity as an Individual Employer
+            <h1 className={`${isIndividual ? "text-[#1A3E32]" : "text-[#16730F]"} font-semibold text-xl sm:text-2xl md:text-3xl leading-snug px-1`}>
+              {isIndividual ? "Verify Your Identity" : "Confirm Your Legal Role"}
             </h1>
 
             <p className="text-xs sm:text-sm italic text-gray-700 leading-relaxed max-w-prose px-1">
-              To maintain a trustworthy platform for jobseekers, Bejite verifies
-              that employers hiring on behalf of companies have proper authority.
-              Help us keep Bejite secure and reliable.
+              {isIndividual
+                ? "A quick verification helps jobseekers feel safe accepting your offers. Upload or snap a clear image of your valid government-issued ID to get verified on Bejite."
+                : "To maintain a trustworthy platform for jobseekers, Bejite verifies that employers hiring on behalf of companies have proper authority. Help us keep Bejite secure and reliable"}
             </p>
 
-            <div className="w-full max-w-md flex flex-col gap-3 mt-1 sm:mt-2">
+            <div className="w-full max-w-md flex flex-col items-center gap-3 mt-1 sm:mt-2">
               <button
                 type="button"
                 className={btnPrimary}
@@ -89,9 +92,15 @@ const CoperateVerify = () => {
                 Start Verification
               </button>
 
-              <button type="button" className={btnSecondary} onClick={handleSkip}>
-                Skip
-              </button>
+              {!isIndividual && (
+                <button
+                  type="button"
+                  className={btnSecondary}
+                  onClick={handleSkip}
+                >
+                  Skip
+                </button>
+              )}
             </div>
 
             <button
@@ -121,12 +130,13 @@ const CoperateVerify = () => {
                 className="mt-1 h-4 w-4 shrink-0 accent-[#16730F]"
               />
               <span className="text-sm sm:text-base text-green-800 leading-relaxed text-left break-words">
-                I confirm that I am legally authorized to hire for this business
-                and consent to ID verification.
+                {isIndividual
+                  ? "I confirm my consent to ID verification."
+                  : "I confirm that I am legally authorized to hire for this company"}
               </span>
             </label>
 
-            <div className="w-full max-w-md flex flex-col gap-3">
+            <div className="w-full max-w-md flex flex-col items-center gap-3">
               <button
                 type="button"
                 className={btnPrimary}
@@ -136,9 +146,15 @@ const CoperateVerify = () => {
                 Continue
               </button>
 
-              <button type="button" className={btnSecondary} onClick={handleSkip}>
-                Skip
-              </button>
+              {!isIndividual && (
+                <button
+                  type="button"
+                  className={btnSecondary}
+                  onClick={handleSkip}
+                >
+                  Skip
+                </button>
+              )}
             </div>
 
             <button

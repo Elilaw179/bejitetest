@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavigationButtons from "../../components/NavigationButtons";
 import Header from "../../components/Header";
+import { ChevronDown } from "lucide-react";
 
 const SelectId = () => {
   const navigate = useNavigate();
-    // const { currentStep } = useOutletContext();
 
   const [formData, setFormData] = useState({
     id_type: "",
@@ -18,44 +18,54 @@ const SelectId = () => {
   const isFormComplete = formData.id_type.trim() !== "";
 
   return (
-    <div className=" min-h-screen  ">
-      <Header />
+    <div className="min-h-screen bg-white px-4 flex flex-col justify-between pb-8">
+      <div>
+        <Header />
 
-      <div className="w-[60%] p-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <div className="bg-[#F5F5F5] w-[90%] mx-auto rounded-2xl p-2">
-          {/* SELECT ID TYPE */}
-          <div className="p-5 bg-[#82828280] rounded-3xl">
-            <label
-              className="font-semibold text-[12px] mb-2 block"
-              htmlFor="id_type"
-            >
-              SELECT ID TYPE
-            </label>
+        <div className="max-w-xl mx-auto mt-20 flex flex-col items-center justify-center p-4">
+          <div className="w-full bg-[#F5F5F5] rounded-3xl p-3 shadow-inner">
+            <div className="p-6 bg-[#C4C4C4]/80 rounded-2xl">
+              <label
+                className="font-bold text-[10px] text-gray-800 tracking-wider mb-3 block"
+                htmlFor="id_type"
+              >
+                SELECT ID TYPE
+              </label>
 
-            <select
-              id="id_type"
-              name="id_type"
-              value={formData.id_type}
-              onChange={handleChange}
-              className="w-full p-2 rounded-md border-[#F5F5F5] outline-none"
-            >
-              <option value="">Select an ID Type </option>
-              <option value="National ID">National ID</option>
-              <option value="Voter's Card">Voter's Card</option>
-              <option value="Driver's License">Driver's License</option>
-              <option value="International Passport">
-                International Passport
-              </option>
-            </select>
+              <div className="relative">
+                <select
+                  id="id_type"
+                  name="id_type"
+                  value={formData.id_type}
+                  onChange={handleChange}
+                  className="w-full bg-white/40 border border-white/60 rounded-xl px-4 h-12 text-sm text-gray-800 outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all"
+                >
+                  <option value="" className="bg-white">Select</option>
+                  <option value="NIN" className="bg-white">National Identification Number (NIN)</option>
+                  <option value="International Passport" className="bg-white">International Passport</option>
+                  <option value="Driver's License" className="bg-white">Driver's License</option>
+                  <option value="PVC" className="bg-white">Permanent Voter's Card (PVC)</option>
+                  <option value="National Identity Card" className="bg-white">National Identity Card</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700">
+                  <ChevronDown className="w-4 h-4 text-gray-800" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-        <NavigationButtons
-          isFormComplete={isFormComplete}
-          onBack={() => navigate(-1)}
-          onNext={() => isFormComplete && navigate("/individual/upload")}
-        />
       </div>
+
+      <NavigationButtons
+        isFormComplete={isFormComplete}
+        onBack={() => navigate(-1)}
+        nextLabel="Next"
+        onNext={() => {
+          if (isFormComplete) {
+            navigate("/individual/upload", { state: { id_type: formData.id_type } });
+          }
+        }}
+      />
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useLocation, useOutletContext } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { updateUser } from "../../features/auth/authSlice";
@@ -18,7 +18,10 @@ import { RECRUITER_ONBOARDING_STEPS } from "../../components/recruiter/recruiter
 const CoperateProfileSetup = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
+  const { currentStep, isEditMode, recruiterData, getPath } =
+    useOutletContext();
+  const location = useLocation();
+  const isIndividual = location.pathname.includes("individual");
   const { user: authUser } = useAuth();
 
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -72,7 +75,8 @@ const CoperateProfileSetup = () => {
       }
       try {
         const fromApi = await fetchCurrentUserProfilePhoto();
-        if (!cancelled && fromApi) setImagePreview(profilePhotoUrl(fromApi) ?? null);
+        if (!cancelled && fromApi)
+          setImagePreview(profilePhotoUrl(fromApi) ?? null);
       } catch {
         /* optional */
       }
@@ -186,7 +190,11 @@ const CoperateProfileSetup = () => {
       if (isEditMode) {
         navigate(getPath(currentStep + 1));
       } else {
-        navigate("/corporate/company-details");
+        navigate(
+          isIndividual
+            ? "/individual/company-details"
+            : "/corporate/company-details",
+        );
       }
     } catch (error) {
       console.error(error);
@@ -197,7 +205,11 @@ const CoperateProfileSetup = () => {
     if (isEditMode) {
       navigate(getPath(currentStep + 1));
     } else {
-      navigate("/corporate/company-details");
+      navigate(
+        isIndividual
+          ? "/individual/company-details"
+          : "/corporate/company-details",
+      );
     }
   };
 
@@ -237,7 +249,12 @@ const CoperateProfileSetup = () => {
           if (isEditMode) {
             navigate(getPath(currentStep - 1));
           } else {
-            navigateBack(navigate, "/corporate/basic-details");
+            navigateBack(
+              navigate,
+              isIndividual
+                ? "/individual/basic-details"
+                : "/corporate/basic-details",
+            );
           }
         }}
         onNext={handleNextStep}

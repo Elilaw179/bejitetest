@@ -227,10 +227,11 @@ const CoperateBasicDetails = () => {
         },
       });
 
+      const isIndividual = location.pathname.includes("individual");
       if (isEditMode) {
         navigate(getPath(currentStep + 1));
       } else {
-        navigate("/corporate/profile-setup");
+        navigate(isIndividual ? "/individual/profile-setup" : "/corporate/profile-setup");
       }
     } catch (error) {
       console.error(error);
