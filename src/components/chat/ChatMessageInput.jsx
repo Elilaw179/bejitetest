@@ -24,6 +24,28 @@ function ChatMessageInput({
   const recordChunksRef = useRef([]);
   const emojiRef = useRef(null);
   const attachRef = useRef(null);
+  const textareaRef = useRef(null);
+  const [emojiPickerWidth, setEmojiPickerWidth] = useState(320);
+
+  const adjustTextareaHeight = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [message]);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      setEmojiPickerWidth(Math.min(320, Math.max(260, window.innerWidth - 32)));
+    };
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -136,7 +158,7 @@ function ChatMessageInput({
   const busy = sending || uploading || disabled;
 
   return (
-    <div className="shrink-0 z-20 p-2 md:p-4 bg-gray-100 border-t border-gray-200 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+    <div className="shrink-0 z-20 px-2 pt-2 md:px-4 md:pt-3 bg-gray-100 border-t border-gray-200 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
       {recordError && (
         <p className="text-red-500 text-xs mb-2 px-1">{recordError}</p>
       )}
@@ -149,19 +171,25 @@ function ChatMessageInput({
         <p className="text-gray-500 text-xs mb-2 px-1">Uploading attachment…</p>
       )}
 
-      <div className="flex flex-col gap-1 md:gap-2 border border-[#D3D3D3] rounded-2xl px-3 md:px-4 py-2 md:py-3 bg-gray-100 shadow-sm">
-        <input
-          type="text"
+      <div className="flex flex-col gap-1 border border-[#16730F] rounded-[2rem] px-4 md:px-5 pt-2.5 pb-2 md:pt-3 md:pb-2.5 bg-[#F3F3F3] shadow-sm">
+        <textarea
+          ref={textareaRef}
+          rows={1}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendClick()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSendClick();
+            }
+          }}
           placeholder="Type a message"
           disabled={busy}
-          className="flex-1 outline-none text-xs md:text-sm bg-transparent placeholder-gray-400 disabled:opacity-50"
+          className="w-full outline-none text-xs md:text-sm bg-transparent text-[#1A3E32] placeholder:text-[#A89B72] disabled:opacity-50 leading-normal resize-none overflow-y-auto max-h-32 break-words"
         />
 
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-1 md:space-x-2">
+        <div className="flex justify-between items-center min-h-0">
+          <div className="flex items-center gap-2 md:gap-3">
             <div className="relative" ref={emojiRef}>
               <button
                 type="button"
@@ -170,16 +198,20 @@ function ChatMessageInput({
                   setShowAttachMenu(false);
                 }}
                 disabled={busy}
-                className="text-gray-500 hover:text-green-600 text-base md:text-lg disabled:opacity-50"
+                className="inline-flex items-center justify-center shrink-0 hover:opacity-80 disabled:opacity-50"
                 aria-label="Add emoji"
               >
-                😊
+                <img
+                  src="/assets/images/Smily.svg"
+                  alt=""
+                  className="block w-5 h-5"
+                />
               </button>
               {showEmoji && (
                 <div className="absolute bottom-full left-0 mb-2 z-30 rounded-xl shadow-lg overflow-hidden">
                   <EmojiPicker
                     onEmojiClick={handleEmojiClick}
-                    width={320}
+                    width={emojiPickerWidth}
                     height={400}
                     searchPlaceholder="Search emojis…"
                     previewConfig={{ showPreview: false }}
@@ -196,10 +228,14 @@ function ChatMessageInput({
                   setShowEmoji(false);
                 }}
                 disabled={busy}
-                className="text-gray-500 hover:text-green-600 text-base md:text-lg disabled:opacity-50"
+                className="inline-flex items-center justify-center shrink-0 hover:opacity-80 disabled:opacity-50"
                 aria-label="Attach file"
               >
-                ＋
+                <img
+                  src="/assets/images/Plus_Icon.svg"
+                  alt=""
+                  className="block w-4 h-4"
+                />
               </button>
               {showAttachMenu && (
                 <div className="absolute bottom-full left-0 mb-2 z-20 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[140px]">
@@ -250,28 +286,40 @@ function ChatMessageInput({
             </div>
           </div>
 
-          <div className="flex items-center space-x-1 md:space-x-2">
+          <div className="flex items-center gap-2 md:gap-3">
             <button
               type="button"
               onClick={handleVoiceClick}
               disabled={uploading || disabled}
-              className={`text-base md:text-lg disabled:opacity-50 ${
-                recording
-                  ? 'text-red-500 animate-pulse'
-                  : 'text-gray-500 hover:text-green-600'
+              className={`inline-flex items-center justify-center shrink-0 disabled:opacity-50 ${
+                recording ? 'animate-pulse opacity-80' : 'hover:opacity-80'
               }`}
               aria-label={recording ? 'Stop recording' : 'Record voice'}
             >
-              🎤
+              <img
+                src="/assets/images/microphone.png"
+                alt=""
+                className={`block w-5 h-5 ${recording ? 'opacity-70' : ''}`}
+              />
             </button>
             <button
               type="button"
               onClick={handleSendClick}
               disabled={busy || !message.trim()}
-              className="bg-gray-700 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-full p-1 md:p-2 transition"
+              className="inline-flex items-center justify-center shrink-0 disabled:opacity-50 transition"
               aria-label="Send message"
             >
-              {sending ? '...' : '➤'}
+              {sending ? (
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#1A3E32] text-white text-xs">
+                  ...
+                </span>
+              ) : (
+                <img
+                  src="/assets/images/chat_send.svg"
+                  alt=""
+                  className="block w-8 h-8 md:w-9 md:h-9"
+                />
+              )}
             </button>
           </div>
         </div>

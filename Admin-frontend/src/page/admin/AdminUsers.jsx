@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
-import { Search, Mail, Shield, CheckCircle, XCircle, MoreVertical, X } from 'lucide-react';
+import { Search, Mail, Shield, CheckCircle, XCircle, MoreVertical, X, Eye } from 'lucide-react';
+import AdminUserDetailModal from '../../components/admin/AdminUserDetailModal';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   // Filter states
   const [roleFilter, setRoleFilter] = useState('all'); // all | jobseeker | recruiter | unassigned
@@ -18,33 +20,41 @@ const AdminUsers = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const filterMenuRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        // Build query params
         const params = new URLSearchParams({
           page: currentPage.toString(),
           limit: itemsPerPage.toString(),
         });
-        
-        // Add search param if present
-        if (searchTerm) {
-          params.append('search', searchTerm);
+
+        if (debouncedSearch) {
+          params.append('search', debouncedSearch);
         }
-        
-        // Add role filter if not 'all'
+
         if (roleFilter !== 'all') {
           params.append('role', roleFilter);
         }
-        
+
+        if (dateFilter !== 'all') {
+          params.append('joined', dateFilter);
+        }
+
         const response = await axiosInstance.get(`/api/admin/data/users?${params.toString()}`);
         setUsers(response.data.users);
-        
-        // Update pagination from server response
+
         if (response.data.pagination) {
           setTotalUsers(response.data.pagination.total);
           setTotalPages(response.data.pagination.pages);
@@ -58,7 +68,7 @@ const AdminUsers = () => {
     };
 
     fetchUsers();
-  }, [currentPage, itemsPerPage, searchTerm, roleFilter]);
+  }, [currentPage, itemsPerPage, debouncedSearch, roleFilter, dateFilter]);
 
   // Close filter menu when clicking outside
   useEffect(() => {
@@ -77,10 +87,9 @@ const AdminUsers = () => {
     };
   }, [showFilterMenu]);
 
-// Reset to first page whenever filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, roleFilter, dateFilter]);
+  }, [debouncedSearch, roleFilter, dateFilter]);
 
   // Calculate display range for "Showing X-Y of Z users"
   const startIndex = (currentPage - 1) * itemsPerPage + 1;
@@ -215,7 +224,7 @@ const AdminUsers = () => {
             
             {searchTerm && (
               <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
-                Search: "{searchTerm}"
+                Search: &quot;{searchTerm}&quot;
                 <button onClick={() => setSearchTerm('')} className="hover:text-red-500">
                   <X size={12} />
                 </button>
@@ -263,12 +272,13 @@ const AdminUsers = () => {
                   <th className="px-6 py-4">Role</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Joined Date</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan="4" className="px-6 py-12 text-center">
+                    <td colSpan="5" className="px-6 py-12 text-center">
                       <div className="animate-spin inline-block rounded-full h-8 w-8 border-b-2 border-[#16730F]"></div>
                       <p className="text-gray-500 mt-2">Loading users...</p>
                     </td>
@@ -313,11 +323,23 @@ const AdminUsers = () => {
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {new Date(user.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                       </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUser(user)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#16730F] hover:bg-[#16730F]/10 rounded-lg transition-colors"
+                          >
+                            <Eye size={16} />
+                            View profile
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
                        {searchTerm || roleFilter !== 'all' || dateFilter !== 'all' 
                          ? 'No users match your current filters.' 
                          : 'No users found.'}
@@ -408,9 +430,16 @@ const AdminUsers = () => {
                </div>
              </div>
            )}
-         </div>
-
        </div>
+
+       {selectedUser && (
+         <AdminUserDetailModal
+           user={selectedUser}
+           onClose={() => setSelectedUser(null)}
+         />
+       )}
+
+     </div>
    );
  };
 

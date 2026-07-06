@@ -1,14 +1,20 @@
 import React, { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
 import ImageUpload from "../../components/ImageUpload";
+import useRecruiterProfile from "../../services/recruiterProfile";
+import { updateUser } from "../../features/auth/authSlice";
 
 const ProfileSetup = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { currentStep } = useOutletContext();
+  const { updateProfileSetup, uploadProfilePhoto } = useRecruiterProfile();
 
   const steps = ["Basic Details", "Profile Setup", "Location"];
 
@@ -16,21 +22,87 @@ const ProfileSetup = () => {
     nickname: "",
     summary: "",
   });
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  const [imagePreview, setImagePreview] = useState(null);
-
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) setImagePreview(URL.createObjectURL(file));
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const isFormComplete =
-    Object.values(formData).every((v) => v.trim() !== "") && imagePreview;
+    formData.nickname.trim() !== "" &&
+    formData.summary.trim() !== "" &&
+    (imagePreview || imageFile);
 
+  const handleNextStep = async () => {
+    if (!isFormComplete || submitting) {
+      if (!isFormComplete) {
+        toast.error("Please complete all fields and upload a profile photo.");
+      }
+      return;
+    }
+
+    const submitProfileSequence = async () => {
+      await updateProfileSetup({
+        nickname: formData.nickname.trim(),
+        summary: formData.summary.trim(),
+      });
+
+      if (imageFile) {
+        const photoRes = await uploadProfilePhoto(imageFile);
+        const photoUrl =
+          photoRes?.profilePhoto ??
+          photoRes?.profile_photo ??
+          photoRes?.image ??
+          photoRes?.data?.profilePhoto ??
+          photoRes?.data?.profile_photo ??
+          photoRes?.url ??
+          null;
+        if (photoUrl) {
+          dispatch(
+            updateUser({
+              image: photoUrl,
+              profilePhoto: photoUrl,
+              profile_photo: photoUrl,
+            }),
+          );
+        }
+      }
+
+      return "Profile setup saved successfully!";
+    };
+
+    setSubmitting(true);
+    try {
+      await toast.promise(submitProfileSequence(), {
+        pending: "Saving profile setup...",
+        success: "Profile setup saved successfully!",
+        error: {
+          render({ data }) {
+            return `Save failed: ${data}`;
+          },
+        },
+      });
+      navigate("/individual/location");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSkip = () => {
+    navigate("/individual/location");
+  };
 
   return (
     <div className="bg-white min-h-screen">
@@ -46,7 +118,7 @@ const ProfileSetup = () => {
         Introduce yourself to jobseekers
       </p>
 
-      <div className="max-w-4xl mx-auto mt-6 border-2 border-[#E0E0E0] flex flex-col lg:flex-row gap-8 p-4 items-center">
+      <div className="max-w-4xl mx-auto mt-8 bg-white md:border border-gray-200 rounded-2xl md:shadow-sm p-4 md:p-8 flex flex-col lg:flex-row gap-8 items-start">
         <ImageUpload
           imagePreview={imagePreview}
           handleImageChange={handleImageChange}
@@ -54,9 +126,8 @@ const ProfileSetup = () => {
           onBioChange={handleChange}
         />
 
-        <div className="bg-[#F5F5F5] w-[90%] mx-auto rounded-2xl p-5">
-          {/* NICK NAME*/}
-          <div className="p-5 bg-[#82828280] rounded-3xl mb-4">
+        <div className="w-full flex-1 space-y-5">
+          <div>
             <label className="font-semibold text-[12px] mb-2 block">
               Unique Identifier (required)
             </label>
@@ -66,12 +137,11 @@ const ProfileSetup = () => {
               placeholder="@Nickname"
               value={formData.nickname}
               onChange={handleChange}
-              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none"
+              className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm placeholder-gray-400"
             />
           </div>
 
-          {/* SUMMARY */}
-          <div className="p-5 bg-[#82828280] rounded-3xl mb-4">
+          <div>
             <label className="font-semibold text-[12px] mb-2 block">
               Bio/Summary (Required, 500 chars max)
             </label>
@@ -82,16 +152,18 @@ const ProfileSetup = () => {
               onChange={handleChange}
               rows={4}
               maxLength={500}
-              className="border w-full p-4 border-[#F5F5F5] rounded-[10px] outline-none resize-none"
+              className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm resize-none"
             />
           </div>
         </div>
       </div>
 
       <NavigationButtons
-        isFormComplete={isFormComplete}
+        showSkip
+        onSkip={handleSkip}
+        isFormComplete={isFormComplete && !submitting}
         onBack={() => navigate(-1)}
-        onNext={() => isFormComplete && navigate("/individual/location")}
+        onNext={handleNextStep}
       />
     </div>
   );

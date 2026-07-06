@@ -204,7 +204,7 @@ function SignIn() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-[#d3d3d3] rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-green-300"
+                className="w-full px-4 py-3 border border-[#d3d3d3] rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-[#1A3E32] focus:border-[#1A3E32]"
               />
               <div className="relative">
                 <input
@@ -212,7 +212,7 @@ function SignIn() {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-[#d3d3d3] rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-green-300"
+                  className="w-full px-4 py-3 border border-[#d3d3d3] rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-[#1A3E32] focus:border-[#1A3E32]"
                 />
                 <button
                   type="button"

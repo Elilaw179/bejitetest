@@ -85,7 +85,7 @@ const CoperateUploadDoc = () => {
             ) : (
               <>
                 <p className="italic text-center text-gray-600">
-                  • Upload an authorization letter (PDF/PNG) (e.g., company letterhead, HR approval, or director’s signature.)
+                  • Upload CAC documents (PDF/PNG) (e.g., Certificate of Incorporation, CAC status report, or business registration certificate.)
                 </p>
                 <p className="italic text-center text-gray-600">
                   • Supported formats: PNG, JPG, PDF (max 2MB)
@@ -198,7 +198,7 @@ const CoperateUploadDoc = () => {
       {/* Navigation Buttons */}
       <NavigationButtons
         isFormComplete={isFormComplete}
-        showSkip={true}
+        showSkip={isIndividual}
         onSkip={handleSkip}
         nextLabel="Submit"
         onBack={() => {

@@ -312,6 +312,11 @@ const PostCard = ({
   const [editBody, setEditBody] = useState(post.body || "");
   const [savingEdit, setSavingEdit] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
+
+  useEffect(() => {
+    setCommentsCount(post.commentsCount || 0);
+  }, [post.id, post.commentsCount]);
 
   const fetchComments = async (force = false) => {
     if (!force && comments.length > 0) return;
@@ -360,11 +365,7 @@ const PostCard = ({
   }, [post.id, defaultShowComments]);
 
   const handleCommentAction = () => {
-    if (isDetailView) {
-      toggleComments();
-      return;
-    }
-    navigate(getPostDetailPath(post.id));
+    toggleComments();
   };
 
   const handleLikeClick = () => {
@@ -516,7 +517,7 @@ const PostCard = ({
       )}
       <PostStats
         likesCount={post.likesCount || 0}
-        commentsCount={post.commentsCount || 0}
+        commentsCount={commentsCount}
         sharesCount={post.sharesCount || 0}
         onCommentsClick={handleCommentAction}
         isDetailView={isDetailView}
@@ -525,7 +526,7 @@ const PostCard = ({
         liked={liked}
         saved={saved}
         likesCount={post.likesCount || 0}
-        commentsCount={post.commentsCount || 0}
+        commentsCount={commentsCount}
         sharesCount={post.sharesCount || 0}
         onLike={handleLikeClick}
         onComment={handleCommentAction}
@@ -545,6 +546,9 @@ const PostCard = ({
           setComments={setComments}
           loading={loadingComments}
           onReload={() => fetchComments(true)}
+          onCommentCountChange={(delta) =>
+            setCommentsCount((count) => Math.max(0, count + delta))
+          }
           currentUserPhotoUrl={getUserProfileImage()}
           currentUserId={currentUserId}
         />

@@ -1,35 +1,56 @@
 
 import React, { useRef, useState } from "react";
 import { Camera, Upload } from "lucide-react";
+import { toast } from "react-toastify";
 import NavigationButtons from "../../components/NavigationButtons";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
+import useRecruiterProfile from "../../services/recruiterProfile";
 
 const UploadDoc = () => {
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+  const { uploadIdDocument } = useRecruiterProfile();
 
+  const [selectedFile, setSelectedFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
   const [isUploaded, setIsUploaded] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       setFileName(file.name);
+      setIsUploaded(false);
       if (file.type.startsWith("image/")) {
-        const imageUrl = URL.createObjectURL(file);
-        setPreviewUrl(imageUrl);
+        setPreviewUrl(URL.createObjectURL(file));
       } else {
         setPreviewUrl("");
       }
     }
   };
 
-  const handleUpload = () => {
-    if (fileName) {
-      // Simulate upload logic
+  const handleUpload = async () => {
+    if (!selectedFile || isUploaded || uploading) return;
+
+    setUploading(true);
+    try {
+      await toast.promise(uploadIdDocument(selectedFile), {
+        pending: "Uploading ID document...",
+        success: "ID document uploaded successfully!",
+        error: {
+          render({ data }) {
+            return `Upload failed: ${data}`;
+          },
+        },
+      });
       setIsUploaded(true);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -40,7 +61,6 @@ const UploadDoc = () => {
       <Header />
 
       <div className="max-w-4xl mx-auto mt-6 flex flex-col items-center justify-center gap-8 p-4">
-        {/* Instructions */}
         <div className="text-xs text-black mb-6 text-left">
           <p className="font-semibold mb-2">Instructions:</p>
           <ul className="space-y-1 list-disc list-inside">
@@ -51,7 +71,6 @@ const UploadDoc = () => {
           </ul>
         </div>
 
-        {/* Upload Section */}
         <div className="w-full max-w-lg">
           <p className="text-sm font-semibold text-gray-800 mb-3 text-left">
             {isUploaded
@@ -59,8 +78,7 @@ const UploadDoc = () => {
               : "Upload front of your Government ID"}
           </p>
 
-          {/* Preview Area */}
-          <div className="w-full h-60 bg-gray-200 rounded-md flex items-center justify-center mb-4 overflow-hidden">
+          <div className="w-full h-60 bg-white border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center mb-4 overflow-hidden">
             {previewUrl ? (
               <img
                 src={previewUrl}
@@ -72,7 +90,6 @@ const UploadDoc = () => {
             )}
           </div>
 
-          {/* Choose File (hide only after upload) */}
           {!isUploaded && (
             <div className="mb-3">
               <label
@@ -93,24 +110,22 @@ const UploadDoc = () => {
             </div>
           )}
 
-          {/* Upload or Uploaded Button */}
           <button
             onClick={handleUpload}
-            disabled={!fileName || isUploaded}
+            disabled={!selectedFile || isUploaded || uploading}
             className={`w-full py-3 rounded-md font-semibold transition ${
               isUploaded
                 ? "bg-gray-500 text-white cursor-not-allowed"
-                : fileName
+                : selectedFile
                 ? "bg-green-700 text-white hover:bg-green-800"
                 : "bg-gray-300 text-gray-600 cursor-not-allowed"
             }`}
           >
-            {isUploaded ? "Uploaded" : "Upload"}
+            {isUploaded ? "Uploaded" : uploading ? "Uploading..." : "Upload"}
           </button>
         </div>
       </div>
 
-      {/* Navigation Buttons */}
       <NavigationButtons
         isFormComplete={isFormComplete}
         onBack={() => navigate(-1)}

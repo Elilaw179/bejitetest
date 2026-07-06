@@ -7,6 +7,7 @@ import {
 import { CertificateViewLink } from './CertificateViewerModal';
 import { normalizeProfileSkills, resolveProfileSkillSource } from '../utils/profileSkills';
 import ProfileSkillsDisplay from './ProfileSkillsDisplay';
+import ResponsibilitiesList from './ResponsibilitiesList';
 import {
   getFormattedEducationFields,
   getFormattedWorkHistoryFields,
@@ -146,9 +147,10 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
                   )}
                 </p>
                 {formatted.description && (
-                  <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap break-words">
-                    {formatted.description}
-                  </p>
+                  <ResponsibilitiesList
+                    text={formatted.description}
+                    className="mt-2 space-y-1.5 list-disc list-outside pl-5 text-sm text-gray-700 break-words"
+                  />
                 )}
               </li>
             );

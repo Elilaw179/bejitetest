@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaImage, FaVideo, FaTimes, FaClock } from 'react-icons/fa';
 import { uploadMedia } from '../services/postsApi';
+import EmojiPickerButton from './common/EmojiPickerButton';
 
 function getDefaultSchedule() {
   const d = new Date();
@@ -101,6 +102,10 @@ const PostCreationModal = ({
       throw new Error('Scheduled time must be in the future.');
     }
     return scheduled.toISOString();
+  };
+
+  const insertInto = (setter) => (emoji) => {
+    setter((prev) => `${prev || ''}${emoji}`);
   };
 
   const updatePollOption = (index, value) => {
@@ -223,14 +228,21 @@ const PostCreationModal = ({
                 <label className="mb-2 block text-sm font-medium text-[#1A3E32]">
                   Poll question
                 </label>
-                <input
-                  type="text"
-                  value={pollQuestion}
-                  onChange={(e) => setPollQuestion(e.target.value)}
-                  placeholder="Ask something..."
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:outline-none focus:border-[#16730F]"
-                  autoFocus
-                />
+                <div>
+                  <input
+                    type="text"
+                    value={pollQuestion}
+                    onChange={(e) => setPollQuestion(e.target.value)}
+                    placeholder="Ask something..."
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:outline-none focus:border-[#16730F]"
+                    autoFocus
+                  />
+                  <div className="flex justify-end mt-2">
+                    <EmojiPickerButton
+                      onEmojiSelect={insertInto(setPollQuestion)}
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -289,22 +301,36 @@ const PostCreationModal = ({
                 <label className="mb-2 block text-sm font-medium text-[#1A3E32]">
                   Additional context (optional)
                 </label>
-                <textarea
-                  value={postBody}
-                  onChange={(e) => setPostBody(e.target.value)}
-                  placeholder="Add more details about your poll..."
-                  className="w-full min-h-[100px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#16730F] resize-none text-sm"
-                />
+                <div>
+                  <textarea
+                    value={postBody}
+                    onChange={(e) => setPostBody(e.target.value)}
+                    placeholder="Add more details about your poll..."
+                    className="w-full min-h-[100px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#16730F] resize-none text-sm"
+                  />
+                  <div className="flex justify-end mt-2">
+                    <EmojiPickerButton
+                      onEmojiSelect={insertInto(setPostBody)}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
-            <textarea
-              value={postBody}
-              onChange={(e) => setPostBody(e.target.value)}
-              placeholder="What do you want to talk about?"
-              className="w-full min-h-[150px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#16730F] resize-none text-base"
-              autoFocus
-            />
+            <div>
+              <textarea
+                value={postBody}
+                onChange={(e) => setPostBody(e.target.value)}
+                placeholder="What do you want to talk about?"
+                className="w-full min-h-[150px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#16730F] resize-none text-base"
+                autoFocus
+              />
+              <div className="flex justify-end mt-2">
+                <EmojiPickerButton
+                  onEmojiSelect={insertInto(setPostBody)}
+                />
+              </div>
+            </div>
           )}
 
           {!isPollMode && mediaFiles.length > 0 && (
@@ -411,15 +437,15 @@ const PostCreationModal = ({
           )}
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="w-full sm:min-w-0 sm:flex-1">
+            <div className="w-auto max-w-full sm:flex-none">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                 When to publish
               </p>
-              <div className="flex w-full sm:w-auto rounded-full border border-gray-200 p-1 bg-gray-50">
+              <div className="inline-flex w-auto rounded-full border border-gray-200 p-0.5 bg-gray-50">
                 <button
                   type="button"
                   onClick={() => setPostMode('now')}
-                  className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
                     !isScheduleMode
                       ? 'bg-[#16730F] text-white'
                       : 'text-gray-600 hover:text-[#1A3E32]'
@@ -430,13 +456,13 @@ const PostCreationModal = ({
                 <button
                   type="button"
                   onClick={() => setPostMode('schedule')}
-                  className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center justify-center gap-1 whitespace-nowrap ${
                     isScheduleMode
                       ? 'bg-[#16730F] text-white'
                       : 'text-gray-600 hover:text-[#1A3E32]'
                   }`}
                 >
-                  <FaClock className="text-xs shrink-0" />
+                  <FaClock className="text-[10px] shrink-0" />
                   Schedule
                 </button>
               </div>

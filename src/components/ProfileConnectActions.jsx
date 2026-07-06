@@ -54,28 +54,36 @@ export default function ProfileConnectActions({ userId, displayName }) {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 mt-4 w-full max-w-md sm:max-w-none mx-auto sm:mx-0">
+    <div className="flex flex-col sm:flex-row sm:flex-nowrap gap-2 sm:gap-3 mt-4 w-full max-w-md sm:max-w-none mx-auto sm:mx-0">
       <button
         type="button"
         onClick={handleConnect}
         disabled={connectDisabled}
-        className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-colors ${
+        className={`inline-flex shrink-0 items-center justify-center gap-2 w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-colors ${
           connectDisabled
             ? 'bg-gray-400 cursor-not-allowed'
             : 'bg-[#16730F] hover:bg-[#145a0c]'
         }`}
       >
         <FaUserPlus className="shrink-0" />
-        <span className="truncate">{connectLabel}</span>
+        <span className="whitespace-nowrap">{connectLabel}</span>
       </button>
       <button
         type="button"
         onClick={handleMessage}
         disabled={messaging}
-        className="inline-flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-full text-sm font-semibold text-[#16730F] border-2 border-[#16730F] bg-white hover:bg-[#16730F]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-busy={messaging}
+        className="inline-flex shrink-0 items-center justify-center gap-2 w-full sm:w-auto sm:min-w-[7.5rem] min-h-[44px] px-5 py-2.5 rounded-full text-sm font-semibold text-[#16730F] border-2 border-[#16730F] bg-white hover:bg-[#16730F]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <FaComment className="shrink-0" />
-        {messaging ? 'Opening...' : 'Message'}
+        {messaging ? (
+          <span
+            className="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-[#16730F] border-t-transparent"
+            aria-hidden="true"
+          />
+        ) : (
+          <FaComment className="shrink-0" />
+        )}
+        <span className="whitespace-nowrap">Message</span>
       </button>
     </div>
   );

@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { FaArrowLeft, FaPhone, FaVideo, FaBars } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import messagingService from '../../services/messagingService';
 import { API_URL } from '../../config';
 import ChatMessageInput from '../chat/ChatMessageInput';
-import MessageAttachment from '../chat/MessageAttachment';
+import ChatMessageBubble, {
+  formatChatMessageTime,
+} from '../chat/ChatMessageBubble';
 import { formatDisplayPersonName } from '../../utils/personDisplayName';
 
 function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
@@ -12,6 +15,8 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [savingEdit, setSavingEdit] = useState(false);
   const currentUser = useSelector((state) => state.auth.user);
   const messagesContainerRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -49,6 +54,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   useEffect(() => {
     if (selectedChat?.id) {
       stickToBottomRef.current = true;
+      setEditingMessageId(null);
       fetchMessages(selectedChat.id);
       // Mark conversation as read when opened
       messagingService.markConversationRead(selectedChat.id).catch((err) => {
@@ -122,6 +128,75 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     }
   };
 
+  const handleEditMessage = async (messageId, content) => {
+    if (!messageId || !content.trim() || savingEdit) return;
+
+    try {
+      setSavingEdit(true);
+      await messagingService.editMessage(messageId, content.trim());
+      setEditingMessageId(null);
+      await fetchMessages(selectedChat.id, true);
+      window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
+    } catch (error) {
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        'Failed to edit message';
+      toast.error(msg);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    if (!messageId) return;
+    if (!window.confirm('Delete this message?')) return;
+
+    try {
+      await messagingService.deleteMessage(messageId);
+      if (editingMessageId === messageId) {
+        setEditingMessageId(null);
+      }
+      await fetchMessages(selectedChat.id, true);
+      window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
+    } catch (error) {
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        'Failed to delete message';
+      toast.error(msg);
+    }
+  };
+
+  const isOwnMessage = (msg) => {
+    const currentUserId =
+      currentUser?.id ||
+      currentUser?.user_id ||
+      currentUser?.userId ||
+      currentUser?.sub ||
+      currentUser?.authId;
+
+    const selectedOtherUserId =
+      selectedChat?.other_user?.id ||
+      selectedChat?.other_user?.user_id ||
+      selectedChat?.otherUserId;
+
+    const messageSenderId =
+      msg.sender_id || msg.user_id || msg.sender?.id || msg.senderId;
+
+    if (currentUserId != null && messageSenderId != null) {
+      return String(messageSenderId) === String(currentUserId);
+    }
+    if (selectedOtherUserId != null && messageSenderId != null) {
+      return String(messageSenderId) !== String(selectedOtherUserId);
+    }
+
+    return (
+      `${msg.firstName || msg.first_name || ''} ${msg.lastName || msg.last_name || ''}`.trim() ===
+      `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim()
+    );
+  };
+
   const getInitials = (firstName, lastName) => {
     const first = (firstName || '').trim().charAt(0).toUpperCase();
     const last = (lastName || '').trim().charAt(0).toUpperCase();
@@ -162,7 +237,8 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     <div className="flex items-center gap-2 md:gap-3">
       <button
         onClick={onShowChatList}
-        className="lg:hidden text-gray-600 hover:text-gray-800 transition-colors"
+        className="md:hidden text-gray-600 hover:text-gray-800 transition-colors"
+        aria-label="Back to conversations"
       >
         <FaArrowLeft />
       </button>
@@ -205,7 +281,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   <div
     ref={messagesContainerRef}
     onScroll={handleMessagesScroll}
-    className="flex-1 min-h-0 overflow-y-auto nfl-scroll scroll-smooth p-2 md:p-4"
+    className="flex-1 min-h-0 overflow-y-auto nfl-scroll scroll-smooth p-3 md:p-5 bg-[#F7F7F7]"
   >
     {loading ? (
       <div className="text-center text-[#16730F] py-2 md:py-4">
@@ -218,38 +294,8 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       </div>
     ) : (
       /* Messages Display */
-      <div className="space-y-4">
+      <div className="px-1 md:px-2">
         {messages.map((msg) => {
-          const currentUserId =
-            currentUser?.id ||
-            currentUser?.user_id ||
-            currentUser?.userId ||
-            currentUser?.sub ||
-            currentUser?.authId;
-
-          const selectedOtherUserId =
-            selectedChat?.other_user?.id ||
-            selectedChat?.other_user?.user_id ||
-            selectedChat?.otherUserId;
-
-          const messageSenderId = msg.sender_id || msg.user_id || msg.sender?.id || msg.senderId;
-
-          // Prefer ID-based check for robust sender/receiver separation
-          let isOwnMessage = false;
-          if (currentUserId != null && messageSenderId != null) {
-            isOwnMessage = String(messageSenderId) === String(currentUserId);
-          } else if (selectedOtherUserId != null && messageSenderId != null) {
-            // If current user ID is not available after refresh, infer from selected chat participant
-            isOwnMessage = String(messageSenderId) !== String(selectedOtherUserId);
-          } else {
-            // Final fallback to name match only when IDs are missing
-            isOwnMessage =
-              `${msg.firstName || msg.first_name || ''} ${msg.lastName || msg.last_name || ''}`.trim() ===
-              `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim();
-          }
-
-          // Real names from backend JOIN
-          // Backend returns firstName/lastName directly on msg (JOIN), NOT msg.sender object
           const senderName = formatDisplayPersonName(
             {
               firstName: msg.firstName ?? msg.first_name,
@@ -257,39 +303,37 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
             },
             'User',
           );
-          const messageTime = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          const messageTime = formatChatMessageTime(msg.created_at);
+          const ownMessage = isOwnMessage(msg);
+          const senderAvatar = getProfileImageUrl(
+            msg.profilePictureUrl ||
+              msg.profile_photo ||
+              (!ownMessage
+                ? selectedChat?.other_user?.profilePictureUrl ||
+                  selectedChat?.other_user?.profilePhoto
+                : null),
+          );
+          const senderInitials = getInitials(
+            msg.firstName ?? msg.first_name,
+            msg.lastName ?? msg.last_name,
+          );
 
           return (
-            <div key={msg.id} className={isOwnMessage ? 'flex justify-end mb-2 md:mb-4' : 'flex justify-start mb-2 md:mb-4'}>
-              <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'} w-full max-w-xs md:max-w-md`}>
-                {!isOwnMessage && (
-                  <div className="text-xs font-medium text-gray-500 mb-1">
-                    {senderName}
-                  </div>
-                )}
-                <div className={`p-2 md:p-3 rounded-2xl shadow-sm ${isOwnMessage ? 'bg-green-500 text-white ml-8 md:ml-16 rounded-r-none' : 'bg-white text-gray-900 mr-8 md:mr-16 rounded-l-none border border-[#D3D3D3]'}`}>
-                  {msg.image_url && (
-                    <MessageAttachment url={msg.image_url} caption={msg.content} />
-                  )}
-                  {(() => {
-                    const attachmentLabel =
-                      msg.image_url &&
-                      (msg.content === '🎬 Video' ||
-                        msg.content === '🎤 Voice message' ||
-                        msg.content?.startsWith('📎'));
-                    if (!msg.content || attachmentLabel) return null;
-                    return (
-                      <p className={msg.is_deleted ? 'italic text-gray-400 line-through' : ''}>
-                        {msg.content}
-                      </p>
-                    );
-                  })()}
-                </div>
-                <div className={`text-xs mt-1 ${isOwnMessage ? 'text-gray-500 ml-auto' : 'text-gray-500'}`}>
-                  {messageTime}
-                </div>
-              </div>
-            </div>
+            <ChatMessageBubble
+              key={msg.id}
+              message={msg}
+              isOwnMessage={ownMessage}
+              senderName={senderName}
+              senderAvatar={senderAvatar}
+              senderInitials={senderInitials}
+              messageTime={messageTime}
+              editing={editingMessageId === msg.id}
+              saving={savingEdit && editingMessageId === msg.id}
+              onStartEdit={() => setEditingMessageId(msg.id)}
+              onCancelEdit={() => setEditingMessageId(null)}
+              onSaveEdit={(content) => handleEditMessage(msg.id, content)}
+              onDelete={() => handleDeleteMessage(msg.id)}
+            />
           );
         })}
         <div ref={messagesEndRef} aria-hidden="true" />

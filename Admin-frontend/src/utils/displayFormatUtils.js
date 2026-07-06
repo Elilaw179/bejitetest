@@ -128,6 +128,33 @@ export function getFormattedWorkHistoryFields(work, { legacy = false } = {}) {
   };
 }
 
+const INLINE_BULLET_SPLIT = /\s*[•●·▪◦‣⁃]\s*/;
+const LEADING_BULLET = /^[\s\-*•●·▪◦‣⁃]+\s*/;
+
+/** Split stored responsibility text into separate bullet items for display. */
+export function parseResponsibilitiesList(value) {
+  if (value == null || String(value).trim() === '') return [];
+
+  const lines = String(value).trim().split(/\n+/);
+  const items = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    const parts = INLINE_BULLET_SPLIT.test(trimmed)
+      ? trimmed.split(INLINE_BULLET_SPLIT)
+      : [trimmed];
+
+    for (const part of parts) {
+      const cleaned = part.replace(LEADING_BULLET, '').trim();
+      if (cleaned) items.push(cleaned);
+    }
+  }
+
+  return items;
+}
+
 /**
  * Normalize education row text for display (degree, school, field, location, level).
  */
