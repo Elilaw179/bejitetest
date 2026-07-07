@@ -2,16 +2,16 @@ import React from "react";
 import FormLabel from "../forms/FormLabel";
 
 const inputClass =
-  "w-full h-11 bg-white border border-gray-200 rounded-xl px-4 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all disabled:bg-gray-50 disabled:text-gray-500";
+  "w-full h-11 bg-white border border-gray-200 rounded-xl px-4 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all disabled:bg-gray-50 disabled:text-gray-500";
 
 const textareaClass =
-  "w-full min-h-[120px] bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all resize-none";
+  "w-full min-h-[120px] bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all resize-none";
 
 export function RecruiterPageHero({ icon: Icon, eyebrow, title, description }) {
   return (
     <div className="text-center mb-8">
       {Icon && (
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#1A3E32] to-[#2A5E4A] rounded-2xl shadow-lg mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#16730F] to-[#145a0c] rounded-2xl shadow-lg mb-4">
           <Icon className="text-3xl text-white" />
         </div>
       )}
@@ -20,7 +20,7 @@ export function RecruiterPageHero({ icon: Icon, eyebrow, title, description }) {
           {eyebrow}
         </p>
       )}
-      <h1 className="text-2xl sm:text-3xl font-bold text-[#1A3E32] mt-1 mb-2">
+      <h1 className="text-2xl sm:text-3xl font-bold text-[#16730F] mt-1 mb-2">
         {title}
       </h1>
       {description && (
@@ -40,7 +40,7 @@ export function RecruiterFormShell({
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-      <div className="bg-gradient-to-r from-[#1A3E32] to-[#2A5E4A] px-6 py-4">
+      <div className="bg-gradient-to-r from-[#16730F] to-[#145a0c] px-6 py-4">
         <h2 className="text-white text-lg font-semibold flex items-center gap-2">
           {Icon && <Icon className="text-white/80 shrink-0" />}
           {sectionTitle}

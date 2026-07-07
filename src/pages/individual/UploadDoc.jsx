@@ -158,7 +158,7 @@ const UploadDoc = () => {
             <div className="mb-3">
               <label
                 htmlFor="file-upload"
-                className="cursor-pointer border border-green-700 rounded-md px-4 py-3 flex items-center justify-center gap-2 text-green-700"
+                className="cursor-pointer border border-[#16730F] rounded-md px-4 py-3 flex items-center justify-center gap-2 text-[#16730F]"
               >
                 <Upload className="w-4 h-4" />
                 {isEditMode && hasSavedDocument
@@ -188,7 +188,7 @@ const UploadDoc = () => {
             disabled={!canUploadNewFile}
             className={`w-full py-3 rounded-md font-semibold transition ${
               canUploadNewFile
-                ? "bg-green-700 text-white hover:bg-green-800"
+                ? "bg-[#16730F] text-white hover:bg-[#145a0c]"
                 : justUploaded
                   ? "bg-gray-500 text-white cursor-default"
                   : "bg-gray-300 text-gray-600 cursor-not-allowed"

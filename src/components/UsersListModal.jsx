@@ -123,9 +123,9 @@ const handleConnect = async (e, userId) => {
       />
       
       {/* Modal Content */}
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+      <div className="relative bg-white rounded-2xl border border-gray-300 shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b border-gray-300">
           <h2 className="text-lg font-semibold text-[#1A3E32]">{title}</h2>
           <button
             type="button"
@@ -143,7 +143,7 @@ const handleConnect = async (e, userId) => {
               Loading {type}...
             </div>
           ) : users && users.length > 0 ? (
-            <div className="divide-y">
+            <div className="divide-y divide-gray-200">
               {users.map(user => renderUserItem(user))}
             </div>
           ) : (
@@ -154,7 +154,7 @@ const handleConnect = async (e, userId) => {
         </div>
         
         {/* Footer */}
-        <div className="p-4 border-t">
+        <div className="p-4 border-t border-gray-300">
           <button
             type="button"
             onClick={onClose}

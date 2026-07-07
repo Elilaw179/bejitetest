@@ -195,7 +195,7 @@ function Education() {
       isEditMode={isEditMode}
     >
       <div className="pb-10">
-        <section className="max-w-3xl text-center md:text-left mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
+        <section className="max-w-3xl text-center md:text-left mx-auto px-4 mt-4 text-[#16730F] text-2xl font-semibold">
           Education
         </section>
         <p className="max-w-3xl text-center md:text-left mx-auto px-4 text-[#333] text-[15px] mb-6">
@@ -275,7 +275,7 @@ function Education() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm"
+                className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm"
               />
             </div>
           </div>
@@ -294,7 +294,7 @@ function Education() {
                         setEndDate("");
                       }
                     }}
-                    className="w-4 h-4 text-[#1A3E32] rounded border-gray-300 focus:ring-[#1A3E32]"
+                    className="w-4 h-4 text-[#16730F] rounded border-gray-300 focus:ring-[#16730F]"
                   />
                   <span className="text-sm text-gray-600">Currently studying</span>
                 </label>
@@ -304,7 +304,7 @@ function Education() {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 disabled={isCurrentlyStudying}
-                className={`w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm ${isCurrentlyStudying ? "bg-gray-100 cursor-not-allowed" : ""
+                className={`w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm ${isCurrentlyStudying ? "bg-gray-100 cursor-not-allowed" : ""
                   }`}
               />
             </div>
@@ -313,7 +313,7 @@ function Education() {
                 onClick={addMore}
                 disabled={!allFilled}
                 className={`w-full h-11 cursor-pointer flex items-center justify-center gap-2 text-white font-semibold rounded-xl text-sm transition-all shadow-sm ${allFilled
-                  ? "bg-[#1A3E32] hover:bg-[#143026]"
+                  ? "bg-[#16730F] hover:bg-[#145a0c]"
                   : "bg-gray-300 cursor-not-allowed"
                   }`}
               >
@@ -327,8 +327,8 @@ function Education() {
           <div className="max-w-4xl mx-auto mt-8 px-2 md:px-0">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-[#1A3E32]/10 flex items-center justify-center">
-                  <svg className="w-3.5 h-3.5 text-[#1A3E32]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-6 h-6 rounded-full bg-[#16730F]/10 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-[#16730F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path d="M12 14l9-5-9-5-9 5 9 5z" />
                     <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />

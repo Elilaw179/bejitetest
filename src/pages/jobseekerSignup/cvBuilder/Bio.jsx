@@ -254,7 +254,7 @@ const Bio = () => {
       getPath={getPath}
       isEditMode={isEditMode}
     >
-      <section className="max-w-3xl font-nunito-semi text-center md:text-start mx-auto px-4 text-[#1A3E32] text-2xl font-semibold">
+      <section className="max-w-3xl font-nunito-semi text-center md:text-start mx-auto px-4 text-[#16730F] text-2xl font-semibold">
         Bio/Personal Information
       </section>
       <p className=" max-w-3xl mx-auto px-4 text-center md:text-start text-[#333] text-[15px]">

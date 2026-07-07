@@ -17,6 +17,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   const [sending, setSending] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
   const currentUser = useSelector((state) => state.auth.user);
   const messagesContainerRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -64,14 +65,16 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   }, [selectedChat]);
 
   useEffect(() => {
-    if (!selectedChat?.id) return;
+    if (!selectedChat?.id || isRecordingVoice) {
+      return undefined;
+    }
 
     const interval = setInterval(() => {
       fetchMessages(selectedChat.id, true); // silent fetch
     }, 5000); // poll every 5 seconds
 
     return () => clearInterval(interval);
-  }, [selectedChat]);
+  }, [selectedChat?.id, isRecordingVoice]);
 
   useEffect(() => {
     if (!messages.length || loading) return;
@@ -112,7 +115,9 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   };
 
   const handleSendAttachment = async (url, caption = '') => {
-    if (!selectedChat?.id || sending) return;
+    if (!selectedChat?.id || sending) {
+      return;
+    }
 
     try {
       setSending(true);
@@ -122,7 +127,11 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       await fetchMessages(selectedChat.id, true);
       window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
     } catch (error) {
-      console.error('Error sending attachment:', error);
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        'Failed to send attachment';
+      toast.error(msg);
     } finally {
       setSending(false);
     }
@@ -343,10 +352,12 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
 
   {selectedChat?.id ? (
     <ChatMessageInput
+      key={selectedChat.id}
       message={message}
       setMessage={setMessage}
       onSend={handleSendMessage}
       onSendAttachment={handleSendAttachment}
+      onRecordingChange={setIsRecordingVoice}
       sending={sending}
       disabled={!selectedChat?.id}
     />

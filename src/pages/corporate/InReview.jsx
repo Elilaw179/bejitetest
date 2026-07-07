@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../../components/Header";
+import { SIGNUP_BTN_ENABLED } from "../../constants/signupTheme";
 
 const CoperateInReview = () => {
   const navigate = useNavigate();
@@ -26,19 +27,19 @@ const CoperateInReview = () => {
           <div className="text-center">
             {isIndividual ? (
               <>
-                <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl">
+                <h1 className="text-[#16730F] font-semibold text-xl sm:text-2xl">
                   Thank you!
                 </h1>
-                <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl mt-1">
+                <h1 className="text-[#16730F] font-semibold text-xl sm:text-2xl mt-1">
                   Your ID has been submitted for review
                 </h1>
               </>
             ) : (
               <>
-                <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl">
+                <h1 className="text-[#16730F] font-semibold text-xl sm:text-2xl">
                   Thank You for Submitting Documents!
                 </h1>
-                <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl mt-1">
+                <h1 className="text-[#16730F] font-semibold text-xl sm:text-2xl mt-1">
                   Your company verification is under review.
                 </h1>
               </>
@@ -46,7 +47,7 @@ const CoperateInReview = () => {
           </div>
 
           <button
-            className="bg-[#16730F] w-full sm:w-1/2 text-white text-base sm:text-lg py-3 sm:py-4 rounded-3xl shadow-md font-medium"
+            className={`w-full sm:w-1/2 text-white text-base sm:text-lg py-3 sm:py-4 rounded-full shadow-md font-semibold ${SIGNUP_BTN_ENABLED}`}
             onClick={handleContinue}
           >
             Proceed to Login
