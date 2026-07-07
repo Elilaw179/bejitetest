@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -9,14 +9,21 @@ import Header from "../../components/Header";
 import ImageUpload from "../../components/ImageUpload";
 import useRecruiterProfile from "../../services/recruiterProfile";
 import { updateUser } from "../../features/auth/authSlice";
+import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
+import { fetchCurrentUserProfilePhoto } from "../../services/profilePhotoService";
+import { getUser, pickProfilePhotoPath } from "../../utils/tokenManager";
+import useAuth from "../../hooks/useAuth";
 
 const ProfileSetup = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
+  const { user: authUser } = useAuth();
   const { updateProfileSetup, uploadProfilePhoto } = useRecruiterProfile();
 
   const steps = ["Basic Details", "Profile Setup", "Location"];
+
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const [formData, setFormData] = useState({
     nickname: "",
@@ -25,6 +32,43 @@ const ProfileSetup = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isEditMode || dataLoaded) return;
+
+    const loadEditData = async () => {
+      if (recruiterData) {
+        setFormData({
+          nickname: recruiterData.nickname || "",
+          summary: recruiterData.summary || "",
+        });
+        const fromProfile =
+          recruiterData.profile_photo || recruiterData.profilePhoto;
+        if (fromProfile) {
+          setImagePreview(profilePhotoUrl(fromProfile) ?? null);
+        }
+      }
+
+      const fromStorage =
+        pickProfilePhotoPath(authUser) || pickProfilePhotoPath(getUser());
+      if (fromStorage) {
+        setImagePreview(profilePhotoUrl(fromStorage) ?? null);
+      }
+
+      try {
+        const fromApi = await fetchCurrentUserProfilePhoto();
+        if (fromApi) setImagePreview(profilePhotoUrl(fromApi) ?? null);
+      } catch {
+        /* keep existing preview */
+      }
+
+      setDataLoaded(true);
+    };
+
+    if (recruiterData !== null && recruiterData !== undefined) {
+      loadEditData();
+    }
+  }, [isEditMode, recruiterData, dataLoaded, authUser]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -92,7 +136,7 @@ const ProfileSetup = () => {
           },
         },
       });
-      navigate("/individual/location");
+      navigate(getPath(3));
     } catch (error) {
       console.error(error);
     } finally {
@@ -101,14 +145,19 @@ const ProfileSetup = () => {
   };
 
   const handleSkip = () => {
-    navigate("/individual/location");
+    navigate(getPath(3));
   };
 
   return (
     <div className="bg-white min-h-screen">
       <Header />
 
-      <StepTabs steps={steps} currentStep={currentStep} />
+      <StepTabs
+        steps={steps}
+        currentStep={currentStep}
+        getPath={getPath}
+        isEditMode={isEditMode}
+      />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
@@ -162,7 +211,13 @@ const ProfileSetup = () => {
         showSkip
         onSkip={handleSkip}
         isFormComplete={isFormComplete && !submitting}
-        onBack={() => navigate(-1)}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+            return;
+          }
+          navigate(-1);
+        }}
         onNext={handleNextStep}
       />
     </div>

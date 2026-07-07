@@ -230,6 +230,30 @@ function App() {
                   path="/individual/inreview"
                   element={<InReview />}
                 />
+                <Route
+                  path="/edit-profile/individual/basic-details"
+                  element={<IndividualBasicDetails />}
+                />
+                <Route
+                  path="/edit-profile/individual/profile-setup"
+                  element={<ProfileSetup />}
+                />
+                <Route
+                  path="/edit-profile/individual/location"
+                  element={<Location />}
+                />
+                <Route
+                  path="/edit-profile/individual/verify"
+                  element={<Verify />}
+                />
+                <Route
+                  path="/edit-profile/individual/selectid"
+                  element={<SelectId />}
+                />
+                <Route
+                  path="/edit-profile/individual/upload"
+                  element={<UploadDoc />}
+                />
               </Route>
 
               <Route element={<CoperateVerificationLayout />}>

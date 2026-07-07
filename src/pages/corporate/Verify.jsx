@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import Header from "../../components/Header";
 import { FaArrowLeft } from "react-icons/fa";
+import useRecruiterProfile from "../../services/recruiterProfile";
 
 const btnPrimary =
   "w-full max-w-md min-h-[44px] px-6 py-3 sm:py-4 bg-[#16730F] text-white text-sm sm:text-base font-medium rounded-3xl shadow-md hover:bg-[#145a0c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
@@ -16,9 +17,11 @@ const CoperateVerify = () => {
     useOutletContext();
   const location = useLocation();
   const isIndividual = location.pathname.includes("individual");
+  const { updateVerificationConsent } = useRecruiterProfile();
 
   const [showConsent, setShowConsent] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (isEditMode && recruiterData?.verification_consent) {
@@ -31,23 +34,43 @@ const CoperateVerify = () => {
     setShowConsent(true);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!agreed) {
       toast.error("Please confirm the consent checkbox to continue.");
       return;
     }
+    if (submitting) return;
 
-    if (isEditMode) {
-      if (currentStep >= 6) {
-        navigate("/news-feed");
-        toast.success("Profile updated successfully!");
-      } else {
-        navigate(getPath(currentStep + 1));
+    setSubmitting(true);
+    try {
+      if (!isEditMode || !recruiterData?.verification_consent) {
+        await toast.promise(updateVerificationConsent(true), {
+          pending: "Saving consent...",
+          success: "Consent recorded",
+          error: {
+            render({ data }) {
+              return `Failed: ${data}`;
+            },
+          },
+        });
       }
-      return;
-    }
 
-    navigate(isIndividual ? "/individual/selectid" : "/corporate/upload");
+      if (isEditMode) {
+        if (currentStep >= 6) {
+          navigate("/news-feed");
+          toast.success("Profile updated successfully!");
+        } else {
+          navigate(getPath(currentStep + 1));
+        }
+        return;
+      }
+
+      navigate(isIndividual ? "/individual/selectid" : "/corporate/upload");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSkip = () => {
@@ -141,9 +164,9 @@ const CoperateVerify = () => {
                 type="button"
                 className={btnPrimary}
                 onClick={handleContinue}
-                disabled={!agreed}
+                disabled={!agreed || submitting}
               >
-                Continue
+                {submitting ? "Saving..." : "Continue"}
               </button>
 
               {!isIndividual && (

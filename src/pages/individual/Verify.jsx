@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import Header from "../../components/Header";
 import { FaArrowLeft } from "react-icons/fa";
@@ -13,11 +13,19 @@ const btnSecondary =
 
 const Verify = () => {
   const navigate = useNavigate();
+  const { isEditMode, recruiterData, getPath } = useOutletContext();
   const { updateVerificationConsent } = useRecruiterProfile();
 
   const [showConsent, setShowConsent] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isEditMode && recruiterData?.verification_consent) {
+      setAgreed(true);
+      setShowConsent(true);
+    }
+  }, [isEditMode, recruiterData]);
 
   const handleStartVerification = () => {
     setShowConsent(true);
@@ -41,7 +49,7 @@ const Verify = () => {
           },
         },
       });
-      navigate("/individual/selectid");
+      navigate(getPath(5));
     } catch (error) {
       console.error(error);
     } finally {

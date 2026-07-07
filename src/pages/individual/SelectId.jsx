@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import NavigationButtons from "../../components/NavigationButtons";
 import Header from "../../components/Header";
@@ -8,12 +8,19 @@ import useRecruiterProfile from "../../services/recruiterProfile";
 
 const SelectId = () => {
   const navigate = useNavigate();
+  const { isEditMode, recruiterData, getPath } = useOutletContext();
   const { updateIdType } = useRecruiterProfile();
 
   const [formData, setFormData] = useState({
     id_type: "",
   });
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isEditMode && recruiterData?.id_type) {
+      setFormData({ id_type: recruiterData.id_type });
+    }
+  }, [isEditMode, recruiterData]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,7 +42,7 @@ const SelectId = () => {
           },
         },
       });
-      navigate("/individual/upload", { state: { id_type: formData.id_type } });
+      navigate(getPath(6), { state: { id_type: formData.id_type } });
     } catch (error) {
       console.error(error);
     } finally {

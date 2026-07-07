@@ -91,7 +91,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
       {
         name: "zip",
         label: "ZIP CODE",
-        optional: false,
+        optional: true,
         placeholder: "e.g 60094",
         width: "w-full sm:w-[calc(33.33%-0.67rem)]",
       },

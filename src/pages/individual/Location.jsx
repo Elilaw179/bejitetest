@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ChevronDown } from "lucide-react";
@@ -14,7 +14,7 @@ const selectClassName =
 
 const Location = () => {
   const navigate = useNavigate();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
   const { updateLocation } = useRecruiterProfile();
 
   const steps = ["Basic Details", "Profile Setup", "Location"];
@@ -26,6 +26,20 @@ const Location = () => {
   });
   const [isManualCity, setIsManualCity] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isEditMode || !recruiterData) return;
+
+    setFormData({
+      address: recruiterData.address || "",
+      city: recruiterData.city || "",
+      country: recruiterData.country || "",
+    });
+    if (recruiterData.city && recruiterData.country) {
+      const options = getStateOptions(recruiterData.country) || [];
+      setIsManualCity(!options.includes(recruiterData.city));
+    }
+  }, [isEditMode, recruiterData]);
 
   const stateOptions = getStateOptions(formData.country) || [];
 
@@ -67,7 +81,7 @@ const Location = () => {
           },
         },
       });
-      navigate("/individual/verify");
+      navigate(getPath(4));
     } catch (error) {
       console.error(error);
     } finally {
@@ -76,7 +90,7 @@ const Location = () => {
   };
 
   const handleSkip = () => {
-    navigate("/individual/verify");
+    navigate(getPath(4));
   };
 
   const renderCityTownField = () => {
@@ -153,7 +167,12 @@ const Location = () => {
     <div className="bg-white min-h-screen">
       <Header />
 
-      <StepTabs steps={steps} currentStep={currentStep} />
+      <StepTabs
+        steps={steps}
+        currentStep={currentStep}
+        getPath={getPath}
+        isEditMode={isEditMode}
+      />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
@@ -218,7 +237,13 @@ const Location = () => {
         showSkip
         onSkip={handleSkip}
         isFormComplete={isFormComplete && !submitting}
-        onBack={() => navigate(-1)}
+        onBack={() => {
+          if (isEditMode) {
+            navigate(getPath(currentStep - 1));
+            return;
+          }
+          navigate(-1);
+        }}
         onNext={handleNextStep}
       />
     </div>

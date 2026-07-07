@@ -149,7 +149,6 @@ const Bio = () => {
     "country",
     "street",
     "city",
-    "zip",
     "bio",
   ];
   const isFormComplete =
@@ -194,7 +193,7 @@ const Bio = () => {
       street: normalizeText(formData.street),
       city: normalizeText(formData.city),
       tribe: formData.tribe ? normalizeText(formData.tribe) : null,
-      zip: normalizeText(formData.zip),
+      zip: formData.zip ? normalizeText(formData.zip) : null,
       bio: formData.bio,
     };
 
@@ -255,14 +254,14 @@ const Bio = () => {
       getPath={getPath}
       isEditMode={isEditMode}
     >
-      <section className="max-w-3xl font-nunito-semi text-center md:text-start mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
+      <section className="max-w-3xl font-nunito-semi text-center md:text-start mx-auto px-4 text-[#1A3E32] text-2xl font-semibold">
         Bio/Personal Information
       </section>
       <p className=" max-w-3xl mx-auto px-4 text-center md:text-start text-[#333] text-[15px]">
         Tell us who you are. This is the first impression employers get.
       </p>
 
-      <div className="max-w-4xl mx-auto mt-8 bg-white md:border border-gray-200 rounded-2xl md:shadow-sm flex flex-col lg:flex-row gap-10 p-2 md:p-8">
+      <div className="max-w-4xl mx-auto bg-white md:border border-gray-200 rounded-2xl md:shadow-sm flex flex-col lg:flex-row gap-10 p-2 md:p-8">
         <ImageUpload
           imagePreview={imagePreview}
           handleImageChange={handleImageChange}

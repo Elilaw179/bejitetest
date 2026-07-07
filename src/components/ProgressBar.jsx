@@ -1,9 +1,8 @@
-import React from 'react';
 const ProgressBar = ({ currentStep, totalSteps }) => {
   const width = ((currentStep - 1) / (totalSteps - 1)) * 100;
 
   return (
-    <div className="max-w-3xl mx-auto mt-[2%] py-6 px-1">
+    <div className="max-w-3xl mx-auto mt-[2%] pb-6 pt-2 px-1">
       <div className="relative w-full h-1 bg-[#E0E0E0] rounded-full">
         <div
           className="absolute top-0 left-0 h-1 bg-[#1A3E32] rounded-full transition-all duration-300"

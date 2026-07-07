@@ -21,9 +21,12 @@ export default function useProfileCompletionStatus({ enabled = true } = {}) {
   });
 
   const refresh = useCallback(async () => {
-    if (!enabled || !isAuthenticated()) {
+    if (!isAuthenticated()) {
       setProfileCompleted(false);
       return false;
+    }
+    if (!enabled) {
+      return null;
     }
 
     setLoading(true);
@@ -34,9 +37,10 @@ export default function useProfileCompletionStatus({ enabled = true } = {}) {
       const merged = {
         ...mergeAuthUsers(local, data?.user ?? {}),
         profileCompleted: fromApi,
+        mode: data?.user?.mode ?? local?.mode ?? null,
       };
       storeUser(merged);
-      dispatch(updateUser({ profileCompleted: fromApi }));
+      dispatch(updateUser({ profileCompleted: fromApi, mode: merged.mode }));
       setProfileCompleted(fromApi);
       return fromApi;
     } catch {

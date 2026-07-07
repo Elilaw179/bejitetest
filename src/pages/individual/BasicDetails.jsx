@@ -18,7 +18,7 @@ const BasicDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const { currentStep } = useOutletContext();
+  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
   const { user } = useAuth();
   const { updateBasicDetails } = useRecruiterProfile();
 
@@ -32,6 +32,20 @@ const BasicDetails = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (!isEditMode || !recruiterData) return;
+
+    setFormData({
+      full_name: formatRecruiterFullName(
+        recruiterData.firstName,
+        recruiterData.lastName,
+      ),
+      email: recruiterData.email || "",
+      phone_number: recruiterData.phone_number || "",
+    });
+  }, [isEditMode, recruiterData]);
+
+  useEffect(() => {
+    if (isEditMode) return;
     let storedUser = {};
     try {
       storedUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -71,6 +85,7 @@ const BasicDetails = () => {
       return next;
     });
   }, [
+    isEditMode,
     location.state?.email,
     location.state?.firstName,
     location.state?.lastName,
@@ -141,7 +156,7 @@ const BasicDetails = () => {
           },
         },
       });
-      navigate("/individual/profile-setup");
+      navigate(getPath(2));
     } catch (error) {
       console.error(error);
     } finally {
@@ -153,7 +168,12 @@ const BasicDetails = () => {
     <div className="bg-white min-h-screen">
       <Header />
 
-      <StepTabs steps={steps} currentStep={currentStep} />
+      <StepTabs
+        steps={steps}
+        currentStep={currentStep}
+        getPath={getPath}
+        isEditMode={isEditMode}
+      />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
       <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
@@ -211,7 +231,13 @@ const BasicDetails = () => {
 
       <NavigationButtons
         isFormComplete={isFormComplete && !submitting}
-        onBack={() => navigate(-1)}
+        onBack={() => {
+          if (isEditMode) {
+            navigate('/news-feed');
+            return;
+          }
+          navigate(-1);
+        }}
         onNext={handleNextStep}
       />
     </div>

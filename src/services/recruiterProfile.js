@@ -47,14 +47,10 @@ const assertBearerAuth = () => {
   if (!token) {
     throw 'Not authenticated. Please sign in again.';
   }
-};
-
-const assertUserId = () => {
   const userId = getResolvedUserId();
   if (!userId) {
     throw 'Missing user ID. Please sign in again to continue profile setup.';
   }
-  return userId;
 };
 
 const useRecruiterProfile = () => {
