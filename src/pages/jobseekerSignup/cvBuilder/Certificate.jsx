@@ -38,11 +38,11 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${value ? "border-[#828282]" : "border-[#F5F5F5]"
+      className={`w-full h-12 border-2 rounded-[10px] text-sm p-2 pr-10 focus:outline-1 focus:outline-[#16730F] ${value ? "border-[#828282]" : "border-[#F5F5F5]"
         } ${type === "date" && value ? "hide-calendar-icon" : ""}`}
     />
     {value && (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
+      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] text-lg" />
     )}
   </div>
 );
@@ -189,7 +189,7 @@ function Certificate() {
       <StepTabs steps={steps} currentStep={currentStep} onStepClick={handleStepClick} getPath={getPath} isEditMode={isEditMode} />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} /> */}
 
-        <div className="max-w-3xl mx-auto mt-6 text-[#1A3E32] text-2xl font-semibold">
+        <div className="max-w-3xl mx-auto mt-6 text-[#16730F] text-2xl font-semibold">
           Awards / Achievements (Optional)
         </div>
         <p className="max-w-3xl mx-auto text-[#333] text-sm mb-6">
@@ -230,14 +230,14 @@ function Certificate() {
                     {file ? file.name : "Upload JPG or PNG"}
                   </span>
                   {file ? (
-                    <FaCheck className="ml-2 text-green-500 text-lg" />
+                    <FaCheck className="ml-2 text-[#16730F] text-lg" />
                   ) : (
                     <FaCamera className="ml-2 text-lg" />
                   )}
                   <input
                     type="file"
                     accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                    className="hidden focus:outline-1 focus:outline-[#1A3E32]"
+                    className="hidden focus:outline-1 focus:outline-[#16730F]"
                     onChange={handleFileChange}
                   />
                 </label>
@@ -256,7 +256,7 @@ function Certificate() {
               <button
                 onClick={clearForm}
                 className={`flex-1 cursor-pointer h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${allFilled
-                  ? "bg-[#2A4E42] border-[#2A4E42]"
+                  ? "bg-[#16730F] border-[#16730F] hover:bg-[#145a0c]"
                   : "bg-transparent border-[#F5F5F5]"
                   }`}
               >
@@ -268,7 +268,7 @@ function Certificate() {
 
         {allFilled && (
           <div className="max-w-4xl px-4 mt-6 m-auto">
-            <div className="max-w-xs m-auto bg-[#1A3E32] text-white rounded-lg flex flex-col sm:flex-row justify-between sm:items-center p-4 space-y-2 sm:space-y-0">
+            <div className="max-w-xs m-auto bg-[#16730F] text-white rounded-lg flex flex-col sm:flex-row justify-between sm:items-center p-4 space-y-2 sm:space-y-0">
               <div>
                 <p className="font-semibold">{certName}</p>
                 <p className="text-sm">@ {issuer}</p>

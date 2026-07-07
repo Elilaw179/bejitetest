@@ -185,7 +185,7 @@ const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
       ))}
     </select>
     {value ? (
-      <FaCheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
+      <FaCheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] text-lg" />
     ) : (
       <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
     )}
@@ -204,7 +204,7 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
       } ${type === "date" && value ? "hide-calendar-icon" : ""}`}
     />
     {value && (
-      <FaCheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
+      <FaCheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] text-lg" />
     )}
   </div>
 );
@@ -361,7 +361,7 @@ function Education() {
 
       {allFilled && (
         <div className="max-w-4xl px-4 mt-6   m-auto ">
-          <div className="max-w-2xs  bg-[#E63357] text-white rounded-lg flex flex-col m-auto sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
+          <div className="max-w-2xs  bg-[#16730F] text-white rounded-lg flex flex-col m-auto sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
             <div>
               <p className="font-semibold">{fieldOfStudy}</p>
               <p className="text-sm">

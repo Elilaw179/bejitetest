@@ -4,9 +4,12 @@ import { toast } from "react-toastify";
 import Header from "../../components/Header";
 import { FaArrowLeft } from "react-icons/fa";
 import useRecruiterProfile from "../../services/recruiterProfile";
+import {
+  SIGNUP_BTN_ENABLED,
+} from "../../constants/signupTheme";
 
 const btnPrimary =
-  "w-full max-w-md min-h-[44px] px-6 py-3 sm:py-4 bg-[#16730F] text-white text-sm sm:text-base font-medium rounded-3xl shadow-md hover:bg-[#145a0c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  `w-full max-w-md min-h-[44px] px-6 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-full shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${SIGNUP_BTN_ENABLED}`;
 
 const btnSecondary =
   "w-full max-w-md min-h-[44px] px-6 py-3 bg-white border-2 border-[#16730F] text-[#16730F] text-sm sm:text-base font-medium rounded-full shadow-sm hover:bg-[#16730F]/5 transition-colors";
@@ -72,7 +75,7 @@ const Verify = () => {
               Almost there
             </p>
 
-            <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl md:text-3xl leading-snug px-1">
+            <h1 className="text-[#16730F] font-semibold text-xl sm:text-2xl md:text-3xl leading-snug px-1">
               Verify Your Identity
             </h1>
 
@@ -114,23 +117,47 @@ const Verify = () => {
               Verification consent
             </h2>
 
-            <label
-              htmlFor="agree"
-              className="flex items-start gap-3 w-full max-w-xl cursor-pointer rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5"
+            <div
+              className="flex items-start gap-3 w-full max-w-xl rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5 cursor-pointer"
+              onClick={(event) => {
+                if (event.target.closest("[data-privacy-link]")) return;
+                setAgreed((prev) => !prev);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setAgreed((prev) => !prev);
+                }
+              }}
+              role="checkbox"
+              aria-checked={agreed}
+              tabIndex={0}
             >
               <input
                 type="checkbox"
                 id="agree"
                 checked={agreed}
-                onChange={() => setAgreed(!agreed)}
-                className="mt-1 h-4 w-4 shrink-0 accent-[#16730F]"
+                readOnly
+                tabIndex={-1}
+                aria-hidden="true"
+                className="mt-1 h-4 w-4 shrink-0 accent-[#16730F] pointer-events-none"
               />
-              <span className="text-sm sm:text-base text-green-800 leading-relaxed text-left break-words">
+              <p className="text-sm sm:text-base text-[#16730F] leading-relaxed text-left break-words">
                 I agree to Bejite&apos;s{" "}
-                <span className="text-[#16730F] underline">Privacy Policy</span>{" "}
+                <a
+                  href="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-privacy-link
+                  className="relative z-10 text-[#16730F] underline hover:text-[#145a0c]"
+                  onClick={(event) => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}
+                >
+                  Privacy Policy
+                </a>{" "}
                 and consent to ID verification.
-              </span>
-            </label>
+              </p>
+            </div>
 
             <div className="w-full max-w-md flex flex-col items-center gap-3">
               <button
@@ -152,7 +179,7 @@ const Verify = () => {
 
             <button
               type="button"
-              className="mt-1 flex items-center justify-center gap-2 text-green-900 text-sm font-medium underline hover:text-[#16730F] min-h-[44px] px-2"
+              className="mt-1 flex items-center justify-center gap-2 text-[#16730F] text-sm font-medium underline hover:text-[#16730F] min-h-[44px] px-2"
               onClick={() => setShowConsent(false)}
             >
               <FaArrowLeft className="shrink-0" />

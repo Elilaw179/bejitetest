@@ -1,7 +1,9 @@
-import { getAttachmentType } from '../../utils/chatAttachmentUtils';
+import React from 'react';
+import { getAttachmentType, isVoiceMessageCaption } from '../../utils/chatAttachmentUtils';
+import VoiceMessagePlayer from './VoiceMessagePlayer';
 
-function MessageAttachment({ url, caption }) {
-  const type = getAttachmentType(url);
+function MessageAttachment({ url, caption, isOwnMessage = false }) {
+  const type = isVoiceMessageCaption(caption) ? 'audio' : getAttachmentType(url);
 
   if (type === 'video') {
     return (
@@ -14,9 +16,7 @@ function MessageAttachment({ url, caption }) {
   }
 
   if (type === 'audio') {
-    return (
-      <audio src={url} controls className="mb-2 w-full max-w-xs" />
-    );
+    return <VoiceMessagePlayer url={url} isOwnMessage={isOwnMessage} />;
   }
 
   if (type === 'document') {

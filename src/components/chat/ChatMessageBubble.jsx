@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FaPen, FaTrash } from 'react-icons/fa';
 import MessageAttachment from './MessageAttachment';
 
@@ -45,8 +46,11 @@ export default function ChatMessageBubble({
   onDelete,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState(null);
   const [draft, setDraft] = useState(message.content || '');
   const menuRef = useRef(null);
+  const bubbleRef = useRef(null);
+  const menuPopupRef = useRef(null);
 
   useEffect(() => {
     if (editing) {
@@ -60,13 +64,60 @@ export default function ChatMessageBubble({
     }
   }, [editing]);
 
+  const updateMenuPosition = useCallback(() => {
+    const anchor = bubbleRef.current;
+    if (!anchor) return;
+
+    const rect = anchor.getBoundingClientRect();
+    const gap = 8;
+    const menuHeight = menuPopupRef.current?.offsetHeight ?? 88;
+
+    let top = rect.top - gap;
+    let transform = 'translate(-100%, -100%)';
+
+    if (top - menuHeight < gap) {
+      top = rect.bottom + gap;
+      transform = 'translateX(-100%)';
+    }
+
+    setMenuStyle({
+      top: `${top}px`,
+      left: `${rect.right}px`,
+      transform,
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!menuOpen) {
+      setMenuStyle(null);
+      return undefined;
+    }
+
+    updateMenuPosition();
+    const rafId = requestAnimationFrame(updateMenuPosition);
+
+    window.addEventListener('resize', updateMenuPosition);
+    window.addEventListener('scroll', updateMenuPosition, true);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', updateMenuPosition);
+      window.removeEventListener('scroll', updateMenuPosition, true);
+    };
+  }, [menuOpen, updateMenuPosition]);
+
   useEffect(() => {
     if (!menuOpen) return undefined;
 
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
+      const target = event.target;
+      if (
+        menuRef.current?.contains(target) ||
+        menuPopupRef.current?.contains(target)
+      ) {
+        return;
       }
+      setMenuOpen(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -78,7 +129,7 @@ export default function ChatMessageBubble({
   }, [menuOpen]);
 
   const isDeleted = message.is_deleted;
-  const hasAttachment = Boolean(message.image_url);
+  const hasAttachment = Boolean(message.image_url) && !isDeleted;
   const attachmentOnly = isAttachmentOnlyCaption(message.content, message.image_url);
   const canEdit =
     isOwnMessage &&
@@ -102,7 +153,11 @@ export default function ChatMessageBubble({
   const renderBubbleContent = () => (
     <>
       {hasAttachment && (
-        <MessageAttachment url={message.image_url} caption={message.content} />
+        <MessageAttachment
+          url={message.image_url}
+          caption={message.content}
+          isOwnMessage={isOwnMessage}
+        />
       )}
 
       {editing ? (
@@ -180,10 +235,20 @@ export default function ChatMessageBubble({
   };
 
   const renderActionsMenu = () => {
-    if (!showActions || !menuOpen) return null;
+    if (!showActions || !menuOpen || !menuStyle) return null;
 
-    return (
-      <div className="absolute bottom-full right-0 z-20 mb-2 min-w-[7rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+    return createPortal(
+      <div
+        ref={menuPopupRef}
+        style={{
+          position: 'fixed',
+          top: menuStyle.top,
+          left: menuStyle.left,
+          transform: menuStyle.transform,
+          zIndex: 9999,
+        }}
+        className="min-w-[7rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+      >
         {canEdit && (
           <button
             type="button"
@@ -210,7 +275,8 @@ export default function ChatMessageBubble({
             Delete
           </button>
         )}
-      </div>
+      </div>,
+      document.body
     );
   };
 
@@ -222,6 +288,7 @@ export default function ChatMessageBubble({
           className="relative flex flex-col items-end max-w-[min(100%,28rem)]"
         >
           <div
+            ref={bubbleRef}
             role={showActions ? 'button' : undefined}
             tabIndex={showActions ? 0 : undefined}
             onClick={handleBubbleActivate}

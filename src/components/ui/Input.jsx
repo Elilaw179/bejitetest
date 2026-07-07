@@ -19,7 +19,7 @@ const Input = ({ type = 'text', placeholder, value, setValue, errorKey, localErr
           className={`w-full px-4 py-2 rounded-xl outline-none border shadow-sm ${
             errorMessage
               ? 'border-red-500 focus:ring-2 focus:ring-red-300'
-              : 'border-[#d3d3d3] focus:ring-2 focus:ring-[#1A3E32] focus:border-[#1A3E32]'
+              : 'border-[#d3d3d3] focus:ring-2 focus:ring-[#16730F] focus:border-[#16730F]'
           }`}
         />
         {type === 'password' && (

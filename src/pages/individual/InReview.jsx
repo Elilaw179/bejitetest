@@ -2,8 +2,10 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 
+import { SIGNUP_BTN_ENABLED } from "../../constants/signupTheme";
+
 const btnPrimary =
-  "w-full max-w-md min-h-[44px] px-6 py-3 sm:py-4 bg-[#16730F] text-white text-sm sm:text-base font-medium rounded-3xl shadow-md hover:bg-[#145a0c] transition-colors";
+  `w-full max-w-md min-h-[44px] px-6 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-full shadow-md transition-colors ${SIGNUP_BTN_ENABLED}`;
 
 const InReview = () => {
   const navigate = useNavigate();
@@ -25,10 +27,10 @@ const InReview = () => {
           />
 
           <div className="px-1">
-            <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl leading-snug">
+            <h1 className="text-[#16730F] font-semibold text-xl sm:text-2xl leading-snug">
               Thank you!
             </h1>
-            <p className="text-[#1A3E32] font-semibold text-xl sm:text-2xl leading-snug mt-1">
+            <p className="text-[#16730F] font-semibold text-xl sm:text-2xl leading-snug mt-1">
               Your ID has been submitted for review
             </p>
           </div>

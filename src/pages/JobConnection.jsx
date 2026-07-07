@@ -75,7 +75,7 @@ const JobConnection = () => {
             <div
               key={user.id}
               className={`p-4 rounded-lg border cursor-pointer ${
-                addedUsers.includes(user.id) ? "bg-green-200" : "bg-white"
+                addedUsers.includes(user.id) ? "bg-[#16730F]/20" : "bg-white"
               }`}
               onClick={() => handleAdd(user.id)}
             >
@@ -87,7 +87,7 @@ const JobConnection = () => {
         <button
           onClick={handleContinue}
           className={`px-6 py-3 rounded-lg text-white font-semibold ${
-            addedUsers.length >= 10 ? "bg-green-600" : "bg-gray-400 cursor-not-allowed"
+            addedUsers.length >= 10 ? "bg-[#16730F] hover:bg-[#145a0c]" : "bg-[#16730F40] cursor-not-allowed"
           }`}
           disabled={addedUsers.length < 10}
         >

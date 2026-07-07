@@ -70,7 +70,7 @@ const SelectId = () => {
                 name="id_type"
                 value={formData.id_type}
                 onChange={handleChange}
-                className="w-full bg-white border border-gray-300 rounded-xl px-4 h-12 text-sm text-gray-800 outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm"
+                className="w-full bg-white border border-gray-300 rounded-xl px-4 h-12 text-sm text-gray-800 outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm"
               >
                 <option value="">Select</option>
                 <option value="NIN">National Identification Number (NIN)</option>

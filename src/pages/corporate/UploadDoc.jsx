@@ -129,7 +129,7 @@ const CoperateUploadDoc = () => {
           <div className="w-full flex flex-col items-center mt-4">
             {/* Preview Area */}
             {(isIndividual || (!isIndividual && hasSavedDocument)) && (
-              <h2 className="text-[#1A3E32] font-bold text-lg sm:text-xl mb-4 text-center">
+              <h2 className="text-[#16730F] font-bold text-lg sm:text-xl mb-4 text-center">
                 {isIndividual ? "Front of Government ID" : "Company registration document"}
               </h2>
             )}

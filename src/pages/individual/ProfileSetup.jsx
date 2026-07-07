@@ -160,7 +160,7 @@ const ProfileSetup = () => {
       />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
-      <section className="max-w-3xl mx-auto px-4 mt-4 text-[#1A3E32] text-2xl font-semibold">
+      <section className="max-w-3xl mx-auto px-4 mt-4 text-[#16730F] text-2xl font-semibold">
         Profile Setup
       </section>
       <p className="max-w-3xl mx-auto px-4 text-[#333] text-[15px]">
@@ -186,7 +186,7 @@ const ProfileSetup = () => {
               placeholder="@Nickname"
               value={formData.nickname}
               onChange={handleChange}
-              className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm placeholder-gray-400"
+              className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm placeholder-gray-400"
             />
           </div>
 
@@ -201,7 +201,7 @@ const ProfileSetup = () => {
               onChange={handleChange}
               rows={4}
               maxLength={500}
-              className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm resize-none"
+              className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm resize-none"
             />
           </div>
         </div>

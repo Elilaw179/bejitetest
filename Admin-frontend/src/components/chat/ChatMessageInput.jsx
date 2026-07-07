@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import EmojiPicker from 'emoji-picker-react';
 import { fileToDataUrl, inferUploadKind, simpleAudioMime } from '../../utils/chatAttachmentUtils';
+import {
+  createLiveAnalyser,
+  formatVoiceDuration,
+  getLiveWaveformLevels,
+} from '../../utils/voiceWaveform';
 import messagingService from '../../services/messagingService';
+import VoiceWaveform from './VoiceWaveform';
 
 function ChatMessageInput({
   message,
@@ -16,12 +22,19 @@ function ChatMessageInput({
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordError, setRecordError] = useState(null);
+  const [liveLevels, setLiveLevels] = useState([]);
+  const [recordElapsed, setRecordElapsed] = useState(0);
 
   const imageInputRef = useRef(null);
   const videoInputRef = useRef(null);
   const docInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const recordChunksRef = useRef([]);
+  const sendRecordingRef = useRef(false);
+  const recordStreamRef = useRef(null);
+  const analyserRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const recordStartRef = useRef(0);
   const emojiRef = useRef(null);
   const attachRef = useRef(null);
 
@@ -37,6 +50,30 @@ function ChatMessageInput({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const cleanupAnalyser = async () => {
+    analyserRef.current = null;
+    if (audioContextRef.current) {
+      await audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (!recording) return undefined;
+
+    let rafId;
+    const tick = () => {
+      if (analyserRef.current) {
+        setLiveLevels(getLiveWaveformLevels(analyserRef.current));
+      }
+      setRecordElapsed((Date.now() - recordStartRef.current) / 1000);
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [recording]);
 
   const insertEmoji = (emoji) => {
     setMessage((prev) => `${prev || ''}${emoji}`);
@@ -96,15 +133,39 @@ function ChatMessageInput({
         if (ev.data.size > 0) recordChunksRef.current.push(ev.data);
       };
       recorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
+        recordStreamRef.current?.getTracks().forEach((t) => t.stop());
+        recordStreamRef.current = null;
+        await cleanupAnalyser();
+
+        const shouldSend = sendRecordingRef.current;
+        sendRecordingRef.current = false;
+        setRecording(false);
+        setLiveLevels([]);
+        setRecordElapsed(0);
+
+        if (!shouldSend || recordChunksRef.current.length === 0) {
+          recordChunksRef.current = [];
+          return;
+        }
+
         const mime = simpleAudioMime(recorder.mimeType);
         const ext = mime.includes('mp4') ? 'm4a' : 'webm';
         const blob = new Blob(recordChunksRef.current, { type: mime });
+        recordChunksRef.current = [];
         const file = new File([blob], `voice-${Date.now()}.${ext}`, { type: mime });
         await uploadAndSend(file, 'audio');
-        setRecording(false);
       };
       mediaRecorderRef.current = recorder;
+      recordStreamRef.current = stream;
+      sendRecordingRef.current = false;
+
+      const { audioContext, analyser } = createLiveAnalyser(stream);
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+      recordStartRef.current = Date.now();
+      setLiveLevels(getLiveWaveformLevels(analyser));
+      setRecordElapsed(0);
+
       recorder.start();
       setRecording(true);
     } catch (err) {
@@ -113,7 +174,8 @@ function ChatMessageInput({
     }
   };
 
-  const stopRecording = () => {
+  const finishRecording = (send) => {
+    sendRecordingRef.current = send;
     if (mediaRecorderRef.current?.state === 'recording') {
       mediaRecorderRef.current.stop();
     }
@@ -121,17 +183,23 @@ function ChatMessageInput({
 
   const handleVoiceClick = () => {
     if (recording) {
-      stopRecording();
+      finishRecording(false);
     } else {
       startRecording();
     }
   };
 
   const handleSendClick = () => {
+    if (recording) {
+      finishRecording(true);
+      return;
+    }
     if (message.trim() && !sending && !uploading) {
       onSend();
     }
   };
+
+  const canSend = recording || message.trim();
 
   const busy = sending || uploading || disabled;
 
@@ -141,8 +209,8 @@ function ChatMessageInput({
         <p className="text-red-500 text-xs mb-2 px-1">{recordError}</p>
       )}
       {recording && (
-        <p className="text-[#16730F] text-xs mb-2 px-1 font-medium animate-pulse">
-          Recording… tap microphone again to send
+        <p className="text-[#16730F] text-xs mb-2 px-1 font-medium">
+          Recording voice message
         </p>
       )}
       {uploading && (
@@ -150,15 +218,32 @@ function ChatMessageInput({
       )}
 
       <div className="flex flex-col gap-1 md:gap-2 border border-[#D3D3D3] rounded-2xl px-3 md:px-4 py-2 md:py-3 bg-gray-100 shadow-sm">
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendClick()}
-          placeholder="Type a message"
-          disabled={busy}
-          className="flex-1 outline-none text-xs md:text-sm bg-transparent placeholder-gray-400 disabled:opacity-50"
-        />
+        {recording ? (
+          <div className="flex min-h-[2.5rem] items-center gap-3 py-1">
+            <span
+              className="h-2.5 w-2.5 shrink-0 rounded-full bg-red-500 animate-pulse"
+              aria-hidden="true"
+            />
+            <VoiceWaveform
+              levels={liveLevels}
+              isOwnMessage={false}
+              className="max-w-none"
+            />
+            <span className="shrink-0 text-xs font-medium tabular-nums text-[#1A3E32]">
+              {formatVoiceDuration(recordElapsed)}
+            </span>
+          </div>
+        ) : (
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendClick()}
+            placeholder="Type a message"
+            disabled={busy}
+            className="flex-1 outline-none text-xs md:text-sm bg-transparent placeholder-gray-400 disabled:opacity-50"
+          />
+        )}
 
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-1 md:space-x-2">
@@ -260,16 +345,16 @@ function ChatMessageInput({
                   ? 'text-red-500 animate-pulse'
                   : 'text-gray-500 hover:text-green-600'
               }`}
-              aria-label={recording ? 'Stop recording' : 'Record voice'}
+              aria-label={recording ? 'Cancel recording' : 'Record voice'}
             >
               🎤
             </button>
             <button
               type="button"
               onClick={handleSendClick}
-              disabled={busy || !message.trim()}
+              disabled={busy || !canSend}
               className="bg-gray-700 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-full p-1 md:p-2 transition"
-              aria-label="Send message"
+              aria-label={recording ? 'Send voice message' : 'Send message'}
             >
               {sending ? '...' : '➤'}
             </button>
