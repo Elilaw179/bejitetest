@@ -1,5 +1,3 @@
-import React from "react";
-
 const FormLabel = ({
   label,
   required = false,

@@ -1,4 +1,3 @@
-import React from "react";
 import { RiHome5Line } from "react-icons/ri";
 import { IoChatbubblesOutline } from "react-icons/io5";
 import { CiBellOn } from "react-icons/ci";

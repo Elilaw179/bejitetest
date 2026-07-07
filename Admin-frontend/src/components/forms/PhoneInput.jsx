@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Country } from 'country-state-city';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { countryNameToIso2, formatPhoneAsYouType } from '../../utils/phoneUtils';

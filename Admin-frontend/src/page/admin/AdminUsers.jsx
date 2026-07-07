@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { Fragment, useState, useEffect, useRef } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
 import { Search, Mail, Shield, CheckCircle, XCircle, MoreVertical, X, Eye } from 'lucide-react';
@@ -402,7 +402,7 @@ const AdminUsers = () => {
                        const showEllipsisAfter = index < arr.length - 1 && arr[index + 1] !== page + 1;
 
                        return (
-                         <React.Fragment key={page}>
+                         <Fragment key={page}>
                            {showEllipsisBefore && <span className="px-2 text-gray-400">...</span>}
                            <button
                              onClick={() => setCurrentPage(page)}
@@ -415,7 +415,7 @@ const AdminUsers = () => {
                              {page}
                            </button>
                            {showEllipsisAfter && <span className="px-2 text-gray-400">...</span>}
-                         </React.Fragment>
+                         </Fragment>
                        );
                      })}
                  </div>

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
-import { Search, Heart, MessageSquare, Share2, Image as ImageIcon, Video, TrendingUp, Users, Activity } from 'lucide-react';
+import { Search, Heart, MessageSquare, Share2, TrendingUp, Users, Activity } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 
 // StatCard component

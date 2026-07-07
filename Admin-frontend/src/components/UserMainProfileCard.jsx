@@ -1,7 +1,5 @@
 
 
-import React from 'react';
-
 const UserMainProfileCard = ({ onConnect }) => {
   return (
     <div className="max-w-3xl w-full mx-auto px-8 py-6 bg-[#F5F5F5] mt-1">

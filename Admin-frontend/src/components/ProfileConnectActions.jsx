@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserPlus, FaComment } from 'react-icons/fa';
 import { toast } from 'react-toastify';

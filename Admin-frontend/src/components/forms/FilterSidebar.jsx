@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from 'react';
 import { FaFilter, FaTimes } from "react-icons/fa";
 
-export const FilterSidebar = ({
+function FilterPanelContent({
   industries,
   workModes,
   jobTypes,
@@ -17,10 +17,8 @@ export const FilterSidebar = ({
   onExperienceLevelChange,
   onSalaryRangeChange,
   onClearFilters,
-}) => {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-
-  const FilterContent = () => (
+}) {
+  return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="font-semibold text-gray-900">Filters</h3>
@@ -147,6 +145,43 @@ export const FilterSidebar = ({
       </div>
     </div>
   );
+}
+
+export const FilterSidebar = ({
+  industries,
+  workModes,
+  jobTypes,
+  experienceLevels,
+  selectedIndustry,
+  selectedWorkMode,
+  selectedJobType,
+  selectedExperienceLevel,
+  salaryRange,
+  onIndustryChange,
+  onWorkModeChange,
+  onJobTypeChange,
+  onExperienceLevelChange,
+  onSalaryRangeChange,
+  onClearFilters,
+}) => {
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const filterProps = {
+    industries,
+    workModes,
+    jobTypes,
+    experienceLevels,
+    selectedIndustry,
+    selectedWorkMode,
+    selectedJobType,
+    selectedExperienceLevel,
+    salaryRange,
+    onIndustryChange,
+    onWorkModeChange,
+    onJobTypeChange,
+    onExperienceLevelChange,
+    onSalaryRangeChange,
+    onClearFilters,
+  };
 
   return (
     <>
@@ -175,7 +210,7 @@ export const FilterSidebar = ({
       </div>
 
       <div className="hidden lg:block bg-white rounded-2xl border border-gray-200 p-5 sticky top-24 h-fit">
-        <FilterContent />
+        <FilterPanelContent {...filterProps} />
       </div>
 
       {isMobileOpen && (
@@ -187,7 +222,7 @@ export const FilterSidebar = ({
                 <FaTimes />
               </button>
             </div>
-            <FilterContent />
+            <FilterPanelContent {...filterProps} />
             <button
               onClick={() => setIsMobileOpen(false)}
               className="w-full mt-6 bg-[#16730F] text-white py-3 rounded-xl font-semibold"

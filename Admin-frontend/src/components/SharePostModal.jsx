@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   FaTimes,
   FaWhatsapp,
@@ -51,7 +50,7 @@ const SharePostModal = ({ isOpen, onClose, onShare }) => {
         </div>
 
         <div className="grid grid-cols-3 gap-4 p-5 pt-3 pb-7 sm:pb-5">
-          {OPTIONS.map(({ id, label, icon, color, bg }) => (
+          {OPTIONS.map(({ id, label, icon: Icon, color, bg }) => (
             <button
               key={id}
               type="button"
@@ -59,7 +58,7 @@ const SharePostModal = ({ isOpen, onClose, onShare }) => {
               className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-300 p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#16730F] hover:bg-[#F5F9F4]"
             >
               <span className={`flex h-11 w-11 items-center justify-center rounded-full ${bg}`}>
-                {React.createElement(icon, { className: `text-xl ${color}` })}
+                <Icon className={`text-xl ${color}`} />
               </span>
               <span className="text-xs font-medium text-[#1A3E32]">{label}</span>
             </button>

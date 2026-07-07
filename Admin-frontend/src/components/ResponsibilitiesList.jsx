@@ -1,4 +1,3 @@
-import React from 'react';
 import { parseResponsibilitiesList } from '../utils/displayFormatUtils';
 
 const ResponsibilitiesList = ({ text, className = '', itemClassName = '' }) => {

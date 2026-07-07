@@ -1,6 +1,4 @@
 
-import React from "react";
-
 const RoleCard = ({ imageSrc, title, description, buttonText, onClick }) => (
   <div className="w-full max-w-[450px] border-2 border-[#82828226] rounded-2xl px-6 py-8 relative bg-white shadow-sm">
     

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   formatDateRange,
   formatDateToMonthYear,
@@ -27,7 +26,7 @@ const Section = ({ title, children, empty }) => (
   </div>
 );
 
-const ProfileCvSections = ({ cv, candidate = null }) => {
+const ProfileCvSections = ({ cv, candidate = null, showCertificates = true }) => {
   if (!cv) return null;
 
   const bio = cv.bio;
@@ -158,6 +157,7 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
         </ul>
       </Section>
 
+      {showCertificates && (
       <Section title="Certificates" empty={!cv.certificates?.length}>
         <ul className="space-y-3">
           {cv.certificates?.map((cert) => {
@@ -181,6 +181,7 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
           })}
         </ul>
       </Section>
+      )}
 
       <Section
         title="Links"

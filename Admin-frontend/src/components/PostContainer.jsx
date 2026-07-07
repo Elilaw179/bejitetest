@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaImage, FaVideo, FaPoll } from 'react-icons/fa';
 import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, voteOnPoll } from '../services/postsApi';
 import { recordPostShare } from '../utils/postShare';
 import { getUser } from '../utils/tokenManager';
-import { getUserProfileImage, getProfileImageUrl } from '../utils/profileImageUtils';
+import { getUserProfileImage } from '../utils/profileImageUtils';
 import PostCreationModal from './PostCreationModal';
 import FeedLoadMoreButton from './FeedLoadMoreButton';
 import PostCard from './feed/PostCard';
-import { formatDisplayPersonName } from '../utils/personDisplayName';
 
 const FEED_PAGE_SIZE = 20;
 
@@ -23,8 +22,6 @@ const mergeFeedPosts = (existing, incoming) => {
   return merged;
 };
 
-const getDisplayName = (user) => formatDisplayPersonName(user);
-
 const PostContainer = () => {
   const [posts, setPosts] = useState([]);
   const [nextCursor, setNextCursor] = useState(null);
@@ -36,11 +33,7 @@ const PostContainer = () => {
   const user = getUser();
   const currentUserImage = getUserProfileImage();
 
-  useEffect(() => {
-    fetchFeed();
-  }, []);
-
-  const fetchFeed = async (silent = false) => {
+  const fetchFeed = useCallback(async (silent = false) => {
     try {
       if (!silent) setLoading(true);
       const data = await getFeed(FEED_PAGE_SIZE);
@@ -53,7 +46,11 @@ const PostContainer = () => {
     } finally {
       if (!silent) setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void fetchFeed();
+  }, [fetchFeed]);
 
   const loadMorePosts = async () => {
     if (!nextCursor || loadingMore) return;
@@ -233,136 +230,6 @@ const PostContainer = () => {
           fetchFeed();
         }}
       />
-    </div>
-  );
-};
-
-const CreatePostSection = ({ postBody, setPostBody, visibility, setVisibility, onSubmit, submitting, user, mediaFiles, removeMedia, handleMediaSelect, uploadingMedia }) => {
-  const displayName = getDisplayName(user);
-  const userImage = getProfileImageUrl(user?.image);
-  return (
-    <form id="create-post-form" onSubmit={onSubmit} className="max-w-3xl mx-auto rounded-2xl p-6 bg-[#ffffff]">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-        <img
-          src={userImage}
-          alt="profile"
-          className="rounded-full w-[60px] h-[60px]"
-        />
-        <div className="flex-1">
-          <p className="font-semibold text-[#16730F] text-sm mb-1">{displayName}</p>
-          <div className="relative w-full">
-            <textarea
-              name="post"
-              id="post-input"
-              placeholder="Share something"
-              value={postBody}
-              onChange={(e) => setPostBody(e.target.value)}
-              className="w-full p-3 pl-4 pr-20 text-sm border-2 border-[#16730F] focus:outline-none rounded-2xl resize-none"
-              rows={mediaFiles.length > 0 ? 3 : 1}
-            />
-          </div>
-        </div>
-      </div>
-      
-      {mediaFiles.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {mediaFiles.map((media, index) => (
-            <div key={index} className="relative">
-              {media.kind === 'image' ? (
-                <img src={media.url} alt={`Media ${index + 1}`} className="w-20 h-20 object-cover rounded-lg" />
-              ) : (
-                <video src={media.url} className="w-20 h-20 object-cover rounded-lg" />
-              )}
-              <button
-                type="button"
-                onClick={() => removeMedia(index)}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      
-      <PostOptions 
-        visibility={visibility} 
-        setVisibility={setVisibility} 
-        submitting={submitting}
-        handleMediaSelect={handleMediaSelect}
-        uploadingMedia={uploadingMedia}
-      />
-    </form>
-  );
-};
-
-const PostOptions = ({ visibility, setVisibility, submitting, handleMediaSelect, uploadingMedia }) => {
-  return (
-    <div className="flex flex-wrap justify-between items-center mt-5 gap-3 px-2">
-      <MediaOptions handleMediaSelect={handleMediaSelect} uploadingMedia={uploadingMedia} />
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <img src="/assets/images/public-icon.svg" alt="Public" className="w-4 h-4" />
-          <select 
-            value={visibility} 
-            onChange={(e) => setVisibility(e.target.value)}
-            className="text-sm rounded-md border border-gray-300 px-2 py-1 text-[#1A3E32] text-[13px] bg-white"
-          >
-            <option value="public">Public</option>
-            <option value="connections">Connections Only</option>
-          </select>
-        </div>
-        <button
-          type="submit"
-          form="create-post-form"
-          disabled={submitting}
-          className="bg-[#16730F] text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-[#145a0c] disabled:opacity-50 transition-colors cursor-pointer shadow-sm min-w-[80px]"
-        >
-          {submitting ? 'Posting...' : 'Post'}
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const MediaOptions = ({ handleMediaSelect, uploadingMedia }) => {
-  const handleImageClick = () => {
-    document.getElementById('image-input').click();
-  };
-
-  const handleVideoClick = () => {
-    document.getElementById('video-input').click();
-  };
-
-  const options = [
-    { icon: "assets/images/gallery.svg", label: "Image", onClick: handleImageClick },
-    { icon: "assets/images/video-square.png", label: "Video", onClick: handleVideoClick },
-    { icon: "/assets/images/Amount_Icon_UIA.svg", label: "Poll", onClick: () => {} }
-  ];
-
-  return (
-    <div className="flex gap-4 flex-wrap justify-center sm:justify-start">
-      <input
-        type="file"
-        id="image-input"
-        accept="image/*"
-        onChange={(e) => handleMediaSelect(e, 'image')}
-        className="hidden"
-      />
-      <input
-        type="file"
-        id="video-input"
-        accept="video/*"
-        onChange={(e) => handleMediaSelect(e, 'video')}
-        className="hidden"
-      />
-      {uploadingMedia && <span className="text-sm text-[#16730F]">Uploading...</span>}
-      {options.map((option, index) => (
-        <div key={index} onClick={option.onClick} className="flex items-center gap-1 cursor-pointer hover:opacity-70">
-          <img src={option.icon} alt={option.label} />
-          <p className="text-[#1A3E32] text-[13px]">{option.label}</p>
-        </div>
-      ))}
     </div>
   );
 };

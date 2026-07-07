@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import UserPostsFeed from "./UserPostsFeed";
 

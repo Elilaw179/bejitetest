@@ -1,7 +1,5 @@
 
 
-import React from "react";
-
 const InfoBox = ({ text, position }) => {
   const base =
     "absolute z-20 text-center text-xs font-normal text-white bg-[#333333] p-4 rounded-tl-[50px] rounded-br-[50px] shadow-lg";

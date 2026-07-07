@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from "react-router-dom";
 import { FaTimes, FaUserPlus } from "react-icons/fa";
 import { getConnections, sendConnectionRequest } from "../services/connectionsApi";
@@ -22,20 +22,20 @@ const UsersListModal = ({ isOpen, onClose, title, users, type, loading }) => {
   const currentUser = getUser();
   const currentUserId = currentUser?.id;
 
-useEffect(() => {
-    if (isOpen && type === 'likes') {
-      fetchConnections();
-    }
-  }, [isOpen, type]);
-
-  const fetchConnections = async () => {
+  const fetchConnections = useCallback(async () => {
     try {
       const data = await getConnections();
       setConnections(data.connections || []);
     } catch (err) {
       console.error('Error fetching connections:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && type === 'likes') {
+      void fetchConnections();
+    }
+  }, [isOpen, type, fetchConnections]);
 
   // Check connection status for a user
   const getConnectionStatus = (userId) => {

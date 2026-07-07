@@ -1,6 +1,4 @@
 
-import React from 'react';
-
 const UserProfilePanel = ({ onViewMainProfile }) => {
   return (
     <div className="max-w-3xl m-auto px-4 py-6 bg-[#F5F5F5] mt-3">

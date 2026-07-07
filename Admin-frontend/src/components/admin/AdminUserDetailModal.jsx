@@ -1,26 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { X, Mail, Shield, CheckCircle, XCircle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { X } from 'lucide-react';
 import axiosInstance from '../../utils/axiosInstance';
 import { fetchFullUserProfile } from '../../services/fetchFullUserProfile';
+import { normalizeProfileData } from '../../utils/profileUtils';
 import { mergeCvWithCandidateSkills } from '../../utils/profileSkills';
-import { formatDisplayPersonName, formatDisplayRole } from '../../utils/personDisplayName';
+import { formatDisplayPersonName } from '../../utils/personDisplayName';
 import { getFormattedCandidateProfileFields } from '../../utils/displayFormatUtils';
-import { profileAvatarSrc } from '../../utils/profilePhotoUrl';
+import { profilePhotoUrl } from '../../utils/profilePhotoUrl';
 import { pickAuthorProfilePhoto } from '../../utils/profileImageUtils';
-import ProfileCvSections from '../ProfileCvSections';
-import ContactInfoSection from '../ContactInfoSection';
-import VerifiedBadge from '../VerifiedBadge';
-import AdminUserJobPreferences from './AdminUserJobPreferences';
-
-const DetailItem = ({ label, value }) => {
-  if (value == null || value === '') return null;
-  return (
-    <div className="rounded-lg border border-gray-100 bg-[#F9FAF8] px-4 py-3 min-w-0">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-[#1A3E32] break-words">{value}</p>
-    </div>
-  );
-};
+import { CertificateViewerModal } from '../CertificateViewerModal';
+import AdminProfileHeader from './profilePanels/AdminProfileHeader';
+import AdminProfilePanelRouter from './profilePanels/AdminProfilePanelRouter';
+import {
+  getAdminProfilePanelType,
+  PROFILE_PANEL_TITLES,
+} from './profilePanels/profilePanelUtils';
 
 const AdminUserDetailModal = ({ user, onClose }) => {
   const [loading, setLoading] = useState(true);
@@ -28,6 +22,9 @@ const AdminUserDetailModal = ({ user, onClose }) => {
   const [profileUser, setProfileUser] = useState(null);
   const [cvData, setCvData] = useState(null);
   const [candidate, setCandidate] = useState(null);
+  const [photoError, setPhotoError] = useState(false);
+  const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
+  const [resolvedPhotoPath, setResolvedPhotoPath] = useState(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -35,12 +32,15 @@ const AdminUserDetailModal = ({ user, onClose }) => {
     const load = async () => {
       setLoading(true);
       setError(null);
+      setPhotoError(false);
+      setResolvedPhotoPath(null);
 
       try {
         const userId = user.id;
         let loadedUser = null;
         let cv = null;
         let candidateRow = null;
+        let photoFromApi = null;
 
         const full = await fetchFullUserProfile(userId);
         if (full?.user) {
@@ -48,27 +48,53 @@ const AdminUserDetailModal = ({ user, onClose }) => {
           cv = full.cv;
         } else {
           try {
-            const { data: cvRes } = await axiosInstance.get(
-              `/api/cv-builder/complete/${userId}`,
+            const { data: profileRes } = await axiosInstance.get(
+              `/api/admin/data/users/${userId}/profile`,
             );
-            if (cvRes?.success && cvRes.data) {
-              cv = {
-                bio: cvRes.data.bio ?? null,
-                education: cvRes.data.education ?? [],
-                skills: cvRes.data.skills ?? [],
-                workHistory: cvRes.data.workHistory ?? [],
-                certificates: cvRes.data.certificates ?? [],
-                links: cvRes.data.links ?? null,
-              };
+            if (profileRes?.success && profileRes.data) {
+              loadedUser = normalizeProfileData(profileRes.data);
             }
           } catch {
             /* optional fallback */
           }
+
+          if (!cv) {
+            try {
+              const { data: cvRes } = await axiosInstance.get(
+                `/api/cv-builder/complete/${userId}`,
+              );
+              if (cvRes?.success && cvRes.data) {
+                cv = {
+                  bio: cvRes.data.bio ?? null,
+                  education: cvRes.data.education ?? [],
+                  skills: cvRes.data.skills ?? [],
+                  workHistory: cvRes.data.workHistory ?? [],
+                  certificates: cvRes.data.certificates ?? [],
+                  links: cvRes.data.links ?? null,
+                };
+              }
+            } catch {
+              /* optional fallback */
+            }
+          }
         }
 
         try {
-          const { data: candRes } = await axiosInstance.get(`/api/candidates/${userId}`);
-          candidateRow = candRes?.data ?? null;
+          const { data: photoRes } = await axiosInstance.get(
+            `/api/admin/data/users/${userId}/profile-photo`,
+          );
+          photoFromApi = photoRes?.profile_photo ?? null;
+        } catch {
+          /* optional */
+        }
+
+        try {
+          const isRecruiterRole =
+            String(user?.role || loadedUser?.role || '').toLowerCase() === 'recruiter';
+          if (!isRecruiterRole) {
+            const { data: candRes } = await axiosInstance.get(`/api/candidates/${userId}`);
+            candidateRow = candRes?.data ?? null;
+          }
         } catch {
           /* not every user has a candidate row */
         }
@@ -80,8 +106,21 @@ const AdminUserDetailModal = ({ user, onClose }) => {
           last_name: loadedUser?.last_name ?? user.lastName,
           firstName: loadedUser?.firstName ?? user.firstName,
           lastName: loadedUser?.lastName ?? user.lastName,
+          profile_photo:
+            photoFromApi ??
+            loadedUser?.profile_photo ??
+            loadedUser?.profilePhoto ??
+            null,
         };
 
+        const photoPath =
+          photoFromApi ||
+          pickAuthorProfilePhoto(mergedProfile) ||
+          pickAuthorProfilePhoto(candidateRow) ||
+          cv?.bio?.profile_photo ||
+          null;
+
+        setResolvedPhotoPath(photoPath);
         setProfileUser(mergedProfile);
         setCvData(mergeCvWithCandidateSkills(cv, candidateRow));
         setCandidate(candidateRow);
@@ -95,6 +134,11 @@ const AdminUserDetailModal = ({ user, onClose }) => {
 
     load();
   }, [user]);
+
+  const panelType = useMemo(
+    () => getAdminProfilePanelType(user, profileUser),
+    [user, profileUser],
+  );
 
   if (!user) return null;
 
@@ -113,44 +157,11 @@ const AdminUserDetailModal = ({ user, onClose }) => {
     { cvBio: cvData?.bio },
   );
 
-  const photoPath =
-    pickAuthorProfilePhoto(profileUser) ||
-    pickAuthorProfilePhoto(candidate) ||
-    cvData?.bio?.profile_photo;
-
+  const photoPath = resolvedPhotoPath;
+  const photoViewUrl = photoPath && !photoError ? profilePhotoUrl(photoPath) : null;
+  const canViewPhoto = Boolean(photoViewUrl);
   const isVerified = user.verified || user.isEmailVerified || profileUser?.verified;
-
-  const accountItems = [
-    { label: 'User ID', value: String(user.id) },
-    { label: 'Email', value: user.email },
-    { label: 'Role', value: formatDisplayRole(user.role, 'Unassigned') },
-    { label: 'First name', value: profileUser?.firstName ?? user.firstName },
-    { label: 'Last name', value: profileUser?.lastName ?? user.lastName },
-    { label: 'Nickname', value: profileUser?.nickname },
-    { label: 'Username', value: profileUser?.username },
-    { label: 'Phone', value: profileUser?.phone ?? profileUser?.phone_number },
-    { label: 'Location', value: profileFields.location ?? profileUser?.location },
-    { label: 'Company', value: profileUser?.company_name },
-    { label: 'Job title', value: profileUser?.job_title ?? profileUser?.title },
-    {
-      label: 'Joined',
-      value: user.created_at
-        ? new Date(user.created_at).toLocaleString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          })
-        : null,
-    },
-    {
-      label: 'Email verified',
-      value: isVerified ? 'Yes' : 'No',
-    },
-    {
-      label: 'Admin account',
-      value: user.is_admin ? 'Yes' : 'No',
-    },
-  ].filter((item) => item.value != null && item.value !== '');
+  const modalTitle = PROFILE_PANEL_TITLES[panelType] || PROFILE_PANEL_TITLES.unknown;
 
   return (
     <div
@@ -167,7 +178,9 @@ const AdminUserDetailModal = ({ user, onClose }) => {
       >
         <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-800 truncate">User profile</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
+              {modalTitle}
+            </h2>
             <p className="text-sm text-gray-500 truncate">{displayName}</p>
           </div>
           <button
@@ -190,83 +203,42 @@ const AdminUserDetailModal = ({ user, onClose }) => {
             <div className="py-12 text-center text-red-600">{error}</div>
           ) : (
             <>
-              <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-                  <img
-                    src={profileAvatarSrc(photoPath)}
-                    alt={displayName}
-                    className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-xl font-bold text-[#1A3E32]">{displayName}</h3>
-                      {profileUser?.hasVerifiedBadge && <VerifiedBadge />}
-                      {user.is_admin && (
-                        <Shield className="text-blue-500" size={18} title="Admin" />
-                      )}
-                    </div>
-                    {profileFields.title && (
-                      <p className="text-gray-700 mt-1">{profileFields.title}</p>
-                    )}
-                    <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500">
-                      <span className="flex items-center gap-1 min-w-0">
-                        <Mail size={14} className="shrink-0" />
-                        <span className="truncate">{user.email}</span>
-                      </span>
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                          isVerified
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-amber-50 text-amber-700'
-                        }`}
-                      >
-                        {isVerified ? (
-                          <CheckCircle size={12} />
-                        ) : (
-                          <XCircle size={12} />
-                        )}
-                        {isVerified ? 'Verified' : 'Pending verification'}
-                      </span>
-                      <span className="capitalize text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                        {formatDisplayRole(user.role, 'Unassigned')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </section>
+              <AdminProfileHeader
+                user={user}
+                profileUser={profileUser}
+                displayName={displayName}
+                profileFields={profileFields}
+                panelType={panelType}
+                photoPath={photoPath}
+                photoError={photoError}
+                onPhotoError={() => setPhotoError(true)}
+                onPhotoClick={() => canViewPhoto && setPhotoViewerOpen(true)}
+                canViewPhoto={canViewPhoto}
+                isVerified={isVerified}
+              />
 
-              <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-4">
-                  Account details
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {accountItems.map((item) => (
-                    <DetailItem key={item.label} label={item.label} value={item.value} />
-                  ))}
-                </div>
-              </section>
-
-              {profileFields.bio && (
-                <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-                  <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-4">About</h2>
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
-                    {profileFields.bio}
-                  </p>
-                </section>
-              )}
-
-              <ProfileCvSections cv={cvData} candidate={candidate ?? profileUser} />
-
-              <AdminUserJobPreferences candidate={candidate} profileUser={profileUser} />
-
-              <ContactInfoSection
-                candidate={{ ...candidate, ...profileUser, email: user.email }}
-                bio={cvData?.bio}
+              <AdminProfilePanelRouter
+                panelType={panelType}
+                user={user}
+                profileUser={profileUser}
+                profileFields={profileFields}
+                cvData={cvData}
+                candidate={candidate}
+                isVerified={isVerified}
               />
             </>
           )}
         </div>
       </div>
+
+      {canViewPhoto ? (
+        <CertificateViewerModal
+          open={photoViewerOpen}
+          onClose={() => setPhotoViewerOpen(false)}
+          fileUrl={photoPath}
+          title={`${displayName} — profile photo`}
+        />
+      ) : null}
     </div>
   );
 };

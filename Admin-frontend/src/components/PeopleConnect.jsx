@@ -1,5 +1,5 @@
 // PeopleConnect.jsx
-import React, { useState } from "react";
+import { Fragment, useState } from 'react';
 import { FaSearch } from "react-icons/fa";
 import { toast } from "react-toastify";
 import * as connectionsApi from "../services/connectionsApi";
@@ -47,13 +47,13 @@ const PeopleConnect = () => {
         
         {/* User List */}
         {users.map((user, index) => (
-          <React.Fragment key={index}>
+          <Fragment key={index}>
             <UserCard 
               user={user}
               onConnect={() => handleSendRequest(user.id || index, user.name)}
             />
             <Divider small />
-          </React.Fragment>
+          </Fragment>
         ))}
       </div>
     </div>

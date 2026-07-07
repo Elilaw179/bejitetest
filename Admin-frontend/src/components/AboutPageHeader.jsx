@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function AboutPageHeader({headerText}) {
   return(
     <header className="w-full px-2 py-3 flex justify-center items-center max-w-full mx-auto bg-[#16730F] text-white gap-4">

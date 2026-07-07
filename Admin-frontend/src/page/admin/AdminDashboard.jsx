@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
 import {
@@ -8,7 +8,6 @@ import {
   Activity,
   TrendingUp,
   BarChart2,
-  PieChart as PieChartIcon,
 } from "lucide-react";
 import {
   LineChart,
@@ -20,10 +19,7 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
   Cell,
-  Legend,
 } from "recharts";
 const AdminDashboard = () => {
   const [overview, setOverview] = useState(null);

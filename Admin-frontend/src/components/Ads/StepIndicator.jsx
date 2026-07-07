@@ -1,11 +1,11 @@
-import React from "react";
+import { Fragment } from 'react';
 import { Check } from "lucide-react";
 
 export default function StepIndicator({ currentStep, steps }) {
   return (
     <div className="flex items-center justify-between mb-8">
       {steps.map((step, index) => (
-        <React.Fragment key={step.number}>
+        <Fragment key={step.number}>
           <div className="flex flex-col items-center">
             <div
               className={`
@@ -34,7 +34,7 @@ export default function StepIndicator({ currentStep, steps }) {
               className={`flex-1 h-0.5 mx-4 transition-all ${currentStep > step.number + 1 ? "bg-[#1A3E32]" : "bg-gray-200"}`}
             />
           )}
-        </React.Fragment>
+        </Fragment>
       ))}
     </div>
   );

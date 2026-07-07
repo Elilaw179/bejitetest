@@ -1,4 +1,3 @@
-import React from 'react';
 import { buildContactInfoItems } from '../utils/displayFormatUtils';
 
 const ContactInfoField = ({ label, value, href, fullWidth }) => (

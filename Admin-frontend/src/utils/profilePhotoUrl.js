@@ -4,10 +4,10 @@
  * @typedef {string | null | undefined} StoredPhoto
  */
 
-import { API_URL } from '../config';
+import { API_URL } from '../config.mjs';
 
 /** Default placeholder served from the Vite public folder */
-export const PROFILE_PHOTO_PLACEHOLDER = '/assets/images/photo_placeholder.png';
+export const PROFILE_PHOTO_PLACEHOLDER = '/assets/images/profile.svg';
 
 /**
  * Returns an absolute URL for display, or `undefined` when there is nothing to show.
@@ -25,6 +25,7 @@ export function profilePhotoUrl(stored) {
   const s = String(stored).trim();
   if (!s) return undefined;
   if (/^https?:\/\//i.test(s)) return s;
+  if (s.startsWith('//')) return `https:${s}`;
   if (s.startsWith('blob:') || s.startsWith('data:')) return s;
   if (s.startsWith('/assets/')) return s;
   if (s.startsWith('assets/')) return `/${s}`;

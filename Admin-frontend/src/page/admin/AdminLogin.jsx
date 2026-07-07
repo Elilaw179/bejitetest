@@ -1,5 +1,5 @@
 import { Eye, EyeOff } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { clearErrors, logout, setAdminAuth } from "../../features/auth/authSlice";

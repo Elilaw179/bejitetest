@@ -1,4 +1,3 @@
-import React from "react";
 import { LuSend } from "react-icons/lu";
 import { RxCross1 } from "react-icons/rx";
 import { useNavigate } from "react-router-dom";

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import EmojiPicker from 'emoji-picker-react';
 import { fileToDataUrl, inferUploadKind, simpleAudioMime } from '../../utils/chatAttachmentUtils';
 import messagingService from '../../services/messagingService';

@@ -185,7 +185,7 @@
 
 
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
@@ -250,7 +250,7 @@ function VerifyEmail() {
               navigate('/');
             }, 3000);
           } else {
-            throw new Error("Alternative endpoint also failed");
+            setMessage(altRes.data?.message || "❌ Verification link invalid or expired.");
           }
         } catch (altErr) {
           // network or backend error

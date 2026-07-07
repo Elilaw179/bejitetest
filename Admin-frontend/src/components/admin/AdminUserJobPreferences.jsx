@@ -1,4 +1,3 @@
-import React from 'react';
 import { formatSalaryExpectation } from '../../utils/formatSalary';
 import { formatDisplayText } from '../../utils/displayFormatUtils';
 
