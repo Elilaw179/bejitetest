@@ -1,11 +1,12 @@
-
-
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../../components/Header";
 
 const CoperateInReview = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isIndividual = location.pathname.includes("individual");
+
   const handleContinue = () => {
     navigate("/");
   };
@@ -23,12 +24,25 @@ const CoperateInReview = () => {
           />
 
           <div className="text-center">
-            <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl">
-              Thank You for Submitting Documents!
-            </h1>
-            <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl">
-              Your company verification is under review.
-            </h1>
+            {isIndividual ? (
+              <>
+                <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl">
+                  Thank you!
+                </h1>
+                <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl mt-1">
+                  Your ID has been submitted for review
+                </h1>
+              </>
+            ) : (
+              <>
+                <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl">
+                  Thank You for Submitting Documents!
+                </h1>
+                <h1 className="text-[#1A3E32] font-semibold text-xl sm:text-2xl mt-1">
+                  Your company verification is under review.
+                </h1>
+              </>
+            )}
           </div>
 
           <button

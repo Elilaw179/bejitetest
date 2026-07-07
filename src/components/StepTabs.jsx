@@ -8,7 +8,7 @@ const StepTabs = ({
   getPath,
   isEditMode = false,
 }) => (
-  <div className="max-w-3xl flex flex-wrap justify-center sm:justify-between items-center mx-auto mt-[5%] gap-2 p-2">
+  <div className="max-w-3xl flex flex-wrap justify-center sm:justify-between items-center mx-auto gap-2 p-2">
     {steps.map((step, i) => {
       const stepNumber = i + 1;
       const isCompleted = stepNumber < currentStep;

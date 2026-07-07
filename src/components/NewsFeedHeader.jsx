@@ -22,6 +22,7 @@ import {
   profileAvatarSrc,
   PROFILE_PHOTO_PLACEHOLDER,
 } from "../utils/profilePhotoUrl";
+import { getRecruiterEditProfilePath } from "../utils/recruiterProfilePaths";
 import { pickAuthorProfilePhoto } from "../utils/profileImageUtils";
 import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
@@ -731,7 +732,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                         onClick={() => {
                           navigate(
                             user?.role === "recruiter"
-                              ? "/edit-profile/recruiter/basic-details"
+                              ? getRecruiterEditProfilePath(user)
                               : "/edit-profile/bio",
                           );
                           setIsDropdownOpen(false);

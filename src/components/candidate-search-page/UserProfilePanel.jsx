@@ -18,6 +18,7 @@ import {
   resolveProfileSkillSource,
 } from "../../utils/profileSkills";
 import ProfileSkillsDisplay from "../ProfileSkillsDisplay";
+import ResponsibilitiesList from "../ResponsibilitiesList";
 import {
   buildContactInfoItems,
   getFormattedEducationFields,
@@ -573,9 +574,10 @@ const WorkHistoryItem = ({ work, legacy = false }) => {
             <p className="text-[13px]">{formatted.company}</p>
           )}
           {formatted.description && (
-            <p className="text-[11px] text-[#E0E0E0] mt-1 line-clamp-3">
-              {formatted.description}
-            </p>
+            <ResponsibilitiesList
+              text={formatted.description}
+              className="mt-1 space-y-1 list-disc list-outside pl-4 text-[11px] text-[#E0E0E0] break-words"
+            />
           )}
           {duration && (
             <span className="text-[#FFB54780] text-[11px]">{duration}</span>

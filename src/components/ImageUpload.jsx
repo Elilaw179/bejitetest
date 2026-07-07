@@ -10,7 +10,7 @@ const ImageUpload = ({
 }) => (
   <div className="w-full lg:w-64 flex flex-col items-center">
     <div className="relative group cursor-pointer">
-      <label className="w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 hover:border-[#1A3E32] hover:bg-gray-100 transition-all duration-300 cursor-pointer overflow-hidden shadow-sm">
+      <label className="w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center bg-white border-2 border-dashed border-gray-300 hover:border-[#1A3E32] transition-all duration-300 cursor-pointer overflow-hidden shadow-sm">
         {imagePreview ? (
           <img
             src={imagePreview}

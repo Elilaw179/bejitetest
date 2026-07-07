@@ -21,7 +21,7 @@ import Link from "./pages/jobseekerSignup/cvBuilder/Link.jsx";
 import JobType from "./pages/jobseekerSignup/JobType.jsx";
 import SaveProgress from "./pages/jobseekerSignup/SaveProgress.jsx";
 import EmployerOpt from "./pages/EmployerOpt";
-import BasicDetails from "./pages/corporate/BasicDetails.jsx";
+import IndividualBasicDetails from "./pages/individual/BasicDetails.jsx";
 import ProfileSetup from "./pages/individual/ProfileSetup";
 import Location from "./pages/individual/Location";
 import Verify from "./pages/individual/Verify";
@@ -119,7 +119,13 @@ const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
 function App() {
   return (
-    <Sentry.ErrorBoundary fallback={<div className="min-h-screen flex items-center justify-center p-6 text-center">Something went wrong. Please refresh the page or contact support.</div>}>
+    <Sentry.ErrorBoundary
+      fallback={
+        <div className="min-h-screen flex items-center justify-center p-6 text-center">
+          Something went wrong. Please refresh the page or contact support.
+        </div>
+      }
+    >
       <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <Router>
           <AuthBootstrap>
@@ -200,21 +206,56 @@ function App() {
                 <Route path="/edit-profile/links" element={<Link />} />
                 <Route path="/edit-profile/job-type" element={<JobType />} />
               </Route>
+
               <Route element={<IndividualVerificationLayout />}>
                 <Route
                   path="/individual/basic-details"
-                  element={<BasicDetails />}
+                  element={<IndividualBasicDetails />}
                 />
                 <Route
                   path="/individual/profile-setup"
                   element={<ProfileSetup />}
                 />
-                <Route path="/individual/location" element={<Location />} />
+                <Route
+                  path="/individual/location"
+                  element={<Location />}
+                />
                 <Route path="/individual/verify" element={<Verify />} />
                 <Route path="/individual/selectid" element={<SelectId />} />
-                <Route path="/individual/upload" element={<UploadDoc />} />
-                <Route path="/individual/inreview" element={<InReview />} />
+                <Route
+                  path="/individual/upload"
+                  element={<UploadDoc />}
+                />
+                <Route
+                  path="/individual/inreview"
+                  element={<InReview />}
+                />
+                <Route
+                  path="/edit-profile/individual/basic-details"
+                  element={<IndividualBasicDetails />}
+                />
+                <Route
+                  path="/edit-profile/individual/profile-setup"
+                  element={<ProfileSetup />}
+                />
+                <Route
+                  path="/edit-profile/individual/location"
+                  element={<Location />}
+                />
+                <Route
+                  path="/edit-profile/individual/verify"
+                  element={<Verify />}
+                />
+                <Route
+                  path="/edit-profile/individual/selectid"
+                  element={<SelectId />}
+                />
+                <Route
+                  path="/edit-profile/individual/upload"
+                  element={<UploadDoc />}
+                />
               </Route>
+
               <Route element={<CoperateVerificationLayout />}>
                 <Route
                   path="/corporate/basic-details"
@@ -233,7 +274,10 @@ function App() {
                   element={<CoperateLocation />}
                 />
                 <Route path="/corporate/verify" element={<CoperateVerify />} />
-                <Route path="/corporate/upload" element={<CoperateUploadDoc />} />
+                <Route
+                  path="/corporate/upload"
+                  element={<CoperateUploadDoc />}
+                />
                 <Route
                   path="/corporate/inreview"
                   element={<CoperateInReview />}
@@ -270,7 +314,10 @@ function App() {
               <Route path="/a/:campaignId" element={<SharedAdRedirect />} />
               <Route path="/news-feed" element={<Recruitment />} />
               <Route path="/badge" element={<BadgeStatus />} />
-              <Route path="/badge/payment-callback" element={<BadgePaymentCallback />} />
+              <Route
+                path="/badge/payment-callback"
+                element={<BadgePaymentCallback />}
+              />
               <Route path="/activity-logs" element={<ActivityLog />} />
               <Route path="/account-settings" element={<AccountSettings />} />
               <Route path="/badge-holder" element={<BadgeHolder />} />
@@ -287,7 +334,10 @@ function App() {
                 element={<CampaignReports />}
               />
               <Route path="/adpro/create" element={<CreateCampaign />} />
-              <Route path="/adpro/campaign/:id/edit" element={<EditCampaign />} />
+              <Route
+                path="/adpro/campaign/:id/edit"
+                element={<EditCampaign />}
+              />
               <Route
                 path="/adpro/campaign/:id/edit-audience"
                 element={<EditCampaignAudience />}
@@ -310,7 +360,10 @@ function App() {
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/payment-type" element={<PaymentType />} />
               <Route path="/add-card" element={<AddCard />} />
-              <Route path="/payment-processing" element={<PaymentProcessing />} />
+              <Route
+                path="/payment-processing"
+                element={<PaymentProcessing />}
+              />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/sent-invite" element={<SentInvite />} />
               <Route
@@ -377,9 +430,15 @@ function App() {
               />
               <Route path="/employer/create-job" element={<CreateJob />} />
 
-              <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+              <Route
+                path="/employer/dashboard"
+                element={<EmployerDashboard />}
+              />
 
-              <Route path="/employer/bulk-create" element={<BulkCreateJobs />} />
+              <Route
+                path="/employer/bulk-create"
+                element={<BulkCreateJobs />}
+              />
               <Route
                 path="/employer/extend/callback"
                 element={<JobExtendCallback />}

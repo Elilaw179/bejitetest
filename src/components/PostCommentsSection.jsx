@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PostActionIcon from "./feed/PostActionIcon";
+import EmojiPickerButton from "./common/EmojiPickerButton";
 import {
   addComment,
   deleteComment,
   likeComment,
   unlikeComment,
+  updateComment,
 } from "../services/postsApi";
 import { getAuthorProfileImageUrl } from "../utils/profileImageUtils";
 import { formatDisplayPersonName } from "../utils/personDisplayName";
@@ -42,15 +44,23 @@ function CommentItem({
   onCancelReply,
   onSubmitReply,
   onLike,
+  onEdit,
+  onCancelEdit,
+  onSaveEdit,
   onDelete,
   onViewProfile,
   deletingCommentId,
+  editingCommentId,
+  savingCommentId,
+  editDraft,
+  onEditDraftChange,
   getReplies,
   getCommentById,
   depth = 0,
 }) {
   const replies = getReplies(comment.id);
   const isReplying = replyingTo === comment.id;
+  const isEditing = editingCommentId === comment.id;
   const isReply = depth > 0;
   const isOwner = String(comment.authorId) === String(currentUserId);
   const parentComment = isReply ? getCommentById(comment.parentCommentId) : null;
@@ -117,7 +127,41 @@ function CommentItem({
               )}
             </div>
             <p className="text-sm break-words text-gray-800 mt-0.5">
-              {comment.body}
+              {isEditing ? (
+                <form
+                  onSubmit={(e) => onSaveEdit(e, comment)}
+                  className="space-y-2"
+                >
+                  <textarea
+                    value={editDraft}
+                    onChange={(e) => onEditDraftChange(e.target.value)}
+                    rows={2}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#16730F] resize-none"
+                    autoFocus
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={onCancelEdit}
+                      disabled={savingCommentId === comment.id}
+                      className="px-3 py-1 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={
+                        savingCommentId === comment.id || !editDraft.trim()
+                      }
+                      className="px-3 py-1 rounded-full text-xs font-medium bg-[#16730F] text-white hover:bg-[#145a0c] disabled:opacity-50"
+                    >
+                      {savingCommentId === comment.id ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                comment.body
+              )}
             </p>
           </div>
 
@@ -147,37 +191,49 @@ function CommentItem({
                 {comment.likedByMe ? "Liked" : "Like"}
               </span>
             </button>
-            <button
-              type="button"
-              onClick={() =>
-                isReplying ? onCancelReply() : onStartReply(comment.id)
-              }
-              className="text-xs font-medium text-gray-500 hover:text-[#16730F] transition-colors"
-              aria-label={isReplying ? "Cancel reply" : "Reply to comment"}
-            >
-              Reply
-            </button>
-            {isOwner && (
+            {!isEditing && (
               <button
                 type="button"
-                onClick={() => onDelete(comment)}
-                disabled={deletingCommentId === comment.id}
-                className="flex items-center gap-1 sm:gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
-                aria-label={
-                  deletingCommentId === comment.id
-                    ? "Deleting comment"
-                    : "Delete comment"
+                onClick={() =>
+                  isReplying ? onCancelReply() : onStartReply(comment.id)
                 }
+                className="text-xs font-medium text-gray-500 hover:text-[#16730F] transition-colors"
+                aria-label={isReplying ? "Cancel reply" : "Reply to comment"}
               >
-                <PostActionIcon
-                  type="delete"
-                  compact
-                  active={deletingCommentId === comment.id}
-                />
-                <span className="hidden sm:inline">
-                  {deletingCommentId === comment.id ? "Deleting..." : "Delete"}
-                </span>
+                Reply
               </button>
+            )}
+            {isOwner && !isEditing && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onEdit(comment)}
+                  className="text-xs font-medium text-gray-500 hover:text-[#16730F] transition-colors"
+                  aria-label="Edit comment"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(comment)}
+                  disabled={deletingCommentId === comment.id}
+                  className="flex items-center gap-1 sm:gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
+                  aria-label={
+                    deletingCommentId === comment.id
+                      ? "Deleting comment"
+                      : "Delete comment"
+                  }
+                >
+                  <PostActionIcon
+                    type="delete"
+                    compact
+                    active={deletingCommentId === comment.id}
+                  />
+                  <span className="hidden sm:inline">
+                    {deletingCommentId === comment.id ? "Deleting..." : "Delete"}
+                  </span>
+                </button>
+              </>
             )}
           </div>
 
@@ -191,14 +247,20 @@ function CommentItem({
                 alt=""
                 className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover shrink-0"
               />
-              <input
-                type="text"
-                placeholder={`Reply to ${getDisplayName(comment.author)}...`}
-                value={replyText}
-                onChange={(e) => onReplyTextChange(e.target.value)}
-                className="flex-1 min-w-[120px] sm:min-w-[140px] border border-[#D3D3D3] rounded-full px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:border-[#16730F]"
-                autoFocus
-              />
+              <div className="flex-1 min-w-[120px] sm:min-w-[140px] flex items-center gap-1 border border-[#D3D3D3] rounded-full px-2 py-1 focus-within:border-[#16730F]">
+                <input
+                  type="text"
+                  placeholder={`Reply to ${getDisplayName(comment.author)}...`}
+                  value={replyText}
+                  onChange={(e) => onReplyTextChange(e.target.value)}
+                  className="flex-1 min-w-0 border-0 bg-transparent px-2 py-0.5 text-xs sm:text-sm outline-none"
+                  autoFocus
+                />
+                <EmojiPickerButton
+                  onEmojiSelect={(emoji) => onReplyTextChange(`${replyText}${emoji}`)}
+                  buttonClassName="p-0.5"
+                />
+              </div>
               <button
                 type="submit"
                 disabled={!replyText.trim()}
@@ -232,9 +294,16 @@ function CommentItem({
               onCancelReply={onCancelReply}
               onSubmitReply={onSubmitReply}
               onLike={onLike}
+              onEdit={onEdit}
+              onCancelEdit={onCancelEdit}
+              onSaveEdit={onSaveEdit}
               onDelete={onDelete}
               onViewProfile={onViewProfile}
               deletingCommentId={deletingCommentId}
+              editingCommentId={editingCommentId}
+              savingCommentId={savingCommentId}
+              editDraft={editDraft}
+              onEditDraftChange={onEditDraftChange}
               getReplies={getReplies}
               getCommentById={getCommentById}
               depth={depth + 1}
@@ -252,6 +321,7 @@ export default function PostCommentsSection({
   setComments,
   loading,
   onReload,
+  onCommentCountChange,
   currentUserPhotoUrl,
   currentUserId,
 }) {
@@ -260,6 +330,9 @@ export default function PostCommentsSection({
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [deletingCommentId, setDeletingCommentId] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editDraft, setEditDraft] = useState("");
+  const [savingCommentId, setSavingCommentId] = useState(null);
 
   const topLevelComments = comments.filter((c) => !c.parentCommentId);
   const getReplies = (parentId) =>
@@ -275,9 +348,14 @@ export default function PostCommentsSection({
     e.preventDefault();
     if (!newComment.trim()) return;
     try {
-      await addComment(postId, newComment);
+      const data = await addComment(postId, newComment);
       setNewComment("");
-      await onReload();
+      if (data?.comment) {
+        setComments((prev) => [...prev, data.comment]);
+        onCommentCountChange?.(1);
+      } else {
+        await onReload();
+      }
     } catch (err) {
       console.error("Error adding comment:", err);
     }
@@ -287,10 +365,15 @@ export default function PostCommentsSection({
     e.preventDefault();
     if (!replyText.trim()) return;
     try {
-      await addComment(postId, replyText, parentCommentId);
+      const data = await addComment(postId, replyText, parentCommentId);
       setReplyText("");
       setReplyingTo(null);
-      await onReload();
+      if (data?.comment) {
+        setComments((prev) => [...prev, data.comment]);
+        onCommentCountChange?.(1);
+      } else {
+        await onReload();
+      }
     } catch (err) {
       console.error("Error adding reply:", err);
     }
@@ -331,6 +414,54 @@ export default function PostCommentsSection({
     }
   };
 
+  const handleEdit = (comment) => {
+    setReplyingTo(null);
+    setReplyText("");
+    setEditingCommentId(comment.id);
+    setEditDraft(comment.body || "");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditDraft("");
+  };
+
+  const handleSaveEdit = async (e, comment) => {
+    e.preventDefault();
+    const trimmed = editDraft.trim();
+    if (!trimmed || savingCommentId) return;
+
+    setSavingCommentId(comment.id);
+    setComments((prev) =>
+      prev.map((entry) =>
+        entry.id === comment.id ? { ...entry, body: trimmed } : entry,
+      ),
+    );
+
+    try {
+      const data = await updateComment(postId, comment.id, trimmed);
+      if (data?.comment) {
+        setComments((prev) =>
+          prev.map((entry) =>
+            entry.id === comment.id ? { ...entry, ...data.comment } : entry,
+          ),
+        );
+      }
+      setEditingCommentId(null);
+      setEditDraft("");
+    } catch (err) {
+      console.error("Error updating comment:", err);
+      setComments((prev) =>
+        prev.map((entry) =>
+          entry.id === comment.id ? { ...entry, body: comment.body } : entry,
+        ),
+      );
+      await onReload();
+    } finally {
+      setSavingCommentId(null);
+    }
+  };
+
   const handleDelete = async (comment) => {
     if (deletingCommentId) return;
 
@@ -348,15 +479,20 @@ export default function PostCommentsSection({
       setReplyingTo(null);
       setReplyText("");
     }
+    if (editingCommentId && idsToRemove.has(editingCommentId)) {
+      setEditingCommentId(null);
+      setEditDraft("");
+    }
 
     setComments((prev) => prev.filter((entry) => !idsToRemove.has(entry.id)));
+    onCommentCountChange?.(-idsToRemove.size);
 
     try {
       await deleteComment(postId, comment.id);
-      await onReload();
     } catch (err) {
       console.error("Error deleting comment:", err);
       await onReload();
+      onCommentCountChange?.(idsToRemove.size);
     } finally {
       setDeletingCommentId(null);
     }
@@ -375,13 +511,19 @@ export default function PostCommentsSection({
             className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shrink-0"
           />
         )}
-        <input
-          type="text"
-          placeholder="Write a comment..."
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          className="flex-1 min-w-[180px] border border-[#D3D3D3] rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[#16730F]"
-        />
+        <div className="flex-1 min-w-[180px] flex items-center gap-1 border border-[#D3D3D3] rounded-full px-2 py-1 focus-within:border-[#16730F]">
+          <input
+            type="text"
+            placeholder="Write a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            className="flex-1 min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm outline-none"
+          />
+          <EmojiPickerButton
+            onEmojiSelect={(emoji) => setNewComment((prev) => `${prev}${emoji}`)}
+            buttonClassName="p-0.5"
+          />
+        </div>
         <button
           type="submit"
           className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c]"
@@ -412,9 +554,16 @@ export default function PostCommentsSection({
               }}
               onSubmitReply={handleSubmitReply}
               onLike={handleLike}
+              onEdit={handleEdit}
+              onCancelEdit={handleCancelEdit}
+              onSaveEdit={handleSaveEdit}
               onDelete={handleDelete}
               onViewProfile={handleViewProfile}
               deletingCommentId={deletingCommentId}
+              editingCommentId={editingCommentId}
+              savingCommentId={savingCommentId}
+              editDraft={editDraft}
+              onEditDraftChange={setEditDraft}
               getReplies={getReplies}
               getCommentById={getCommentById}
             />

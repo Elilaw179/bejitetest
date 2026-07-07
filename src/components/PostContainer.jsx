@@ -76,22 +76,26 @@ const PostContainer = () => {
   };
 
   const handleLike = async (postId, isLiked) => {
+    const current = posts.find((p) => p.id === postId);
+    patchPost(postId, {
+      likedByMe: !isLiked,
+      likesCount: Math.max(
+        0,
+        (current?.likesCount || 0) + (isLiked ? -1 : 1),
+      ),
+    });
     try {
       if (isLiked) {
         await unlikePost(postId);
       } else {
         await likePost(postId);
       }
-      const current = posts.find((p) => p.id === postId);
-      patchPost(postId, {
-        likedByMe: !isLiked,
-        likesCount: Math.max(
-          0,
-          (current?.likesCount || 0) + (isLiked ? -1 : 1),
-        ),
-      });
     } catch (err) {
       console.error('Error toggling like:', err);
+      patchPost(postId, {
+        likedByMe: isLiked,
+        likesCount: current?.likesCount || 0,
+      });
     }
   };
 

@@ -20,6 +20,7 @@ import {
   getSavedPosts,
   getPostLikes,
   getPostShares,
+  getComments,
   voteOnPoll,
 } from "../../services/postsApi";
 import { getPostDetailPath } from "../../utils/postNavigation";
@@ -38,7 +39,7 @@ import {
   pickProfilePhotoPath,
 } from "../../utils/tokenManager";
 import { profileAvatarSrc } from "../../utils/profilePhotoUrl";
-import { getAuthorProfileImageUrl } from "../../utils/profileImageUtils";
+import { getAuthorProfileImageUrl, getUserProfileImage } from "../../utils/profileImageUtils";
 import PostCreationModal from "../PostCreationModal";
 import ConfirmModal from "../ConfirmModal";
 import useSyncProfilePhoto from "../../hooks/useSyncProfilePhoto";
@@ -49,6 +50,7 @@ import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import PostMediaGallery from "../PostMediaGallery";
 import PostPoll from "../feed/PostPoll";
 import PostActions from "../feed/PostActions";
+import PostCommentsSection from "../PostCommentsSection";
 import FeedLoadMoreButton from "../FeedLoadMoreButton";
 import AdCard from "../Ads/AdCard";
 import { getAdProFeedAds, trackAdCampaignEvent, likeAdCampaign, unlikeAdCampaign, saveAdCampaign, unsaveAdCampaign } from "../../services/adProApi";
@@ -302,22 +304,26 @@ export default function RecruitmentMiddle() {
   };
 
   const handleLike = async (postId, isLiked) => {
+    const current = posts.find((p) => p.id === postId);
+    patchPost(postId, {
+      likedByMe: !isLiked,
+      likesCount: Math.max(
+        0,
+        (current?.likesCount || 0) + (isLiked ? -1 : 1),
+      ),
+    });
     try {
       if (isLiked) {
         await unlikePost(postId);
       } else {
         await likePost(postId);
       }
-      const current = posts.find((p) => p.id === postId);
-      patchPost(postId, {
-        likedByMe: !isLiked,
-        likesCount: Math.max(
-          0,
-          (current?.likesCount || 0) + (isLiked ? -1 : 1),
-        ),
-      });
     } catch (err) {
       console.error("Error toggling like:", err);
+      patchPost(postId, {
+        likedByMe: isLiked,
+        likesCount: current?.likesCount || 0,
+      });
     }
   };
 
@@ -562,6 +568,14 @@ const RecruitmentPostCard = ({
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState("");
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
+
+  useEffect(() => {
+    setCommentsCount(post.commentsCount || 0);
+  }, [post.id, post.commentsCount]);
 
   // Users list modal state
   const [usersListModalOpen, setUsersListModalOpen] = useState(false);
@@ -581,8 +595,28 @@ const RecruitmentPostCard = ({
     setLinkModalOpen(false);
   };
 
+  const fetchComments = async (force = false) => {
+    if (!force && comments.length > 0) return;
+    try {
+      setLoadingComments(true);
+      const data = await getComments(post.id);
+      setComments(data.comments || []);
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const toggleComments = () => {
+    if (!showComments) {
+      fetchComments();
+    }
+    setShowComments(!showComments);
+  };
+
   const handleCommentAction = () => {
-    openPostDetail();
+    toggleComments();
   };
 
   const handleLikeClick = () => {
@@ -931,13 +965,13 @@ const RecruitmentPostCard = ({
             {post.likesCount} like{post.likesCount > 1 ? "s" : ""}
           </button>
         )}
-        {post.commentsCount > 0 && (
+        {commentsCount > 0 && (
           <button
             type="button"
             onClick={handleCommentAction}
             className="hover:underline font-medium"
           >
-            {post.commentsCount} comment{post.commentsCount > 1 ? "s" : ""}
+            {commentsCount} comment{commentsCount > 1 ? "s" : ""}
           </button>
         )}
         {post.sharesCount > 0 && (
@@ -954,7 +988,7 @@ const RecruitmentPostCard = ({
         liked={liked}
         saved={saved}
         likesCount={post.likesCount || 0}
-        commentsCount={post.commentsCount || 0}
+        commentsCount={commentsCount}
         sharesCount={post.sharesCount || 0}
         onLike={handleLikeClick}
         onComment={handleCommentAction}
@@ -962,7 +996,21 @@ const RecruitmentPostCard = ({
         onSave={handleSaveClick}
       />
 
-      {/* Comments Section */}
+      {showComments && (
+        <PostCommentsSection
+          postId={post.id}
+          comments={comments}
+          setComments={setComments}
+          loading={loadingComments}
+          onReload={() => fetchComments(true)}
+          onCommentCountChange={(delta) =>
+            setCommentsCount((count) => Math.max(0, count + delta))
+          }
+          currentUserPhotoUrl={getUserProfileImage()}
+          currentUserId={currentUserId}
+        />
+      )}
+
       <SharePostModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}

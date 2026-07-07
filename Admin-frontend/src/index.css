@@ -1,0 +1,184 @@
+@import "tailwindcss";
+
+/* .custom-scroll::-webkit-scrollbar {
+  display: none;
+} */
+
+/* 
+.custom-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+} */
+
+body {
+  font-family: "Montserrat";
+}
+
+input[type="date"].hide-calendar-icon::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Consistent affordance for clickable UI/text across the app */
+a,
+button,
+[role="button"],
+summary,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+@keyframes shareSheetEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shareBackdropEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.share-sheet-enter {
+  animation: shareSheetEnter 220ms ease-out;
+}
+
+.share-backdrop-enter {
+  animation: shareBackdropEnter 180ms ease-out;
+}
+
+/* News feed layout scrollbars — apply class nfl-scroll / nfl-sidebar-scroll on scroll containers */
+.nfl-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(26, 62, 50, 0.2) transparent;
+}
+
+.nfl-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nfl-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nfl-scroll::-webkit-scrollbar-thumb {
+  background: rgba(26, 62, 50, 0.2);
+  border-radius: 100px;
+}
+
+.nfl-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(26, 62, 50, 0.4);
+}
+
+.nfl-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.nfl-sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nfl-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nfl-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 100px;
+}
+
+.nfl-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Nunito Regular */
+@font-face {
+  font-family: "NunitoRegular";
+  src: url("./assets/font/Nunito-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Nunito Medium */
+@font-face {
+  font-family: "NunitoSemi";
+  src: url("./assets/font/Nunito-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+/* Nunito Bold */
+@font-face {
+  font-family: "NunitoBold";
+  src: url("./assets/font/Nunito-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* font-nunito-regular (for NunitoRegular)
+font-nunito-semi (for NunitoSemi)
+font-nunito-bold (for NunitoBold) */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+.active\\:scale-98:active {
+  transform: scale(0.98);
+}
