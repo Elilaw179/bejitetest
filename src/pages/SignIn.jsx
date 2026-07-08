@@ -194,7 +194,7 @@ function SignIn() {
             <h2 className="text-3xl font-norican font-semibold text-[#16730F] text-center">
               Welcome Back!
             </h2>
-            <p className="text-center text-[#1A3E32] text-md">
+            <p className="text-center text-[#16730F] text-md">
               Sign in to continue
             </p>
 
@@ -204,7 +204,7 @@ function SignIn() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-[#d3d3d3] rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-green-300"
+                className="w-full px-4 py-3 border border-[#d3d3d3] rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-[#16730F] focus:border-[#16730F]"
               />
               <div className="relative">
                 <input
@@ -212,7 +212,7 @@ function SignIn() {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-[#d3d3d3] rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-green-300"
+                  className="w-full px-4 py-3 border border-[#d3d3d3] rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-[#16730F] focus:border-[#16730F]"
                 />
                 <button
                   type="button"
@@ -255,7 +255,7 @@ function SignIn() {
               </button>
             </form>
 
-            <p className="text-[#1A3E32] text-center text-xl">
+            <p className="text-[#16730F] text-center text-xl">
               ...or sign in with
             </p>
             <div className="flex justify-center gap-6 mt-4">

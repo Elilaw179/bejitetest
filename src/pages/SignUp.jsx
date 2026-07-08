@@ -144,7 +144,7 @@ function SignUp() {
           >
             <h2 className="text-3xl font-norican font-semibold text-[#16730F] text-center">              Sign Up
             </h2>
-            <p className="text-center text-[#1A3E32] text-md">
+            <p className="text-center text-[#16730F] text-md">
               Create your account in a few steps
             </p>
 
@@ -203,7 +203,7 @@ function SignUp() {
               Continue
             </button>
 
-            <p className="text-[#1A3E32] text-center text-xl">...or signup with</p>
+            <p className="text-[#16730F] text-center text-xl">...or signup with</p>
             <div className="flex justify-center gap-6 mt-1">
               {/* <FaLinkedin className="text-3xl text-blue-600 cursor-pointer" /> */}
 

@@ -1,4 +1,3 @@
-
 import InfoBox from "./InfoBox";
 
 const MemberCard = ({

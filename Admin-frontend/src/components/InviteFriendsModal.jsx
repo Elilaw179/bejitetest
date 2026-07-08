@@ -122,7 +122,7 @@ const InviteFriendsModal = ({ isOpen, onClose, user }) => {
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Share via</p>
             <div className="grid grid-cols-3 gap-3 pb-2 sm:pb-0">
-              {options.map(({ id, label, icon, color, bg }) => (
+              {options.map(({ id, label, icon: Icon, color, bg }) => (
                 <button
                   key={id}
                   type="button"
@@ -130,7 +130,7 @@ const InviteFriendsModal = ({ isOpen, onClose, user }) => {
                   className="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-300 p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#16730F] hover:bg-[#F5F9F4]"
                 >
                   <span className={`flex h-11 w-11 items-center justify-center rounded-full ${bg}`}>
-                    {React.createElement(icon, { className: `text-xl ${color}` })}
+                    <Icon className={`text-xl ${color}`} />
                   </span>
                   <span className="text-xs font-medium text-[#1A3E32]">{label}</span>
                 </button>

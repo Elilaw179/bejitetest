@@ -21,7 +21,7 @@ import Link from "./pages/jobseekerSignup/cvBuilder/Link.jsx";
 import JobType from "./pages/jobseekerSignup/JobType.jsx";
 import SaveProgress from "./pages/jobseekerSignup/SaveProgress.jsx";
 import EmployerOpt from "./pages/EmployerOpt";
-import BasicDetails from "./pages/corporate/BasicDetails.jsx";
+import IndividualBasicDetails from "./pages/individual/BasicDetails.jsx";
 import ProfileSetup from "./pages/individual/ProfileSetup";
 import Location from "./pages/individual/Location";
 import Verify from "./pages/individual/Verify";
@@ -210,29 +210,49 @@ function App() {
               <Route element={<IndividualVerificationLayout />}>
                 <Route
                   path="/individual/basic-details"
-                  element={<CoperateBasicDetails />}
+                  element={<IndividualBasicDetails />}
                 />
                 <Route
                   path="/individual/profile-setup"
-                  element={<CoperateProfileSetup />}
-                />
-                <Route
-                  path="/individual/company-details"
-                  element={<CompanyDetails />}
+                  element={<ProfileSetup />}
                 />
                 <Route
                   path="/individual/location"
-                  element={<CoperateLocation />}
+                  element={<Location />}
                 />
-                <Route path="/individual/verify" element={<CoperateVerify />} />
+                <Route path="/individual/verify" element={<Verify />} />
                 <Route path="/individual/selectid" element={<SelectId />} />
                 <Route
                   path="/individual/upload"
-                  element={<CoperateUploadDoc />}
+                  element={<UploadDoc />}
                 />
                 <Route
                   path="/individual/inreview"
-                  element={<CoperateInReview />}
+                  element={<InReview />}
+                />
+                <Route
+                  path="/edit-profile/individual/basic-details"
+                  element={<IndividualBasicDetails />}
+                />
+                <Route
+                  path="/edit-profile/individual/profile-setup"
+                  element={<ProfileSetup />}
+                />
+                <Route
+                  path="/edit-profile/individual/location"
+                  element={<Location />}
+                />
+                <Route
+                  path="/edit-profile/individual/verify"
+                  element={<Verify />}
+                />
+                <Route
+                  path="/edit-profile/individual/selectid"
+                  element={<SelectId />}
+                />
+                <Route
+                  path="/edit-profile/individual/upload"
+                  element={<UploadDoc />}
                 />
               </Route>
 

@@ -28,6 +28,8 @@ const SKIP_PREFIXES = [
   '/job-type',
   '/save-progress',
   '/edit-profile',
+  '/individual/',
+  '/corporate/',
   '/jobseeker-option',
   '/employer-option',
   '/jobconnection',

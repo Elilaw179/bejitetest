@@ -95,7 +95,8 @@ export function getFormattedCandidateProfileFields(candidate = {}, options = {})
   const bioRow = options.bio ?? candidate.user_bio?.[0] ?? candidate.user_bio;
   const cvBio = options.cvBio;
 
-  const bioRaw = candidate.bio ?? cvBio?.bio ?? bioRow?.bio;
+  const bioRaw =
+    candidate.bio ?? candidate.summary ?? cvBio?.bio ?? bioRow?.bio;
   const bio =
     bioRaw != null && String(bioRaw).trim() !== ''
       ? String(bioRaw).trim()
@@ -103,7 +104,9 @@ export function getFormattedCandidateProfileFields(candidate = {}, options = {})
 
   return {
     bio,
-    title: formatDisplayText(candidate.title),
+    title: formatDisplayText(
+      candidate.job_title ?? candidate.jobTitle ?? candidate.title,
+    ),
     location: formatCandidateLocation(candidate, bioRow ?? cvBio),
     remotePreference: formatDisplayText(candidate.remote_preference),
     industry: formatDisplayText(candidate.industry),
@@ -126,6 +129,33 @@ export function getFormattedWorkHistoryFields(work, { legacy = false } = {}) {
       legacy ? work.description : work.responsibilities ?? work.description,
     ),
   };
+}
+
+const INLINE_BULLET_SPLIT = /\s*[•●·▪◦‣⁃]\s*/;
+const LEADING_BULLET = /^[\s\-*•●·▪◦‣⁃]+\s*/;
+
+/** Split stored responsibility text into separate bullet items for display. */
+export function parseResponsibilitiesList(value) {
+  if (value == null || String(value).trim() === '') return [];
+
+  const lines = String(value).trim().split(/\n+/);
+  const items = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    const parts = INLINE_BULLET_SPLIT.test(trimmed)
+      ? trimmed.split(INLINE_BULLET_SPLIT)
+      : [trimmed];
+
+    for (const part of parts) {
+      const cleaned = part.replace(LEADING_BULLET, '').trim();
+      if (cleaned) items.push(cleaned);
+    }
+  }
+
+  return items;
 }
 
 /**
@@ -169,12 +199,21 @@ export function buildContactInfoItems({ candidate, bio } = {}) {
   const phone = formatDisplayPhone(phoneRaw, countryHint);
   const address = formatCandidateAddress(candidate, bio);
   const email = formatDisplayEmail(candidate?.email);
+  const linkedin =
+    candidate?.linkedin_url ?? candidate?.links?.linkedin ?? null;
+  const website = candidate?.website ?? candidate?.links?.portfolio ?? null;
+  const twitter = candidate?.twitter_url ?? candidate?.links?.twitter ?? null;
+  const instagram =
+    candidate?.instagram_url ?? candidate?.links?.instagram ?? null;
 
   const items = [
     { type: 'Phone', value: phone },
     { type: 'Email', value: email, isEmail: true },
     { type: 'Address', value: address, fullWidth: true },
-    { type: 'LinkedIn', value: candidate?.linkedin_url, href: true },
+    { type: 'Website', value: website, href: true },
+    { type: 'LinkedIn', value: linkedin, href: true },
+    { type: 'X (Twitter)', value: twitter, href: true },
+    { type: 'Instagram', value: instagram, href: true },
     { type: 'GitHub', value: candidate?.github_url, href: true },
     { type: 'Portfolio', value: candidate?.portfolio_url, href: true },
   ].filter((item) => item.value);

@@ -53,7 +53,9 @@ function CommentItem({
   const isReplying = replyingTo === comment.id;
   const isReply = depth > 0;
   const isOwner = String(comment.authorId) === String(currentUserId);
-  const parentComment = isReply ? getCommentById(comment.parentCommentId) : null;
+  const parentComment = isReply
+    ? getCommentById(comment.parentCommentId)
+    : null;
   const authorImage =
     String(comment.authorId) === String(currentUserId)
       ? currentUserPhotoUrl
@@ -132,17 +134,15 @@ function CommentItem({
               }`}
               aria-label={comment.likedByMe ? "Unlike comment" : "Like comment"}
             >
-              <PostActionIcon
-                type="like"
-                active={comment.likedByMe}
-                compact
-              />
+              <PostActionIcon type="like" active={comment.likedByMe} compact />
               <span className="text-xs tabular-nums sm:hidden">
                 {comment.likesCount || 0}
               </span>
               <span className="hidden sm:inline">
                 {comment.likesCount > 0 && (
-                  <span className="tabular-nums mr-1">{comment.likesCount}</span>
+                  <span className="tabular-nums mr-1">
+                    {comment.likesCount}
+                  </span>
                 )}
                 {comment.likedByMe ? "Liked" : "Like"}
               </span>
@@ -304,7 +304,10 @@ export default function PostCommentsSection({
           ? {
               ...c,
               likedByMe: !wasLiked,
-              likesCount: Math.max(0, (c.likesCount || 0) + (wasLiked ? -1 : 1)),
+              likesCount: Math.max(
+                0,
+                (c.likesCount || 0) + (wasLiked ? -1 : 1),
+              ),
             }
           : c,
       ),

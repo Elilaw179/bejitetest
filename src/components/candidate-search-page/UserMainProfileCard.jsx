@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FaComment } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
 import { fetchFullUserProfile } from '../../services/fetchFullUserProfile';
 import { profileAvatarSrc } from '../../utils/profilePhotoUrl';
@@ -8,6 +11,7 @@ import ProfileCvSections from '../ProfileCvSections';
 import { mergeCvWithCandidateSkills } from '../../utils/profileSkills';
 import { useCandidateConnect } from '../../hooks/useCandidateConnect';
 import { resolveCandidateUserId } from '../../utils/resolveCandidateUserId';
+import messagingService from '../../services/messagingService';
 import CandidateJobPreferences from './CandidateJobPreferences';
 import CandidateContactInfo from './CandidateContactInfo';
 import { formatDisplayPersonName, formatDisplayRole } from '../../utils/personDisplayName';
@@ -190,12 +194,35 @@ const ProfileHeaderCard = ({
   connectUserIdProp,
   onOpenPhotoViewer,
 }) => {
+  const navigate = useNavigate();
   const connectUserId =
     resolveCandidateUserId(candidate) || connectUserIdProp || null;
   const { sendRequest, connectLabel, connectDisabled } = useCandidateConnect(
     connectUserId,
     displayName,
   );
+  const [messaging, setMessaging] = useState(false);
+
+  const handleMessage = async () => {
+    if (!connectUserId || messaging) return;
+    try {
+      setMessaging(true);
+      const conversation = await messagingService.startConversation(
+        String(connectUserId),
+      );
+      navigate('/chats', {
+        state: { openConversationId: conversation?.id },
+      });
+    } catch (error) {
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        'Could not start conversation';
+      toast.error(msg);
+    } finally {
+      setMessaging(false);
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -224,19 +251,36 @@ const ProfileHeaderCard = ({
           {salaryPreview && (
             <p className="text-sm text-gray-500">💰 Expected: {salaryPreview}</p>
           )}
-          <div className="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
+          <div className="mt-4 flex flex-nowrap gap-2 justify-center sm:justify-start">
             <button
               type="button"
               onClick={sendRequest}
               disabled={connectDisabled}
-              className={`inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium text-white transition-colors ${
+              className={`inline-flex shrink-0 items-center justify-center gap-2 min-h-[40px] px-5 py-2 rounded-full text-sm font-medium text-white transition-colors ${
                 connectDisabled
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-[#556B1F] hover:bg-[#6B8E23]'
               }`}
             >
-              <img className="w-4 h-4" src="/assets/images/repeate-one.svg" alt="" />
-              {connectLabel}
+              <img className="w-4 h-4 shrink-0" src="/assets/images/repeate-one.svg" alt="" />
+              <span className="whitespace-nowrap">{connectLabel}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleMessage}
+              disabled={!connectUserId || messaging}
+              aria-busy={messaging}
+              className="inline-flex shrink-0 items-center justify-center gap-2 min-h-[40px] min-w-[7.5rem] px-5 py-2 rounded-full text-sm font-medium text-[#556B1F] border border-[#556B1F] bg-white hover:bg-[#556B1F]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {messaging ? (
+                <span
+                  className="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-[#556B1F] border-t-transparent"
+                  aria-hidden="true"
+                />
+              ) : (
+                <FaComment className="w-3.5 h-3.5 shrink-0" />
+              )}
+              <span className="whitespace-nowrap">Message</span>
             </button>
           </div>
         </div>

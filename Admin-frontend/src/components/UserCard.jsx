@@ -1,6 +1,3 @@
-
-
-
 import { FaCheck } from "react-icons/fa";
 
 const UserCard = ({ user, isAdded, onAdd }) => (
@@ -15,11 +12,14 @@ const UserCard = ({ user, isAdded, onAdd }) => (
           />
         </div>
         <div className="flex flex-col items-center sm:items-start justify-center">
-          <p className="text-lg sm:text-[20px] font-bold text-[#16730F]">{user.name}</p>
-          <p className="text-[#1A3E32] text-sm sm:text-base mt-1">{user.role}</p>
+          <p className="text-lg sm:text-[20px] font-bold text-[#16730F]">
+            {user.name}
+          </p>
+          <p className="text-[#1A3E32] text-sm sm:text-base mt-1">
+            {user.role}
+          </p>
         </div>
       </div>
-
 
       <div
         className={`flex justify-center items-center gap-2 rounded-3xl px-4 py-1.5 shadow-2xl cursor-pointer w-full sm:w-28 mx-auto sm:mx-0 ${

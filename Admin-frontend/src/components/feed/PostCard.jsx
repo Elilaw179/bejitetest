@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  FaEllipsisH,
-} from "react-icons/fa";
+import { FaEllipsisH } from "react-icons/fa";
 import PostActions from "./PostActions";
 import { getComments } from "../../services/postsApi";
 import {
@@ -11,7 +9,10 @@ import {
   getSocialShareUrl,
   openShareWindow,
 } from "../../utils/postShare";
-import { getUserProfileImage, getProfileImageUrl } from "../../utils/profileImageUtils";
+import {
+  getUserProfileImage,
+  getProfileImageUrl,
+} from "../../utils/profileImageUtils";
 import ConfirmModal from "../ConfirmModal";
 import SharePostModal from "../SharePostModal";
 import PostMediaGallery from "../PostMediaGallery";
@@ -73,7 +74,9 @@ const PostHeader = ({
   const menuRef = useRef(null);
   const displayName = getDisplayName(author);
   const displayJobTitle = getAuthorSubtitle(author, authorId);
-  const authorImage = getProfileImageUrl(author?.image || author?.profile_photo);
+  const authorImage = getProfileImageUrl(
+    author?.image || author?.profile_photo,
+  );
 
   useEffect(() => {
     if (!showMenu) return;
@@ -119,7 +122,9 @@ const PostHeader = ({
             {author?.hasVerifiedBadge && <VerifiedBadge size="xs" />}
           </button>
           <p className="text-[#1A3E32] text-xs sm:text-sm">{displayJobTitle}</p>
-          <p className="text-[#1A3E32] text-xs sm:text-sm">{formatDate(createdAt)}</p>
+          <p className="text-[#1A3E32] text-xs sm:text-sm">
+            {formatDate(createdAt)}
+          </p>
         </div>
       </div>
       {isOwner && (
@@ -265,7 +270,11 @@ const PostCard = ({
   const [prevLikedByMe, setPrevLikedByMe] = useState(post.likedByMe);
   const [prevSavedByMe, setPrevSavedByMe] = useState(post.savedByMe);
 
-  if (post.id !== prevPostId || post.likedByMe !== prevLikedByMe || post.savedByMe !== prevSavedByMe) {
+  if (
+    post.id !== prevPostId ||
+    post.likedByMe !== prevLikedByMe ||
+    post.savedByMe !== prevSavedByMe
+  ) {
     setPrevPostId(post.id);
     setPrevLikedByMe(post.likedByMe);
     setPrevSavedByMe(post.savedByMe);

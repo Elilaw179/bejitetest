@@ -4,6 +4,10 @@ import NavigationButtons from "../../components/NavigationButtons";
 import { useNavigate, useLocation, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import Header from "../../components/Header";
+import useRecruiterProfile from "../../services/recruiterProfile";
+import { documentViewUrl, isDocumentImage, isDocumentPdf } from "../../utils/documentViewUrl";
+
+const isPdfPreview = (url) => url === "pdf-document" || isDocumentPdf(url);
 
 const CoperateUploadDoc = () => {
   const fileInputRef = useRef(null);
@@ -12,51 +16,78 @@ const CoperateUploadDoc = () => {
     useOutletContext();
   const location = useLocation();
   const isIndividual = location.pathname.includes("individual");
+  const { uploadIdDocument } = useRecruiterProfile();
 
+  const [selectedFile, setSelectedFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
-  const [isUploaded, setIsUploaded] = useState(false);
+  const [existingDocUrl, setExistingDocUrl] = useState(null);
+  const [justUploaded, setJustUploaded] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
-    if (isEditMode && recruiterData && !dataLoaded) {
-      if (recruiterData.id_document) {
-        setPreviewUrl(recruiterData.id_document);
-        setIsUploaded(true);
-        setDataLoaded(true);
-      }
+    if (!isEditMode || !recruiterData?.id_document || dataLoaded) return;
+
+    const preview = documentViewUrl(recruiterData.id_document);
+    setExistingDocUrl(recruiterData.id_document);
+    setFileName("Current document");
+
+    if (isPdfPreview(preview)) {
+      setPreviewUrl("pdf-document");
+    } else if (isDocumentImage(preview) || preview?.startsWith("blob:")) {
+      setPreviewUrl(preview);
+    } else if (preview) {
+      setPreviewUrl(preview);
     }
+
+    setJustUploaded(true);
+    setDataLoaded(true);
   }, [isEditMode, recruiterData, dataLoaded]);
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFileName(file.name);
-      if (file.type.startsWith("image/")) {
-        const imageUrl = URL.createObjectURL(file);
-        setPreviewUrl(imageUrl);
-      } else {
-        setPreviewUrl("pdf-document");
-      }
-    }
-  };
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleUpload = () => {
-    if (fileName) {
-      setIsUploaded(true);
-      toast.success("Document uploaded successfully!");
-    }
-  };
+    setSelectedFile(file);
+    setFileName(file.name);
+    setJustUploaded(false);
 
-  const handleSkip = () => {
-    if (isEditMode) {
-      navigate("/news-feed");
+    if (file.type.startsWith("image/")) {
+      setPreviewUrl(URL.createObjectURL(file));
     } else {
-      navigate("/news-feed");
+      setPreviewUrl("pdf-document");
     }
   };
 
-  const isFormComplete = isUploaded;
+  const handleUpload = async () => {
+    if (!selectedFile || uploading) return;
+
+    setUploading(true);
+    try {
+      await toast.promise(uploadIdDocument(selectedFile), {
+        pending: "Uploading document...",
+        success: "Document uploaded successfully!",
+        error: {
+          render({ data }) {
+            return `Upload failed: ${data}`;
+          },
+        },
+      });
+      setJustUploaded(true);
+      setExistingDocUrl(null);
+      setSelectedFile(null);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const hasSavedDocument = Boolean(existingDocUrl) || justUploaded;
+  const isFormComplete = isEditMode ? hasSavedDocument : justUploaded;
+  const showFilePicker = isEditMode || !justUploaded;
+  const canUploadNewFile = Boolean(selectedFile) && !uploading;
 
   return (
     <div className="min-h-screen bg-white px-4 flex flex-col justify-between pb-8">
@@ -85,7 +116,7 @@ const CoperateUploadDoc = () => {
             ) : (
               <>
                 <p className="italic text-center text-gray-600">
-                  • Upload an authorization letter (PDF/PNG) (e.g., company letterhead, HR approval, or director’s signature.)
+                  • Upload CAC documents (PDF/PNG) (e.g., Certificate of Incorporation, CAC status report, or business registration certificate.)
                 </p>
                 <p className="italic text-center text-gray-600">
                   • Supported formats: PNG, JPG, PDF (max 2MB)
@@ -97,9 +128,9 @@ const CoperateUploadDoc = () => {
           {/* Upload Section */}
           <div className="w-full flex flex-col items-center mt-4">
             {/* Preview Area */}
-            {isIndividual && (
-              <h2 className="text-[#1A3E32] font-bold text-lg sm:text-xl mb-4 text-center">
-                Front of Government ID
+            {(isIndividual || (!isIndividual && hasSavedDocument)) && (
+              <h2 className="text-[#16730F] font-bold text-lg sm:text-xl mb-4 text-center">
+                {isIndividual ? "Front of Government ID" : "Company registration document"}
               </h2>
             )}
             <div className="w-full aspect-square max-w-[340px] bg-gray-200 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center mb-6 overflow-hidden relative shadow-inner transition-all duration-300">
@@ -145,13 +176,16 @@ const CoperateUploadDoc = () => {
             </div>
 
             {/* Choose File (hide only after upload) */}
-            {!isUploaded && (
+            {showFilePicker && (
               <div className="mb-4 flex flex-col items-center w-full">
                 <label
                   htmlFor="file-upload"
                   className="cursor-pointer border-2 border-[#16730F] hover:bg-[#16730F]/5 rounded-full px-12 py-3 flex items-center justify-center gap-2 text-[#16730F] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm w-full max-w-[320px]"
                 >
                   <Camera className="w-5 h-5 text-[#16730F]" />
+                  <span className="text-sm">
+                    {isEditMode && hasSavedDocument ? "Choose a new file" : "Choose file"}
+                  </span>
                 </label>
                 <input
                   id="file-upload"
@@ -164,29 +198,33 @@ const CoperateUploadDoc = () => {
               </div>
             )}
 
-            {fileName && !isUploaded && (
+            {selectedFile && !justUploaded && (
               <p className="text-xs text-gray-600 mb-4 font-semibold text-center italic bg-gray-50 py-1.5 px-4 rounded-full max-w-[320px] truncate">
                 Selected: <span className="text-black font-normal">{fileName}</span>
               </p>
             )}
 
-            {/* Upload or Uploaded Button */}
             <button
+              type="button"
               onClick={handleUpload}
-              disabled={!fileName || isUploaded}
+              disabled={!canUploadNewFile}
               className={`w-full max-w-[320px] py-3 rounded-full font-bold transition-all shadow-md flex items-center justify-center gap-2 ${
-                isUploaded
-                  ? "bg-[#16730F] text-white cursor-default"
-                  : fileName
-                    ? "bg-[#16730F] text-white hover:bg-[#125E0E] hover:scale-[1.02] active:scale-[0.98]"
+                canUploadNewFile
+                  ? "bg-[#16730F] text-white hover:bg-[#125E0E] hover:scale-[1.02] active:scale-[0.98]"
+                  : justUploaded
+                    ? "bg-[#16730F] text-white cursor-default"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
               }`}
             >
-              {isUploaded ? (
+              {uploading ? (
+                "Uploading..."
+              ) : justUploaded ? (
                 <>
                   <CheckCircle2 className="w-5 h-5 text-white" />
                   Uploaded
                 </>
+              ) : selectedFile ? (
+                isEditMode && existingDocUrl ? "Replace document" : "Upload"
               ) : (
                 "Upload"
               )}
@@ -198,8 +236,8 @@ const CoperateUploadDoc = () => {
       {/* Navigation Buttons */}
       <NavigationButtons
         isFormComplete={isFormComplete}
-        showSkip={true}
-        onSkip={handleSkip}
+        showSkip={isIndividual}
+        onSkip={() => navigate("/news-feed")}
         nextLabel="Submit"
         onBack={() => {
           if (isEditMode) {
@@ -209,6 +247,11 @@ const CoperateUploadDoc = () => {
           }
         }}
         onNext={() => {
+          if (!isFormComplete) return;
+          if (selectedFile && !justUploaded) {
+            toast.error("Upload your document before continuing.");
+            return;
+          }
           if (isEditMode) {
             if (currentStep === 6) {
               navigate("/news-feed");

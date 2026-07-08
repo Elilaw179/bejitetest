@@ -1,13 +1,12 @@
-
-import { buildContactInfoItems } from '../utils/displayFormatUtils';
+import { buildContactInfoItems } from "../utils/displayFormatUtils";
 
 const ContactInfoField = ({ label, value, href, fullWidth }) => (
-  <div className={`min-w-0 ${fullWidth ? 'sm:col-span-2' : ''}`}>
+  <div className={`min-w-0 ${fullWidth ? "sm:col-span-2" : ""}`}>
     <dt className="text-sm font-medium text-gray-500">{label}</dt>
     <dd className="mt-1.5 text-[#1A3E32] text-sm font-medium leading-relaxed break-words">
       {href ? (
         <a
-          href={value.startsWith('http') ? value : `https://${value}`}
+          href={value.startsWith("http") ? value : `https://${value}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#16730F] hover:underline break-words"
@@ -28,14 +27,14 @@ export function ContactInfoSection({
   candidate,
   bio,
   items: itemsProp,
-  title = 'Contact info',
-  className = '',
+  title = "Contact info",
+  className = "",
 }) {
   const items = itemsProp ?? buildContactInfoItems({ candidate, bio });
   if (items.length === 0) return null;
 
   const primary = items.filter((item) =>
-    ['Phone', 'Email', 'Address'].includes(item.type),
+    ["Phone", "Email", "Address"].includes(item.type),
   );
   const links = items.filter((item) => item.href);
 

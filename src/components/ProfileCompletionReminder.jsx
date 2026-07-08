@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaTimes } from 'react-icons/fa';
 import { getUser, isAuthenticated } from '../utils/tokenManager';
@@ -15,6 +15,7 @@ const SKIP_EXACT = new Set([
   '/confirmpassword',
 ]);
 
+/** Onboarding / auth flows — hide popup here, but still show on main app (e.g. news-feed). */
 const SKIP_PREFIXES = [
   '/auth/',
   '/admin',
@@ -28,6 +29,8 @@ const SKIP_PREFIXES = [
   '/job-type',
   '/save-progress',
   '/edit-profile',
+  '/individual/',
+  '/corporate/',
   '/jobseeker-option',
   '/employer-option',
   '/jobconnection',
@@ -41,8 +44,17 @@ function shouldSkipPath(pathname) {
   return SKIP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
-function getProfileSetupPath(role) {
+function resolveRecruiterMode(user) {
+  const mode = String(user?.mode || '').toLowerCase();
+  if (mode === 'individual' || mode === 'corporate') return mode;
+  return 'corporate';
+}
+
+function getProfileSetupPath(role, mode) {
   if (role === 'recruiter') {
+    if (mode === 'individual') {
+      return '/individual/basic-details';
+    }
     return '/edit-profile/recruiter/basic-details';
   }
   if (role === 'jobseeker') {
@@ -57,18 +69,29 @@ function getProfileSetupPath(role) {
 export default function ProfileCompletionReminder() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [dismissed, setDismissed] = useState(
-    () => sessionStorage.getItem(DISMISS_KEY) === '1',
-  );
+  const prevPathRef = useRef(location.pathname);
+  const [dismissed, setDismissed] = useState(false);
 
   const onAppRoute = !shouldSkipPath(location.pathname);
   const authenticated = isAuthenticated();
   const { profileCompleted, loading } = useProfileCompletionStatus({
-    enabled: authenticated && onAppRoute,
+    enabled: authenticated,
   });
 
   const user = getUser();
   const role = user?.role;
+  const recruiterMode = role === 'recruiter' ? resolveRecruiterMode(user) : null;
+
+  // Leaving onboarding for the main app — show reminder again if they dismissed it earlier there.
+  useEffect(() => {
+    const prev = prevPathRef.current;
+    const curr = location.pathname;
+    if (shouldSkipPath(prev) && !shouldSkipPath(curr)) {
+      sessionStorage.removeItem(DISMISS_KEY);
+      setDismissed(false);
+    }
+    prevPathRef.current = curr;
+  }, [location.pathname]);
 
   const visible = useMemo(() => {
     if (!authenticated || !onAppRoute || dismissed || loading) return false;
@@ -86,23 +109,25 @@ export default function ProfileCompletionReminder() {
   useEffect(() => {
     if (profileCompleted === true) {
       sessionStorage.removeItem(DISMISS_KEY);
+      setDismissed(false);
     }
   }, [profileCompleted]);
 
   if (!visible) return null;
 
-  const setupPath = getProfileSetupPath(role);
+  const setupPath = getProfileSetupPath(role, recruiterMode);
+  const isIndividualRecruiter = role === 'recruiter' && recruiterMode === 'individual';
   const title =
     role === 'recruiter'
       ? 'Complete your recruiter profile'
       : 'Complete your jobseeker profile';
-  const description =
-    role === 'recruiter'
+  const description = isIndividualRecruiter
+    ? 'Add your profile details and verify your identity so jobseekers can trust you.'
+    : role === 'recruiter'
       ? 'Add your company details so candidates can find and trust you.'
       : 'Add your bio, skills, and experience to get better job matches.';
 
   const handleDismiss = () => {
-    sessionStorage.setItem(DISMISS_KEY, '1');
     setDismissed(true);
   };
 

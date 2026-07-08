@@ -30,7 +30,7 @@ import { SKILL_SUGGESTIONS } from "../../../utils/checksFormat";
 
 const CATEGORY_OPTIONS = [
   { value: "Entry Level", label: "Entry Level", icon: FaRocket, color: "text-blue-500" },
-  { value: "Junior", label: "Junior", icon: FaGraduationCap, color: "text-green-500" },
+  { value: "Junior", label: "Junior", icon: FaGraduationCap, color: "text-[#16730F]" },
   { value: "Mid-level", label: "Mid-level", icon: FaUserTie, color: "text-yellow-500" },
   { value: "Senior", label: "Senior", icon: FaStar, color: "text-orange-500" },
   { value: "Veteran", label: "Veteran", icon: FaStar, color: "text-red-500" },
@@ -43,11 +43,11 @@ const InputWithIcon = ({ value, onChange, placeholder }) => (
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 focus:outline-1 focus:outline-[#1A3E32] ${value ? "border-[#828282]" : "border-[#F5F5F5]"
+      className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 focus:outline-1 focus:outline-[#16730F] ${value ? "border-[#828282]" : "border-[#F5F5F5]"
         }`}
     />
     {value && (
-      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
+      <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] text-lg" />
     )}
   </div>
 );
@@ -124,10 +124,10 @@ const AutocompleteSkillInput = ({ value, onChange, placeholder, suggestions, onA
           }
         }}
         placeholder={placeholder}
-        className="w-full h-12 border-2 rounded-[10px] pl-4 pr-10 focus:outline-1 focus:outline-[#1A3E32] transition-all bg-white"
+        className="w-full h-12 border-2 rounded-[10px] pl-4 pr-10 focus:outline-1 focus:outline-[#16730F] transition-all bg-white"
       />
       {inputValue && (
-        <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg pointer-events-none" />
+        <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] text-lg pointer-events-none" />
       )}
 
       {showSuggestions && (
@@ -155,7 +155,7 @@ const AutocompleteSkillInput = ({ value, onChange, placeholder, suggestions, onA
               {inputValue.trim() && !filteredSuggestions.includes(inputValue.trim()) && (
                 <div
                   onClick={handleAddNew}
-                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-[#1A3E32] font-medium transition-colors flex items-center gap-2 border-t border-gray-100"
+                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2 border-t border-gray-100"
                 >
                   <FaPlus className="text-xs" />
                   Add "{inputValue}"
@@ -166,7 +166,7 @@ const AutocompleteSkillInput = ({ value, onChange, placeholder, suggestions, onA
             inputValue.trim() && (
               <div
                 onClick={handleAddNew}
-                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-[#1A3E32] font-medium transition-colors flex items-center gap-2"
+                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2"
               >
                 <FaPlus className="text-xs" />
                 Add "{inputValue}"
@@ -201,7 +201,7 @@ const CategorySelect = ({ value, onChange }) => {
     <div ref={wrapperRef} className="relative w-full" style={{ position: "relative", zIndex: 15 }}>
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 flex items-center justify-between cursor-pointer focus:outline-1 focus:outline-[#1A3E32] ${value ? "border-[#828282]" : "border-[#F5F5F5]"
+        className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 flex items-center justify-between cursor-pointer focus:outline-1 focus:outline-[#16730F] ${value ? "border-[#828282]" : "border-[#F5F5F5]"
           } bg-white`}
       >
         <div className="flex items-center gap-2">
@@ -211,7 +211,7 @@ const CategorySelect = ({ value, onChange }) => {
           </span>
         </div>
         {value ? (
-          <FaCheck className="text-green-500 text-lg" />
+          <FaCheck className="text-[#16730F] text-lg" />
         ) : (
           <FaChevronDown className={`text-gray-400 text-lg transition-transform ${isOpen ? "rotate-180" : ""}`} />
         )}
@@ -393,7 +393,7 @@ function Skills() {
   const getCategoryBadgeColor = (categoryName) => {
     switch (categoryName) {
       case "Entry Level": return "bg-blue-100 text-blue-700";
-      case "Junior": return "bg-green-100 text-green-700";
+      case "Junior": return "bg-[#16730F]/10 text-[#16730F]";
       case "Mid-level": return "bg-yellow-100 text-yellow-700";
       case "Senior": return "bg-orange-100 text-orange-700";
       case "Veteran": return "bg-red-100 text-red-700";
@@ -411,7 +411,7 @@ function Skills() {
       getPath={getPath}
       isEditMode={isEditMode}
     >
-        <div className="max-w-3xl mx-auto mt-6 px-4 text-[#1A3E32] text-2xl font-semibold">
+        <div className="max-w-3xl mx-auto mt-6 px-4 text-[#16730F] text-2xl font-semibold">
           Skills
         </div>
         <p className="max-w-3xl mx-auto px-4 text-[#333] text-sm mb-6">
@@ -482,7 +482,7 @@ function Skills() {
                   disabled={!allFilled}
                   className={`flex-1 h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
                     allFilled
-                      ? "bg-[#2A4E42] cursor-pointer border-[#2A4E42]"
+                      ? "bg-[#16730F] cursor-pointer border-[#16730F] hover:bg-[#145a0c]"
                       : "bg-transparent border-[#F5F5F5]"
                   }`}
                 >
@@ -496,7 +496,7 @@ function Skills() {
         {/* Display Added Skills */}
         {allSkill.length > 0 && (
           <div className="max-w-3xl mx-auto mt-8">
-            <h3 className="text-lg font-semibold text-[#1A3E32] mb-4 px-4">
+            <h3 className="text-lg font-semibold text-[#16730F] mb-4 px-4">
               Your Skills ({allSkill.length})
             </h3>
             <div className="space-y-3 px-4">
@@ -508,7 +508,7 @@ function Skills() {
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <h4 className="font-bold text-[#1A3E32] text-lg">
+                        <h4 className="font-bold text-[#16730F] text-lg">
                           {item.skillSector}
                         </h4>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryBadgeColor(item.category)}`}>

@@ -1,6 +1,3 @@
-
-
-
 const UserProfilePanel = ({ onViewMainProfile }) => {
   return (
     <div className="max-w-3xl m-auto px-4 py-6 bg-[#F5F5F5] mt-3">
@@ -25,7 +22,7 @@ const ProfileHeader = ({ onViewMainProfile }) => {
 
 const ProfileImageSection = () => {
   return (
-    <div >
+    <div>
       <div className="relative p-4">
         <div className="rounded-full w-[100px] h-[100px] overflow-hidden">
           <img
@@ -37,8 +34,12 @@ const ProfileImageSection = () => {
         <span className="absolute w-4 h-4 bg-[#6B8E23] rounded-full border-2 border-white top-24 left-23"></span>
       </div>
       <div className=" ">
-        <p className="text-[#6B8E23] font-semibold text-[13px]">Graphics Designer</p>
-        <p className="text-[7px] font-semibold text-[#556B1F]">@Lagos, Nigeria</p>
+        <p className="text-[#6B8E23] font-semibold text-[13px]">
+          Graphics Designer
+        </p>
+        <p className="text-[7px] font-semibold text-[#556B1F]">
+          @Lagos, Nigeria
+        </p>
       </div>
     </div>
   );
@@ -56,9 +57,13 @@ const ProfileStatsSection = ({ onViewMainProfile }) => {
 const ProfileInfo = ({ onViewMainProfile }) => {
   return (
     <div className="flex flex-col items-center ml-[-34px] p-2  mt-6 ">
-      <div className=' w-full '>
-        <p className="text-[#6B8E23] ml-1 font-semibold text-[13px]">Osakwe Prisca</p>
-        <p className="text-[6px]  ml-1 font-semibold text-[#556B1F]">Jobseeker</p>
+      <div className=" w-full ">
+        <p className="text-[#6B8E23] ml-1 font-semibold text-[13px]">
+          Osakwe Prisca
+        </p>
+        <p className="text-[6px]  ml-1 font-semibold text-[#556B1F]">
+          Jobseeker
+        </p>
       </div>
       <div className="text-start  w-full">
         <p className="text-[#556B1F] ml-2 text-[16px] font-medium">100</p>
@@ -82,7 +87,11 @@ const ConnectionInfo = () => {
         <p className="text-[#556B1F] text-[16px] font-medium">Connections</p>
       </div>
       <button className="bg-[#556B1F] flex gap-2 justify-center text-[8px] items-center text-white p-1 w-[140px] rounded-3xl mt-1">
-        <img src="/assets/images/Send_Submit.svg" alt="Send icon" className="w-3 h-3" />
+        <img
+          src="/assets/images/Send_Submit.svg"
+          alt="Send icon"
+          className="w-3 h-3"
+        />
         Message
       </button>
     </div>
@@ -142,8 +151,12 @@ const PostHeader = () => {
           className="rounded-full w-[60px] h-[60px]"
         />
         <div>
-          <p className="font-semibold text-[11px] text-lg text-[#16730F]">Osakwe Prisca</p>
-          <p className="text-[#1A3E32] text-[8px] text-sm">Posted 12 minutes ago</p>
+          <p className="font-semibold text-[11px] text-lg text-[#16730F]">
+            Osakwe Prisca
+          </p>
+          <p className="text-[#1A3E32] text-[8px] text-sm">
+            Posted 12 minutes ago
+          </p>
         </div>
       </div>
       <img

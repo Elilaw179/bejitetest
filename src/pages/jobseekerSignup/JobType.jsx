@@ -38,7 +38,7 @@ const SelectField = ({ label, value, onChange, options, placeholder = "Select" }
       <div className="relative w-full">
         <input
           type="text"
-          className={`w-full h-11 bg-white border rounded-xl px-3 pr-10 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all ${
+          className={`w-full h-11 bg-white border rounded-xl px-3 pr-10 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all ${
             value ? "border-gray-300" : "border-gray-200"
           }`}
           value={inputValue}
@@ -55,7 +55,7 @@ const SelectField = ({ label, value, onChange, options, placeholder = "Select" }
           ))}
         </datalist>
         {(value || inputValue) && (
-          <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 pointer-events-none" />
+          <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] pointer-events-none" />
         )}
       </div>
     </div>
@@ -227,13 +227,13 @@ function JobType() {
       <div className="pb-20">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#1A3E32] to-[#2A5E4A] rounded-2xl shadow-lg mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#16730F] to-[#145a0c] rounded-2xl shadow-lg mb-4">
               <FaBriefcase className="text-3xl text-white" />
             </div>
             <p className="text-[#16730F] text-sm font-medium uppercase tracking-wide">
               Almost there!
             </p>
-            <h1 className="text-3xl font-bold text-[#1A3E32] mt-1 mb-2">
+            <h1 className="text-3xl font-bold text-[#16730F] mt-1 mb-2">
               What type of job do you want?
             </h1>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -248,7 +248,7 @@ function JobType() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-[#1A3E32] to-[#2A5E4A] px-6 py-4">
+            <div className="bg-gradient-to-r from-[#16730F] to-[#145a0c] px-6 py-4">
               <h2 className="text-white text-lg font-semibold flex items-center gap-2">
                 <FaBriefcase className="text-white/80" />
                 Job preferences
@@ -328,7 +328,7 @@ function JobType() {
                       inputMode="numeric"
                       value={form.salary}
                       onChange={updateField("salary")}
-                      className="w-full h-11 bg-white border border-gray-200 rounded-xl px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent"
+                      className="w-full h-11 bg-white border border-gray-200 rounded-xl px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent"
                       placeholder="e.g. 500000"
                     />
                   </div>

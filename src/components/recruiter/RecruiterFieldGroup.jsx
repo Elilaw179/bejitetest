@@ -34,7 +34,7 @@ const RecruiterFieldGroup = ({ formData, handleChange, fieldGroups }) => (
                   value={formData[f.name] ?? ""}
                   onChange={handleChange}
                   disabled={f.disabled}
-                  className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm appearance-none disabled:bg-gray-50 disabled:text-gray-500"
+                  className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm appearance-none disabled:bg-gray-50 disabled:text-gray-500"
                 >
                   <option value="">{f.placeholder || "Select"}</option>
                   {(f.options || []).map((opt) => (
@@ -75,7 +75,7 @@ const RecruiterFieldGroup = ({ formData, handleChange, fieldGroups }) => (
                   placeholder={f.placeholder}
                   rows={f.rows || 5}
                   maxLength={f.maxWords == null ? f.maxLength : undefined}
-                  className="w-full min-h-[120px] bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm resize-none"
+                  className="w-full min-h-[120px] bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm resize-none"
                 />
                 {f.maxWords != null && (
                   <p className="text-xs text-gray-400 text-right mt-1">
@@ -96,7 +96,7 @@ const RecruiterFieldGroup = ({ formData, handleChange, fieldGroups }) => (
                 type={f.type || "text"}
                 placeholder={f.placeholder}
                 disabled={f.disabled}
-                className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm placeholder-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
+                className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm placeholder-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
               />
             )}
             {f.hint && (

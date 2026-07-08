@@ -37,7 +37,7 @@ function JobType() {
     <div className="relative w-full">
       {children}
       {showIcon && (
-        <FaCheckCircle className="absolute right-3 top-3 text-green-500 text-lg pointer-events-none" />
+        <FaCheckCircle className="absolute right-3 top-3 text-[#16730F] text-lg pointer-events-none" />
       )}
     </div>
   );

@@ -6,6 +6,10 @@ import { discoverRecruitersForSignup } from "../../services/signupApi";
 import axiosPublic from "../../services/axiosPublic";
 import * as connectionsApi from "../../services/connectionsApi";
 import { getProfileImageUrl } from "../../utils/profileImageUtils";
+import {
+  SIGNUP_BTN_DISABLED,
+  SIGNUP_BTN_ENABLED,
+} from "../../constants/signupTheme";
 
 const PAGE_SIZE = 20;
 
@@ -215,10 +219,8 @@ const JobConnection = () => {
           </p>
 
           <button
-            className={`w-52 h-12 rounded-2xl font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 ${
-              isEnabled
-                ? "bg-[#16730F] hover:bg-[#0f4e0a]"
-                : "bg-[#1A3E32] opacity-25 cursor-not-allowed"
+            className={`w-52 h-12 rounded-full font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 ${
+              isEnabled ? SIGNUP_BTN_ENABLED : SIGNUP_BTN_DISABLED
             }`}
             disabled={!isEnabled || loading || loadingUsers}
             onClick={handleContinue}

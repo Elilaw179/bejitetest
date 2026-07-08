@@ -104,6 +104,7 @@ const EmployerOpt = () => {
                     firstName: responseUser?.firstName || resolvedFirstName || storedUser?.firstName || '',
                     lastName: responseUser?.lastName || resolvedLastName || storedUser?.lastName || '',
                     role: responseUser?.role || resolvedRole,
+                    mode: responseUser?.mode || mode,
                 }
                 : {
                     ...storedUser,
@@ -111,6 +112,7 @@ const EmployerOpt = () => {
                     firstName: storedUser?.firstName || resolvedFirstName || '',
                     lastName: storedUser?.lastName || resolvedLastName || '',
                     role: storedUser?.role || resolvedRole,
+                    mode,
                 };
 
             localStorage.setItem('user', JSON.stringify(normalizedUser));

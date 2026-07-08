@@ -1,6 +1,3 @@
-
-
-
 import { useNavigate } from "react-router-dom";
 
 const ContinueButton = ({ isEnabled }) => {
@@ -19,7 +16,7 @@ const ContinueButton = ({ isEnabled }) => {
           isEnabled
             ? "bg-[#16730F]"
             : "bg-[#1A3E32] opacity-25 cursor-not-allowed"
-        }`}    
+        }`}
         disabled={!isEnabled}
         onClick={handleClick}
       >

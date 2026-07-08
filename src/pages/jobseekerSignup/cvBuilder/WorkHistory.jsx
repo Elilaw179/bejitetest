@@ -106,10 +106,10 @@ const AutocompleteJobInput = ({ value, onChange, placeholder, suggestions, onAdd
           }
         }}
         placeholder={placeholder}
-        className="w-full h-12 border-2 rounded-[10px] px-4 pr-10 focus:outline-1 focus:outline-[#1A3E32] transition-all bg-white"
+        className="w-full h-12 border-2 rounded-[10px] px-4 pr-10 focus:outline-1 focus:outline-[#16730F] transition-all bg-white"
       />
       {inputValue && (
-        <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg pointer-events-none" />
+        <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] text-lg pointer-events-none" />
       )}
       
       {showSuggestions && (
@@ -137,7 +137,7 @@ const AutocompleteJobInput = ({ value, onChange, placeholder, suggestions, onAdd
               {inputValue.trim() && !filteredSuggestions.includes(inputValue.trim()) && (
                 <div
                   onClick={handleAddNew}
-                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-[#1A3E32] font-medium transition-colors flex items-center gap-2 border-t border-gray-100"
+                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2 border-t border-gray-100"
                 >
                   <FaPlus className="text-xs" />
                   Add "{inputValue}"
@@ -148,7 +148,7 @@ const AutocompleteJobInput = ({ value, onChange, placeholder, suggestions, onAdd
             inputValue.trim() && (
               <div
                 onClick={handleAddNew}
-                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-[#1A3E32] font-medium transition-colors flex items-center gap-2"
+                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2"
               >
                 <FaPlus className="text-xs" />
                 Add "{inputValue}"
@@ -302,7 +302,7 @@ function WorkHistory() {
       isEditMode={isEditMode}
     >
       <div className="pb-20">
-        <div className="max-w-3xl mx-auto mt-6 text-[#1A3E32] text-2xl font-semibold">
+        <div className="max-w-3xl mx-auto mt-6 text-[#16730F] text-2xl font-semibold">
           Work history
         </div>
         <p className="max-w-3xl mx-auto text-[#333] text-sm mb-6">
@@ -338,7 +338,7 @@ function WorkHistory() {
                   value={responsibilities}
                   onChange={(e) => setResponsibilities(e.target.value)}
                   placeholder="Tip: Use bullet points to highlight what you did and how it helped the company."
-                  className="w-full bg-[#F5F5F5] rounded-[6px] p-3 h-40 text-[10px] focus:outline-1 focus:outline-[#1A3E32]"
+                  className="w-full bg-[#F5F5F5] rounded-[6px] p-3 h-40 text-[10px] focus:outline-1 focus:outline-[#16730F]"
                 />
               </div>
 
@@ -363,9 +363,9 @@ function WorkHistory() {
                           setEndDate("");
                         }
                       }}
-                      className="w-4 h-4 text-[#1A3E32] rounded border-gray-300 focus:ring-[#1A3E32] cursor-pointer"
+                      className="w-4 h-4 text-[#16730F] rounded border-gray-300 focus:ring-[#16730F] cursor-pointer"
                     />
-                    <span className="text-sm text-gray-600 group-hover:text-[#1A3E32] transition-colors">
+                    <span className="text-sm text-gray-600 group-hover:text-[#16730F] transition-colors">
                       Currently working here
                     </span>
                   </label>
@@ -376,14 +376,14 @@ function WorkHistory() {
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     disabled={isCurrentJob}
-                    className={`w-full h-12 border-2 rounded-[10px] px-4 pr-10 focus:outline-1 focus:outline-[#1A3E32] transition-all bg-white ${
+                    className={`w-full h-12 border-2 rounded-[10px] px-4 pr-10 focus:outline-1 focus:outline-[#16730F] transition-all bg-white ${
                       isCurrentJob 
                         ? "bg-gray-100 cursor-not-allowed opacity-60" 
                         : "hover:border-gray-400"
                     } ${endDate ? "border-[#828282]" : "border-[#F5F5F5]"}`}
                   />
                   {endDate && !isCurrentJob && (
-                    <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg pointer-events-none" />
+                    <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] text-lg pointer-events-none" />
                   )}
                   {isCurrentJob && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">
@@ -392,7 +392,7 @@ function WorkHistory() {
                   )}
                 </div>
                 {isCurrentJob && (
-                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                  <p className="text-xs text-[#16730F] mt-1 flex items-center gap-1">
                     <FaCheck className="text-xs" /> You are currently employed here
                   </p>
                 )}
@@ -405,7 +405,7 @@ function WorkHistory() {
                 disabled={!allFilled}
                 className={`flex-1 h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm transition-all ${
                   allFilled
-                    ? "bg-[#2A4E42] border-[#2A4E42] cursor-pointer hover:bg-[#2a5949] transform hover:scale-105"
+                    ? "bg-[#16730F] border-[#16730F] cursor-pointer hover:bg-[#145a0c] transform hover:scale-105"
                     : "bg-transparent border-[#F5F5F5] cursor-not-allowed opacity-50"
                 }`}
               >
@@ -421,7 +421,7 @@ function WorkHistory() {
               allWorkHistory.map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-gradient-to-r from-[#1A3E32] to-[#2A4E42] text-white rounded-lg flex justify-between items-center p-4 shadow-md hover:shadow-xl transition-all"
+                  className="bg-gradient-to-r from-[#16730F] to-[#145a0c] text-white rounded-lg flex justify-between items-center p-4 shadow-md hover:shadow-xl transition-all"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -434,8 +434,8 @@ function WorkHistory() {
                       {formatDateRange(item.startDate, item.endDate, item.isCurrentJob)}
                     </p>
                     {item.isCurrentJob && (
-                      <p className="text-xs text-green-300 mt-1 flex items-center gap-1">
-                        <span className="inline-block w-2 h-2 bg-green-300 rounded-full animate-pulse"></span>
+                      <p className="text-xs text-[#16730F]/50 mt-1 flex items-center gap-1">
+                        <span className="inline-block w-2 h-2 bg-[#16730F]/50 rounded-full animate-pulse"></span>
                         Currently working here
                       </p>
                     )}

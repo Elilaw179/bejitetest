@@ -74,8 +74,7 @@ const UserPostsFeed = ({
         }
 
         const cursor = reset ? null : nextCursorRef.current;
-        const requestLimit =
-          isPreview && reset ? previewLimit + 1 : pageSize;
+        const requestLimit = isPreview && reset ? previewLimit + 1 : pageSize;
 
         const data = await getUserPosts(userId, requestLimit, cursor, {
           mediaType,
@@ -196,13 +195,7 @@ const UserPostsFeed = ({
       loading,
       error,
     });
-  }, [
-    visiblePosts.length,
-    hasMoreBeyondPreview,
-    loading,
-    error,
-    onMetaChange,
-  ]);
+  }, [visiblePosts.length, hasMoreBeyondPreview, loading, error, onMetaChange]);
 
   const filters = [
     { value: "all", label: "Posts" },

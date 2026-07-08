@@ -1,4 +1,3 @@
-
 import { FaChevronLeft } from "react-icons/fa";
 
 export default function PaymentPageHeader() {
@@ -18,5 +17,5 @@ export default function PaymentPageHeader() {
         </p>
       </div>
     </header>
-  )
+  );
 }

@@ -17,7 +17,12 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export const ConfirmBadgeModal = ({ plan, onClose, onConfirm, isLoading = false }) => {
+export const ConfirmBadgeModal = ({
+  plan,
+  onClose,
+  onConfirm,
+  isLoading = false,
+}) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -87,7 +92,9 @@ export function EventModal({ event, onClose, onRegister, canRegister = true }) {
       await onRegister(event.id);
       setRegistered(true);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Registration failed");
+      setError(
+        err.response?.data?.message || err.message || "Registration failed",
+      );
     } finally {
       setLoading(false);
     }
@@ -553,6 +560,27 @@ export function ChangeEmailModal({ onClose }) {
   );
 }
 
+function ChangePasswordField({ placeholder, show, value, onToggle, onChange }) {
+  return (
+    <div className="relative">
+      <input
+        type={show ? "text" : "password"}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32]/30"
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+      >
+        {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+}
+
 export function ChangePasswordModal({ onClose }) {
   const [form, setForm] = useState({ current: "", next: "", confirm: "" });
   const [show, setShow] = useState({
@@ -571,7 +599,6 @@ export function ChangePasswordModal({ onClose }) {
   const handleSave = async () => {
     if (!valid) return;
     setIsLoading(true);
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsLoading(false);
     setSaved(true);
@@ -579,29 +606,6 @@ export function ChangePasswordModal({ onClose }) {
   };
 
   const toggle = (field) => setShow((s) => ({ ...s, [field]: !s[field] }));
-
-  const renderPasswordInput = (field, placeholder) => (
-    <div className="relative">
-      <input
-        type={show[field] ? "text" : "password"}
-        placeholder={placeholder}
-        value={form[field]}
-        onChange={(e) => setForm((f) => ({ ...f, [field]: e.target.value }))}
-        className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32]/30"
-      />
-      <button
-        type="button"
-        onClick={() => toggle(field)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-      >
-        {show[field] ? (
-          <EyeOff className="w-4 h-4" />
-        ) : (
-          <Eye className="w-4 h-4" />
-        )}
-      </button>
-    </div>
-  );
 
   return (
     <motion.div
@@ -620,14 +624,36 @@ export function ChangePasswordModal({ onClose }) {
       >
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-gray-900">Change Password</h3>
-          <button onClick={onClose}>
+          <button type="button" onClick={onClose}>
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
         <div className="space-y-3">
-          {renderPasswordInput("current", "Current password")}
-          {renderPasswordInput("next", "New password (min 8 chars)")}
-          {renderPasswordInput("confirm", "Confirm new password")}
+          <ChangePasswordField
+            placeholder="Current password"
+            show={show.current}
+            value={form.current}
+            onToggle={() => toggle("current")}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, current: e.target.value }))
+            }
+          />
+          <ChangePasswordField
+            placeholder="New password (min 8 chars)"
+            show={show.next}
+            value={form.next}
+            onToggle={() => toggle("next")}
+            onChange={(e) => setForm((f) => ({ ...f, next: e.target.value }))}
+          />
+          <ChangePasswordField
+            placeholder="Confirm new password"
+            show={show.confirm}
+            value={form.confirm}
+            onToggle={() => toggle("confirm")}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, confirm: e.target.value }))
+            }
+          />
           {form.next && form.confirm && form.next !== form.confirm && (
             <p className="text-xs text-red-500">Passwords do not match</p>
           )}
@@ -643,6 +669,7 @@ export function ChangePasswordModal({ onClose }) {
           </div>
         ) : (
           <button
+            type="button"
             onClick={handleSave}
             disabled={!valid || isLoading}
             className="w-full py-2.5 rounded-xl bg-[#1A3E32] text-white text-sm font-semibold disabled:opacity-40 flex items-center justify-center gap-2"

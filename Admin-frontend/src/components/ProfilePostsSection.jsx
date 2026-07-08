@@ -25,8 +25,7 @@ const ProfilePostsSection = ({ userId, currentUserId }) => {
 
   if (!userId) return null;
 
-  const showViewMore =
-    !meta.loading && !meta.error && meta.hasAnyPosts;
+  const showViewMore = !meta.loading && !meta.error && meta.hasAnyPosts;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">

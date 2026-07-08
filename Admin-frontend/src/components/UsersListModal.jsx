@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTimes, FaUserPlus } from "react-icons/fa";
-import { getConnections, sendConnectionRequest } from "../services/connectionsApi";
+import {
+  getConnections,
+  sendConnectionRequest,
+} from "../services/connectionsApi";
 import { getAuthorProfileImageUrl } from "../utils/profileImageUtils";
 import { getUser } from "../utils/tokenManager";
 
@@ -22,29 +25,27 @@ const UsersListModal = ({ isOpen, onClose, title, users, type, loading }) => {
   const currentUser = getUser();
   const currentUserId = currentUser?.id;
 
-  const fetchConnections = async () => {
+  const fetchConnections = useCallback(async () => {
     try {
       const data = await getConnections();
       setConnections(data.connections || []);
     } catch (err) {
-      console.error('Error fetching connections:', err);
+      console.error("Error fetching connections:", err);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (isOpen && type === 'likes') {
-      Promise.resolve().then(() => {
-        fetchConnections();
-      });
+    if (isOpen && type === "likes") {
+      void fetchConnections();
     }
-  }, [isOpen, type]);
+  }, [isOpen, type, fetchConnections]);
 
   // Check connection status for a user
   const getConnectionStatus = (userId) => {
-    if (String(userId) === String(currentUserId)) return 'self';
-    const conn = connections.find(c => String(c.id) === String(userId));
-    if (conn) return 'connected';
-    return 'none';
+    if (String(userId) === String(currentUserId)) return "self";
+    const conn = connections.find((c) => String(c.id) === String(userId));
+    if (conn) return "connected";
+    return "none";
   };
 
   const handleUserClick = (userId) => {
@@ -54,13 +55,13 @@ const UsersListModal = ({ isOpen, onClose, title, users, type, loading }) => {
     }
   };
 
-const handleConnect = async (e, userId) => {
+  const handleConnect = async (e, userId) => {
     e.stopPropagation();
     try {
       setSendingRequest(userId);
       await sendConnectionRequest(userId);
     } catch (err) {
-      console.error('Error sending connection request:', err);
+      console.error("Error sending connection request:", err);
     } finally {
       setSendingRequest(null);
     }
@@ -70,9 +71,14 @@ const handleConnect = async (e, userId) => {
 
   const renderUserItem = (user) => {
     const userId = user.id || user.userId || user.authorId;
-    const userName = user.name || (user.firstName ? `${user.firstName} ${user.lastName}`.trim() : 'User');
+    const userName =
+      user.name ||
+      (user.firstName ? `${user.firstName} ${user.lastName}`.trim() : "User");
     const userImage = getAuthorProfileImageUrl(user);
-    const connStatus = String(userId) === String(currentUserId) ? 'self' : getConnectionStatus(userId);
+    const connStatus =
+      String(userId) === String(currentUserId)
+        ? "self"
+        : getConnectionStatus(userId);
 
     return (
       <div
@@ -89,15 +95,15 @@ const handleConnect = async (e, userId) => {
           <div>
             <p className="font-semibold text-sm text-[#16730F]">{userName}</p>
             {user.headline && (
-              <p className="text-xs text-gray-500 truncate max-w-[200px]">{user.headline}</p>
+              <p className="text-xs text-gray-500 truncate max-w-[200px]">
+                {user.headline}
+              </p>
             )}
-            {user.role && (
-              <p className="text-xs text-gray-500">{user.role}</p>
-            )}
+            {user.role && <p className="text-xs text-gray-500">{user.role}</p>}
           </div>
         </div>
-        
-        {connStatus === 'none' && currentUserId !== userId && (
+
+        {connStatus === "none" && currentUserId !== userId && (
           <button
             type="button"
             onClick={(e) => handleConnect(e, userId)}
@@ -105,11 +111,11 @@ const handleConnect = async (e, userId) => {
             className="flex items-center gap-1 px-3 py-1.5 bg-[#16730F] text-white text-xs rounded-full hover:bg-[#145a0c] disabled:opacity-50 transition-colors"
           >
             <FaUserPlus />
-            {sendingRequest === userId ? 'Sending...' : 'Connect'}
+            {sendingRequest === userId ? "Sending..." : "Connect"}
           </button>
         )}
-        
-        {connStatus === 'connected' && (
+
+        {connStatus === "connected" && (
           <span className="text-xs text-green-600 font-medium">Connected</span>
         )}
       </div>
@@ -119,11 +125,8 @@ const handleConnect = async (e, userId) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-      />
-      
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+
       {/* Modal Content */}
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
@@ -137,7 +140,7 @@ const handleConnect = async (e, userId) => {
             <FaTimes className="text-gray-500" />
           </button>
         </div>
-        
+
         {/* User List */}
         <div className="flex-1 overflow-y-auto nfl-scroll scroll-smooth">
           {loading ? (
@@ -146,15 +149,13 @@ const handleConnect = async (e, userId) => {
             </div>
           ) : users && users.length > 0 ? (
             <div className="divide-y">
-              {users.map(user => renderUserItem(user))}
+              {users.map((user) => renderUserItem(user))}
             </div>
           ) : (
-            <div className="p-8 text-center text-gray-500">
-              No {type} yet
-            </div>
+            <div className="p-8 text-center text-gray-500">No {type} yet</div>
           )}
         </div>
-        
+
         {/* Footer */}
         <div className="p-4 border-t">
           <button

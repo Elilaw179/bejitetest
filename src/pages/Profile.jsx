@@ -24,6 +24,7 @@ import {
 import { getUser, pickProfilePhotoPath } from '../utils/tokenManager';
 import { profileAvatarSrc } from '../utils/profilePhotoUrl';
 import { pickAuthorProfilePhoto } from '../utils/profileImageUtils';
+import { getRecruiterEditProfilePath } from '../utils/recruiterProfilePaths';
 import {
   normalizeProfileData,
   unwrapAuthProfileBody,
@@ -317,7 +318,7 @@ const Profile = () => {
     if (user?.role === 'jobseeker') {
       navigate('/edit-profile/bio');
     } else {
-      navigate('/edit-profile/recruiter/basic-details');
+      navigate(getRecruiterEditProfilePath(user));
     }
   };
 
@@ -385,7 +386,7 @@ const Profile = () => {
                 navigate(
                   user?.role === 'jobseeker'
                     ? '/edit-profile/bio'
-                    : '/edit-profile/recruiter/basic-details',
+                    : getRecruiterEditProfilePath(user),
                 )
               }
               className="bg-[#16730F] text-white px-4 py-2 rounded-lg hover:bg-[#145a0c] transition-colors"

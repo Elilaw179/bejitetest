@@ -1,4 +1,3 @@
-
 import NewsFeedHeader from "../NewsFeedHeader";
 import RecruitmentLeft from "../recruitment/RecruitmentLeft";
 import RecruitmentRight from "../recruitment/RecruitmentRight";
@@ -19,7 +18,7 @@ export default function NewsFeedLayout({
   leftSidebar,
   rightSidebar,
   scrollable = true, // New prop to control scrolling
-  classes = `overflow-y-auto overflow-x-hidden max-h-[calc(100vh-72px)] nfl-scroll scroll-smooth`
+  classes = `overflow-y-auto overflow-x-hidden max-h-[calc(100vh-72px)] nfl-scroll scroll-smooth`,
 }) {
   return (
     <div
@@ -62,9 +61,7 @@ export default function NewsFeedLayout({
         /* No sidebars — conditional scrolling */
         <div
           className={`flex-1 min-h-0 flex flex-col ${
-            scrollable
-              ? classes
-              : "overflow-hidden"
+            scrollable ? classes : "overflow-hidden"
           }`}
         >
           {children}
