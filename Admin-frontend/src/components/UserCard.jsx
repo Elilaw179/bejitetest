@@ -1,6 +1,6 @@
 
 
-import React from "react";
+
 import { FaCheck } from "react-icons/fa";
 
 const UserCard = ({ user, isAdded, onAdd }) => (

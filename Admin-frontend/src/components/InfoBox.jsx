@@ -1,6 +1,6 @@
 
 
-import React from "react";
+
 
 const InfoBox = ({ text, position }) => {
   const base =

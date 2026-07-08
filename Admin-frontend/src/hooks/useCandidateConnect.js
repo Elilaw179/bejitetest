@@ -18,17 +18,21 @@ export function useCandidateConnect(userId, displayName = '') {
   });
   const [sending, setSending] = useState(false);
 
+  const [prevUserId, setPrevUserId] = useState(normalizedUserId);
+
+  if (normalizedUserId !== prevUserId) {
+    setPrevUserId(normalizedUserId);
+    setStatus({
+      loading: Boolean(normalizedUserId),
+      isConnected: false,
+      pendingOutgoing: false,
+      pendingIncoming: false,
+      unavailable: false,
+    });
+  }
+
   useEffect(() => {
-    if (!normalizedUserId) {
-      setStatus({
-        loading: false,
-        isConnected: false,
-        pendingOutgoing: false,
-        pendingIncoming: false,
-        unavailable: false,
-      });
-      return;
-    }
+    if (!normalizedUserId) return;
 
     let cancelled = false;
 

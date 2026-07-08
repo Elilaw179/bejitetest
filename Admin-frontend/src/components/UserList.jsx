@@ -1,6 +1,6 @@
 
 
-import React from "react";
+
 import UserCard from "./UserCard";
 
 const UserList = ({ users, addedUsers, onAdd }) => (

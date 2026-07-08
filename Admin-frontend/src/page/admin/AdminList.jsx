@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
 import { Search, Mail, Shield, CheckCircle, XCircle, Plus, X } from 'lucide-react';
@@ -32,7 +32,18 @@ const AdminList = () => {
   };
 
   useEffect(() => {
-    fetchAdmins();
+    const loadAdmins = async () => {
+      try {
+        const response = await axiosInstance.get('/api/admin/data/admins');
+        setAdmins(response.data.admins);
+      } catch (error) {
+        console.error('Error fetching admins', error);
+        toast.error('Failed to load admins data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAdmins();
   }, []);
 
   const handleInputChange = (e) => {

@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 export default function FeedLoadMoreButton({ hasMore, loading, onLoadMore, label = 'Load older posts' }) {
   if (!hasMore) return null;

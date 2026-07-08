@@ -319,7 +319,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
 
   // Fetch notification count on mount and periodically
   useEffect(() => {
-    fetchNotificationCount();
+    Promise.resolve().then(() => {
+      fetchNotificationCount();
+    });
     const interval = setInterval(fetchNotificationCount, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
@@ -340,7 +342,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
   };
 
   useEffect(() => {
-    fetchUnreadMessageCount();
+    Promise.resolve().then(() => {
+      fetchUnreadMessageCount();
+    });
     const interval = setInterval(fetchUnreadMessageCount, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -376,7 +380,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
   };
 
   useEffect(() => {
-    fetchConnectionRequestCount();
+    Promise.resolve().then(() => {
+      fetchConnectionRequestCount();
+    });
     const interval = setInterval(fetchConnectionRequestCount, 30000);
     return () => clearInterval(interval);
   }, [location.pathname]);

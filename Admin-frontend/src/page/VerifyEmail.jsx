@@ -185,28 +185,26 @@
 
 
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 function VerifyEmail() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [message, setMessage] = useState("Verifying your email...");
-  const [busy, setBusy] = useState(true);
+  const qs = new URLSearchParams(location.search);
+  const token = qs.get("token");
+  const email = qs.get("email");
+  const isLinkInvalid = !token || !email;
+
+  const [message, setMessage] = useState(() =>
+    isLinkInvalid ? "❌ Invalid verification link." : "Verifying your email..."
+  );
+  const [busy, setBusy] = useState(() => !isLinkInvalid);
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
-    // read token & email from query string
-    const qs = new URLSearchParams(location.search);
-    const token = qs.get("token");
-    const email = qs.get("email");
-
-    if (!token || !email) {
-      setMessage("❌ Invalid verification link.");
-      setBusy(false);
-      return;
-    }
+    if (isLinkInvalid) return;
 
     const verify = async () => {
       try {
@@ -250,7 +248,7 @@ function VerifyEmail() {
               navigate('/');
             }, 3000);
           } else {
-            throw new Error("Alternative endpoint also failed");
+            throw new Error("Alternative endpoint also failed", { cause: err });
           }
         } catch (altErr) {
           // network or backend error
@@ -264,7 +262,7 @@ function VerifyEmail() {
     };
 
     verify();
-  }, [location.search, navigate]);
+  }, [location.search, navigate, email, isLinkInvalid, token]);
 
   const handleResendVerification = async () => {
     const qs = new URLSearchParams(location.search);

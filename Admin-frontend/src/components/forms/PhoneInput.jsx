@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Country } from 'country-state-city';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { countryNameToIso2, formatPhoneAsYouType } from '../../utils/phoneUtils';
@@ -26,29 +26,36 @@ export default function PhoneInput({
   const [national, setNational] = useState('');
   const [codeOpen, setCodeOpen] = useState(false);
 
+  const [prevCountryName, setPrevCountryName] = useState(countryName);
+  const [prevValue, setPrevValue] = useState(value);
+
+  if (countryName !== prevCountryName) {
+    setPrevCountryName(countryName);
+    const iso = countryNameToIso2(countryName);
+    if (iso) {
+      setCountryIso(iso);
+    }
+  }
+
+  if (value !== prevValue) {
+    setPrevValue(value);
+    if (!value) {
+      setNational('');
+    } else {
+      const parsed = parsePhoneNumberFromString(String(value).trim());
+      if (parsed?.isValid()) {
+        setCountryIso(parsed.country || defaultIso);
+        setNational(parsed.nationalNumber);
+      } else {
+        setNational(String(value).replace(/\D/g, ''));
+      }
+    }
+  }
+
   const selectedCountry = useMemo(
     () => countryOptions.find((c) => c.isoCode === countryIso) ?? countryOptions.find((c) => c.isoCode === 'NG'),
     [countryIso],
   );
-
-  useEffect(() => {
-    const iso = countryNameToIso2(countryName);
-    if (iso) setCountryIso(iso);
-  }, [countryName]);
-
-  useEffect(() => {
-    if (!value) {
-      setNational('');
-      return;
-    }
-    const parsed = parsePhoneNumberFromString(String(value).trim());
-    if (parsed?.isValid()) {
-      setCountryIso(parsed.country || defaultIso);
-      setNational(parsed.nationalNumber);
-      return;
-    }
-    setNational(String(value).replace(/\D/g, ''));
-  }, [value, defaultIso]);
 
   useEffect(() => {
     if (!codeOpen) return undefined;

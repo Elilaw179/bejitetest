@@ -1,20 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
 
 const EmailSent = () => {
   const location = useLocation();
-  const [email, setEmail] = useState('');
+  const params = new URLSearchParams(location.search);
+  const email = params.get('email') || '';
   const [resending, setResending] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const paramEmail = params.get('email');
-    if (paramEmail) {
-      setEmail(paramEmail);
-    }
-  }, [location.search]);
 
   const fromLogin = new URLSearchParams(location.search).get('reason') === 'login';
 

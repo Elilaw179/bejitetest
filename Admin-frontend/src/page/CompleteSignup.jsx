@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -17,7 +17,6 @@ export default function CompleteSignup() {
   const email = params.get("email")?.trim() || "";
   const status = params.get("status");
 
-  const [_, setRole] = useState("");
 
   // OAuth redirects include tokens in the URL — persist before role selection.
   useEffect(() => {
@@ -31,7 +30,6 @@ export default function CompleteSignup() {
       return;
     }
 
-    setRole(selectedRole);
 
     // Navigate to next step (jobseeker-option or employer-option)
     navigate(

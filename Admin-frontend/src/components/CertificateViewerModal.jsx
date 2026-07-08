@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { profilePhotoUrl } from '../utils/profilePhotoUrl';
 
 const getMediaKind = (url) => {
@@ -16,9 +16,14 @@ export function CertificateViewerModal({ open, onClose, fileUrl, title }) {
   const kind = getMediaKind(resolvedUrl);
   const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
-    if (!open) setLoadError(false);
-  }, [open, resolvedUrl]);
+  const [prevOpen, setPrevOpen] = useState(open);
+
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (!open) {
+      setLoadError(false);
+    }
+  }
 
   useEffect(() => {
     if (!open) return undefined;

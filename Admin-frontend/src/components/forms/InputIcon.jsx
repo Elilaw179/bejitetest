@@ -1,8 +1,4 @@
 import {
-  FaPlus,
-  FaCheckCircle,
-  FaChevronDown,
-  FaTrash,
   FaCheck,
 } from "react-icons/fa";
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { FaFilter, FaTimes } from "react-icons/fa";
 
 export const FilterSidebar = ({
@@ -20,7 +20,7 @@ export const FilterSidebar = ({
 }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const FilterContent = () => (
+  const renderFilterContent = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="font-semibold text-gray-900">Filters</h3>
@@ -175,7 +175,7 @@ export const FilterSidebar = ({
       </div>
 
       <div className="hidden lg:block bg-white rounded-2xl border border-gray-200 p-5 sticky top-24 h-fit">
-        <FilterContent />
+        {renderFilterContent()}
       </div>
 
       {isMobileOpen && (
@@ -187,7 +187,7 @@ export const FilterSidebar = ({
                 <FaTimes />
               </button>
             </div>
-            <FilterContent />
+            {renderFilterContent()}
             <button
               onClick={() => setIsMobileOpen(false)}
               className="w-full mt-6 bg-[#16730F] text-white py-3 rounded-xl font-semibold"

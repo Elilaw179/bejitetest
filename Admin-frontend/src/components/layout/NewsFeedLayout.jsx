@@ -1,4 +1,4 @@
-import React from "react";
+
 import NewsFeedHeader from "../NewsFeedHeader";
 import RecruitmentLeft from "../recruitment/RecruitmentLeft";
 import RecruitmentRight from "../recruitment/RecruitmentRight";

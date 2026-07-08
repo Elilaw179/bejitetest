@@ -1,7 +1,7 @@
 
 
 import { ChevronLeft } from "lucide-react";
-import React from "react";
+
 import { useNavigate } from "react-router-dom";
 
 function EmailCheck() {

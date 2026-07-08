@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   AlertTriangle,
   Calendar,
@@ -580,7 +580,7 @@ export function ChangePasswordModal({ onClose }) {
 
   const toggle = (field) => setShow((s) => ({ ...s, [field]: !s[field] }));
 
-  const PasswordInput = ({ field, placeholder }) => (
+  const renderPasswordInput = (field, placeholder) => (
     <div className="relative">
       <input
         type={show[field] ? "text" : "password"}
@@ -625,12 +625,9 @@ export function ChangePasswordModal({ onClose }) {
           </button>
         </div>
         <div className="space-y-3">
-          <PasswordInput field="current" placeholder="Current password" />
-          <PasswordInput
-            field="next"
-            placeholder="New password (min 8 chars)"
-          />
-          <PasswordInput field="confirm" placeholder="Confirm new password" />
+          {renderPasswordInput("current", "Current password")}
+          {renderPasswordInput("next", "New password (min 8 chars)")}
+          {renderPasswordInput("confirm", "Confirm new password")}
           {form.next && form.confirm && form.next !== form.confirm && (
             <p className="text-xs text-red-500">Passwords do not match</p>
           )}

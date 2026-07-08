@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
 import { Search, Mail, Shield, CheckCircle, XCircle, MoreVertical, X } from 'lucide-react';
@@ -77,10 +77,7 @@ const AdminUsers = () => {
     };
   }, [showFilterMenu]);
 
-// Reset to first page whenever filters or search change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, roleFilter, dateFilter]);
+
 
   // Calculate display range for "Showing X-Y of Z users"
   const startIndex = (currentPage - 1) * itemsPerPage + 1;
@@ -102,7 +99,7 @@ const AdminUsers = () => {
                  type="text" 
                  placeholder="Search users..." 
                  value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
+                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl outline-none focus:border-[#16730F] focus:ring-1 focus:ring-[#16730F] transition"
                />
                <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
@@ -150,7 +147,7 @@ const AdminUsers = () => {
                        ].map((option) => (
                          <button
                            key={option.value}
-                           onClick={() => setRoleFilter(option.value)}
+                           onClick={() => { setRoleFilter(option.value); setCurrentPage(1); }}
                            className={`w-full text-left px-3 py-2 text-sm rounded-lg transition ${
                              roleFilter === option.value 
                                ? 'bg-[#16730F] text-white' 
@@ -176,7 +173,7 @@ const AdminUsers = () => {
                        ].map((option) => (
                          <button
                            key={option.value}
-                           onClick={() => setDateFilter(option.value)}
+                           onClick={() => { setDateFilter(option.value); setCurrentPage(1); }}
                            className={`w-full text-left px-3 py-2 text-sm rounded-lg transition ${
                              dateFilter === option.value 
                                ? 'bg-[#16730F] text-white' 
@@ -196,6 +193,7 @@ const AdminUsers = () => {
                          setRoleFilter('all');
                          setDateFilter('all');
                          setSearchTerm('');
+                         setCurrentPage(1);
                        }}
                        className="w-full text-sm text-gray-600 hover:text-red-600 py-2 transition"
                      >
@@ -216,7 +214,7 @@ const AdminUsers = () => {
             {searchTerm && (
               <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
                 Search: "{searchTerm}"
-                <button onClick={() => setSearchTerm('')} className="hover:text-red-500">
+                <button onClick={() => { setSearchTerm(''); setCurrentPage(1); }} className="hover:text-red-500">
                   <X size={12} />
                 </button>
               </span>
@@ -225,7 +223,7 @@ const AdminUsers = () => {
             {roleFilter !== 'all' && (
               <span className="inline-flex items-center gap-1.5 bg-[#16730F]/10 text-[#16730F] px-3 py-1 rounded-full text-xs font-medium">
                 Role: {roleFilter === 'unassigned' ? 'Unassigned' : roleFilter.charAt(0).toUpperCase() + roleFilter.slice(1)}
-                <button onClick={() => setRoleFilter('all')} className="hover:text-red-500">
+                <button onClick={() => { setRoleFilter('all'); setCurrentPage(1); }} className="hover:text-red-500">
                   <X size={12} />
                 </button>
               </span>
@@ -234,7 +232,7 @@ const AdminUsers = () => {
             {dateFilter !== 'all' && (
               <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">
                 Joined: {dateFilter === 'week' ? 'This Week' : dateFilter.charAt(0).toUpperCase() + dateFilter.slice(1)}
-                <button onClick={() => setDateFilter('all')} className="hover:text-red-500">
+                <button onClick={() => { setDateFilter('all'); setCurrentPage(1); }} className="hover:text-red-500">
                   <X size={12} />
                 </button>
               </span>
@@ -245,6 +243,7 @@ const AdminUsers = () => {
                 setRoleFilter('all');
                 setDateFilter('all');
                 setSearchTerm('');
+                setCurrentPage(1);
               }}
               className="ml-2 text-xs text-gray-500 hover:text-red-600 underline"
             >
@@ -380,7 +379,7 @@ const AdminUsers = () => {
                        const showEllipsisAfter = index < arr.length - 1 && arr[index + 1] !== page + 1;
 
                        return (
-                         <React.Fragment key={page}>
+                         <Fragment key={page}>
                            {showEllipsisBefore && <span className="px-2 text-gray-400">...</span>}
                            <button
                              onClick={() => setCurrentPage(page)}
@@ -393,7 +392,7 @@ const AdminUsers = () => {
                              {page}
                            </button>
                            {showEllipsisAfter && <span className="px-2 text-gray-400">...</span>}
-                         </React.Fragment>
+                         </Fragment>
                        );
                      })}
                  </div>

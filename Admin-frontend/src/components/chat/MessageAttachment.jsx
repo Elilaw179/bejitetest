@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { getAttachmentType } from '../../utils/chatAttachmentUtils';
 
 function MessageAttachment({ url, caption }) {

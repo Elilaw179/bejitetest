@@ -50,9 +50,40 @@ export default function useProfileCompletionStatus({ enabled = true } = {}) {
   }, [dispatch, enabled]);
 
   useEffect(() => {
-    if (!enabled) return;
-    refresh();
-  }, [enabled, refresh]);
+    if (!enabled) return undefined;
+
+    let active = true;
+    if (!isAuthenticated()) {
+      Promise.resolve().then(() => {
+        if (active) setProfileCompleted(false);
+      });
+      return undefined;
+    }
+
+    (async () => {
+      try {
+        const { data } = await axiosInstance.get('/auth/me');
+        if (!active) return;
+        const fromApi = data?.user?.profileCompleted === true;
+        const local = getUser() || {};
+        const merged = {
+          ...mergeAuthUsers(local, data?.user ?? {}),
+          profileCompleted: fromApi,
+        };
+        storeUser(merged);
+        dispatch(updateUser({ profileCompleted: fromApi }));
+        setProfileCompleted(fromApi);
+      } catch {
+        if (!active) return;
+        const local = getUser();
+        setProfileCompleted(local?.profileCompleted === true);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, dispatch]);
 
   return { profileCompleted, loading, refresh };
 }

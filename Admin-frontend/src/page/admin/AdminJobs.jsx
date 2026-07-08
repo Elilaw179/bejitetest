@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
 import {
@@ -15,7 +15,6 @@ const AdminJobs = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalJobs, setTotalJobs] = useState(0);
   const itemsPerPage = 10;
 
@@ -26,7 +25,6 @@ const AdminJobs = () => {
         const response = await axiosInstance.get("/api/admin/data/jobs");
         setJobs(response.data.jobs);
         setTotalJobs(response.data.jobs.length);
-        setTotalPages(Math.ceil(response.data.jobs.length / itemsPerPage));
       } catch (error) {
         console.error("Error fetching jobs", error);
         toast.error("Failed to load jobs data");
@@ -49,11 +47,7 @@ const AdminJobs = () => {
       "",
   );
 
-  // Update total pages when filtered jobs change
-  useEffect(() => {
-    setTotalPages(Math.ceil(filteredJobs.length / itemsPerPage));
-    setCurrentPage(1);
-  }, [filteredJobs.length]);
+  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage) || 1;
 
   // Get current page jobs
   const indexOfLastJob = currentPage * itemsPerPage;
@@ -137,7 +131,10 @@ const AdminJobs = () => {
               type="text"
               placeholder="Search jobs or companies..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl outline-none focus:border-[#16730F] focus:ring-1 focus:ring-[#16730F] transition"
             />
             <Search

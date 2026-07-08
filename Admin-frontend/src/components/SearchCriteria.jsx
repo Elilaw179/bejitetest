@@ -1,8 +1,4 @@
-
-
-import React from "react";
 import { FaCheck, FaSearch } from "react-icons/fa";
-import NewsFeedHeader from "./NewsFeedHeader";
 
 const SearchCriteria = ({ formData, setFormData, isFormComplete, onSearch }) => {
   const handleChange = (e) => {
@@ -10,7 +6,7 @@ const SearchCriteria = ({ formData, setFormData, isFormComplete, onSearch }) => 
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const SearchInput = ({ id, label, options, placeholder }) => (
+  const renderSearchInput = (id, label, options, placeholder) => (
     <div className="w-full p-3 sm:p-4 rounded-lg">
       <label htmlFor={id} className="text-[#16730F] text-sm sm:text-[12px] font-medium block mb-1">
         {label}
@@ -37,7 +33,7 @@ const SearchCriteria = ({ formData, setFormData, isFormComplete, onSearch }) => 
     </div>
   );
 
-  const TextInput = ({ id, label, placeholder }) => (
+  const renderTextInput = (id, label, placeholder) => (
     <div className="w-full p-3 sm:p-4 rounded-lg">
       <label htmlFor={id} className="text-[#16730F] text-sm sm:text-[12px] font-medium block mb-1">
         {label}
@@ -53,19 +49,19 @@ const SearchCriteria = ({ formData, setFormData, isFormComplete, onSearch }) => 
           placeholder={placeholder}
         />
         {formData[id] && (
-          <FaCheck className="absolute  right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
+          <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-lg" />
         )}
       </div>
     </div>
   );
 
-  const GroupedInputs = ({ children }) => (
+  const renderGroupedInputs = (children) => (
     <div className="flex flex-col sm:flex-row gap-4">
       {children}
     </div>
   );
 
-  const Divider = () => (
+  const renderDivider = () => (
     <div className="max-w-3xl mx-auto my-4 border-t-2 border-[#16730F]" />
   );
 
@@ -78,39 +74,46 @@ const SearchCriteria = ({ formData, setFormData, isFormComplete, onSearch }) => 
           </p>
         </div>
 
-        <Divider />
+        {renderDivider()}
 
         <div className="max-w-3xl mx-auto rounded-2xl p-4 sm:p-6 bg-white shadow-sm space-y-4">
 
-          <SearchInput id="jobInput" label="JOB TITLE" options={["Software Engineer", "Product Designer", "Data Analyst", "Project Manager", "Marketing Specialist"]} placeholder="Enter your job or select from list" />
-          <SearchInput id="industryInput" label="INDUSTRY" options={["Technology", "Healthcare", "Finance", "Education", "Retail"]} placeholder="Enter sector" />
-          <SearchInput id="countryInput" label="PREFERRED COUNTRY" options={["United States", "United Kingdom", "Canada", "Germany", "Australia"]} placeholder="Enter or select" />
-          <SearchInput id="stateInput" label="PREFERRED STATE" options={["California", "Texas", "New York", "Florida", "Illinois"]} placeholder="Enter or select" />
-          <SearchInput id="workTypeInput" label="WORK TYPE" options={["Full-time", "Part-time", "Contract", "Freelance", "Remote"]} placeholder="Enter or select" />
+          {renderSearchInput("jobInput", "JOB TITLE", ["Software Engineer", "Product Designer", "Data Analyst", "Project Manager", "Marketing Specialist"], "Enter your job or select from list")}
+          {renderSearchInput("industryInput", "INDUSTRY", ["Technology", "Healthcare", "Finance", "Education", "Retail"], "Enter sector")}
+          {renderSearchInput("countryInput", "PREFERRED COUNTRY", ["United States", "United Kingdom", "Canada", "Germany", "Australia"], "Enter or select")}
+          {renderSearchInput("stateInput", "PREFERRED STATE", ["California", "Texas", "New York", "Florida", "Illinois"], "Enter or select")}
+          {renderSearchInput("workTypeInput", "WORK TYPE", ["Full-time", "Part-time", "Contract", "Freelance", "Remote"], "Enter or select")}
 
-          <GroupedInputs>
-            <TextInput id="salaryInput" label="SALARY" placeholder="Enter" />
-            <SearchInput id="currencyInput" label="CURRENCY" options={["USD", "EUR", "GBP", "JPY", "CAD"]} placeholder="Enter or select" />
-          </GroupedInputs>
+          {renderGroupedInputs(
+            <>
+              {renderTextInput("salaryInput", "SALARY", "Enter")}
+              {renderSearchInput("currencyInput", "CURRENCY", ["USD", "EUR", "GBP", "JPY", "CAD"], "Enter or select")}
+            </>
+          )}
 
-          <GroupedInputs>
-            <TextInput id="remoteInput" label="REMOTE REFERENCE" placeholder="Enter" />
-            <SearchInput id="availabilityInput" label="AVAILABILITY" options={["Immediately", "1-2 weeks", "1 month", "2 months", "3+ months"]} placeholder="Enter or select" />
-          </GroupedInputs>
+          {renderGroupedInputs(
+            <>
+              {renderTextInput("remoteInput", "REMOTE REFERENCE", "Enter")}
+              {renderSearchInput("availabilityInput", "AVAILABILITY", ["Immediately", "1-2 weeks", "1 month", "2 months", "3+ months"], "Enter or select")}
+            </>
+          )}
 
-          <SearchInput id="educationInput" label="EDUCATION" options={["High School", "Associate Degree", "Bachelor's Degree", "Master's Degree", "PhD"]} placeholder="Enter or select" />
-          <SearchInput id="skillInput" label="SKILL" options={["JavaScript", "React", "Node.js", "Python", "SQL"]} placeholder="Enter or select" />
+          {renderSearchInput("educationInput", "EDUCATION", ["High School", "Associate Degree", "Bachelor's Degree", "Master's Degree", "PhD"], "Enter or select")}
+          {renderSearchInput("skillInput", "SKILL", ["JavaScript", "React", "Node.js", "Python", "SQL"], "Enter or select")}
 
-          <GroupedInputs>
-            <TextInput id="tribeInput" label="TRIBE" placeholder="Enter" />
-            <SearchInput id="ageInput" label="AGE" options={["18-24", "25-34", "35-44", "45-54", "55+"]} placeholder="Enter or select" />
-          </GroupedInputs>
+          {renderGroupedInputs(
+            <>
+              {renderTextInput("tribeInput", "TRIBE", "Enter")}
+              {renderSearchInput("ageInput", "AGE", ["18-24", "25-34", "35-44", "45-54", "55+"], "Enter or select")}
+            </>
+          )}
 
-          <GroupedInputs>
-            <TextInput id="genderInput" label="GENDER" placeholder="Enter" />
-            <SearchInput id="maritalInput" label="MARITAL" options={["Single", "Married", "Divorced", "Widowed", "Separated"]} placeholder="Enter or select" />
-          </GroupedInputs>
-
+          {renderGroupedInputs(
+            <>
+              {renderTextInput("genderInput", "GENDER", "Enter")}
+              {renderSearchInput("maritalInput", "MARITAL", ["Single", "Married", "Divorced", "Widowed", "Separated"], "Enter or select")}
+            </>
+          )}
 
           <div className="mt-6 sm:mt-10">
             <button

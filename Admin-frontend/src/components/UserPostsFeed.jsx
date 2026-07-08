@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FileText } from "lucide-react";
 import {
   getUserPosts,
@@ -63,10 +63,14 @@ const UserPostsFeed = ({
 
       try {
         if (reset) {
-          setLoading(true);
-          setError(null);
+          Promise.resolve().then(() => {
+            setLoading(true);
+            setError(null);
+          });
         } else {
-          setLoadingMore(true);
+          Promise.resolve().then(() => {
+            setLoadingMore(true);
+          });
         }
 
         const cursor = reset ? null : nextCursorRef.current;
@@ -97,9 +101,11 @@ const UserPostsFeed = ({
   );
 
   useEffect(() => {
-    setPosts([]);
-    setNextCursor(null);
-    nextCursorRef.current = null;
+    Promise.resolve().then(() => {
+      setPosts([]);
+      setNextCursor(null);
+      nextCursorRef.current = null;
+    });
     fetchPosts(true);
   }, [userId, filter, fetchPosts]);
 

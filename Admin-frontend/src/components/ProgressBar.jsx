@@ -1,4 +1,3 @@
-import React from 'react';
 const ProgressBar = ({ currentStep, totalSteps }) => {
   const width = ((currentStep - 1) / (totalSteps - 1)) * 100;
 

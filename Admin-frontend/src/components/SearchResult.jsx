@@ -1,7 +1,4 @@
 
-import React from 'react';
-import NewsFeedHeader from './NewsFeedHeader';
-
 const CandidateCard = ({ candidate }) => {
   return (
     <div>

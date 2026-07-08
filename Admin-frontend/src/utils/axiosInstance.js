@@ -5,7 +5,7 @@ import {
   refreshAccessToken,
   restoreUserFromServer,
 } from "./tokenManager";
-import { API_KEY, API_URL } from "../config.mjs";
+import {  API_URL } from "../config.mjs";
 
 const axiosInstance = axios.create({
   baseURL: API_URL,

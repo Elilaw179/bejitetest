@@ -18,14 +18,17 @@ export function useAdProCampaignReports(campaignId) {
 
   const loadReport = useCallback(
     async ({ background = false } = {}) => {
+      await Promise.resolve();
       if (!campaignId) {
-        setLoading(false);
+        Promise.resolve().then(() => setLoading(false));
         return null;
       }
 
       if (!background) {
-        setLoading(true);
-        setError(null);
+        Promise.resolve().then(() => {
+          setLoading(true);
+          setError(null);
+        });
       }
 
       try {
@@ -59,19 +62,26 @@ export function useAdProCampaignReports(campaignId) {
     [campaignId],
   );
 
-  useEffect(() => {
-    if (cachedReport) {
-      setReport(cachedReport);
-      setLoading(false);
-      setError(null);
-      hasCachedData.current = true;
-      loadReport({ background: true });
-      return;
-    }
+  const [prevCampaignId, setPrevCampaignId] = useState(campaignId);
+  const [prevCachedReport, setPrevCachedReport] = useState(cachedReport);
 
-    hasCachedData.current = false;
-    setReport(null);
-    loadReport();
+  if (campaignId !== prevCampaignId || cachedReport !== prevCachedReport) {
+    setPrevCampaignId(campaignId);
+    setPrevCachedReport(cachedReport);
+    setReport(cachedReport);
+    setLoading(!cachedReport);
+    setError(null);
+  }
+
+  useEffect(() => {
+    hasCachedData.current = Boolean(cachedReport);
+    Promise.resolve().then(() => {
+      if (cachedReport) {
+        loadReport({ background: true });
+      } else {
+        loadReport();
+      }
+    });
   }, [campaignId, cachedReport, loadReport]);
 
   return {

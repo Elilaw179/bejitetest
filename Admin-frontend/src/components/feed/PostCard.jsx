@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaEllipsisH,
@@ -261,10 +261,17 @@ const PostCard = ({
   const [liked, setLiked] = useState(post.likedByMe === true);
   const [saved, setSaved] = useState(post.savedByMe === true);
 
-  useEffect(() => {
+  const [prevPostId, setPrevPostId] = useState(post.id);
+  const [prevLikedByMe, setPrevLikedByMe] = useState(post.likedByMe);
+  const [prevSavedByMe, setPrevSavedByMe] = useState(post.savedByMe);
+
+  if (post.id !== prevPostId || post.likedByMe !== prevLikedByMe || post.savedByMe !== prevSavedByMe) {
+    setPrevPostId(post.id);
+    setPrevLikedByMe(post.likedByMe);
+    setPrevSavedByMe(post.savedByMe);
     setLiked(post.likedByMe === true);
     setSaved(post.savedByMe === true);
-  }, [post.id, post.likedByMe, post.savedByMe]);
+  }
 
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
