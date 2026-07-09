@@ -13,7 +13,7 @@ export default function MetricCard({
         >
           <Icon className="w-5 h-5" />
         </div>
-        <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+        <span className="text-xs font-medium text-[#16730F] bg-[#16730F] px-2 py-1 rounded-full">
           {change}
         </span>
       </div>

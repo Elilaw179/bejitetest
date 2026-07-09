@@ -132,7 +132,7 @@ function App() {
             <PushNotificationBootstrap />
             <Routes>
               {/* Admin Routes */}
-              <Route path="/admin/login" element={<AdminLogin />} />
+              {/* <Route path="/admin/login" element={<AdminLogin />} />
               <Route
                 path="/admin"
                 element={
@@ -151,7 +151,7 @@ function App() {
                 <Route path="demographics" element={<AdminDemographics />} />
                 <Route path="admins" element={<AdminList />} />
                 <Route path="adpro" element={<AdminAdPro />} />
-              </Route>
+              </Route> */}
 
               <Route path="/auth/email-sent" element={<EmailSent />} />
               <Route path="/auth/success" element={<AuthSuccess />} />
@@ -216,20 +216,11 @@ function App() {
                   path="/individual/profile-setup"
                   element={<ProfileSetup />}
                 />
-                <Route
-                  path="/individual/location"
-                  element={<Location />}
-                />
+                <Route path="/individual/location" element={<Location />} />
                 <Route path="/individual/verify" element={<Verify />} />
                 <Route path="/individual/selectid" element={<SelectId />} />
-                <Route
-                  path="/individual/upload"
-                  element={<UploadDoc />}
-                />
-                <Route
-                  path="/individual/inreview"
-                  element={<InReview />}
-                />
+                <Route path="/individual/upload" element={<UploadDoc />} />
+                <Route path="/individual/inreview" element={<InReview />} />
                 <Route
                   path="/edit-profile/individual/basic-details"
                   element={<IndividualBasicDetails />}
