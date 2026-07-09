@@ -1,11 +1,11 @@
-import React from "react";
+// import React from "react";
 
 const ASECheckoutModal = ({
   isOpen,
   onClose,
   plan,
   billingInterval,
-  currency,
+  // currency,
   processing,
   onPay,
   getDisplayPrice,

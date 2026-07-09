@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -15,7 +15,7 @@ export default function CompleteSignup() {
   const email = params.get("email")?.trim() || "";
   const status = params.get("status");
 
-  const [, setRole] = useState("");
+  // const [, setRole] = useState("");
 
   // OAuth redirects include tokens in the URL — persist before role selection.
   useEffect(() => {

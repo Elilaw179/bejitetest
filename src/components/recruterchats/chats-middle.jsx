@@ -5,9 +5,8 @@ import { toast } from 'react-toastify';
 import messagingService from '../../services/messagingService';
 import { API_URL } from '../../config';
 import ChatMessageInput from '../chat/ChatMessageInput';
-import ChatMessageBubble, {
-  formatChatMessageTime,
-} from '../chat/ChatMessageBubble';
+import ChatMessageBubble from '../chat/ChatMessageBubble';
+import { formatChatMessageTime } from '../../utils/chatTimeUtils';
 import { formatDisplayPersonName } from '../../utils/personDisplayName';
 
 function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {

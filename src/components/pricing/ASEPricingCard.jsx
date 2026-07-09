@@ -1,9 +1,9 @@
-import React from "react";
+// import React from "react";
 
 const ASEPricingCard = ({
   plan,
   billingInterval,
-  currency,
+  // currency,
   onSelectPlan,
   getDisplayPrice,
   getSaveText,
