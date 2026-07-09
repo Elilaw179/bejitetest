@@ -77,11 +77,11 @@ const ASEPricingComparisonTable = () => {
               <td className="py-3.5 text-gray-500 font-semibold">
                 AdPro credits
               </td>
-              <td className="py-3.5 text-center">$10 Credit</td>
+              <td className="py-3.5 text-center">₦10,000 Credit</td>
               <td className="py-3.5 text-center text-[#1A3E32] font-bold">
-                $20 Credit
+                ₦20,000 Credit
               </td>
-              <td className="py-3.5 text-center">$30 Credit</td>
+              <td className="py-3.5 text-center">₦30,000 Credit</td>
             </tr>
             <tr>
               <td className="py-3.5 text-gray-500 font-semibold">

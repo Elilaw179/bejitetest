@@ -406,7 +406,14 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/help" element={<Help />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/ase/pricing" element={<ASEPricingPage />} />
+              <Route
+                path="/subscription-pricing"
+                element={
+                  <ProtectedRoute redirectMessage="Please log in to view subscription plans.">
+                    <ASEPricingPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/ase/payment-callback"
                 element={<ASEPaymentCallback />}
@@ -416,8 +423,16 @@ function App() {
                 element={<ASEPaymentCallback />}
               />
               <Route
-                path="/ase/dashboard"
-                element={<ASESubscriptionDashboard />}
+                path="/ase/topup-callback"
+                element={<ASEPaymentCallback />}
+              />
+              <Route
+                path="/subscription-dashboard"
+                element={
+                  <ProtectedRoute redirectMessage="Please log in to view your subscription dashboard.">
+                    <ASESubscriptionDashboard />
+                  </ProtectedRoute>
+                }
               />
               <Route path="/employer/create-job" element={<CreateJob />} />
 

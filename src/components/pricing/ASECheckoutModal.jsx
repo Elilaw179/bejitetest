@@ -138,16 +138,16 @@ const ASECheckoutModal = ({
             </p>
             <ul className="list-disc list-outside pl-4 space-y-1">
               <li>
-                Payments are safely processed and secured by Paystack in local
-                Naira currency equivalent.
+                Payments are processed securely by Paystack in Nigerian Naira
+                (₦).
               </li>
               <li>
                 Monthly allowances are refilled on the recurring renewal date.
                 Unused search/job credits do not roll over.
               </li>
               <li>
-                Top-ups: Extra search block (10 results) is $10 (₦10,000); extra
-                job slot is $10 (₦10,000).
+                Top-ups: Extra search block (10 results) is ₦10,000; extra job
+                slot is ₦10,000.
               </li>
             </ul>
           </div>

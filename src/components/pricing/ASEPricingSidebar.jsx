@@ -29,7 +29,7 @@ const ASEPricingSidebar = () => {
                   d="M10 19l-7-7m0 0l7-7m-7 7h18"
                 />
               </svg>
-              ← Back to Dashboard
+               Back to Dashboard
             </button>
           </li>
           <li>
@@ -55,7 +55,7 @@ const ASEPricingSidebar = () => {
           </li>
           <li>
             <button
-              onClick={() => navigate("/ase/dashboard")}
+              onClick={() => navigate("/subscription-dashboard")}
               className="flex items-center gap-3 text-gray-600 hover:text-[#1A3E32] w-full text-left px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-all font-semibold text-sm"
             >
               <svg

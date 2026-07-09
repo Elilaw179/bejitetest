@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import NewsFeedHeader from "../../components/NewsFeedHeader";
 import {
   getSubscriptionPlans,
   checkASEEligibility,
   initializeSubscriptionPayment,
+  initializeTopUpPayment,
   activateFreeTrial,
 } from "../../services/paymentApi";
+import { getUser, isAuthenticated } from "../../utils/tokenManager";
 
 // Sub-components
 import ASEPricingHeader from "../../components/pricing/ASEPricingHeader";
@@ -16,10 +19,8 @@ import ASEPricingComparisonTable from "../../components/pricing/ASEPricingCompar
 import ASEPricingTopups from "../../components/pricing/ASEPricingTopups";
 import ASECheckoutModal from "../../components/pricing/ASECheckoutModal";
 
-const formatPlanPrice = (amount, currency) => {
-  if (currency === "USD") return `$${amount}`;
-  return `₦${Number(amount).toLocaleString("en-NG")}`;
-};
+const formatPlanPrice = (amount) =>
+  `₦${Number(amount).toLocaleString("en-NG")}`;
 
 const ASEPricingPage = () => {
   const navigate = useNavigate();
@@ -27,10 +28,10 @@ const ASEPricingPage = () => {
   const [eligibility, setEligibility] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [processingTopUp, setProcessingTopUp] = useState(null);
 
   // Toggles and Modal State
   const [billingInterval, setBillingInterval] = useState("monthly");
-  const [currency, setCurrency] = useState("NGN");
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [selectedCheckoutPlan, setSelectedCheckoutPlan] = useState(null);
 
@@ -49,7 +50,7 @@ const ASEPricingPage = () => {
           searches: "5 searches/mo",
           results: "10 results/search",
           posts: "5 job posts/mo",
-          adCredits: "$10 ad credit",
+          adCredits: "₦10,000 ad credit",
           analytics: "Monthly",
           support: "Email support",
           events: "Access to events",
@@ -60,7 +61,7 @@ const ASEPricingPage = () => {
           "5 ASE Searches / Month (10 results/search)",
           "5 Job Posts / Month",
           "Applicant access included before/after expiry",
-          "$10 AdPro ad credit",
+          "₦10,000 AdPro ad credit",
           "Verified Badge included",
           "Monthly Job Analytics Dashboard",
           "Access to Networking Events",
@@ -80,7 +81,7 @@ const ASEPricingPage = () => {
           searches: "20 searches/mo",
           results: "20 results/search",
           posts: "20 job posts/mo",
-          adCredits: "$20 ad credit",
+          adCredits: "₦20,000 ad credit",
           analytics: "Enhanced monthly",
           support: "Priority support",
           events: "Priority access to events",
@@ -91,7 +92,7 @@ const ASEPricingPage = () => {
           "20 ASE Searches / Month (20 results/search)",
           "20 Job Posts / Month",
           "Full Applicant Access (before/after expiry)",
-          "$20 AdPro ad credit",
+          "₦20,000 AdPro ad credit",
           "Verified Badge included",
           "Enhanced Monthly Analytics Dashboard",
           "Priority Networking Event Access",
@@ -111,7 +112,7 @@ const ASEPricingPage = () => {
           searches: "60 searches/mo",
           results: "30 results/search",
           posts: "Unlimited Fair Use",
-          adCredits: "$30 ad credit",
+          adCredits: "₦30,000 ad credit",
           analytics: "Advanced monthly + trends",
           support: "Dedicated support manager",
           events: "VIP networking events",
@@ -122,7 +123,7 @@ const ASEPricingPage = () => {
           "60 ASE Searches / Month (30 results/search)",
           "Unlimited Job Posts (Fair Use)",
           "Full Applicant Access (before/after expiry)",
-          "$30 AdPro ad credit",
+          "₦30,000 AdPro ad credit",
           "Verified Badge included",
           "Advanced Analytics & Trend Reports",
           "VIP Networking Event Access",
@@ -169,19 +170,8 @@ const ASEPricingPage = () => {
   }, [loadData]);
 
   const plansData = useMemo(() => {
-    return defaultPlans.map((defaultPlan) => {
-      const backendPlan = plans.find(
-        (p) => p.id === defaultPlan.id || p.planType === defaultPlan.id,
-      );
-      return {
-        ...defaultPlan,
-        ...backendPlan,
-        prices: defaultPlan.prices,
-        savings: defaultPlan.savings,
-        limits: defaultPlan.limits,
-        features: defaultPlan.features,
-      };
-    });
+    if (plans.length > 0) return plans;
+    return defaultPlans;
   }, [plans, defaultPlans]);
 
   // Trigger checkout confirmation popup
@@ -194,18 +184,27 @@ const ASEPricingPage = () => {
   const triggerPayment = async (plan) => {
     setProcessing(true);
     try {
-      const userData = JSON.parse(localStorage.getItem("user") || "{}");
-      const userId = localStorage.getItem("userId");
+      const user = getUser();
 
-      // Paystack expects NGN amounts for local gateway billing integration
-      const paymentAmountNaira = plan.prices[billingInterval].ngn;
+      if (!isAuthenticated() || !user?.email) {
+        toast.error("Please log in to subscribe");
+        navigate("/");
+        return;
+      }
+
+      const paymentAmount = plan.prices?.[billingInterval]?.ngn;
+      if (!paymentAmount) {
+        toast.error("Unable to determine plan price. Please try again.");
+        return;
+      }
 
       const paymentData = {
-        email: userData.email,
-        amount: paymentAmountNaira,
+        email: user.email,
+        amount: paymentAmount,
         currency: "NGN",
-        employerId: userId,
+        employerId: user.id,
         planType: plan.id,
+        billingInterval,
         billingPeriod: billingInterval,
       };
 
@@ -216,37 +215,67 @@ const ASEPricingPage = () => {
       if (data.data?.authorization_url) {
         window.location.href = data.data.authorization_url;
       } else {
-        alert("Failed to initialize subscription checkout. Please try again.");
+        toast.error("Failed to initialize subscription checkout. Please try again.");
       }
     } catch (error) {
       console.error("Payment initiation error:", error);
       const errorMessage =
+        error.response?.data?.message ||
         error.response?.data?.error ||
         error.message ||
         "Payment initialization failed. Please contact support.";
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setProcessing(false);
     }
   };
 
+  const handlePurchaseTopUp = async (topUpType) => {
+    setProcessingTopUp(topUpType);
+    try {
+      if (!isAuthenticated()) {
+        toast.error("Please log in to purchase top-ups");
+        navigate("/");
+        return;
+      }
+
+      localStorage.setItem("aseTopUpType", topUpType);
+      const data = await initializeTopUpPayment({ topUpType });
+
+      if (data.data?.authorization_url) {
+        window.location.href = data.data.authorization_url;
+      } else {
+        toast.error("Failed to initialize top-up checkout. Please try again.");
+      }
+    } catch (error) {
+      console.error("Top-up payment error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to start top-up checkout",
+      );
+    } finally {
+      setProcessingTopUp(null);
+    }
+  };
+
   // Price calculations helpers
   const getDisplayPrice = (plan) => {
-    const val = plan.prices[billingInterval][currency.toLowerCase()];
-    return formatPlanPrice(val, currency);
+    const val = plan.prices[billingInterval].ngn;
+    return formatPlanPrice(val);
   };
 
   const getSaveText = (plan) => {
     if (billingInterval === "monthly") return null;
-    const val = plan.savings[currency.toLowerCase()];
-    return `Save ${formatPlanPrice(val, currency)}`;
+    const val = plan.savings.ngn;
+    return `Save ${formatPlanPrice(val)}`;
   };
 
   const getMonthlyEquivalent = (plan) => {
     if (billingInterval === "monthly") return null;
-    const val = plan.prices.yearly[currency.toLowerCase()];
+    const val = plan.prices.yearly.ngn;
     const monthlyEq = Math.round((val / 12) * 100) / 100;
-    return `${formatPlanPrice(Math.round(monthlyEq), currency)}/mo`;
+    return `${formatPlanPrice(Math.round(monthlyEq))}/mo`;
   };
 
   if (loading) {
@@ -304,7 +333,7 @@ const ASEPricingPage = () => {
                     {eligibility.accessType === "one_time" &&
                       `${eligibility.remainingSearches} Search Credits`}
                     {eligibility.accessType === "subscription" &&
-                      `Active ${eligibility.planType?.toUpperCase()} Subscription`}
+                      `Active ${eligibility.planType?.toUpperCase()} — ${eligibility.remainingSearches ?? 0}/${eligibility.monthlySearchLimit ?? "∞"} searches left`}
                     {eligibility.accessType === "none" && "No Active Plan"}
                   </h4>
                   <p className="text-sm text-gray-500 mt-0.5">
@@ -315,7 +344,7 @@ const ASEPricingPage = () => {
                     {eligibility.accessType === "one_time" &&
                       "Purchase more searches or upgrade to unlimited"}
                     {eligibility.accessType === "subscription" &&
-                      "Recruiting dashboard features are fully unlocked"}
+                      "Plan limits apply to searches, job posts, and AdPro credits this billing period"}
                     {eligibility.accessType === "none" &&
                       "Choose a plan below to continue"}
                   </p>
@@ -337,7 +366,6 @@ const ASEPricingPage = () => {
 
           {/* Interactive Controls (Toggles) */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100">
-            {/* Billing Interval Toggle */}
             <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
               <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">
                 Billing Interval:
@@ -369,34 +397,9 @@ const ASEPricingPage = () => {
               </div>
             </div>
 
-            {/* Currency Toggle */}
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-              <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">
-                Currency:
-              </span>
-              <div className="inline-flex bg-gray-100 p-1 rounded-xl">
-                <button
-                  onClick={() => setCurrency("NGN")}
-                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                    currency === "NGN"
-                      ? "bg-[#16730F] text-white shadow-sm"
-                      : "text-gray-600 hover:text-[#16730F]"
-                  }`}
-                >
-                  NGN (₦)
-                </button>
-                <button
-                  onClick={() => setCurrency("USD")}
-                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                    currency === "USD"
-                      ? "bg-[#16730F] text-white shadow-sm"
-                      : "text-gray-600 hover:text-[#16730F]"
-                  }`}
-                >
-                  USD ($)
-                </button>
-              </div>
-            </div>
+            <p className="text-sm font-semibold text-gray-500">
+              All prices in Nigerian Naira (₦)
+            </p>
           </div>
 
           {/* Pricing Cards Grid */}
@@ -406,7 +409,6 @@ const ASEPricingPage = () => {
                 key={plan.id}
                 plan={plan}
                 billingInterval={billingInterval}
-                currency={currency}
                 onSelectPlan={handleSelectPlan}
                 getDisplayPrice={getDisplayPrice}
                 getSaveText={getSaveText}
@@ -419,13 +421,25 @@ const ASEPricingPage = () => {
           <ASEPricingComparisonTable />
 
           {/* Top-Ups Information Box */}
-          <ASEPricingTopups />
+          <ASEPricingTopups
+            onPurchaseTopUp={handlePurchaseTopUp}
+            processingTopUp={processingTopUp}
+            topUpBalances={
+              eligibility
+                ? {
+                    topupSearchesRemaining:
+                      eligibility.topupSearchesRemaining || 0,
+                    topupJobPostsRemaining:
+                      eligibility.topupJobPostsRemaining || 0,
+                  }
+                : null
+            }
+          />
 
           {/* Free Trial Banner */}
           {eligibility &&
-            (eligibility.accessType === "free_trial_upgrade" ||
-              (!eligibility.hasUsedFreeTrial &&
-                eligibility.accessType === "none")) && (
+            (eligibility.accessType === "free_trial" ||
+              eligibility.accessType === "free_trial_upgrade") && (
               <div className="border-2 border-dashed border-[#16730F] bg-green-50/50 rounded-3xl p-6 sm:p-8 text-center space-y-4">
                 <h3 className="text-xl font-black text-gray-900 tracking-tight">
                   {eligibility.accessType === "free_trial_upgrade"
@@ -442,9 +456,14 @@ const ASEPricingPage = () => {
                   onClick={async () => {
                     try {
                       await activateFreeTrial();
+                      toast.success("Free trial activated");
                       navigate("/candidate-search-page");
                     } catch (error) {
                       console.error("Free trial error:", error);
+                      toast.error(
+                        error.response?.data?.message ||
+                          "Failed to activate free trial",
+                      );
                     }
                   }}
                   className="px-8 py-3 bg-[#16730F] text-white font-bold rounded-xl hover:bg-[#2d5a47] transition-all hover:shadow shadow-sm active:scale-95"
@@ -464,7 +483,6 @@ const ASEPricingPage = () => {
         onClose={() => setIsCheckoutModalOpen(false)}
         plan={selectedCheckoutPlan}
         billingInterval={billingInterval}
-        currency={currency}
         processing={processing}
         onPay={triggerPayment}
         getDisplayPrice={getDisplayPrice}

@@ -217,7 +217,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = 
               <p className="text-white text-lg font-semibold mt-4">Free Trial Used</p>
               <p className="text-white mt-2 text-sm">{error}</p>
               <button
-                onClick={() => navigate('/ase/pricing')}
+                onClick={() => navigate('/subscription-pricing')}
                 className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 Upgrade Now

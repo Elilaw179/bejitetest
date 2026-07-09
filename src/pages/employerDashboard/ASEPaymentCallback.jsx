@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { verifyOneTimePayment, verifySubscriptionPayment } from "../../services/paymentApi";
+import {
+  verifyOneTimePayment,
+  verifySubscriptionPayment,
+  verifyTopUpPayment,
+} from "../../services/paymentApi";
+
+const TOPUP_REDIRECTS = {
+  extra_search: "/candidate-search-page",
+  extra_job_post: "/employer/create-job",
+  standalone_badge: "/subscription-dashboard",
+};
 
 const ASEPaymentCallback = () => {
   const [searchParams] = useSearchParams();
@@ -20,31 +30,41 @@ const ASEPaymentCallback = () => {
         return;
       }
 
+      const topUpType = localStorage.getItem("aseTopUpType");
+      const isTopUpFlow =
+        window.location.pathname.includes("topup-callback") || Boolean(topUpType);
+
       try {
-        // Try to verify as one-time payment first
         let response;
-        try {
-          response = await verifyOneTimePayment(ref);
-        } catch {
-          // Try subscription verification
-          response = await verifySubscriptionPayment(ref);
+        if (isTopUpFlow) {
+          response = await verifyTopUpPayment(ref);
+        } else {
+          try {
+            response = await verifyOneTimePayment(ref);
+          } catch {
+            response = await verifySubscriptionPayment(ref);
+          }
         }
 
         if (response?.data?.status === "success") {
           setStatus("success");
           setMessage("Payment verified! Redirecting...");
-          
+
           const recruitJobId = localStorage.getItem("aseRecruitReturnJobId");
           localStorage.removeItem("aseRecruitReturnJobId");
 
+          const redirectPath = isTopUpFlow
+            ? TOPUP_REDIRECTS[topUpType] || "/subscription-pricing"
+            : recruitJobId
+              ? `/employer/job/${recruitJobId}/recruit?paid=1`
+              : "/candidate-search-page";
+
+          if (isTopUpFlow) {
+            localStorage.removeItem("aseTopUpType");
+          }
+
           setTimeout(() => {
-            if (recruitJobId) {
-              navigate(`/employer/job/${recruitJobId}/recruit?paid=1`, {
-                replace: true,
-              });
-            } else {
-              navigate("/candidate-search-page", { replace: true });
-            }
+            navigate(redirectPath, { replace: true });
           }, 2000);
         } else {
           setStatus("error");
@@ -53,7 +73,10 @@ const ASEPaymentCallback = () => {
       } catch (error) {
         console.error("Verification error:", error);
         setStatus("error");
-        setMessage("An error occurred during verification.");
+        setMessage(
+          error.response?.data?.message ||
+            "An error occurred during verification.",
+        );
       }
     };
 
@@ -93,10 +116,10 @@ const ASEPaymentCallback = () => {
             <h2 className="text-xl font-semibold text-gray-900">Payment Failed</h2>
             <p className="text-gray-600 mt-2">{message}</p>
             <button
-              onClick={() => navigate("/candidate-search-page")}
+              onClick={() => navigate("/subscription-pricing")}
               className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
-              Try Again
+              Back to Pricing
             </button>
           </>
         )}
