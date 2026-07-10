@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import {
   verifyOneTimePayment,
   verifySubscriptionPayment,
@@ -12,9 +12,23 @@ const TOPUP_REDIRECTS = {
   standalone_badge: "/subscription-dashboard",
 };
 
+const resolvePaymentVerifier = (reference, { isTopUpFlow, isSubscriptionFlow }) => {
+  if (isTopUpFlow || reference.startsWith("TOPUP_")) {
+    return verifyTopUpPayment;
+  }
+  if (isSubscriptionFlow || reference.startsWith("SUB_")) {
+    return verifySubscriptionPayment;
+  }
+  if (reference.startsWith("ASE_")) {
+    return verifyOneTimePayment;
+  }
+  return verifySubscriptionPayment;
+};
+
 const ASEPaymentCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [status, setStatus] = useState("processing");
   const [message, setMessage] = useState("Verifying your payment...");
 
@@ -32,19 +46,15 @@ const ASEPaymentCallback = () => {
 
       const topUpType = localStorage.getItem("aseTopUpType");
       const isTopUpFlow =
-        window.location.pathname.includes("topup-callback") || Boolean(topUpType);
+        location.pathname.includes("topup-callback") || Boolean(topUpType);
+      const isSubscriptionFlow = location.pathname.includes("subscription-callback");
 
       try {
-        let response;
-        if (isTopUpFlow) {
-          response = await verifyTopUpPayment(ref);
-        } else {
-          try {
-            response = await verifyOneTimePayment(ref);
-          } catch {
-            response = await verifySubscriptionPayment(ref);
-          }
-        }
+        const verify = resolvePaymentVerifier(ref, {
+          isTopUpFlow,
+          isSubscriptionFlow,
+        });
+        const response = await verify(ref);
 
         if (response?.data?.status === "success") {
           setStatus("success");
@@ -53,14 +63,14 @@ const ASEPaymentCallback = () => {
           const recruitJobId = localStorage.getItem("aseRecruitReturnJobId");
           localStorage.removeItem("aseRecruitReturnJobId");
 
-          const redirectPath = isTopUpFlow
-            ? TOPUP_REDIRECTS[topUpType] || "/subscription-pricing"
-            : recruitJobId
-              ? `/employer/job/${recruitJobId}/recruit?paid=1`
-              : "/candidate-search-page";
-
-          if (isTopUpFlow) {
+          let redirectPath = "/candidate-search-page";
+          if (isTopUpFlow || ref.startsWith("TOPUP_")) {
+            redirectPath = TOPUP_REDIRECTS[topUpType] || "/subscription-pricing";
             localStorage.removeItem("aseTopUpType");
+          } else if (isSubscriptionFlow || ref.startsWith("SUB_")) {
+            redirectPath = "/subscription-dashboard";
+          } else if (recruitJobId) {
+            redirectPath = `/employer/job/${recruitJobId}/recruit?paid=1`;
           }
 
           setTimeout(() => {
@@ -72,6 +82,32 @@ const ASEPaymentCallback = () => {
         }
       } catch (error) {
         console.error("Verification error:", error);
+
+        if (!isTopUpFlow && !ref.startsWith("TOPUP_")) {
+          try {
+            const fallbackVerify =
+              ref.startsWith("SUB_") || isSubscriptionFlow
+                ? verifyOneTimePayment
+                : verifySubscriptionPayment;
+            const fallbackResponse = await fallbackVerify(ref);
+            if (fallbackResponse?.data?.status === "success") {
+              setStatus("success");
+              setMessage("Payment verified! Redirecting...");
+              setTimeout(() => {
+                navigate(
+                  ref.startsWith("SUB_") || isSubscriptionFlow
+                    ? "/subscription-dashboard"
+                    : "/candidate-search-page",
+                  { replace: true },
+                );
+              }, 2000);
+              return;
+            }
+          } catch {
+            /* fall through to error UI */
+          }
+        }
+
         setStatus("error");
         setMessage(
           error.response?.data?.message ||
@@ -81,7 +117,7 @@ const ASEPaymentCallback = () => {
     };
 
     verifyPayment();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, location.pathname]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

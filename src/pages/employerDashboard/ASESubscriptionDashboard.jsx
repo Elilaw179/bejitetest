@@ -6,6 +6,27 @@ import {
   getSubscriptionStatus,
   deleteSavedCard,
 } from "../../services/paymentApi";
+import CardBrandIcon from "../../components/pricing/CardBrandIcon";
+
+const formatPlanLabel = (planType) => {
+  const labels = {
+    standard: "Standard Plan",
+    premium: "Premium Plan",
+    jumbo: "Jumbo Plan",
+  };
+  return labels[String(planType || "").toLowerCase()] || "Subscription Plan";
+};
+
+const formatDashboardDate = (value) => {
+  if (!value) return "N/A";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "N/A";
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "2-digit",
+  }).format(date);
+};
 
 const getLoadErrorMessage = (error) => {
   const status = error?.response?.status;
@@ -43,6 +64,9 @@ const ASESubscriptionDashboard = () => {
         throw new Error(data.message || "Failed to load subscription status");
       }
       setStatus(data);
+      if (data.repaired && data.subscription?.plan_type) {
+        toast.success(`${formatPlanLabel(data.subscription.plan_type)} activated successfully`);
+      }
     } catch (err) {
       console.error("Error loading subscription status:", err);
       const message = getLoadErrorMessage(err);
@@ -195,8 +219,8 @@ const ASESubscriptionDashboard = () => {
                 <div className="bg-green-50 border-2 border-[#16730F] rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-xl font-semibold text-[#1A3E32] capitalize">
-                        {subscription.plan_type} Plan
+                      <span className="text-xl font-semibold text-[#1A3E32]">
+                        {formatPlanLabel(subscription.plan_type)}
                       </span>
                       <span className="ml-3 px-3 py-1 text-xs font-bold bg-[#16730F] text-white rounded-full">
                         {subscription.status?.toUpperCase()}
@@ -207,11 +231,7 @@ const ASESubscriptionDashboard = () => {
                         Next billing:{" "}
                       </span>
                       <span className="text-sm font-semibold text-gray-900">
-                        {subscription.next_billing_date
-                          ? new Date(
-                              subscription.next_billing_date,
-                            ).toLocaleDateString()
-                          : "N/A"}
+                        {formatDashboardDate(subscription.next_billing_date)}
                       </span>
                     </div>
                   </div>
@@ -257,7 +277,7 @@ const ASESubscriptionDashboard = () => {
                     </p>
                   )}
                 </div>
-              ) : usage ? (
+              ) : usage && (usage.remaining_searches > 0 || usage.topup_searches_remaining > 0) ? (
                 <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -268,14 +288,15 @@ const ASESubscriptionDashboard = () => {
                     <div className="text-right">
                       <span className="text-sm text-gray-600">Remaining: </span>
                       <span className="text-2xl font-bold text-[#16730F]">
-                        {usage.remaining_searches}
+                        {(usage.remaining_searches || 0) +
+                          (usage.topup_searches_remaining || 0)}
                       </span>
                     </div>
                   </div>
                   <p className="mt-3 text-sm text-gray-600">
                     Total searches used:{" "}
                     <span className="font-semibold">
-                      {usage.total_paid_searches}
+                      {usage.total_paid_searches || 0}
                     </span>
                   </p>
                 </div>
@@ -308,8 +329,8 @@ const ASESubscriptionDashboard = () => {
                       className="flex items-center justify-between bg-gray-50 rounded-lg p-4 border border-gray-200"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-8 bg-gradient-to-r from-gray-400 to-gray-600 rounded flex items-center justify-center text-white text-xs font-bold">
-                          {card.card_brand?.toUpperCase() || "CARD"}
+                        <div className="w-14 h-9 bg-white border border-gray-200 rounded flex items-center justify-center px-2 shrink-0">
+                          <CardBrandIcon brand={card.card_brand} />
                         </div>
                         <div>
                           <span className="text-base font-semibold text-gray-900">
@@ -385,9 +406,7 @@ const ASESubscriptionDashboard = () => {
                           {txn.status?.toUpperCase()}
                         </span>
                         <span className="text-gray-400 text-sm">
-                          {new Date(
-                            txn.paid_at || txn.created_at,
-                          ).toLocaleDateString()}
+                          {formatDashboardDate(txn.paid_at || txn.created_at)}
                         </span>
                       </div>
                     </div>

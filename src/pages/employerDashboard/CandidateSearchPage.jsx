@@ -8,6 +8,25 @@ import JobSearchFormGreen from "../../components/candidate-search-page/JobSearch
 import UserMainProfileCard from "../../components/candidate-search-page/UserMainProfileCard";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
 
+const DESKTOP_MEDIA_QUERY = "(min-width: 1024px)";
+
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia(DESKTOP_MEDIA_QUERY).matches
+      : false,
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(DESKTOP_MEDIA_QUERY);
+    const handleChange = (event) => setIsDesktop(event.matches);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  return isDesktop;
+}
+
 const CandidateSearchPage = () => {
   const [formData, setFormData] = useState({
     jobInput: "",
@@ -35,8 +54,10 @@ const CandidateSearchPage = () => {
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const mainScrollRef = useRef(null);
   const resultsScrollRef = useRef(null);
+  const isDesktop = useIsDesktop();
 
   const hasAtLeastOneField = Object.values(formData).some((val) => val.trim() !== "");
+  const shouldShowResults = showResults && !viewProfile;
 
   const scrollSearchViewToTop = useCallback(() => {
     window.scrollTo({ top: 0, left: 0 });
@@ -96,21 +117,21 @@ const CandidateSearchPage = () => {
       if (showResults) {
         return (
           <>
-            <div className="lg:hidden">
+            {!isDesktop && shouldShowResults && (
               <CandidateSearchResults
                 searchCriteria={formData}
                 onViewProfile={handleViewProfile}
                 compact
               />
-            </div>
-            <div className="hidden lg:block">
+            )}
+            {isDesktop && (
               <SearchCriteria
                 formData={formData}
                 setFormData={setFormData}
                 isFormComplete={hasAtLeastOneField}
                 onSearch={handleSearch}
               />
-            </div>
+            )}
           </>
         );
       }
@@ -204,24 +225,21 @@ const CandidateSearchPage = () => {
 
           <div className="h-full flex min-h-0">
             {/* Left sidebar — search results (desktop only) */}
-            <aside
-              className={`
-              ${showResults ? "hidden lg:flex" : "hidden"}
-              shrink-0 flex-col bg-[#F5F5F5] border-r border-gray-200
-              lg:w-[min(360px,28vw)] lg:max-w-[400px]
-              overflow-hidden
-            `}
-            >
-              <div
-                ref={resultsScrollRef}
-                className="flex-1 overflow-y-auto nfl-scroll scroll-smooth p-3 sm:p-4 min-h-0"
+            {shouldShowResults && isDesktop && (
+              <aside
+                className="hidden lg:flex shrink-0 flex-col bg-[#F5F5F5] border-r border-gray-200 lg:w-[min(360px,28vw)] lg:max-w-[400px] overflow-hidden"
               >
-                <CandidateSearchResults
-                  searchCriteria={formData}
-                  onViewProfile={handleViewProfile}
-                />
-              </div>
-            </aside>
+                <div
+                  ref={resultsScrollRef}
+                  className="flex-1 overflow-y-auto nfl-scroll scroll-smooth p-3 sm:p-4 min-h-0"
+                >
+                  <CandidateSearchResults
+                    searchCriteria={formData}
+                    onViewProfile={handleViewProfile}
+                  />
+                </div>
+              </aside>
+            )}
 
             {/* Main content */}
             <main

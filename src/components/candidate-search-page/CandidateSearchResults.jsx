@@ -17,13 +17,22 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = 
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState(false);
-  const [paymentRequired, setPaymentRequired] = useState(false);
+  const [accessBlock, setAccessBlock] = useState(null);
 
   // Refs to track and cancel duplicate requests (handles React StrictMode)
   const abortControllerRef = useRef(null);
   const requestIdRef = useRef(0);
 
   useEffect(() => {
+    const hasCriteria = Object.values(searchCriteria).some(
+      (value) => String(value ?? "").trim() !== "",
+    );
+    if (!hasCriteria) {
+      setLoading(false);
+      setCandidates([]);
+      return;
+    }
+
     // Abort any pending request from previous render
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -37,7 +46,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = 
       try {
         setLoading(true);
         setError(null);
-        setPaymentRequired(false);
+        setAccessBlock(null);
 
         // Build query parameters from search criteria
         const queryParams = new URLSearchParams();
@@ -104,16 +113,26 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = 
           }
           
           console.error("API Error Response:", errorData);
-          
-          // Check if it's a payment required error (403)
-          if (response.status === 403 && errorData.code === 'PAYMENT_REQUIRED') {
-            setPaymentRequired(true);
-            throw new Error(errorData.message || 'Payment required to continue using search');
+
+          const errorCode = errorData.code;
+          const errorMessage =
+            errorData.message ||
+            errorData.error ||
+            "Something went wrong. Please try again.";
+
+          if (response.status === 403 && errorCode === "PAYMENT_REQUIRED") {
+            setAccessBlock("free_trial");
+            setError(errorMessage);
+            return;
           }
-          
-          // Read message first, then error, then fallback
-          const errorMessage = errorData.message || errorData.error || 'Unknown error';
-          throw new Error(`HTTP error! status: ${response.status} - ${errorMessage}`);
+
+          if (response.status === 403 && errorCode === "SEARCH_LIMIT_REACHED") {
+            setAccessBlock("search_limit");
+            setError(errorMessage);
+            return;
+          }
+
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
@@ -207,30 +226,14 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = 
 
   if (error) {
     return (
-      <div className={`bg-[#1A3E32] w-full ${compact ? "px-4 py-6 rounded-none min-h-[50vh] flex items-center" : "px-4 sm:px-6 py-8 rounded-2xl shadow-lg"}`}>
-        <div className="text-center w-full">
-          {paymentRequired ? (
-            <>
-              <svg className="w-16 h-16 mx-auto text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-white text-lg font-semibold mt-4">Free Trial Used</p>
-              <p className="text-white mt-2 text-sm">{error}</p>
-              <button
-                onClick={() => navigate('/subscription-pricing')}
-                className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Upgrade Now
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="text-white text-lg font-semibold">Error Loading Candidates</p>
-              <p className="text-white mt-2 text-sm">{error}</p>
-            </>
-          )}
-        </div>
-      </div>
+      <SearchResultsMessage
+        compact={compact}
+        accessBlock={accessBlock}
+        message={error}
+        onUpgrade={() => navigate("/subscription-pricing")}
+        onManageSubscription={() => navigate("/subscription-dashboard")}
+        onPostJob={() => navigate("/employer/create-job")}
+      />
     );
   }
 
@@ -283,6 +286,144 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = 
     </div>
   );
 };
+
+const SearchResultsMessage = ({
+  compact,
+  accessBlock,
+  message,
+  onUpgrade,
+  onManageSubscription,
+  onPostJob,
+}) => (
+  <div
+    className={`bg-[#1A3E32] w-full ${
+      compact
+        ? "px-4 py-6 rounded-none min-h-[50vh] flex items-center"
+        : "px-4 sm:px-6 py-8 rounded-2xl shadow-lg"
+    }`}
+  >
+    <div className="text-center w-full max-w-md mx-auto">
+      {accessBlock === "free_trial" && (
+        <>
+          <MessageIcon type="info" />
+          <p className="text-white text-lg font-semibold mt-4">Free trial used</p>
+          <p className="text-white/85 mt-2 text-sm leading-relaxed">
+            {message ||
+              "You've used your free ASE search. Subscribe to keep finding candidates."}
+          </p>
+          <ActionButton label="View plans" onClick={onUpgrade} primary />
+        </>
+      )}
+
+      {accessBlock === "search_limit" && (
+        <>
+          <MessageIcon type="limit" />
+          <p className="text-white text-lg font-semibold mt-4">
+            Monthly search limit reached
+          </p>
+          <p className="text-white/85 mt-2 text-sm leading-relaxed">
+            You've used all searches included in your plan this billing period.
+            Buy an extra search, upgrade your plan, wait until your plan renews,
+            or post your job so candidates can discover it and apply.
+          </p>
+          <div
+            className={`mt-5 flex w-full ${
+              compact ? "flex-col gap-2" : "flex-col gap-2 sm:gap-3"
+            }`}
+          >
+            <ActionButton label="Buy extra search" onClick={onUpgrade} primary />
+            <ActionButton label="Post a job" onClick={onPostJob} />
+            <ActionButton
+              label="Manage subscription"
+              onClick={onManageSubscription}
+            />
+          </div>
+        </>
+      )}
+
+      {!accessBlock && (
+        <>
+          <MessageIcon type="error" />
+          <p className="text-white text-lg font-semibold mt-4">
+            Couldn't load candidates
+          </p>
+          <p className="text-white/85 mt-2 text-sm leading-relaxed">{message}</p>
+        </>
+      )}
+    </div>
+  </div>
+);
+
+const MessageIcon = ({ type }) => {
+  if (type === "limit") {
+    return (
+      <svg
+        className="w-16 h-16 mx-auto text-[#6B8E23]"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.75}
+          d="M21 21l-5.197-5.197M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
+        />
+      </svg>
+    );
+  }
+
+  if (type === "info") {
+    return (
+      <svg
+        className="w-16 h-16 mx-auto text-white"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.75}
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      className="w-16 h-16 mx-auto text-white/90"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.75}
+        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+      />
+    </svg>
+  );
+};
+
+const ActionButton = ({ label, onClick, primary = false }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`w-full sm:w-auto px-6 py-2.5 rounded-full font-medium transition-colors ${
+      primary
+        ? "bg-[#6B8E23] hover:bg-[#556B1F] text-white"
+        : "border border-white/40 text-white hover:bg-white/10"
+    }`}
+  >
+    {label}
+  </button>
+);
 
 const SearchResultsHeader = ({ count, compact }) => (
   <div className={compact ? "px-2 py-3 border-b border-[#556B1F]/50" : "text-center p-5"}>
