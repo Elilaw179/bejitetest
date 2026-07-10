@@ -385,7 +385,7 @@ const EmployerDashboard = () => {
               </p>
             </div>
             <button
-              onClick={() => navigate("/ase/pricing")}
+              onClick={() => navigate("/subscription-pricing")}
               className="px-6 py-3 bg-white text-[#16730F] rounded-xl font-semibold hover:shadow-lg transition-shadow"
             >
               Get Started

@@ -52,15 +52,17 @@ const PostCreationModal = ({
   useEffect(() => {
     if (!isOpen) return;
     const defaults = getDefaultSchedule();
-    setMinDate(new Date().toISOString().slice(0, 10));
-    setScheduleDate(defaults.date);
-    setScheduleTime(defaults.time);
-    setPostMode('now');
-    setPollQuestion('');
-    setPollOptions(['', '']);
-    setPollDurationDays(7);
-    setError(null);
-    setSuccess(null);
+    Promise.resolve().then(() => {
+      setMinDate(new Date().toISOString().slice(0, 10));
+      setScheduleDate(defaults.date);
+      setScheduleTime(defaults.time);
+      setPostMode('now');
+      setPollQuestion('');
+      setPollOptions(['', '']);
+      setPollDurationDays(7);
+      setError(null);
+      setSuccess(null);
+    });
   }, [isOpen, initialMode]);
 
   if (!isOpen) return null;

@@ -3,9 +3,13 @@ import { useNavigate } from "react-router-dom";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
 import { createEmployerJob } from "../../services/employerApi";
 import useCountryStateOptions from "../../hooks/useCountryStateOptions";
-import { findCountryByName } from "../../utils/countryStateData";
 import { AutocompleteInput } from "../../components/forms/AutocompleteInput";
-import { INDUSTRY_OPTIONS } from "../../data/jobTypeData";
+import {
+  CURRENCY_OPTIONS,
+  INDUSTRY_OPTIONS,
+  currencyCodeFromLabel,
+} from "../../data/jobTypeData";
+import { formatSalaryExpectation } from "../../utils/formatSalary";
 import {
   FaBriefcase,
   FaBuilding,
@@ -24,6 +28,19 @@ const INDUSTRY_SUGGESTIONS = INDUSTRY_OPTIONS.filter(
   (option) => option && option !== "Not Available",
 );
 
+const formatSalaryRangePreview = (salaryMin, salaryMax, currencyLabel) => {
+  const code = currencyCodeFromLabel(currencyLabel) || "NGN";
+  const min = salaryMin ? Number(salaryMin) : null;
+  const max = salaryMax ? Number(salaryMax) : null;
+
+  if (min && max) {
+    return `${formatSalaryExpectation(min, code)} - ${formatSalaryExpectation(max, code)}`;
+  }
+  if (min) return `From ${formatSalaryExpectation(min, code)}`;
+  if (max) return `Up to ${formatSalaryExpectation(max, code)}`;
+  return null;
+};
+
 const CreateJob = () => {
   const navigate = useNavigate();
   const [skills, setSkills] = useState([{ skill: "", experience: "" }]);
@@ -35,6 +52,9 @@ const CreateJob = () => {
     workMode: "Remote",
     country: "",
     state: "",
+    salaryMin: "",
+    salaryMax: "",
+    currency: "",
   });
   const { countries, states } = useCountryStateOptions(formData.country);
   const [showPreview, setShowPreview] = useState(false);
@@ -62,18 +82,31 @@ const CreateJob = () => {
     if (!formData.title.trim()) return "Job title is required";
     if (!formData.industry) return "Industry is required";
     if (!formData.country.trim()) return "Country is required";
-    if (!findCountryByName(formData.country)) {
-      return "Please select a valid country from the list";
-    }
-    if (states.length > 0 && !formData.state.trim()) {
-      return "State is required for the selected country";
-    }
     if (!formData.roles.trim()) return "Roles are required";
     if (!formData.responsibilities.trim()) {
       return "Responsibilities are required";
     }
     const hasSkill = skills.some((item) => item.skill.trim());
-    if (!hasSkill) return "At least one required skill is needed";
+    if (!hasSkill) return "At least one skill is needed";
+    if (formData.salaryMin && Number(formData.salaryMin) < 0) {
+      return "Minimum salary must be zero or greater";
+    }
+    if (formData.salaryMax && Number(formData.salaryMax) < 0) {
+      return "Maximum salary must be zero or greater";
+    }
+    if (
+      formData.salaryMin &&
+      formData.salaryMax &&
+      Number(formData.salaryMin) > Number(formData.salaryMax)
+    ) {
+      return "Minimum salary cannot be greater than maximum salary";
+    }
+    if (
+      (formData.salaryMin || formData.salaryMax) &&
+      !formData.currency.trim()
+    ) {
+      return "Currency is required when specifying a salary range";
+    }
     return null;
   };
 
@@ -122,6 +155,15 @@ const CreateJob = () => {
             skill: item.skill.trim(),
             experience: item.experience || 0,
           })),
+        salaryMin: formData.salaryMin
+          ? Number(formData.salaryMin)
+          : undefined,
+        salaryMax: formData.salaryMax
+          ? Number(formData.salaryMax)
+          : undefined,
+        currency: formData.currency.trim()
+          ? currencyCodeFromLabel(formData.currency.trim())
+          : undefined,
       });
 
       if (!response?.success) {
@@ -170,6 +212,12 @@ const CreateJob = () => {
     );
   }
 
+  const salaryPreview = formatSalaryRangePreview(
+    formData.salaryMin,
+    formData.salaryMax,
+    formData.currency,
+  );
+
   if (showPreview) {
     return (
       <NewsFeedLayout showSidebars={false}>
@@ -197,14 +245,18 @@ const CreateJob = () => {
                     .filter(Boolean)
                     .join(", ") || "Location not specified"}
                 </span>
+                {salaryPreview && (
+                  <>
+                    <span>•</span>
+                    <span>{salaryPreview}</span>
+                  </>
+                )}
               </div>
             </div>
 
             <div className="p-6">
               <div className="mb-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">
-                  Required Skills
-                </h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-3">Skills</h3>
                 <div className="flex flex-wrap gap-2">
                   {skills
                     .filter((s) => s.skill)
@@ -376,7 +428,7 @@ const CreateJob = () => {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <label className="font-semibold text-[#1A3E32]">
-                    Required Skills <span className="text-red-500">*</span>
+                    Skills <span className="text-red-500">*</span>
                   </label>
                   <button
                     type="button"
@@ -458,10 +510,76 @@ const CreateJob = () => {
                 />
               </div>
 
+              {/* Salary Range */}
+              <div>
+                <label className="block mb-2 font-semibold text-[#1A3E32]">
+                  Salary Range
+                </label>
+                <p className="text-sm text-gray-500 mb-3">
+                  Optional. Helps candidates understand the compensation for this
+                  role.
+                </p>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label
+                      htmlFor="job-salary-min"
+                      className="block mb-2 text-sm font-medium text-gray-600"
+                    >
+                      Minimum
+                    </label>
+                    <input
+                      id="job-salary-min"
+                      type="number"
+                      min="0"
+                      placeholder="e.g., 500000"
+                      className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#16730F]"
+                      value={formData.salaryMin}
+                      onChange={(e) =>
+                        setFormData({ ...formData, salaryMin: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="job-salary-max"
+                      className="block mb-2 text-sm font-medium text-gray-600"
+                    >
+                      Maximum
+                    </label>
+                    <input
+                      id="job-salary-max"
+                      type="number"
+                      min="0"
+                      placeholder="e.g., 800000"
+                      className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#16730F]"
+                      value={formData.salaryMax}
+                      onChange={(e) =>
+                        setFormData({ ...formData, salaryMax: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-600">
+                      Currency
+                    </label>
+                    <AutocompleteInput
+                      value={formData.currency}
+                      onChange={(e) =>
+                        setFormData({ ...formData, currency: e.target.value })
+                      }
+                      placeholder="Select currency"
+                      formName="employer-job"
+                      fieldName="currency"
+                      staticOptions={CURRENCY_OPTIONS}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Work Mode */}
               <div>
                 <label className="block mb-2 font-semibold text-[#1A3E32]">
-                  Work Mode <span className="text-red-500">*</span>
+                  Work Mode
                 </label>
                 <div className="grid grid-cols-3 gap-3">
                   {["Remote", "Onsite", "Hybrid"].map((mode) => (
@@ -514,9 +632,6 @@ const CreateJob = () => {
                     className="block mb-2 font-semibold text-[#1A3E32]"
                   >
                     State / Province
-                    {states.length > 0 && (
-                      <span className="text-red-500"> *</span>
-                    )}
                   </label>
                   {formData.country && states.length > 0 ? (
                     <>

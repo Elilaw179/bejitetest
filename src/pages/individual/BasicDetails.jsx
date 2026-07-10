@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -18,7 +18,8 @@ const BasicDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const { currentStep, isEditMode, recruiterData, getPath } = useOutletContext();
+  const { currentStep, isEditMode, recruiterData, getPath } =
+    useOutletContext();
   const { user } = useAuth();
   const { updateBasicDetails } = useRecruiterProfile();
 
@@ -86,9 +87,7 @@ const BasicDetails = () => {
     });
   }, [
     isEditMode,
-    location.state?.email,
-    location.state?.firstName,
-    location.state?.lastName,
+    location.state,
     user?.email,
     user?.firstName,
     user?.lastName,
@@ -114,7 +113,9 @@ const BasicDetails = () => {
         phone_number: formData.phone_number,
       });
 
-      const { firstName, lastName } = splitRecruiterFullName(formData.full_name);
+      const { firstName, lastName } = splitRecruiterFullName(
+        formData.full_name,
+      );
       const phone_number = formData.phone_number;
 
       dispatch(
@@ -233,7 +234,7 @@ const BasicDetails = () => {
         isFormComplete={isFormComplete && !submitting}
         onBack={() => {
           if (isEditMode) {
-            navigate('/news-feed');
+            navigate("/news-feed");
             return;
           }
           navigate(-1);

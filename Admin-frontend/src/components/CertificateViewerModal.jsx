@@ -1,22 +1,24 @@
-import { useEffect, useMemo, useState } from 'react';
-import axiosInstance from '../utils/axiosInstance';
+import { useEffect, useMemo, useState } from "react";
+import axiosInstance from "../utils/axiosInstance";
 import {
   documentViewUrl,
   getDocumentDownloadFilename,
   getDocumentMediaKind,
   triggerDocumentDownload,
-} from '../utils/documentViewUrl';
+} from "../utils/documentViewUrl";
 
 function parseFilenameFromDisposition(disposition) {
   if (!disposition) return null;
-  const match = String(disposition).match(/filename\*?=(?:UTF-8''|")?([^";]+)/i);
-  return match ? decodeURIComponent(match[1].replace(/"/g, '')) : null;
+  const match = String(disposition).match(
+    /filename\*?=(?:UTF-8''|")?([^";]+)/i,
+  );
+  return match ? decodeURIComponent(match[1].replace(/"/g, "")) : null;
 }
 
 function mediaKindFromBlob(blob, fileUrl) {
-  const type = String(blob?.type || '');
-  if (type.startsWith('image/')) return 'image';
-  if (type.includes('pdf')) return 'pdf';
+  const type = String(blob?.type || "");
+  if (type.startsWith("image/")) return "image";
+  if (type.includes("pdf")) return "pdf";
   return getDocumentMediaKind(fileUrl);
 }
 
@@ -25,22 +27,21 @@ function CertificateViewerModalContent({
   fileUrl,
   title,
   fetchUrl,
-  overlayClassName = 'z-[200]',
+  overlayClassName = "z-[200]",
 }) {
-  const directUrl = documentViewUrl(fileUrl) || '';
+  const directUrl = documentViewUrl(fileUrl) || "";
   const [blobUrl, setBlobUrl] = useState(null);
   const [blobKind, setBlobKind] = useState(null);
-  const [blobContentType, setBlobContentType] = useState('');
-  const [downloadFilename, setDownloadFilename] = useState('');
+  const [blobContentType, setBlobContentType] = useState("");
+  const [downloadFilename, setDownloadFilename] = useState("");
   const [loading, setLoading] = useState(Boolean(fetchUrl));
   const [loadError, setLoadError] = useState(false);
-  const resolvedUrl = fetchUrl ? blobUrl || '' : directUrl;
+  const resolvedUrl = fetchUrl ? blobUrl || "" : directUrl;
   const kind = blobKind || getDocumentMediaKind(fileUrl, directUrl);
 
   const filename = useMemo(
     () =>
-      downloadFilename ||
-      getDocumentDownloadFilename(fileUrl, blobContentType),
+      downloadFilename || getDocumentDownloadFilename(fileUrl, blobContentType),
     [downloadFilename, fileUrl, blobContentType],
   );
 
@@ -53,20 +54,21 @@ function CertificateViewerModalContent({
     (async () => {
       try {
         const response = await axiosInstance.get(fetchUrl, {
-          responseType: 'blob',
+          responseType: "blob",
         });
         if (!active) return;
 
         const blob = response.data;
         if (!(blob instanceof Blob) || blob.size === 0) {
-          throw new Error('Empty document response');
+          throw new Error("Empty document response");
         }
-        if (blob.type === 'application/json') {
-          throw new Error('Document fetch failed');
+        if (blob.type === "application/json") {
+          throw new Error("Document fetch failed");
         }
 
-        const contentType = blob.type || response.headers?.['content-type'] || '';
-        const disposition = response.headers?.['content-disposition'];
+        const contentType =
+          blob.type || response.headers?.["content-type"] || "";
+        const disposition = response.headers?.["content-disposition"];
         const resolvedKind = mediaKindFromBlob(blob, fileUrl);
 
         objectUrl = URL.createObjectURL(blob);
@@ -92,10 +94,10 @@ function CertificateViewerModalContent({
 
   useEffect(() => {
     const onKey = (event) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === "Escape") onClose();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
   if (fetchUrl && loading && !resolvedUrl) {
@@ -109,10 +111,10 @@ function CertificateViewerModalContent({
     );
   }
 
-  if (!resolvedUrl && kind !== 'pdf') return null;
+  if (!resolvedUrl && kind !== "pdf") return null;
 
-  const showImagePreview = kind === 'image';
-  const showPdfDownload = kind === 'pdf' || kind === 'unknown';
+  const showImagePreview = kind === "image";
+  const showPdfDownload = kind === "pdf" || kind === "unknown";
 
   return (
     <div
@@ -120,7 +122,7 @@ function CertificateViewerModalContent({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={title || 'Document preview'}
+      aria-label={title || "Document preview"}
     >
       <div
         className="relative w-full max-w-4xl max-h-[92vh] flex flex-col"
@@ -150,14 +152,16 @@ function CertificateViewerModalContent({
           ) : showImagePreview ? (
             <img
               src={resolvedUrl}
-              alt={title || 'Document'}
+              alt={title || "Document"}
               className="max-w-full max-h-[80vh] object-contain rounded-lg"
               onError={() => setLoadError(true)}
             />
           ) : showPdfDownload ? (
             <div className="text-white text-center p-8 space-y-4">
               <div className="w-16 h-20 mx-auto bg-white rounded-lg flex items-end justify-center pb-2 shadow-lg">
-                <span className="text-red-600 font-bold text-xs tracking-wide">PDF</span>
+                <span className="text-red-600 font-bold text-xs tracking-wide">
+                  PDF
+                </span>
               </div>
               <p className="text-sm text-white/90 max-w-sm mx-auto">
                 PDF documents are downloaded for viewing on your device.
@@ -166,7 +170,8 @@ function CertificateViewerModalContent({
                 type="button"
                 disabled={!resolvedUrl}
                 onClick={() => {
-                  if (resolvedUrl) triggerDocumentDownload(resolvedUrl, filename);
+                  if (resolvedUrl)
+                    triggerDocumentDownload(resolvedUrl, filename);
                 }}
                 className="px-5 py-2.5 rounded-lg bg-[#16A34A] text-white text-sm font-medium hover:bg-[#15803D] disabled:opacity-50"
               >
@@ -214,24 +219,20 @@ export function CertificateViewerModal({
 export function CertificateViewLink({
   fileUrl,
   title,
-  className = '',
-  children = 'View certificate',
+  className = "",
+  children = "View certificate",
   fetchUrl,
 }) {
   const [open, setOpen] = useState(false);
   const kind = getDocumentMediaKind(fileUrl);
-  const resolvedUrl = documentViewUrl(fileUrl) || fetchUrl || '';
+  const resolvedUrl = documentViewUrl(fileUrl) || fetchUrl || "";
 
   if (!resolvedUrl && !fetchUrl) return null;
 
   return (
     <>
-      <button
-        type="button"
-        className={className}
-        onClick={() => setOpen(true)}
-      >
-        {children || (kind === 'pdf' ? 'Download document' : 'View document')}
+      <button type="button" className={className} onClick={() => setOpen(true)}>
+        {children || (kind === "pdf" ? "Download document" : "View document")}
       </button>
       <CertificateViewerModal
         open={open}

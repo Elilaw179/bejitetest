@@ -106,7 +106,7 @@ export default function BadgeStatus() {
       return;
     }
     if (isRecruiter) {
-      navigate("/ase/pricing");
+      navigate("/subscription-pricing");
       return;
     }
     if (!uiPlan) return;

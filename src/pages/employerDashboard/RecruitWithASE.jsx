@@ -21,6 +21,7 @@ import {
   recordASESearch,
   completeASESearch,
 } from "../../services/paymentApi";
+import { getUser, isAuthenticated } from "../../utils/tokenManager";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 
 const RECRUIT_RETURN_KEY = "aseRecruitReturnJobId";
@@ -216,17 +217,22 @@ const RecruitWithASE = () => {
 
     setProcessing(true);
     try {
-      const userData = JSON.parse(localStorage.getItem("user") || "{}");
-      const userId = localStorage.getItem("userId");
+      const user = getUser();
+      if (!isAuthenticated() || !user?.email) {
+        toast.error("Please log in to continue");
+        navigate("/");
+        return;
+      }
+
       const amount = ASE_PRICING.NGN;
 
       localStorage.setItem(RECRUIT_RETURN_KEY, jobId);
 
       const response = await initializeOneTimePayment({
-        email: userData.email,
+        email: user.email,
         amount,
         currency: "NGN",
-        employerId: userId,
+        employerId: user.id,
         planType: "standard",
       });
 
@@ -424,7 +430,7 @@ const RecruitWithASE = () => {
                 Or{" "}
                 <button
                   type="button"
-                  onClick={() => navigate("/ase/pricing")}
+                  onClick={() => navigate("/subscription-pricing")}
                   className="underline hover:text-white"
                 >
                   view subscription plans

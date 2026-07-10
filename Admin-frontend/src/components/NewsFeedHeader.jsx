@@ -317,7 +317,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
 
   // Fetch notification count on mount and periodically
   useEffect(() => {
-    fetchNotificationCount();
+    Promise.resolve().then(() => {
+      fetchNotificationCount();
+    });
     const interval = setInterval(fetchNotificationCount, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
@@ -338,7 +340,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
   };
 
   useEffect(() => {
-    fetchUnreadMessageCount();
+    Promise.resolve().then(() => {
+      fetchUnreadMessageCount();
+    });
     const interval = setInterval(fetchUnreadMessageCount, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -374,7 +378,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
   };
 
   useEffect(() => {
-    fetchConnectionRequestCount();
+    Promise.resolve().then(() => {
+      fetchConnectionRequestCount();
+    });
     const interval = setInterval(fetchConnectionRequestCount, 30000);
     return () => clearInterval(interval);
   }, [location.pathname]);
@@ -393,7 +399,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
     CHAT: ["/chats"],
     notifications: ["/notification"],
     connection: ["/connection"],
-    recruitment: ["/candidate-search-page", "/ase/pricing", "/ase/dashboard"],
+    recruitment: ["/candidate-search-page", "/subscription-pricing", "/subscription-dashboard"],
     adpro: ["/adpro"],
   };
 
@@ -707,11 +713,11 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       {user?.role !== "jobseeker" && (
                         <button
                           onClick={() => {
-                            navigate("/ase/dashboard");
+                            navigate("/subscription-dashboard");
                             setIsDropdownOpen(false);
                           }}
                           className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
-                            ["/ase/dashboard", "/ase/pricing"].includes(
+                            ["/subscription-dashboard", "/subscription-pricing"].includes(
                               location.pathname,
                             )
                               ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"

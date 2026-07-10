@@ -40,8 +40,34 @@ export default function AdminAdPro() {
   }, [searchTerm, statusFilter]);
 
   useEffect(() => {
-    loadCampaigns();
-  }, [loadCampaigns]);
+    let active = true;
+    const fetchFirst = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (statusFilter !== "all") params.set("status", statusFilter);
+        if (searchTerm.trim()) params.set("q", searchTerm.trim());
+        params.set("limit", "50");
+
+        const response = await axiosInstance.get(
+          `/api/admin/data/ad-campaigns?${params.toString()}`,
+        );
+        if (active) {
+          setCampaigns(response.data?.data?.campaigns || []);
+        }
+      } catch (error) {
+        console.error("Error fetching ad campaigns:", error);
+        toast.error("Failed to load ad campaigns");
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+    fetchFirst();
+    return () => {
+      active = false;
+    };
+  }, [searchTerm, statusFilter]);
 
   const updateStatus = async (campaignId, status) => {
     const confirmMessages = {

@@ -1,12 +1,12 @@
 import {
   normalizeProfileSkills,
   resolveProfileSkillSource,
-} from '../utils/profileSkills';
+} from "../utils/profileSkills";
 
 const categoryBadgeClass = (variant) =>
-  variant === 'panel'
-    ? 'bg-[#556B1F] text-[#F5F5F5] text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-medium'
-    : 'bg-[#E8F5E6] text-[#1A3E32] text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-medium border border-[#C5E1BF]';
+  variant === "panel"
+    ? "bg-[#556B1F] text-[#F5F5F5] text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-medium"
+    : "bg-[#E8F5E6] text-[#1A3E32] text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-medium border border-[#C5E1BF]";
 
 /**
  * Skills list for View Profile (panel) and View Full Profile (card).
@@ -17,15 +17,14 @@ const ProfileSkillsDisplay = ({
   skills: skillsProp,
   cv = null,
   candidate = null,
-  variant = 'card',
+  variant = "card",
 }) => {
-  const source =
-    skillsProp ?? resolveProfileSkillSource({ cv, candidate });
+  const source = skillsProp ?? resolveProfileSkillSource({ cv, candidate });
   const items = normalizeProfileSkills(source);
 
   if (items.length === 0) return null;
 
-  if (variant === 'panel') {
+  if (variant === "panel") {
     return (
       <div className="px-4 sm:px-8 pb-6 space-y-3">
         {items.map((skill) => (

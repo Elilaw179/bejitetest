@@ -1,11 +1,16 @@
-import React from 'react';
-import { getAttachmentType, isVoiceMessageCaption } from '../../utils/chatAttachmentUtils';
-import VoiceMessagePlayer from './VoiceMessagePlayer';
+import React from "react";
+import {
+  getAttachmentType,
+  isVoiceMessageCaption,
+} from "../../utils/chatAttachmentUtils";
+import VoiceMessagePlayer from "./VoiceMessagePlayer";
 
 function MessageAttachment({ url, caption, isOwnMessage = false }) {
-  const type = isVoiceMessageCaption(caption) ? 'audio' : getAttachmentType(url);
+  const type = isVoiceMessageCaption(caption)
+    ? "audio"
+    : getAttachmentType(url);
 
-  if (type === 'video') {
+  if (type === "video") {
     return (
       <video
         src={url}
@@ -15,11 +20,11 @@ function MessageAttachment({ url, caption, isOwnMessage = false }) {
     );
   }
 
-  if (type === 'audio') {
+  if (type === "audio") {
     return <VoiceMessagePlayer url={url} isOwnMessage={isOwnMessage} />;
   }
 
-  if (type === 'document') {
+  if (type === "document") {
     return (
       <a
         href={url}
@@ -27,7 +32,7 @@ function MessageAttachment({ url, caption, isOwnMessage = false }) {
         rel="noopener noreferrer"
         className="mb-2 block text-sm underline break-all"
       >
-        {caption || 'View attachment'}
+        {caption || "View attachment"}
       </a>
     );
   }
@@ -35,7 +40,7 @@ function MessageAttachment({ url, caption, isOwnMessage = false }) {
   return (
     <img
       src={url}
-      alt={caption || 'attachment'}
+      alt={caption || "attachment"}
       className="mb-2 w-full max-w-xs rounded-lg max-h-48 object-cover"
     />
   );

@@ -17,5 +17,5 @@ export default function PaymentPageHeader() {
         </p>
       </div>
     </header>
-  )
+  );
 }

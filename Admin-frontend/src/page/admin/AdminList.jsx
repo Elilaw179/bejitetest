@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import axiosInstance from '../../utils/axiosInstance';
-import { toast } from 'react-toastify';
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import axiosInstance from "../../utils/axiosInstance";
+import { toast } from "react-toastify";
 import {
   Search,
   Mail,
@@ -14,23 +14,23 @@ import {
   EyeOff,
   Pencil,
   Trash2,
-} from 'lucide-react';
+} from "lucide-react";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]{3,50}$/;
 
-const emptyForm = { username: '', password: '', isActive: true };
+const emptyForm = { username: "", password: "", isActive: true };
 
 const AdminList = () => {
   const currentUser = useSelector((state) => state.auth.user);
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const selfRecord = admins.find(
     (admin) => String(admin.id) === String(currentUser?.id),
   );
   const isSuperAdmin =
-    (currentUser?.admin_role ?? selfRecord?.admin_role) === 'super_admin';
+    (currentUser?.admin_role ?? selfRecord?.admin_role) === "super_admin";
 
   const [modalMode, setModalMode] = useState(null);
   const [editingAdmin, setEditingAdmin] = useState(null);
@@ -42,18 +42,29 @@ const AdminList = () => {
   const fetchAdmins = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('/api/admin-auth/admins');
+      const response = await axiosInstance.get("/api/admin-auth/admins");
       setAdmins(response.data.admins ?? []);
     } catch (error) {
-      console.error('Error fetching admins', error);
-      toast.error('Failed to load admins data');
+      console.error("Error fetching admins", error);
+      toast.error("Failed to load admins data");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAdmins();
+    const loadAdmins = async () => {
+      try {
+        const response = await axiosInstance.get("/api/admin/data/admins");
+        setAdmins(response.data.admins);
+      } catch (error) {
+        console.error("Error fetching admins", error);
+        toast.error("Failed to load admins data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAdmins();
   }, []);
 
   const closeModal = () => {
@@ -64,18 +75,18 @@ const AdminList = () => {
   };
 
   const openCreateModal = () => {
-    setModalMode('create');
+    setModalMode("create");
     setEditingAdmin(null);
     setFormData(emptyForm);
     setShowPassword(false);
   };
 
   const openEditModal = (admin) => {
-    setModalMode('edit');
+    setModalMode("edit");
     setEditingAdmin(admin);
     setFormData({
-      username: admin.username || '',
-      password: '',
+      username: admin.username || "",
+      password: "",
       isActive: admin.isActive !== false,
     });
     setShowPassword(false);
@@ -85,14 +96,14 @@ const AdminList = () => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const validateUsername = (username) => {
     if (!USERNAME_PATTERN.test(username)) {
       toast.error(
-        'Username must be 3-50 characters and may only contain letters, numbers, ".", "_" or "-".'
+        'Username must be 3-50 characters and may only contain letters, numbers, ".", "_" or "-".',
       );
       return false;
     }
@@ -108,22 +119,22 @@ const AdminList = () => {
     if (!validateUsername(username)) return;
 
     if (password.length < 8) {
-      toast.error('Password must be at least 8 characters long.');
+      toast.error("Password must be at least 8 characters long.");
       return;
     }
 
     try {
       setSubmitting(true);
-      const response = await axiosInstance.post('/api/admin-auth/admins', {
+      const response = await axiosInstance.post("/api/admin-auth/admins", {
         username,
         password,
       });
-      toast.success(response.data.message || 'Admin added successfully');
+      toast.success(response.data.message || "Admin added successfully");
       closeModal();
       fetchAdmins();
     } catch (error) {
-      console.error('Error adding admin', error);
-      toast.error(error.response?.data?.error || 'Failed to add admin');
+      console.error("Error adding admin", error);
+      toast.error(error.response?.data?.error || "Failed to add admin");
     } finally {
       setSubmitting(false);
     }
@@ -139,7 +150,7 @@ const AdminList = () => {
     if (!validateUsername(username)) return;
 
     if (password && password.length < 8) {
-      toast.error('Password must be at least 8 characters long.');
+      toast.error("Password must be at least 8 characters long.");
       return;
     }
 
@@ -155,12 +166,12 @@ const AdminList = () => {
         `/api/admin-auth/admins/${editingAdmin.id}`,
         payload,
       );
-      toast.success(response.data.message || 'Admin updated successfully');
+      toast.success(response.data.message || "Admin updated successfully");
       closeModal();
       fetchAdmins();
     } catch (error) {
-      console.error('Error updating admin', error);
-      toast.error(error.response?.data?.error || 'Failed to update admin');
+      console.error("Error updating admin", error);
+      toast.error(error.response?.data?.error || "Failed to update admin");
     } finally {
       setSubmitting(false);
     }
@@ -174,12 +185,12 @@ const AdminList = () => {
       const response = await axiosInstance.delete(
         `/api/admin-auth/admins/${adminToDelete.id}`,
       );
-      toast.success(response.data.message || 'Admin deleted successfully');
+      toast.success(response.data.message || "Admin deleted successfully");
       setAdminToDelete(null);
       fetchAdmins();
     } catch (error) {
-      console.error('Error deleting admin', error);
-      toast.error(error.response?.data?.error || 'Failed to delete admin');
+      console.error("Error deleting admin", error);
+      toast.error(error.response?.data?.error || "Failed to delete admin");
     } finally {
       setSubmitting(false);
     }
@@ -216,7 +227,10 @@ const AdminList = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl outline-none focus:border-[#16730F] focus:ring-1 focus:ring-[#16730F] transition"
             />
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+            <Search
+              className="absolute left-3 top-2.5 text-gray-400"
+              size={18}
+            />
           </div>
           <button
             onClick={openCreateModal}
@@ -224,8 +238,8 @@ const AdminList = () => {
             className="flex items-center justify-center gap-2 bg-[#16730F] text-white px-4 py-2 rounded-xl hover:bg-[#125c0c] transition-colors whitespace-nowrap font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             title={
               isSuperAdmin
-                ? 'Add a new admin'
-                : 'Only super admins can create admins'
+                ? "Add a new admin"
+                : "Only super admins can create admins"
             }
           >
             <Plus size={18} />
@@ -243,28 +257,40 @@ const AdminList = () => {
                 <th className="px-6 py-4">Role</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Joined Date</th>
-                {isSuperAdmin && <th className="px-6 py-4 text-right">Actions</th>}
+                {isSuperAdmin && (
+                  <th className="px-6 py-4 text-right">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                    <td colSpan={isSuperAdmin ? 5 : 4} className="px-6 py-12 text-center">
+                  <td
+                    colSpan={isSuperAdmin ? 5 : 4}
+                    className="px-6 py-12 text-center"
+                  >
                     <div className="animate-spin inline-block rounded-full h-8 w-8 border-b-2 border-[#16730F]" />
                     <p className="text-gray-500 mt-2">Loading admins...</p>
                   </td>
                 </tr>
               ) : filteredAdmins.length > 0 ? (
                 filteredAdmins.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={user.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold shrink-0">
-                          {(user.username?.[0] || user.email?.[0] || 'A').toUpperCase()}
+                          {(
+                            user.username?.[0] ||
+                            user.email?.[0] ||
+                            "A"
+                          ).toUpperCase()}
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">
-                            {user.username || '—'}
+                            {user.username || "—"}
                             {user.is_admin && (
                               <Shield
                                 className="inline ml-2 text-blue-500"
@@ -284,7 +310,9 @@ const AdminList = () => {
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-blue-50 text-blue-700">
-                        {user.admin_role === 'super_admin' ? 'Super Admin' : user.role || 'Admin'}
+                        {user.admin_role === "super_admin"
+                          ? "Super Admin"
+                          : user.role || "Admin"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -292,21 +320,28 @@ const AdminList = () => {
                         {user.isActive ? (
                           <>
                             <CheckCircle className="text-green-500" size={16} />
-                            <span className="text-sm text-gray-700">Active</span>
+                            <span className="text-sm text-gray-700">
+                              Active
+                            </span>
                           </>
                         ) : (
                           <>
                             <XCircle className="text-red-500" size={16} />
-                            <span className="text-sm text-gray-700">Inactive</span>
+                            <span className="text-sm text-gray-700">
+                              Inactive
+                            </span>
                           </>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {new Date(user.createdAt ?? user.created_at).toLocaleDateString(
-                        undefined,
-                        { year: 'numeric', month: 'short', day: 'numeric' },
-                      )}
+                      {new Date(
+                        user.createdAt ?? user.created_at,
+                      ).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </td>
                     {isSuperAdmin && (
                       <td className="px-6 py-4">
@@ -326,8 +361,8 @@ const AdminList = () => {
                             className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                             title={
                               isSelf(user)
-                                ? 'You cannot delete your own account'
-                                : 'Delete admin'
+                                ? "You cannot delete your own account"
+                                : "Delete admin"
                             }
                           >
                             <Trash2 size={16} />
@@ -339,7 +374,10 @@ const AdminList = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={isSuperAdmin ? 5 : 4} className="px-6 py-12 text-center text-gray-500">
+                  <td
+                    colSpan={isSuperAdmin ? 5 : 4}
+                    className="px-6 py-12 text-center text-gray-500"
+                  >
                     No admins found.
                   </td>
                 </tr>
@@ -351,7 +389,8 @@ const AdminList = () => {
 
       {!isSuperAdmin && !loading && (
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
-          You can view admins, but only super admins can create, edit, or delete admin accounts.
+          You can view admins, but only super admins can create, edit, or delete
+          admin accounts.
         </p>
       )}
 
@@ -361,7 +400,7 @@ const AdminList = () => {
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                 <Shield className="text-[#16730F]" size={24} />
-                {modalMode === 'create' ? 'Add New Admin' : 'Edit Admin'}
+                {modalMode === "create" ? "Add New Admin" : "Edit Admin"}
               </h2>
               <button
                 onClick={closeModal}
@@ -374,11 +413,15 @@ const AdminList = () => {
             <div className="p-5 overflow-y-auto nfl-scroll scroll-smooth flex-1">
               <form
                 id="adminForm"
-                onSubmit={modalMode === 'create' ? handleCreateAdmin : handleUpdateAdmin}
+                onSubmit={
+                  modalMode === "create" ? handleCreateAdmin : handleUpdateAdmin
+                }
                 className="space-y-4"
               >
                 <div className="space-y-1.5">
-                  <label className="block text-sm font-medium text-gray-700">Username</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Username
+                  </label>
                   <input
                     type="text"
                     name="username"
@@ -393,28 +436,28 @@ const AdminList = () => {
                     autoComplete="username"
                   />
                   <p className="text-xs text-gray-500">
-                    3-50 characters. Letters, numbers, &quot;.&quot;, &quot;_&quot; or &quot;-&quot;
-                    only.
+                    3-50 characters. Letters, numbers, &quot;.&quot;,
+                    &quot;_&quot; or &quot;-&quot; only.
                   </p>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="block text-sm font-medium text-gray-700">
-                    {modalMode === 'create' ? 'Password' : 'New Password'}
+                    {modalMode === "create" ? "Password" : "New Password"}
                   </label>
                   <div className="relative">
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       name="password"
-                      required={modalMode === 'create'}
-                      minLength={modalMode === 'create' ? 8 : undefined}
+                      required={modalMode === "create"}
+                      minLength={modalMode === "create" ? 8 : undefined}
                       value={formData.password}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16730F]/20 focus:border-[#16730F]"
                       placeholder={
-                        modalMode === 'create'
-                          ? 'Min. 8 characters'
-                          : 'Leave blank to keep current password'
+                        modalMode === "create"
+                          ? "Min. 8 characters"
+                          : "Leave blank to keep current password"
                       }
                       autoComplete="new-password"
                     />
@@ -422,14 +465,16 @@ const AdminList = () => {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
 
-                {modalMode === 'edit' && (
+                {modalMode === "edit" && (
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
@@ -438,7 +483,9 @@ const AdminList = () => {
                       onChange={handleInputChange}
                       className="w-4 h-4 text-[#16730F] rounded border-gray-300 focus:ring-[#16730F]"
                     />
-                    <span className="text-sm text-gray-700">Account is active</span>
+                    <span className="text-sm text-gray-700">
+                      Account is active
+                    </span>
                   </label>
                 )}
               </form>
@@ -461,12 +508,12 @@ const AdminList = () => {
                 {submitting ? (
                   <>
                     <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                    {modalMode === 'create' ? 'Creating...' : 'Saving...'}
+                    {modalMode === "create" ? "Creating..." : "Saving..."}
                   </>
-                ) : modalMode === 'create' ? (
-                  'Create Admin'
+                ) : modalMode === "create" ? (
+                  "Create Admin"
                 ) : (
-                  'Save Changes'
+                  "Save Changes"
                 )}
               </button>
             </div>
@@ -479,9 +526,9 @@ const AdminList = () => {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
             <h2 className="text-lg font-bold text-gray-800">Delete Admin</h2>
             <p className="text-gray-600 mt-2">
-              Are you sure you want to delete{' '}
-              <span className="font-semibold">{adminToDelete.username}</span>? This action
-              cannot be undone.
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">{adminToDelete.username}</span>?
+              This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3 mt-6">
               <button
@@ -497,7 +544,7 @@ const AdminList = () => {
                 disabled={submitting}
                 className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-70"
               >
-                {submitting ? 'Deleting...' : 'Delete Admin'}
+                {submitting ? "Deleting..." : "Delete Admin"}
               </button>
             </div>
           </div>

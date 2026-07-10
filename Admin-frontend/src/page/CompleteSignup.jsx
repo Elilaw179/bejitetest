@@ -1,12 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import RoleCard from "../components/RoleCard";
 import { hydrateAuth } from "../features/auth/authSlice";
-import {
-  captureOAuthSessionFromUrl,
-} from "../utils/tokenManager";
+import { captureOAuthSessionFromUrl } from "../utils/tokenManager";
 
 export default function CompleteSignup() {
   const location = useLocation();
@@ -17,7 +15,7 @@ export default function CompleteSignup() {
   const email = params.get("email")?.trim() || "";
   const status = params.get("status");
 
-  const [, setRole] = useState("");
+  // const [, setRole] = useState("");
 
   // OAuth redirects include tokens in the URL — persist before role selection.
   useEffect(() => {
@@ -31,14 +29,12 @@ export default function CompleteSignup() {
       return;
     }
 
-    setRole(selectedRole);
-
     // Navigate to next step (jobseeker-option or employer-option)
     navigate(
       selectedRole === "jobseeker"
         ? `/jobseeker-option?email=${encodeURIComponent(email)}&role=${encodeURIComponent(selectedRole)}`
         : `/employer-option?email=${encodeURIComponent(email)}&role=${encodeURIComponent(selectedRole)}`,
-      { state: { email, role: selectedRole } }
+      { state: { email, role: selectedRole } },
     );
   };
 

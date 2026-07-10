@@ -1,5 +1,3 @@
-
-
 import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -22,9 +20,6 @@ function EmailCheck() {
             className="w-28 sm:w-32 md:w-36"
           />
 
-
-        
-
           <h1 className="text-2xl sm:text-3xl font-norican font-semibold text-[#16730F] text-center">
             Check Your Email
           </h1>
@@ -35,9 +30,7 @@ function EmailCheck() {
             Follow the instructions to reset your password.
           </p>
 
-          <button
-            className="w-full max-w-xs py-3 rounded-xl text-white bg-[#16730F] font-semibold transition shadow-md"
-          >
+          <button className="w-full max-w-xs py-3 rounded-xl text-white bg-[#16730F] font-semibold transition shadow-md">
             Resend Email
           </button>
 
@@ -45,7 +38,7 @@ function EmailCheck() {
             className="flex items-center gap-2 text-[#1A3E32] font-medium cursor-pointer mt-4"
             onClick={() => navigate("/")}
           >
-            <ChevronLeft /> 
+            <ChevronLeft />
             <span>Go Back To Login</span>
           </div>
         </div>
@@ -55,4 +48,3 @@ function EmailCheck() {
 }
 
 export default EmailCheck;
-

@@ -33,15 +33,13 @@ async function resolveUserNickname(user) {
 }
 
 export default function useRecruitmentRightStats() {
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState(() => getUser());
   const [postCount, setPostCount] = useState(0);
   const [connectionCount, setConnectionCount] = useState(0);
 
   useEffect(() => {
     const user = getUser();
     if (!user) return;
-
-    setUserData(user);
 
     resolveUserNickname(user).then((enriched) => {
       setUserData(enriched);

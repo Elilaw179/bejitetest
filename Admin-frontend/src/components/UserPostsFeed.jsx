@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FileText } from "lucide-react";
 import {
   getUserPosts,
@@ -63,15 +63,18 @@ const UserPostsFeed = ({
 
       try {
         if (reset) {
-          setLoading(true);
-          setError(null);
+          Promise.resolve().then(() => {
+            setLoading(true);
+            setError(null);
+          });
         } else {
-          setLoadingMore(true);
+          Promise.resolve().then(() => {
+            setLoadingMore(true);
+          });
         }
 
         const cursor = reset ? null : nextCursorRef.current;
-        const requestLimit =
-          isPreview && reset ? previewLimit + 1 : pageSize;
+        const requestLimit = isPreview && reset ? previewLimit + 1 : pageSize;
 
         const data = await getUserPosts(userId, requestLimit, cursor, {
           mediaType,
@@ -97,9 +100,11 @@ const UserPostsFeed = ({
   );
 
   useEffect(() => {
-    setPosts([]);
-    setNextCursor(null);
-    nextCursorRef.current = null;
+    Promise.resolve().then(() => {
+      setPosts([]);
+      setNextCursor(null);
+      nextCursorRef.current = null;
+    });
     fetchPosts(true);
   }, [userId, filter, fetchPosts]);
 
@@ -190,13 +195,7 @@ const UserPostsFeed = ({
       loading,
       error,
     });
-  }, [
-    visiblePosts.length,
-    hasMoreBeyondPreview,
-    loading,
-    error,
-    onMetaChange,
-  ]);
+  }, [visiblePosts.length, hasMoreBeyondPreview, loading, error, onMetaChange]);
 
   const filters = [
     { value: "all", label: "Posts" },

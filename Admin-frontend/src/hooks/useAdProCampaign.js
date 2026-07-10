@@ -22,14 +22,17 @@ export function useAdProCampaign(campaignId, { initialData } = {}) {
 
   const loadCampaign = useCallback(
     async ({ background = false } = {}) => {
+      await Promise.resolve();
       if (!campaignId) {
-        setLoading(false);
+        Promise.resolve().then(() => setLoading(false));
         return null;
       }
 
       if (!background) {
-        setLoading(true);
-        setError(null);
+        Promise.resolve().then(() => {
+          setLoading(true);
+          setError(null);
+        });
       }
 
       try {
@@ -63,19 +66,26 @@ export function useAdProCampaign(campaignId, { initialData } = {}) {
     [campaignId],
   );
 
-  useEffect(() => {
-    if (cachedCampaign) {
-      setCampaign(cachedCampaign);
-      setLoading(false);
-      setError(null);
-      hasCachedData.current = true;
-      loadCampaign({ background: true });
-      return;
-    }
+  const [prevCampaignId, setPrevCampaignId] = useState(campaignId);
+  const [prevCachedCampaign, setPrevCachedCampaign] = useState(cachedCampaign);
 
-    hasCachedData.current = false;
-    setCampaign(null);
-    loadCampaign();
+  if (campaignId !== prevCampaignId || cachedCampaign !== prevCachedCampaign) {
+    setPrevCampaignId(campaignId);
+    setPrevCachedCampaign(cachedCampaign);
+    setCampaign(cachedCampaign);
+    setLoading(!cachedCampaign);
+    setError(null);
+  }
+
+  useEffect(() => {
+    hasCachedData.current = Boolean(cachedCampaign);
+    Promise.resolve().then(() => {
+      if (cachedCampaign) {
+        loadCampaign({ background: true });
+      } else {
+        loadCampaign();
+      }
+    });
   }, [campaignId, cachedCampaign, loadCampaign]);
 
   const updateCampaign = useCallback(

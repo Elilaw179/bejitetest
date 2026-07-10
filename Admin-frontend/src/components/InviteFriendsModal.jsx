@@ -52,11 +52,14 @@ const InviteFriendsModal = ({ isOpen, onClose, user }) => {
     };
   }, [isOpen]);
 
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setMessage(defaultMessage);
     }
-  }, [isOpen, defaultMessage]);
+  }
 
   const options = useMemo(() => {
     if (canUseNativeShare()) {

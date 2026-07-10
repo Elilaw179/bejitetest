@@ -1,33 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 const AuthFailure = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [errorMessage, setErrorMessage] = useState('');
+  const params = new URLSearchParams(location.search);
+  const error = params.get('error');
+
+  const errorMessages = {
+    'normal_signup_user': 'This email is already signed up with a regular account. Please sign in using your email and password instead.',
+    'google_auth_failed': 'Google authentication failed. Please try again.',
+    'user_cancelled': 'Authentication was cancelled.',
+    'email_already_exists': 'An account with this email already exists. Please sign in instead.',
+    'invalid_credentials': 'Invalid credentials provided.',
+    'network_error': 'Network error occurred. Please check your connection and try again.',
+    'default': 'Authentication failed. Please try again.'
+  };
+
+  const errorMessage = errorMessages[error] || errorMessages['default'];
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const error = params.get('error');
-
-    // Map error codes to user-friendly messages
-    const errorMessages = {
-      'normal_signup_user': 'This email is already signed up with a regular account. Please sign in using your email and password instead.',
-      'google_auth_failed': 'Google authentication failed. Please try again.',
-      'user_cancelled': 'Authentication was cancelled.',
-      'email_already_exists': 'An account with this email already exists. Please sign in instead.',
-      'invalid_credentials': 'Invalid credentials provided.',
-      'network_error': 'Network error occurred. Please check your connection and try again.',
-      'default': 'Authentication failed. Please try again.'
-    };
-
-    const message = errorMessages[error] || errorMessages['default'];
-    setErrorMessage(message);
-    toast.error(message);
-
+    toast.error(errorMessage);
     console.log('Authentication failed with error:', error);
-  }, [location]);
+  }, [errorMessage, error]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">

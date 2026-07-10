@@ -6,13 +6,12 @@
 
 //   const navigate = useNavigate();
 
-
 //   useEffect(() => {
 //     const timer = setTimeout(() => {
 //       navigate("/confirmpassword");
-//     }, 5000); 
+//     }, 5000);
 
-//     return () => clearTimeout(timer); 
+//     return () => clearTimeout(timer);
 //   }, [navigate]);
 
 //   return (
@@ -44,7 +43,7 @@
 //               </div>
 
 //               <button
-             
+
 //                 className={`w-[70%] py-4 rounded-[20px] text-white  bg-[#FF3C61] font-semibold transition shadow-md cursor-pointer`}
 //               >
 //                 Resend Email
@@ -58,24 +57,6 @@
 // }
 
 // export default VerifyEmail;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import { ChevronLeft } from "lucide-react";
 // import React, { useEffect, useState } from "react";
@@ -171,42 +152,26 @@
 
 // export default VerifyEmail;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 function VerifyEmail() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [message, setMessage] = useState("Verifying your email...");
-  const [busy, setBusy] = useState(true);
+  const qs = new URLSearchParams(location.search);
+  const token = qs.get("token");
+  const email = qs.get("email");
+  const isLinkInvalid = !token || !email;
+
+  const [message, setMessage] = useState(() =>
+    isLinkInvalid ? "❌ Invalid verification link." : "Verifying your email...",
+  );
+  const [busy, setBusy] = useState(() => !isLinkInvalid);
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
-    // read token & email from query string
-    const qs = new URLSearchParams(location.search);
-    const token = qs.get("token");
-    const email = qs.get("email");
-
-    if (!token || !email) {
-      setMessage("❌ Invalid verification link.");
-      setBusy(false);
-      return;
-    }
+    if (isLinkInvalid) return;
 
     const verify = async () => {
       try {
@@ -216,8 +181,8 @@ function VerifyEmail() {
           `${import.meta.env.VITE_API_URL}/auth/verify-email`,
           {
             token: token,
-            email: email
-          }
+            email: email,
+          },
         );
 
         // Check different possible success responses
@@ -226,36 +191,47 @@ function VerifyEmail() {
           setIsVerified(true);
           // Redirect to login after 3 seconds
           setTimeout(() => {
-            navigate('/');
+            navigate("/");
           }, 3000);
         } else {
           console.error("Backend verify response:", res.data);
           setMessage(res.data?.message || "❌ Verification failed.");
         }
-
       } catch (err) {
         // Log the first error before trying alternative endpoint
-        console.error("First verification attempt failed:", err?.response?.data || err.message);
-        
+        console.error(
+          "First verification attempt failed:",
+          err?.response?.data || err.message,
+        );
+
         // Try alternative endpoint format if first fails
         try {
           const altRes = await axios.get(
-            `${import.meta.env.VITE_API_URL}/auth/verify-email/${token}/${email}`
+            `${import.meta.env.VITE_API_URL}/auth/verify-email/${token}/${email}`,
           );
-          
+
           if (altRes.data?.success || altRes.data?.verified) {
-            setMessage(altRes.data.message || "✅ Email verified successfully!");
+            setMessage(
+              altRes.data.message || "✅ Email verified successfully!",
+            );
             setIsVerified(true);
             setTimeout(() => {
-              navigate('/');
+              navigate("/");
             }, 3000);
           } else {
-            setMessage(altRes.data?.message || "❌ Verification link invalid or expired.");
+            setMessage(
+              altRes.data?.message ||
+                "❌ Verification link invalid or expired.",
+            );
           }
         } catch (altErr) {
           // network or backend error
-          console.error("Verification error:", altErr?.response?.data || altErr.message || altErr);
-          const backendMsg = altErr?.response?.data?.message || altErr?.response?.data?.error;
+          console.error(
+            "Verification error:",
+            altErr?.response?.data || altErr.message || altErr,
+          );
+          const backendMsg =
+            altErr?.response?.data?.message || altErr?.response?.data?.error;
           setMessage(backendMsg || "❌ Verification link invalid or expired.");
         }
       } finally {
@@ -264,12 +240,12 @@ function VerifyEmail() {
     };
 
     verify();
-  }, [location.search, navigate]);
+  }, [location.search, navigate, email, isLinkInvalid, token]);
 
   const handleResendVerification = async () => {
     const qs = new URLSearchParams(location.search);
     const email = qs.get("email");
-    
+
     if (!email) {
       setMessage("❌ No email found to resend verification.");
       return;
@@ -279,13 +255,15 @@ function VerifyEmail() {
       setBusy(true);
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/resend-verification`,
-        { email: email }
+        { email: email },
       );
 
       if (res.data?.success) {
         setMessage(" Verification email resent! Check your inbox.");
       } else {
-        setMessage(res.data?.message || "❌ Failed to resend verification email.");
+        setMessage(
+          res.data?.message || "❌ Failed to resend verification email.",
+        );
       }
     } catch (err) {
       console.error("Resend error:", err);
@@ -315,7 +293,11 @@ function VerifyEmail() {
 
               <div>
                 <p className="text-center">{message}</p>
-                {busy && <p className="text-center text-sm text-gray-500 mt-2">Please wait...</p>}
+                {busy && (
+                  <p className="text-center text-sm text-gray-500 mt-2">
+                    Please wait...
+                  </p>
+                )}
               </div>
 
               {!isVerified && (
@@ -333,7 +315,7 @@ function VerifyEmail() {
               {isVerified && (
                 <button
                   className="w-[70%] py-4 rounded-[20px] text-white bg-[#16730F] font-semibold transition shadow-md cursor-pointer"
-                  onClick={() => navigate('/')}
+                  onClick={() => navigate("/")}
                 >
                   Go to Login
                 </button>

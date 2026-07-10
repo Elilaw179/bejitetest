@@ -52,6 +52,8 @@ export default function CreateCampaign() {
     reach: 0,
     cost: 0,
     loading: false,
+    adCreditBalance: 0,
+    sufficientCredit: true,
   });
   const [estimateError, setEstimateError] = useState(null);
   const [errors, setErrors] = useState({});
@@ -72,11 +74,15 @@ export default function CreateCampaign() {
 
         const reach = Number(response.data?.reach) || 0;
         const cost = Number(response.data?.cost) || 0;
+        const adCreditBalance = Number(response.data?.adCreditBalance) || 0;
+        const sufficientCredit = response.data?.sufficientCredit !== false;
 
         setAudienceEstimate({
           reach,
           cost,
           loading: false,
+          adCreditBalance,
+          sufficientCredit,
         });
         setCampaignData((prev) => ({
           ...prev,
@@ -178,6 +184,16 @@ export default function CreateCampaign() {
     }
     if (!validateAudienceStep()) {
       setCurrentStep(2);
+      return false;
+    }
+    if (
+      audienceEstimate.cost > 0 &&
+      audienceEstimate.adCreditBalance < audienceEstimate.cost
+    ) {
+      setSubmitError(
+        `Insufficient AdPro credit. Available: ${formatAdProCurrency(audienceEstimate.adCreditBalance)}, required: ${formatAdProCurrency(audienceEstimate.cost)}. Subscribe or upgrade your ASE plan for more ad credit.`,
+      );
+      setCurrentStep(3);
       return false;
     }
     return true;
@@ -462,6 +478,32 @@ export default function CreateCampaign() {
                 {formatAdProCurrency(audienceEstimate.cost)}
               </span>
             </div>
+            <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center py-2 min-w-0">
+              <span className="text-gray-500 text-xs sm:text-sm shrink-0">
+                Available Ad Credit
+              </span>
+              <span
+                className={`font-semibold text-sm sm:text-base ${
+                  audienceEstimate.adCreditBalance >= audienceEstimate.cost
+                    ? "text-emerald-700"
+                    : "text-red-600"
+                }`}
+              >
+                {formatAdProCurrency(audienceEstimate.adCreditBalance)}
+              </span>
+            </div>
+            {audienceEstimate.adCreditBalance < audienceEstimate.cost && (
+              <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                You need more AdPro credit to launch this campaign.{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/subscription-pricing")}
+                  className="underline font-medium hover:text-red-900"
+                >
+                  View ASE plans
+                </button>
+              </p>
+            )}
           </div>
         </div>
 
@@ -541,7 +583,10 @@ export default function CreateCampaign() {
               ) : (
                 <button
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
+                  disabled={
+                    isSubmitting ||
+                    audienceEstimate.adCreditBalance < audienceEstimate.cost
+                  }
                   className="px-5 py-2.5 bg-[#1A3E32] text-white rounded-xl hover:bg-[#2d6a54] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 text-sm font-medium sm:ml-auto"
                 >
                   {isSubmitting ? (

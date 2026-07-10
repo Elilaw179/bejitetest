@@ -1,5 +1,3 @@
-
-
 const UserMainProfileCard = ({ onConnect }) => {
   return (
     <div className="max-w-3xl w-full mx-auto px-8 py-6 bg-[#F5F5F5] mt-1">
@@ -59,7 +57,7 @@ const ProfileStats = ({ onConnect }) => (
       <p className="text-[#6B8E23] font-semibold text-[13px]">Osakwe Prisca</p>
       <p className="text-[#E09A36] font-semibold text-[10px]">. Jobseeker</p>
     </div>
-    <div className='text-[10px]'>
+    <div className="text-[10px]">
       <p className="text-[#6B8E23] font-semibold">Visual Strategist🎨💻</p>
       <p className="text-[#6B8E23] font-semibold">
         ▶ Helping Brands Bring Their Visions to Life Through Design.✨
@@ -92,9 +90,17 @@ const StatItem = ({ value, label }) => (
 
 const ActionButtons = ({ onConnect }) => (
   <div className="flex justify-between w-[600px] items-center mt-4">
-    <Button icon="/assets/images/repeate-one.svg" text="Connect" onClick={onConnect} />
+    <Button
+      icon="/assets/images/repeate-one.svg"
+      text="Connect"
+      onClick={onConnect}
+    />
     <Button icon="/assets/images/Send_Submit.svg" text="Message" />
-    <img src="assets/images/more.svg" alt="more options" className="w-4 h-4 self-end sm:self-auto" />
+    <img
+      src="assets/images/more.svg"
+      alt="more options"
+      className="w-4 h-4 self-end sm:self-auto"
+    />
   </div>
 );
 
@@ -126,9 +132,9 @@ const EducationItem = () => (
   <div className="px-8 pb-8 rounded-2xl text-[#F5F5F5] flex justify-between gap-3 items-center">
     <div className="bg-[#D9D9D9] w-30 h-18"></div>
     <div className="mt-3">
-      <p className='text-[13px]'>
-        Chukwuemeka Odumegwu Ojukwu University Bachelor's degree,
-        Computer and Information Science and Technology
+      <p className="text-[13px]">
+        Chukwuemeka Odumegwu Ojukwu University Bachelor's degree, Computer and
+        Information Science and Technology
       </p>
       <span className="text-[#FFB54780] text-[13px]">Sep 2022 - Jul 2027</span>
     </div>
@@ -195,7 +201,7 @@ const ContactInfoList = () => {
       {contacts.map((contact, index) => (
         <div key={index} className="flex gap-3">
           <div className="w-7 h-7 rounded-full bg-[#D9D9D9]"></div>
-          <div className=''>
+          <div className="">
             <p className="text-[15px] font-semibold">{contact.value}</p>
             <p className=" text-[13px] font-medium">{contact.type}</p>
           </div>
@@ -209,7 +215,11 @@ const RecommendedProfile = ({ onConnect }) => (
   <>
     <div className="px-8 pb-8 rounded-2xl text-[#FFFFFF] space-y-4 items-center">
       <div className="flex gap-3">
-        <img className="w-20 h-20 rounded-full" src="/assets/images/photo_placeholder.png" alt="Recommended profile" />
+        <img
+          className="w-20 h-20 rounded-full"
+          src="/assets/images/photo_placeholder.png"
+          alt="Recommended profile"
+        />
         <div>
           <p className="text-[10px] font-semibold">John Samuel</p>
           <div className="flex space-x-2 text-[5px]">
@@ -219,7 +229,8 @@ const RecommendedProfile = ({ onConnect }) => (
           </div>
           <button
             onClick={onConnect}
-            className="bg-[#1A3E32] w-40 flex items-center justify-center space-x-1 p-2 rounded-3xl text-[10px]">
+            className="bg-[#1A3E32] w-40 flex items-center justify-center space-x-1 p-2 rounded-3xl text-[10px]"
+          >
             <img src="/assets/images/repeate-one.svg" alt="Connect" />
             <span>Connect</span>
           </button>

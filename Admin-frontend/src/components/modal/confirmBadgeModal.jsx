@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   AlertTriangle,
   Calendar,
@@ -17,7 +17,12 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export const ConfirmBadgeModal = ({ plan, onClose, onConfirm, isLoading = false }) => {
+export const ConfirmBadgeModal = ({
+  plan,
+  onClose,
+  onConfirm,
+  isLoading = false,
+}) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -87,7 +92,9 @@ export function EventModal({ event, onClose, onRegister, canRegister = true }) {
       await onRegister(event.id);
       setRegistered(true);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Registration failed");
+      setError(
+        err.response?.data?.message || err.message || "Registration failed",
+      );
     } finally {
       setLoading(false);
     }
@@ -553,17 +560,11 @@ export function ChangeEmailModal({ onClose }) {
   );
 }
 
-function ChangePasswordField({
-  placeholder,
-  show,
-  value,
-  onToggle,
-  onChange,
-}) {
+function ChangePasswordField({ placeholder, show, value, onToggle, onChange }) {
   return (
     <div className="relative">
       <input
-        type={show ? 'text' : 'password'}
+        type={show ? "text" : "password"}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
@@ -632,22 +633,26 @@ export function ChangePasswordModal({ onClose }) {
             placeholder="Current password"
             show={show.current}
             value={form.current}
-            onToggle={() => toggle('current')}
-            onChange={(e) => setForm((f) => ({ ...f, current: e.target.value }))}
+            onToggle={() => toggle("current")}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, current: e.target.value }))
+            }
           />
           <ChangePasswordField
             placeholder="New password (min 8 chars)"
             show={show.next}
             value={form.next}
-            onToggle={() => toggle('next')}
+            onToggle={() => toggle("next")}
             onChange={(e) => setForm((f) => ({ ...f, next: e.target.value }))}
           />
           <ChangePasswordField
             placeholder="Confirm new password"
             show={show.confirm}
             value={form.confirm}
-            onToggle={() => toggle('confirm')}
-            onChange={(e) => setForm((f) => ({ ...f, confirm: e.target.value }))}
+            onToggle={() => toggle("confirm")}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, confirm: e.target.value }))
+            }
           />
           {form.next && form.confirm && form.next !== form.confirm && (
             <p className="text-xs text-red-500">Passwords do not match</p>
