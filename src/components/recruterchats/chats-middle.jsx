@@ -32,15 +32,11 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   }, []);
 
   const scrollToBottom = useCallback((behavior = 'auto') => {
-    const end = messagesEndRef.current;
-    if (end) {
-      end.scrollIntoView({ behavior, block: 'end' });
-      return;
-    }
-
     const container = messagesContainerRef.current;
     if (!container) return;
 
+    // Scroll only the messages pane — never scrollIntoView (that scrolls the
+    // page on mobile and pushes the composer off-screen behind the keyboard).
     container.scrollTo({
       top: container.scrollHeight,
       behavior,
@@ -88,7 +84,17 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     try {
       if (!silent) setLoading(true);
       const data = await messagingService.getMessages(conversationId);
-      setMessages((data || []).reverse());
+      const next = (data || []).reverse();
+      setMessages((prev) => {
+        if (
+          prev.length === next.length &&
+          prev.length > 0 &&
+          prev[prev.length - 1]?.id === next[next.length - 1]?.id
+        ) {
+          return prev;
+        }
+        return next;
+      });
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
@@ -289,7 +295,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   <div
     ref={messagesContainerRef}
     onScroll={handleMessagesScroll}
-    className="flex-1 min-h-0 overflow-y-auto nfl-scroll scroll-smooth p-3 md:p-5 bg-[#F7F7F7]"
+    className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain nfl-scroll scroll-smooth p-3 md:p-5 bg-[#F7F7F7]"
   >
     {loading ? (
       <div className="text-center text-[#16730F] py-2 md:py-4">
