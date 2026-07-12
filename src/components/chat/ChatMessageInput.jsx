@@ -25,7 +25,8 @@ function ChatMessageInput({
   const emojiRef = useRef(null);
   const attachRef = useRef(null);
   const textareaRef = useRef(null);
-  const [emojiPickerWidth, setEmojiPickerWidth] = useState(320);
+  const inputBarRef = useRef(null);
+  const [emojiPickerSize, setEmojiPickerSize] = useState({ width: 300, height: 320 });
 
   const uploadingRef = useRef(false);
   const disabledRef = useRef(disabled);
@@ -102,13 +103,36 @@ function ChatMessageInput({
     adjustTextareaHeight();
   }, [message]);
 
+  const computeEmojiPickerSize = useCallback(() => ({
+    width: Math.min(320, Math.max(240, window.innerWidth - 24)),
+    height: Math.min(400, Math.max(220, Math.floor(window.innerHeight * 0.38))),
+  }), []);
+
+  // Keep the composer above the mobile virtual keyboard without re-rendering on
+  // every visualViewport tick (which caused jumpy layout while typing).
   useEffect(() => {
-    const updateWidth = () => {
-      setEmojiPickerWidth(Math.min(320, Math.max(260, window.innerWidth - 32)));
+    const viewport = window.visualViewport;
+    const bar = inputBarRef.current;
+    if (!viewport || !bar) return undefined;
+
+    const syncComposerWithKeyboard = () => {
+      const keyboardOffset = Math.max(
+        0,
+        window.innerHeight - viewport.height - viewport.offsetTop,
+      );
+      bar.style.transform =
+        keyboardOffset > 0 ? `translateY(-${keyboardOffset}px)` : '';
     };
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
+
+    syncComposerWithKeyboard();
+    viewport.addEventListener('resize', syncComposerWithKeyboard);
+    viewport.addEventListener('scroll', syncComposerWithKeyboard);
+
+    return () => {
+      viewport.removeEventListener('resize', syncComposerWithKeyboard);
+      viewport.removeEventListener('scroll', syncComposerWithKeyboard);
+      bar.style.transform = '';
+    };
   }, []);
 
   useEffect(() => {
@@ -144,7 +168,10 @@ function ChatMessageInput({
   const busy = sending || uploading || disabled;
 
   return (
-    <div className="shrink-0 z-20 px-2 pt-2 md:px-4 md:pt-3 bg-gray-100 border-t border-gray-200 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+    <div
+      ref={inputBarRef}
+      className="shrink-0 z-20 px-2 pt-2 md:px-4 md:pt-3 bg-gray-100 border-t border-gray-200 pb-[max(0.25rem,env(safe-area-inset-bottom))] will-change-transform"
+    >
       {recordError && (
         <p className="text-red-500 text-xs mb-2 px-1">{recordError}</p>
       )}
@@ -152,7 +179,7 @@ function ChatMessageInput({
         <p className="text-gray-500 text-xs mb-2 px-1">Uploading voice message…</p>
       )}
 
-      <div className="flex flex-col gap-1 border border-[#16730F] rounded-[2rem] px-4 md:px-5 pt-2.5 pb-2 md:pt-3 md:pb-2.5 bg-[#F3F3F3] shadow-sm">
+      <div className="flex flex-col gap-0.5 sm:gap-1 border border-[#16730F] rounded-3xl sm:rounded-[2rem] px-3 sm:px-4 md:px-5 pt-2 pb-1.5 sm:pt-2.5 sm:pb-2 md:pt-3 md:pb-2.5 bg-[#F3F3F3] shadow-sm">
         {recording ? (
           <div className="flex min-h-[2rem] items-center gap-3 py-1">
             <span
@@ -186,29 +213,34 @@ function ChatMessageInput({
           />
         )}
 
-        <div className="flex justify-between items-center min-h-0">
-          <div className="flex items-center gap-2 md:gap-3">
-            <div className="relative" ref={emojiRef}>
+        <div className="flex justify-between items-center min-h-0 gap-1">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 min-w-0">
+            <div className="relative shrink-0" ref={emojiRef}>
               <button
                 type="button"
                 onClick={() => {
+                  setEmojiPickerSize(computeEmojiPickerSize());
                   setShowEmoji((v) => !v);
                   setShowAttachMenu(false);
                 }}
                 disabled={busy}
-                className="inline-flex items-center justify-center shrink-0 hover:opacity-80 disabled:opacity-50"
+                className="inline-flex items-center justify-center shrink-0 min-w-9 min-h-9 sm:min-w-0 sm:min-h-0 p-1 hover:opacity-80 disabled:opacity-50"
                 aria-label="Add emoji"
               >
-                <img src="/assets/images/Smily.svg" alt="" className="block w-5 h-5" />
+                <img
+                  src="/assets/images/Smily.svg"
+                  alt=""
+                  className="block w-[18px] h-[18px] sm:w-5 sm:h-5"
+                />
               </button>
               {showEmoji && (
-                <div className="absolute bottom-full left-0 mb-2 z-30 rounded-xl shadow-lg overflow-hidden">
+                <div className="absolute bottom-full left-0 mb-2 z-30 rounded-xl shadow-lg overflow-hidden max-h-[min(70dvh,400px)]">
                   <EmojiPicker
                     onEmojiClick={(emojiData) =>
                       setMessage((prev) => `${prev || ''}${emojiData.emoji}`)
                     }
-                    width={emojiPickerWidth}
-                    height={400}
+                    width={emojiPickerSize.width}
+                    height={emojiPickerSize.height}
                     searchPlaceholder="Search emojis…"
                     previewConfig={{ showPreview: false }}
                   />
@@ -216,7 +248,7 @@ function ChatMessageInput({
               )}
             </div>
 
-            <div className="relative" ref={attachRef}>
+            <div className="relative shrink-0" ref={attachRef}>
               <button
                 type="button"
                 onClick={() => {
@@ -224,10 +256,14 @@ function ChatMessageInput({
                   setShowEmoji(false);
                 }}
                 disabled={busy}
-                className="inline-flex items-center justify-center shrink-0 hover:opacity-80 disabled:opacity-50"
+                className="inline-flex items-center justify-center shrink-0 min-w-9 min-h-9 sm:min-w-0 sm:min-h-0 p-1 hover:opacity-80 disabled:opacity-50"
                 aria-label="Attach file"
               >
-                <img src="/assets/images/Plus_Icon.svg" alt="" className="block w-4 h-4" />
+                <img
+                  src="/assets/images/Plus_Icon.svg"
+                  alt=""
+                  className="block w-3.5 h-3.5 sm:w-4 sm:h-4"
+                />
               </button>
               {showAttachMenu && (
                 <div className="absolute bottom-full left-0 mb-2 z-20 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[140px]">
@@ -278,12 +314,12 @@ function ChatMessageInput({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
             <button
               type="button"
               onClick={toggleRecording}
               disabled={uploading || disabled}
-              className={`inline-flex items-center justify-center shrink-0 disabled:opacity-50 ${
+              className={`inline-flex items-center justify-center shrink-0 min-w-9 min-h-9 sm:min-w-0 sm:min-h-0 p-1 disabled:opacity-50 ${
                 recording ? 'animate-pulse opacity-80' : 'hover:opacity-80'
               }`}
               aria-label={recording ? 'Stop and send voice message' : 'Record voice'}
@@ -291,25 +327,25 @@ function ChatMessageInput({
               <img
                 src="/assets/images/microphone.png"
                 alt=""
-                className={`block w-5 h-5 ${recording ? 'opacity-70' : ''}`}
+                className={`block w-[18px] h-[18px] sm:w-5 sm:h-5 ${recording ? 'opacity-70' : ''}`}
               />
             </button>
             <button
               type="button"
               onClick={handleSendClick}
               disabled={busy || !canSend}
-              className="inline-flex items-center justify-center shrink-0 disabled:opacity-50 transition"
+              className="inline-flex items-center justify-center shrink-0 min-w-9 min-h-9 sm:min-w-0 sm:min-h-0 p-0.5 disabled:opacity-50 transition"
               aria-label={recording ? 'Send voice message' : 'Send message'}
             >
               {sending ? (
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#1A3E32] text-white text-xs">
+                <span className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A3E32] text-white text-xs">
                   ...
                 </span>
               ) : (
                 <img
                   src="/assets/images/chat_send.svg"
                   alt=""
-                  className="block w-8 h-8 md:w-9 md:h-9"
+                  className="block w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9"
                 />
               )}
             </button>
