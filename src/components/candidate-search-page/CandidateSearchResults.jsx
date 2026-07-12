@@ -9,7 +9,12 @@ import { formatDisplayText } from "../../utils/displayFormatUtils";
 import { filterAdminUsersFromSearch } from "../../utils/filterAdminUsers";
 import AvailabilityStatusDot from "./AvailabilityStatusDot";
 
-const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = false }) => {
+const CandidateSearchResults = ({
+  onViewProfile,
+  searchCriteria = {},
+  compact = false,
+  enabled = true,
+}) => {
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +29,14 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = 
   const requestIdRef = useRef(0);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      setCandidates([]);
+      setError(null);
+      setAccessBlock(null);
+      return;
+    }
+
     const hasCriteria = Object.values(searchCriteria).some(
       (value) => String(value ?? "").trim() !== "",
     );
@@ -211,7 +224,7 @@ const CandidateSearchResults = ({ onViewProfile, searchCriteria = {}, compact = 
         abortControllerRef.current.abort();
       }
     };
-  }, [searchCriteria]);
+  }, [searchCriteria, enabled]);
 
   if (loading) {
     return (
