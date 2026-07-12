@@ -47,6 +47,7 @@ const CandidateSearchPage = () => {
   });
 
   const [showResults, setShowResults] = useState(false);
+  const [appliedSearchCriteria, setAppliedSearchCriteria] = useState(null);
   const [viewProfile, setViewProfile] = useState(false);
   const [showMainProfile, setShowMainProfile] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState(null);
@@ -57,7 +58,7 @@ const CandidateSearchPage = () => {
   const isDesktop = useIsDesktop();
 
   const hasAtLeastOneField = Object.values(formData).some((val) => val.trim() !== "");
-  const shouldShowResults = showResults && !viewProfile;
+  const activeSearchCriteria = appliedSearchCriteria ?? formData;
 
   const scrollSearchViewToTop = useCallback(() => {
     window.scrollTo({ top: 0, left: 0 });
@@ -74,6 +75,7 @@ const CandidateSearchPage = () => {
   }, []);
 
   const handleSearch = () => {
+    setAppliedSearchCriteria({ ...formData });
     setShowResults(true);
     setViewProfile(false);
     setShowMainProfile(false);
@@ -82,6 +84,7 @@ const CandidateSearchPage = () => {
 
   const handleBackToSearchForm = () => {
     setShowResults(false);
+    setAppliedSearchCriteria(null);
     setViewProfile(false);
     setShowMainProfile(false);
     setRightPanelOpen(false);
@@ -117,9 +120,10 @@ const CandidateSearchPage = () => {
       if (showResults) {
         return (
           <>
-            {!isDesktop && shouldShowResults && (
+            {!isDesktop && showResults && !viewProfile && (
               <CandidateSearchResults
-                searchCriteria={formData}
+                searchCriteria={activeSearchCriteria}
+                enabled={Boolean(appliedSearchCriteria)}
                 onViewProfile={handleViewProfile}
                 compact
               />
@@ -225,7 +229,7 @@ const CandidateSearchPage = () => {
 
           <div className="h-full flex min-h-0">
             {/* Left sidebar — search results (desktop only) */}
-            {shouldShowResults && isDesktop && (
+            {showResults && isDesktop && (
               <aside
                 className="hidden lg:flex shrink-0 flex-col bg-[#F5F5F5] border-r border-gray-200 lg:w-[min(360px,28vw)] lg:max-w-[400px] overflow-hidden"
               >
@@ -234,7 +238,8 @@ const CandidateSearchPage = () => {
                   className="flex-1 overflow-y-auto nfl-scroll scroll-smooth p-3 sm:p-4 min-h-0"
                 >
                   <CandidateSearchResults
-                    searchCriteria={formData}
+                    searchCriteria={activeSearchCriteria}
+                    enabled={Boolean(appliedSearchCriteria)}
                     onViewProfile={handleViewProfile}
                   />
                 </div>
