@@ -9,10 +9,14 @@ import { filterAdminUsersFromSearch } from '../utils/filterAdminUsers';
 /**
  * Get user's accepted connections
  */
-export const getConnections = async (page = 1, limit = 10) => {
+export const getConnections = async (page = 1, limit = 10, q = '') => {
   try {
     const response = await axiosInstance.get('/api/connections', {
-      params: { page, limit },
+      params: {
+        page,
+        limit,
+        ...(String(q || '').trim() ? { q: String(q).trim() } : {}),
+      },
     });
     console.log('getConnections response:', response.data);
     return response.data;

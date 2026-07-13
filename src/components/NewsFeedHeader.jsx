@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
-  FaList,
   FaSearch,
   FaChevronDown,
   FaUserEdit,
@@ -597,10 +596,36 @@ const NewsFeedHeader = ({ user: propUser }) => {
             alt="Logo"
             className="h-10 cursor-pointer"
           />
-          <FaList
-            className="text-2xl text-[#333] block lg:hidden cursor-pointer"
+          <button
+            type="button"
             onClick={toggleSidebar}
-          />
+            aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isSidebarOpen}
+            className="lg:hidden relative inline-flex items-center justify-center w-11 h-11 text-[#1A3E32] transition-all duration-300 active:scale-95"
+          >
+            <span className="sr-only">{isSidebarOpen ? "Close menu" : "Open menu"}</span>
+            <span className="relative w-[18px] h-[12px] flex flex-col justify-between">
+              <span
+                className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
+                  isSidebarOpen
+                    ? "translate-y-[5px] rotate-45 w-[18px]"
+                    : "w-[18px]"
+                }`}
+              />
+              <span
+                className={`block h-[2px] rounded-full bg-current transition-all duration-200 ease-out ${
+                  isSidebarOpen ? "opacity-0 scale-x-0" : "w-[12px] ml-auto"
+                }`}
+              />
+              <span
+                className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
+                  isSidebarOpen
+                    ? "-translate-y-[5px] -rotate-45 w-[18px]"
+                    : "w-[15px]"
+                }`}
+              />
+            </span>
+          </button>
         </div>
 
         <div ref={searchRef} className="relative w-full lg:max-w-[500px]">
@@ -696,7 +721,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
           <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
             <div ref={dropdownRef} className="relative">
               <p className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32]">
-                <PersonName user={user} badgeSize="xs" />
+                <PersonName user={user} showBadge={false} />
               </p>
 
               {/* Custom Dropdown for Role */}
@@ -845,15 +870,13 @@ const NewsFeedHeader = ({ user: propUser }) => {
             className="fixed inset-0 bg-black/40 z-40 lg:hidden"
             onClick={toggleSidebar}
           />
-          <div className="fixed top-0 left-0 w-[min(85vw,300px)] h-full bg-white shadow-lg z-50 flex flex-col lg:hidden">
+          <div className="fixed top-0 left-0 w-[min(85vw,300px)] h-full bg-white shadow-2xl z-50 flex flex-col lg:hidden">
             <div className="p-4 border-b border-gray-100 shrink-0">
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                className="text-[#16730F] font-bold text-lg"
-              >
-                ✕ Close
-              </button>
+              <img
+                src="/assets/images/logo.png"
+                alt="Bejite"
+                className="h-8"
+              />
             </div>
 
             <div className="flex-1 overflow-y-auto nfl-scroll p-4 pt-2">
