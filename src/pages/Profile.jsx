@@ -40,7 +40,7 @@ import { formatDisplayText } from '../utils/displayFormatUtils';
 import { truncateText } from '../utils/checksFormat';
 import ProfileConnectActions from '../components/ProfileConnectActions';
 import ProfilePostsSection from '../components/ProfilePostsSection';
-import VerifiedBadge from '../components/VerifiedBadge';
+import DisplayNameWithBadge from '../components/DisplayNameWithBadge';
 
 const ABOUT_WORD_LIMIT = 100;
 
@@ -444,8 +444,7 @@ const Profile = () => {
             />
             <div className="w-full min-w-0 text-center sm:text-left">
               <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] break-words flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
-                {formatDisplayPersonName(profileData, 'User')}
-                {profileData?.hasVerifiedBadge && <VerifiedBadge size="md" />}
+                <DisplayNameWithBadge user={profileData} fallback="User" badgeSize="md" />
               </h1>
               <p className="text-[#16730F] font-medium text-sm sm:text-base mt-0.5">
                 {formatDisplayRole(viewedRole)}

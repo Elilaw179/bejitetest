@@ -39,6 +39,7 @@ import {
 } from "../utils/personDisplayName";
 import { formatDisplayText } from "../utils/displayFormatUtils";
 import { filterAdminUsersFromSearch, filterAdminSearchResults } from "../utils/filterAdminUsers";
+import PersonName from "./PersonName";
 import RecruitmentRightMobileMenu from "./recruitment/RecruitmentRightMobileMenu";
 import InviteFriendsModal from "./InviteFriendsModal";
 
@@ -172,6 +173,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
               subtitle: u.jobTitle || "Professional",
               image: pickAuthorProfilePhoto(u),
               url: `/user-profile/${u.id}`,
+              hasVerifiedBadge: Boolean(u.hasVerifiedBadge),
             })),
           }))
           .catch(() => ({ type: "people", results: [] })),
@@ -199,6 +201,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       formatDisplayText(candidate.title) || "Professional",
                     image: pickAuthorProfilePhoto(candidate),
                     url: `/user-profile/${userId}`,
+                    hasVerifiedBadge: Boolean(candidate.hasVerifiedBadge),
                   };
                 })
               : [],
@@ -646,7 +649,11 @@ const NewsFeedHeader = ({ user: propUser }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-[#1A3E32] truncate">
-                      {result.name}
+                      <PersonName
+                        user={result}
+                        fallback={result.name}
+                        badgeSize="xs"
+                      />
                     </div>
                     <div className="text-sm text-gray-500 truncate">
                       {result.subtitle}
@@ -689,7 +696,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
           <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
             <div ref={dropdownRef} className="relative">
               <p className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32]">
-                {getDisplayName()}
+                <PersonName user={user} badgeSize="xs" />
               </p>
 
               {/* Custom Dropdown for Role */}
@@ -717,7 +724,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                         />
                         <div className="flex flex-col">
                           <span className="font-semibold text-sm text-[#1A3E32]">
-                            {getDisplayName()}
+                            <PersonName user={user} badgeSize="xs" />
                           </span>
                           <span className="text-xs text-gray-500">
                             {getDisplayRole()}

@@ -338,6 +338,12 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
               message={msg}
               isOwnMessage={ownMessage}
               senderName={senderName}
+              senderHasVerifiedBadge={Boolean(msg.hasVerifiedBadge)}
+              senderBadgeUser={
+                ownMessage
+                  ? currentUser
+                  : selectedChat?.other_user
+              }
               senderAvatar={senderAvatar}
               senderInitials={senderInitials}
               messageTime={messageTime}

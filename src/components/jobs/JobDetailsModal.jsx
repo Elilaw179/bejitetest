@@ -20,6 +20,7 @@ import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { ApplicationForm } from "./ApplicationForm";
 import SharePostModal from "../SharePostModal";
 import { getJobPlatformHref, copyJobLink } from "../../utils/jobShare";
+import { formatJobDescriptionText } from "../../utils/jobDescription";
 
 export const JobDetailsModal = ({ job, onClose, onApply }) => {
   const [isApplying, setIsApplying] = useState(false);
@@ -283,10 +284,10 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                       {job.rolesText?.trim() && (
                         <section>
                           <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
-                            Roles
+                            About the Role
                           </h2>
                           <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
-                            {job.rolesText}
+                            {formatJobDescriptionText(job.rolesText)}
                           </p>
                         </section>
                       )}
@@ -297,7 +298,7 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                             Job Description
                           </h2>
                           <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
-                            {job.description}
+                            {formatJobDescriptionText(job.description)}
                           </p>
                         </section>
                       )}

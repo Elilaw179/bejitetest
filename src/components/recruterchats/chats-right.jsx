@@ -2,6 +2,7 @@ import React from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../../config';
+import DisplayNameWithBadge from '../DisplayNameWithBadge';
 
 function ChatsRight({ selectedChat, onBack }) {
   const navigate = useNavigate();
@@ -92,7 +93,9 @@ function ChatsRight({ selectedChat, onBack }) {
               )}
             </div>
             <div className="text-white text-center mt-3">
-              <h1 className="text-lg font-semibold">{getDisplayName()}</h1>
+              <h1 className="text-lg font-semibold">
+                <DisplayNameWithBadge user={otherUser} fallback={getDisplayName()} badgeSize="sm" />
+              </h1>
               <p className="text-sm opacity-80">{getDisplayRole()}</p>
             </div>
             <div className="w-36 mx-auto mt-4">

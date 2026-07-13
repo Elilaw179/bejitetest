@@ -9,6 +9,7 @@ import { getAuthorProfileImageUrl } from '../utils/profileImageUtils';
 import useSyncProfilePhoto from '../hooks/useSyncProfilePhoto';
 import NewsFeedLayout from '../components/layout/NewsFeedLayout';
 import { formatDisplayPersonName } from '../utils/personDisplayName';
+import DisplayNameWithBadge from '../components/DisplayNameWithBadge';
 import { filterAdminUsersFromSearch } from '../utils/filterAdminUsers';
 
 const shuffleArray = (arr) => {
@@ -29,7 +30,8 @@ const transformDiscoverableUser = (user) => ({
   lastName: user.lastName ?? user.last_name,
   email: user.email,
   image: user.profilePhoto ?? user.profile_photo ?? user.image ?? null,
-  role: user.jobTitle || 'Professional'
+  role: user.jobTitle || 'Professional',
+  hasVerifiedBadge: Boolean(user?.hasVerifiedBadge),
 });
 
 const transformConnectionUser = (user, connectedAt) => ({
@@ -93,7 +95,8 @@ const Connections = () => {
           lastName: req.fromUser?.lastName ?? req.fromUser?.last_name,
           email: req.fromUser?.email,
           image: req.fromUser?.profilePhoto ?? req.fromUser?.profile_photo ?? null,
-          role: req.fromUser?.jobTitle || 'Professional'
+          role: req.fromUser?.jobTitle || 'Professional',
+          hasVerifiedBadge: Boolean(req.fromUser?.hasVerifiedBadge),
         },
         createdAt: req.createdAt
       })) : [];
@@ -109,7 +112,8 @@ const Connections = () => {
           lastName: req.toUser?.lastName ?? req.toUser?.last_name,
           email: req.toUser?.email,
           image: req.toUser?.profilePhoto ?? req.toUser?.profile_photo ?? null,
-          role: req.toUser?.jobTitle || 'Professional'
+          role: req.toUser?.jobTitle || 'Professional',
+          hasVerifiedBadge: Boolean(req.toUser?.hasVerifiedBadge),
         },
         createdAt: req.createdAt
       })) : [];
@@ -531,7 +535,7 @@ const PeopleList = ({ users, onSendRequest, onViewProfile, searchQuery, isSearch
             />
             <div className="min-w-0 flex-1">
               <h3 className="font-semibold text-[#1A3E32] text-sm sm:text-base truncate hover:text-[#16730F] transition-colors">
-                {user.name}
+                <DisplayNameWithBadge user={user} fallback={user.name} badgeSize="xs" />
               </h3>
               <p className="text-xs sm:text-sm text-gray-600 truncate">{user.role || 'Professional'}</p>
             </div>

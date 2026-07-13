@@ -92,6 +92,7 @@ import AdminProtectedRoute from "./components/admin/AdminProtectedRoute.jsx";
 import AdminLayout from "./components/admin/AdminLayout.jsx";
 import PushNotificationBootstrap from "./components/PushNotificationBootstrap.jsx";
 import AuthBootstrap from "./components/AuthBootstrap.jsx";
+import VerifiedBadgeSync from "./components/VerifiedBadgeSync.jsx";
 import ProfileCompletionReminder from "./components/ProfileCompletionReminder.jsx";
 import { Navigate } from "react-router-dom";
 import BadgeStatus from "./pages/badge/BadgeStatus.jsx";
@@ -129,6 +130,7 @@ function App() {
       <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <Router>
           <AuthBootstrap>
+            <VerifiedBadgeSync />
             <PushNotificationBootstrap />
             <Routes>
               {/* Admin Routes */}

@@ -15,7 +15,7 @@ import messagingService from '../../services/messagingService';
 import CandidateJobPreferences from './CandidateJobPreferences';
 import CandidateContactInfo from './CandidateContactInfo';
 import { formatDisplayPersonName, formatDisplayRole } from '../../utils/personDisplayName';
-import VerifiedBadge from '../VerifiedBadge';
+import DisplayNameWithBadge from '../DisplayNameWithBadge';
 import { getFormattedCandidateProfileFields } from '../../utils/displayFormatUtils';
 
 const UserMainProfileCard = ({ candidateId, connectUserId: connectUserIdProp }) => {
@@ -133,6 +133,7 @@ const UserMainProfileCard = ({ candidateId, connectUserId: connectUserIdProp }) 
     <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-6">
       <ProfileHeaderCard
         displayName={displayName}
+        profileUser={profileUser}
         hasVerifiedBadge={Boolean(profileUser?.hasVerifiedBadge)}
         title={title}
         location={location}
@@ -184,6 +185,7 @@ const UserMainProfileCard = ({ candidateId, connectUserId: connectUserIdProp }) 
 
 const ProfileHeaderCard = ({
   displayName,
+  profileUser = null,
   hasVerifiedBadge = false,
   title,
   location,
@@ -235,8 +237,11 @@ const ProfileHeaderCard = ({
         />
         <div className="flex-1 text-center sm:text-left w-full">
           <h1 className="text-2xl font-bold text-[#1A3E32] flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
-            {displayName}
-            {hasVerifiedBadge && <VerifiedBadge size="md" />}
+            <DisplayNameWithBadge
+              user={{ ...profileUser, hasVerifiedBadge }}
+              fallback={displayName}
+              badgeSize="md"
+            />
           </h1>
           <p className="text-[#16730F] font-medium mt-1">{formatDisplayRole('jobseeker')}</p>
           {title && <p className="text-gray-600 mt-1">{title}</p>}

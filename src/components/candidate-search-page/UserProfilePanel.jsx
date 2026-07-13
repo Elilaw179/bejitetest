@@ -24,6 +24,7 @@ import {
   getFormattedEducationFields,
 } from "../../utils/displayFormatUtils";
 import { formatDisplayPersonName, formatDisplayRole } from "../../utils/personDisplayName";
+import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import AvailabilityStatusDot from "./AvailabilityStatusDot";
 import {
   getFormattedCandidateProfileFields,
@@ -412,7 +413,7 @@ const ProfileStats = ({ candidate, connectUserIdProp, onViewMainProfile }) => {
   <div className="px-4 sm:px-8 mt-[-60px] sm:mt-[-40px]">
     <div className="flex gap-2 items-center">
       <p className="text-[#6B8E23] font-semibold text-[16px]">
-        {displayName}
+        <DisplayNameWithBadge user={candidate} fallback={displayName} badgeSize="xs" />
       </p>
       <p className="text-[#E09A36] font-semibold text-[10px]">
         • {formatDisplayRole("jobseeker")}

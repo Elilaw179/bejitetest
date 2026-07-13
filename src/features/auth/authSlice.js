@@ -131,7 +131,10 @@ const authSlice = createSlice({
         const userData = action.payload.user;
         const userWithImage = {
           ...userData,
-          image: action.payload.profilePhoto || userData.image || null
+          image: action.payload.profilePhoto || userData.image || null,
+          hasVerifiedBadge: Boolean(
+            userData.hasVerifiedBadge ?? userData.has_verified_badge,
+          ),
         };
         state.user = userWithImage;
         localStorage.setItem("user", JSON.stringify(userWithImage));
@@ -200,6 +203,10 @@ const authSlice = createSlice({
           const userWithProfileStatus = {
             ...userData,
             profileCompleted: action.payload.profileCompleted || false,
+            hasVerifiedBadge: Boolean(
+              action.payload.user?.hasVerifiedBadge ??
+                userData.hasVerifiedBadge,
+            ),
             ...(normalizedPhoto
               ? {
                   profile_photo: normalizedPhoto,
