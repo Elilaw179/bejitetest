@@ -383,14 +383,19 @@ const ActivityLogPostCard = ({
               className="rounded-full w-10 h-10 sm:w-12 sm:h-12 object-cover border-2 border-green-50 cursor-pointer hover:opacity-90"
             />
           </button>
-          <div>
+          <div className="min-w-0 flex-1">
             <button
               type="button"
               onClick={goToAuthorProfile}
               disabled={!post.authorId}
-              className="font-semibold text-base sm:text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline leading-tight"
+              className="font-semibold text-base sm:text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline leading-tight max-w-full min-w-0"
             >
-              <DisplayNameWithBadge user={post.author} fallback={authorName} badgeSize="xs" />
+              <DisplayNameWithBadge
+                user={post.author}
+                fallback={authorName}
+                badgeSize="xs"
+                responsiveBadge
+              />
             </button>
             <p className="text-gray-500 text-xs sm:text-sm">
               {authorJobTitle}

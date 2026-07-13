@@ -32,7 +32,13 @@ function RecruitmentRight() {
             </div>
             <div className="text-[#FFFFFF] text-center mt-[-40px]">
               <p className="text-[16px] font-bold">
-                <DisplayNameWithBadge user={userData} fallback={displayName} badgeSize="xs" />
+                <DisplayNameWithBadge
+                  user={userData}
+                  fallback={displayName}
+                  badgeSize="xs"
+                  badgePlacement="below"
+                  className="items-center"
+                />
               </p>
               {username && (
                 <p className="text-[11px] font-bold">{username}</p>

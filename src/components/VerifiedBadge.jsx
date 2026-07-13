@@ -12,6 +12,8 @@ export default function VerifiedBadge({
   user = null,
   role = null,
   label = null,
+  /** On small screens show icon only; full labelled pill from sm up */
+  responsiveLabel = false,
 }) {
   const sizes = {
     xs: {
@@ -43,6 +45,26 @@ export default function VerifiedBadge({
         aria-label={displayLabel}
         title={displayLabel}
       />
+    );
+  }
+
+  if (responsiveLabel) {
+    return (
+      <>
+        <BadgeCheck
+          className={`${s.icon} text-[#16730F] shrink-0 sm:hidden ${className}`}
+          aria-label={displayLabel}
+          title={displayLabel}
+        />
+        <span
+          className={`hidden sm:inline-flex items-center ${s.gap} ${s.pad} rounded-full bg-[#E8F5E9] text-[#16730F] border border-[#16730F]/20 font-semibold ${s.text} whitespace-nowrap shrink-0 ${className}`}
+          title={displayLabel}
+          aria-label={displayLabel}
+        >
+          <BadgeCheck className={`${s.icon} shrink-0`} aria-hidden />
+          {displayLabel}
+        </span>
+      </>
     );
   }
 
