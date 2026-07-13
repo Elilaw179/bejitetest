@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import {
   verifyOneTimePayment,
   verifySubscriptionPayment,
   verifyTopUpPayment,
 } from "../../services/paymentApi";
+import { refreshVerifiedBadgeInSession } from "../../services/verifiedBadgeSync";
 
 const TOPUP_REDIRECTS = {
   extra_search: "/candidate-search-page",
@@ -29,6 +31,7 @@ const ASEPaymentCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const [status, setStatus] = useState("processing");
   const [message, setMessage] = useState("Verifying your payment...");
 
@@ -59,6 +62,7 @@ const ASEPaymentCallback = () => {
         if (response?.data?.status === "success") {
           setStatus("success");
           setMessage("Payment verified! Redirecting...");
+          await refreshVerifiedBadgeInSession(dispatch);
 
           const recruitJobId = localStorage.getItem("aseRecruitReturnJobId");
           localStorage.removeItem("aseRecruitReturnJobId");
@@ -93,6 +97,7 @@ const ASEPaymentCallback = () => {
             if (fallbackResponse?.data?.status === "success") {
               setStatus("success");
               setMessage("Payment verified! Redirecting...");
+              await refreshVerifiedBadgeInSession(dispatch);
               setTimeout(() => {
                 navigate(
                   ref.startsWith("SUB_") || isSubscriptionFlow
@@ -117,7 +122,7 @@ const ASEPaymentCallback = () => {
     };
 
     verifyPayment();
-  }, [searchParams, navigate, location.pathname]);
+  }, [searchParams, navigate, location.pathname, dispatch]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

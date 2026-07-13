@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { getUserProfileImage } from "../../utils/profileImageUtils";
 import { formatDisplayPersonName, formatDisplayHandle } from "../../utils/personDisplayName";
+import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import useRecruitmentRightStats from "../../hooks/useRecruitmentRightStats";
 import { RECRUITMENT_RIGHT_LINKS } from "./recruitmentRightLinks";
 
@@ -25,7 +26,9 @@ export default function RecruitmentRightMobileMenu({ onNavigate }) {
             alt={displayName}
             className="w-14 h-14 rounded-full object-cover border-2 border-white/30"
           />
-          <p className="text-sm font-bold mt-2">{displayName}</p>
+          <p className="text-sm font-bold mt-2">
+            <DisplayNameWithBadge user={userData} fallback={displayName} badgeSize="xs" />
+          </p>
           {username && (
             <p className="text-[11px] font-semibold text-white/80">{username}</p>
           )}

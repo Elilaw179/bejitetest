@@ -4,6 +4,7 @@ import messagingService from '../../services/messagingService';
 import { API_URL } from '../../config';
 import { formatConversationPreview } from '../../utils/conversationPreview';
 import { formatDisplayPersonName } from '../../utils/personDisplayName';
+import DisplayNameWithBadge from '../DisplayNameWithBadge';
 
 const CONVERSATION_UPDATED = 'chat:conversation-updated';
 
@@ -200,7 +201,9 @@ function ChatsLeft({ onSelectChat }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-white text-sm font-medium truncate">{displayName}</h3>
+                        <h3 className="text-white text-sm font-medium truncate">
+                          <DisplayNameWithBadge user={user} fallback={displayName} badgeSize="xs" />
+                        </h3>
                       </div>
                       <p className="text-[#fff] text-xs truncate">
                         {user.jobTitle || 'Click to start conversation'}
@@ -248,7 +251,9 @@ conversations.map((conversation) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className={`text-sm truncate ${unreadCount > 0 ? 'text-white font-bold' : 'text-white font-medium'}`}>{displayName}</h3>
+                        <h3 className={`text-sm truncate ${unreadCount > 0 ? 'text-white font-bold' : 'text-white font-medium'}`}>
+                          <DisplayNameWithBadge user={otherUser} fallback={displayName} badgeSize="xs" />
+                        </h3>
                         <span className={`text-xs flex-shrink-0 ${unreadCount > 0 ? 'text-white font-semibold' : 'text-[#fff]'}`}>{lastMessageTime}</span>
                       </div>
                       <p className={`text-xs truncate ${unreadCount > 0 ? 'text-white/80 font-semibold' : 'text-[#fff]'}`}>

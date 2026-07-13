@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserProfileImage } from "../../utils/profileImageUtils";
 import { formatDisplayPersonName, formatDisplayHandle } from "../../utils/personDisplayName";
+import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import useRecruitmentRightStats from "../../hooks/useRecruitmentRightStats";
 import { RECRUITMENT_RIGHT_LINKS } from "./recruitmentRightLinks";
 
@@ -30,7 +31,9 @@ function RecruitmentRight() {
               />
             </div>
             <div className="text-[#FFFFFF] text-center mt-[-40px]">
-              <p className="text-[16px] font-bold">{displayName}</p>
+              <p className="text-[16px] font-bold">
+                <DisplayNameWithBadge user={userData} fallback={displayName} badgeSize="xs" />
+              </p>
               {username && (
                 <p className="text-[11px] font-bold">{username}</p>
               )}

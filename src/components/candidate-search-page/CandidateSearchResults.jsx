@@ -5,6 +5,7 @@ import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import InterviewInviteModal from "./InterviewInviteModal";
 import { useNavigate } from "react-router-dom";
 import { formatDisplayPersonName, formatDisplayRole } from "../../utils/personDisplayName";
+import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import { formatDisplayText } from "../../utils/displayFormatUtils";
 import { filterAdminUsersFromSearch } from "../../utils/filterAdminUsers";
 import AvailabilityStatusDot from "./AvailabilityStatusDot";
@@ -186,6 +187,9 @@ const CandidateSearchResults = ({
               experienceYears: candidate.experience_years || 0,
               initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
               image: profilePhotoUrl(photoPath) ?? null,
+              hasVerifiedBadge: Boolean(candidate.hasVerifiedBadge),
+              first_name: candidate.first_name,
+              last_name: candidate.last_name,
             };
           });
 
@@ -492,6 +496,7 @@ const CandidateProfile = ({ candidate, onViewProfile, onInvite, compact }) => (
         compact={compact}
       />
       <ProfileDetails
+        user={candidate}
         name={candidate.name}
         type={candidate.type}
         jobTitle={candidate.jobTitle}
@@ -531,11 +536,18 @@ const ProfileImage = ({ initials, name, availability, image, compact }) => (
 );
 
 
-const ProfileDetails = ({ name, type, jobTitle, location, skills, experienceYears, onViewProfile, onInvite, compact }) => (
+const ProfileDetails = ({ user, name, type, jobTitle, location, skills, experienceYears, onViewProfile, onInvite, compact }) => (
   <div className="w-full flex-1 min-w-0 space-y-1">
     <div>
       <p className={`text-white font-medium truncate ${compact ? "text-sm" : "text-[15px] sm:text-[16px]"}`}>
-        {compact ? name : <><strong>Name:</strong> {name}</>}
+        {compact ? (
+          <DisplayNameWithBadge user={user} fallback={name} badgeSize="xs" />
+        ) : (
+          <>
+            <strong>Name:</strong>{" "}
+            <DisplayNameWithBadge user={user} fallback={name} badgeSize="xs" />
+          </>
+        )}
       </p>
       <p className={`text-white/80 ${compact ? "text-[11px]" : "text-[12px]"}`}>
         {compact ? `${type} · ${jobTitle}` : <><strong>Type:</strong> {type}</>}

@@ -46,6 +46,7 @@ import useSyncProfilePhoto from "../../hooks/useSyncProfilePhoto";
 import SharePostModal from "../SharePostModal";
 import UsersListModal from "../UsersListModal";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
+import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import PostMediaGallery from "../PostMediaGallery";
 import PostPoll from "../feed/PostPoll";
@@ -796,7 +797,7 @@ const RecruitmentPostCard = ({
               disabled={!post.authorId}
               className="font-semibold text-base sm:text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
             >
-              {authorName}
+              <DisplayNameWithBadge user={post.author} fallback={authorName} badgeSize="xs" />
             </button>
             <p className="text-[#1A3E32] text-xs sm:text-sm">
               {authorJobTitle}

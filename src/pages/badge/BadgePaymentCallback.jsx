@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { verifyBadgeSubscription } from '../../services/verifiedBadgeApi';
+import { refreshVerifiedBadgeInSession } from '../../services/verifiedBadgeSync';
 
 export default function BadgePaymentCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [status, setStatus] = useState('processing');
   const [message, setMessage] = useState('Verifying your subscription...');
 
@@ -22,6 +25,7 @@ export default function BadgePaymentCallback() {
         if (response?.data?.status === 'success') {
           setStatus('success');
           setMessage('Verified Badge activated! Redirecting...');
+          await refreshVerifiedBadgeInSession(dispatch);
           setTimeout(() => navigate('/badge-holder', { replace: true }), 2000);
         } else {
           setStatus('error');
@@ -35,7 +39,7 @@ export default function BadgePaymentCallback() {
     };
 
     verify();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, dispatch]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

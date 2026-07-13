@@ -37,6 +37,7 @@ import {
   PROFILE_PHOTO_PLACEHOLDER,
 } from "../utils/profilePhotoUrl";
 import { formatDisplayPersonName } from "../utils/personDisplayName";
+import DisplayNameWithBadge from "../components/DisplayNameWithBadge";
 import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
 import useAuth from "../hooks/useAuth";
 import {
@@ -341,7 +342,9 @@ export default function AccountSettings() {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900 text-base">{displayName}</p>
+                <p className="font-bold text-gray-900 text-base">
+                  <DisplayNameWithBadge user={user} fallback={displayName} badgeSize="xs" />
+                </p>
                 <p className="text-sm text-gray-400 truncate">
                   {email || "No email on file"}
                 </p>

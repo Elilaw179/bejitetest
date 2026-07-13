@@ -121,7 +121,7 @@ export default function BadgeHolder() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-white font-bold text-xl">Verified Dashboard</h1>
-                <VerifiedBadge size="sm" showLabel />
+                <VerifiedBadge size="sm" role={badgeStatus?.role} />
               </div>
               <p className="text-green-200 text-xs mt-0.5">
                 Events, reports, and subscriber benefits

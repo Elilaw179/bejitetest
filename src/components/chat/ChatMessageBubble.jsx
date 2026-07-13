@@ -8,6 +8,7 @@ import {
 import { createPortal } from "react-dom";
 import { FaPen, FaTrash } from "react-icons/fa";
 import MessageAttachment from "./MessageAttachment";
+import DisplayNameWithBadge from "../DisplayNameWithBadge";
 
 function isAttachmentOnlyCaption(content, imageUrl) {
   if (!imageUrl || !content) return Boolean(imageUrl);
@@ -22,6 +23,8 @@ export default function ChatMessageBubble({
   message,
   isOwnMessage,
   senderName,
+  senderHasVerifiedBadge = false,
+  senderBadgeUser = null,
   senderAvatar,
   senderInitials,
   messageTime,
@@ -336,7 +339,16 @@ export default function ChatMessageBubble({
 
       <div className="flex flex-col min-w-0 flex-1">
         <p className="text-sm font-medium text-[#A89B72] mb-1.5">
-          {senderName}
+          <DisplayNameWithBadge
+            user={
+              senderBadgeUser || {
+                firstName: senderName,
+                hasVerifiedBadge: senderHasVerifiedBadge,
+              }
+            }
+            fallback={senderName}
+            badgeSize="xs"
+          />
         </p>
         <div className="bg-[#E8E8E8] text-[#1A3E32] rounded-2xl rounded-tl-none px-4 py-3 shadow-sm w-fit max-w-full">
           {renderBubbleContent()}

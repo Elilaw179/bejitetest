@@ -65,7 +65,7 @@ export default function AdminProfileHeader({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-xl font-bold text-[#1A3E32]">{displayName}</h3>
-            {profileUser?.hasVerifiedBadge ? <VerifiedBadge /> : null}
+            {profileUser?.hasVerifiedBadge ? <VerifiedBadge user={profileUser} /> : null}
             {user.is_admin ? (
               <Shield className="text-blue-500" size={18} title="Admin" />
             ) : null}
