@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
-  FaUser,
-  FaEnvelope,
   FaEdit,
   FaArrowLeft,
   FaGlobe,
@@ -480,7 +478,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {isRecruiterProfile ? (
+        {isRecruiterProfile && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
               <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4 flex items-center gap-2">
                 <FaGlobe className="shrink-0" />
@@ -517,20 +515,6 @@ const Profile = () => {
                 />
               </div>
             </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4 flex items-center gap-2">
-              <FaUser className="shrink-0" />
-              Basic Information
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <ProfileDetailRow
-                icon={FaEnvelope}
-                label="Email"
-                value={profileData.email}
-              />
-            </div>
-          </div>
         )}
 
         {isRecruiterProfile && (
