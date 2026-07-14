@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Country } from 'country-state-city';
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import Country from 'country-state-city/lib/country.js';
+import { parsePhoneNumberFromString } from 'libphonenumber-js/min';
 import { countryNameToIso2, formatPhoneAsYouType } from '../../utils/phoneUtils';
 
 const countryOptions = Country.getAllCountries()

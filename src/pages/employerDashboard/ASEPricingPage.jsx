@@ -293,7 +293,7 @@ const ASEPricingPage = () => {
     <div className="flex flex-col min-h-screen bg-[#F5F5F5] text-[#16730F] font-sans antialiased">
       <NewsFeedHeader />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 p-4 sm:p-6 max-w-[1500px] mx-auto w-full flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 sm:gap-6 lg:gap-8 p-3 sm:p-6 max-w-[1500px] mx-auto w-full flex-1 min-w-0">
         {/* Sidebar navigation & Help */}
         <ASEPricingSidebar />
 
@@ -304,9 +304,9 @@ const ASEPricingPage = () => {
 
           {/* Current Status Box */}
           {eligibility && (
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#16730F]rounded-2xl flex items-center justify-center text-[#16730F] flex-shrink-0 border border-[#16730F]">
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+                <div className="w-11 h-11 sm:w-12 sm:h-12 bg-green-50 rounded-2xl flex items-center justify-center text-[#16730F] shrink-0 border border-[#16730F]/20">
                   <svg
                     className="w-6 h-6"
                     fill="none"
@@ -321,11 +321,11 @@ const ASEPricingPage = () => {
                     />
                   </svg>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
                     Your Current Status
                   </p>
-                  <h4 className="font-extrabold text-gray-900 text-lg leading-snug">
+                  <h4 className="font-extrabold text-gray-900 text-base sm:text-lg leading-snug">
                     {eligibility.accessType === "free_trial" &&
                       "Free Trial Available"}
                     {eligibility.accessType === "free_trial_upgrade" &&
@@ -365,15 +365,16 @@ const ASEPricingPage = () => {
           )}
 
           {/* Interactive Controls (Toggles) */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100">
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-              <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">
+          <div className="flex flex-col gap-4 sm:gap-6 bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between w-full">
+              <span className="text-sm font-bold text-gray-400 uppercase tracking-wider shrink-0">
                 Billing Interval:
               </span>
-              <div className="inline-flex bg-gray-100 p-1 rounded-xl">
+              <div className="inline-flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
                 <button
+                  type="button"
                   onClick={() => setBillingInterval("monthly")}
-                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                     billingInterval === "monthly"
                       ? "bg-[#16730F] text-white shadow-sm"
                       : "text-gray-600 hover:text-[#16730F]"
@@ -382,8 +383,9 @@ const ASEPricingPage = () => {
                   Monthly
                 </button>
                 <button
+                  type="button"
                   onClick={() => setBillingInterval("yearly")}
-                  className={`relative px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-1.5 ${
+                  className={`relative flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${
                     billingInterval === "yearly"
                       ? "bg-[#16730F] text-white shadow-sm"
                       : "text-gray-600 hover:text-[#16730F]"
@@ -397,13 +399,13 @@ const ASEPricingPage = () => {
               </div>
             </div>
 
-            <p className="text-sm font-semibold text-gray-500">
+            <p className="text-sm font-semibold text-gray-500 text-center sm:text-left">
               All prices in Nigerian Naira (₦)
             </p>
           </div>
 
           {/* Pricing Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {plansData.map((plan) => (
               <ASEPricingCard
                 key={plan.id}

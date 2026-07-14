@@ -1,6 +1,5 @@
 import {
   getAllCountryNames,
-  getStateNamesByCountryName,
 } from "../utils/countryStateData";
 
 export const JOB_TITLE_OPTIONS = [
@@ -193,8 +192,6 @@ export const AVAILABILITY_OPTIONS = [
 ];
 
 export const RATE_OPTIONS = ["Hourly rate", "Monthly Salary"];
-
-export const getStateOptions = (country) => getStateNamesByCountryName(country);
 
 export const currencyLabelFromCode = (code, options = CURRENCY_OPTIONS) => {
   if (!code) return "";

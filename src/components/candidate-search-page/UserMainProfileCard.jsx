@@ -227,15 +227,15 @@ const ProfileHeaderCard = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
         <img
           src={profileAvatarSrc(photoPath)}
           alt={displayName}
-          className="w-24 h-24 rounded-full object-cover border-4 border-[#16730F] shrink-0 cursor-zoom-in"
+          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-[#16730F] shrink-0 cursor-zoom-in"
           onClick={onOpenPhotoViewer}
         />
-        <div className="flex-1 text-center sm:text-left w-full">
+        <div className="flex-1 min-w-0 text-center sm:text-left w-full">
           <h1 className="text-2xl font-bold text-[#1A3E32] flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
             <DisplayNameWithBadge
               user={{ ...profileUser, hasVerifiedBadge }}
@@ -254,28 +254,28 @@ const ProfileHeaderCard = ({
             </p>
           )}
           {salaryPreview && (
-            <p className="text-sm text-gray-500">💰 Expected: {salaryPreview}</p>
+            <p className="text-sm text-gray-500 break-words">💰 Expected: {salaryPreview}</p>
           )}
-          <div className="mt-4 flex flex-nowrap gap-2 justify-center sm:justify-start">
+          <div className="mt-4 grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 sm:gap-3 w-full max-w-lg mx-auto sm:mx-0">
             <button
               type="button"
               onClick={sendRequest}
               disabled={connectDisabled}
-              className={`inline-flex shrink-0 items-center justify-center gap-2 min-h-[40px] px-5 py-2 rounded-full text-sm font-medium text-white transition-colors ${
+              className={`inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white transition-colors ${
                 connectDisabled
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-[#556B1F] hover:bg-[#6B8E23]'
               }`}
             >
               <img className="w-4 h-4 shrink-0" src="/assets/images/repeate-one.svg" alt="" />
-              <span className="whitespace-nowrap">{connectLabel}</span>
+              <span>{connectLabel}</span>
             </button>
             <button
               type="button"
               onClick={handleMessage}
               disabled={!connectUserId || messaging}
               aria-busy={messaging}
-              className="inline-flex shrink-0 items-center justify-center gap-2 min-h-[40px] min-w-[7.5rem] px-5 py-2 rounded-full text-sm font-medium text-[#556B1F] border border-[#556B1F] bg-white hover:bg-[#556B1F]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-[#556B1F] border-2 border-[#556B1F] bg-white hover:bg-[#556B1F]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {messaging ? (
                 <span
@@ -285,7 +285,7 @@ const ProfileHeaderCard = ({
               ) : (
                 <FaComment className="w-3.5 h-3.5 shrink-0" />
               )}
-              <span className="whitespace-nowrap">Message</span>
+              <span>Message</span>
             </button>
           </div>
         </div>

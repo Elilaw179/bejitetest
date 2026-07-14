@@ -65,6 +65,15 @@ function VideoMediaTile({ item, onOpen, showFullMedia }) {
   const posterUrl = getVideoPosterUrl(item);
   const hoverVideoRef = useRef(null);
   const [hovering, setHovering] = useState(false);
+  const interactive = typeof onOpen === 'function';
+  const Wrapper = interactive ? 'button' : 'div';
+  const wrapperProps = interactive
+    ? {
+        type: 'button',
+        onClick: onOpen,
+        'aria-label': 'Play video',
+      }
+    : {};
 
   const handleMouseEnter = useCallback(() => {
     setHovering(true);
@@ -88,13 +97,11 @@ function VideoMediaTile({ item, onOpen, showFullMedia }) {
     const backdropUrl = posterUrl || videoUrl;
 
     return (
-      <button
-        type="button"
+      <Wrapper
+        {...wrapperProps}
         className="relative w-full h-[min(70vh,32rem)] rounded-xl overflow-hidden bg-black group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16730F]"
-        onClick={onOpen}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        aria-label="Play video"
       >
         {backdropUrl && (
           <img
@@ -134,18 +141,16 @@ function VideoMediaTile({ item, onOpen, showFullMedia }) {
             <FaPlay className="ml-1" size={22} />
           </span>
         </span>
-      </button>
+      </Wrapper>
     );
   }
 
   return (
-    <button
-      type="button"
+    <Wrapper
+      {...wrapperProps}
       className="relative w-full rounded-xl overflow-hidden bg-black group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16730F]"
-      onClick={onOpen}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      aria-label="Play video"
     >
       {posterUrl ? (
         <img
@@ -182,7 +187,7 @@ function VideoMediaTile({ item, onOpen, showFullMedia }) {
           <FaPlay className="ml-1" size={22} />
         </span>
       </span>
-    </button>
+    </Wrapper>
   );
 }
 
@@ -190,13 +195,21 @@ function ImageMediaTile({ item, onOpen, showFullMedia }) {
   const imageUrl = resolvePostMediaUrl(item.url);
   if (!imageUrl) return null;
 
+  const interactive = typeof onOpen === 'function';
+  const Wrapper = interactive ? 'button' : 'div';
+  const wrapperProps = interactive
+    ? {
+        type: 'button',
+        onClick: onOpen,
+        'aria-label': 'View image',
+      }
+    : {};
+
   if (showFullMedia) {
     return (
-      <button
-        type="button"
+      <Wrapper
+        {...wrapperProps}
         className="relative w-full h-[min(70vh,32rem)] rounded-xl overflow-hidden bg-black cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16730F]"
-        onClick={onOpen}
-        aria-label="View image"
       >
         <img
           src={imageUrl}
@@ -210,29 +223,28 @@ function ImageMediaTile({ item, onOpen, showFullMedia }) {
           alt="Post media"
           className="absolute inset-0 z-10 w-full h-full object-contain hover:opacity-95 transition-opacity"
         />
-      </button>
+      </Wrapper>
     );
   }
 
   return (
-    <button
-      type="button"
+    <Wrapper
+      {...wrapperProps}
       className="w-full rounded-xl overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16730F]"
-      onClick={onOpen}
-      aria-label="View image"
     >
       <img
         src={imageUrl}
         alt="Post media"
         className="w-full rounded-xl max-h-[55vh] sm:max-h-96 object-cover hover:opacity-95 transition-opacity"
       />
-    </button>
+    </Wrapper>
   );
 }
 
 export default function PostMediaGallery({ media, showFullMedia = false }) {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [modalItem, setModalItem] = useState(null);
+  const openLightbox = showFullMedia ? (item) => setModalItem(item) : undefined;
 
   if (!media || media.length === 0) return null;
 
@@ -268,13 +280,13 @@ export default function PostMediaGallery({ media, showFullMedia = false }) {
                 <VideoMediaTile
                   item={item}
                   showFullMedia={showFullMedia}
-                  onOpen={() => setModalItem(item)}
+                  onOpen={openLightbox ? () => openLightbox(item) : undefined}
                 />
               ) : (
                 <ImageMediaTile
                   item={item}
                   showFullMedia={showFullMedia}
-                  onOpen={() => setModalItem(item)}
+                  onOpen={openLightbox ? () => openLightbox(item) : undefined}
                 />
               )}
             </div>
@@ -289,7 +301,7 @@ export default function PostMediaGallery({ media, showFullMedia = false }) {
         )}
       </div>
 
-      {modalItem && (
+      {showFullMedia && modalItem && (
         <PostMediaModal item={modalItem} onClose={() => setModalItem(null)} />
       )}
     </>

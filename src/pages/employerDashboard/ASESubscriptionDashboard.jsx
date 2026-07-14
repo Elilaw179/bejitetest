@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Loader2, Trash2 } from "lucide-react";
 import NewsFeedHeader from "../../components/NewsFeedHeader";
 import {
   getSubscriptionStatus,
@@ -46,6 +47,49 @@ const getLoadErrorMessage = (error) => {
   }
   return "Failed to load subscription data. Please try again.";
 };
+
+function MobileDashboardNav({ navigate }) {
+  const navItems = [
+    { label: "← Dashboard", path: "/news-feed" },
+    { label: "Search", path: "/candidate-search-page" },
+    { label: "Pricing", path: "/subscription-pricing" },
+  ];
+
+  return (
+    <div className="md:hidden space-y-3">
+      <div className="bg-white rounded-lg shadow p-3">
+        <div className="flex gap-2 overflow-x-auto pb-0.5">
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              type="button"
+              onClick={() => navigate(item.path)}
+              className="shrink-0 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 hover:text-[#16730F] transition-colors"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => navigate("/candidate-search-page")}
+          className="w-full px-4 py-3 bg-[#16730F] text-white rounded-lg hover:bg-[#145c0a] transition-colors font-medium text-sm sm:text-base text-center"
+        >
+          Search Candidates →
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate("/subscription-pricing")}
+          className="w-full px-4 py-3 border-2 border-[#1A3E32] text-[#1A3E32] rounded-lg hover:bg-[#1A3E32] hover:text-white transition-colors font-medium text-sm sm:text-base text-center"
+        >
+          View Plans →
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const ASESubscriptionDashboard = () => {
   const navigate = useNavigate();
@@ -163,7 +207,7 @@ const ASESubscriptionDashboard = () => {
     <div className="flex flex-col min-h-screen bg-gray-50">
       <NewsFeedHeader />
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_3fr_1fr] gap-4 p-4 max-w-screen-xl mx-auto flex-1 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_3fr_1fr] gap-3 sm:gap-4 p-3 sm:p-4 max-w-screen-xl mx-auto flex-1 w-full min-w-0">
         {/* Left Sidebar */}
         <div className="hidden md:block">
           <div className="bg-white rounded-lg shadow p-4 sticky top-20">
@@ -198,35 +242,37 @@ const ASESubscriptionDashboard = () => {
         </div>
 
         {/* Main Content */}
-        <div className="min-h-0">
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="min-h-0 min-w-0">
+          <MobileDashboardNav navigate={navigate} />
+
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden mt-3 md:mt-0">
             {/* Header */}
-            <div className="bg-[#1A3E32] px-6 py-8 text-center">
-              <h1 className="text-3xl font-bold text-white">
+            <div className="bg-[#1A3E32] px-4 py-6 sm:px-6 sm:py-8 text-center">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">
                 Subscription Dashboard
               </h1>
-              <p className="text-green-100 mt-2 text-lg">
+              <p className="text-green-100 mt-2 text-base sm:text-lg">
                 Manage your plan and payment methods
               </p>
             </div>
 
             {/* Current Plan Section */}
-            <div className="p-6 border-b">
+            <div className="p-4 sm:p-6 border-b">
               <h2 className="text-lg font-bold text-[#1A3E32] mb-4">
                 Current Plan
               </h2>
               {subscription ? (
                 <div className="bg-green-50 border-2 border-[#16730F] rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xl font-semibold text-[#1A3E32]">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+                      <span className="text-lg sm:text-xl font-semibold text-[#1A3E32]">
                         {formatPlanLabel(subscription.plan_type)}
                       </span>
-                      <span className="ml-3 px-3 py-1 text-xs font-bold bg-[#16730F] text-white rounded-full">
+                      <span className="px-3 py-1 text-xs font-bold bg-[#16730F] text-white rounded-full">
                         {subscription.status?.toUpperCase()}
                       </span>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right shrink-0">
                       <span className="text-sm text-gray-600">
                         Next billing:{" "}
                       </span>
@@ -279,15 +325,15 @@ const ASESubscriptionDashboard = () => {
                 </div>
               ) : usage && (usage.remaining_searches > 0 || usage.topup_searches_remaining > 0) ? (
                 <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <span className="text-xl font-semibold text-gray-800">
+                      <span className="text-lg sm:text-xl font-semibold text-gray-800">
                         Pay-Per-Search
                       </span>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <span className="text-sm text-gray-600">Remaining: </span>
-                      <span className="text-2xl font-bold text-[#16730F]">
+                      <span className="text-xl sm:text-2xl font-bold text-[#16730F]">
                         {(usage.remaining_searches || 0) +
                           (usage.topup_searches_remaining || 0)}
                       </span>
@@ -309,15 +355,16 @@ const ASESubscriptionDashboard = () => {
               )}
 
               <button
+                type="button"
                 onClick={() => navigate("/subscription-pricing")}
-                className="mt-4 px-6 py-2 bg-[#1A3E32] text-white rounded-lg hover:bg-[#2d5a47] transition-colors font-medium"
+                className="mt-4 w-full sm:w-auto px-6 py-2.5 bg-[#1A3E32] text-white rounded-lg hover:bg-[#2d5a47] transition-colors font-medium"
               >
                 {subscription ? "Change Plan" : "Upgrade Now"} →
               </button>
             </div>
 
             {/* Saved Payment Methods */}
-            <div className="p-6 border-b">
+            <div className="p-4 sm:p-6 border-b">
               <h2 className="text-lg font-bold text-[#1A3E32] mb-4">
                 Payment Methods
               </h2>
@@ -326,32 +373,49 @@ const ASESubscriptionDashboard = () => {
                   {savedCards.map((card) => (
                     <div
                       key={card.id}
-                      className="flex items-center justify-between bg-gray-50 rounded-lg p-4 border border-gray-200"
+                      className="flex items-center gap-3 sm:gap-4 bg-gray-50 rounded-xl p-4 border border-gray-200"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-9 bg-white border border-gray-200 rounded flex items-center justify-center px-2 shrink-0">
-                          <CardBrandIcon brand={card.card_brand} />
-                        </div>
-                        <div>
-                          <span className="text-base font-semibold text-gray-900">
+                      <div className="w-14 h-10 bg-white border border-gray-200 rounded-md flex items-center justify-center px-2 shrink-0 shadow-sm">
+                        <CardBrandIcon brand={card.card_brand} />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm sm:text-base font-semibold text-gray-900 tracking-wide">
                             •••• •••• •••• {card.card_last4}
                           </span>
-                          <span className="text-sm text-gray-500 ml-3">
-                            {card.expiry_month}/{card.expiry_year}
-                          </span>
+                          {card.is_default && (
+                            <span className="px-2.5 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wide bg-[#16730F] text-white rounded-full">
+                              Default
+                            </span>
+                          )}
                         </div>
-                        {card.is_default && (
-                          <span className="px-3 py-1 text-xs font-bold bg-[#16730F] text-white rounded-full">
-                            Default
-                          </span>
-                        )}
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                          Expires {card.expiry_month}/{card.expiry_year}
+                        </p>
                       </div>
+
                       <button
+                        type="button"
                         onClick={() => handleDeleteCard(card.id)}
                         disabled={deletingCardId === card.id}
-                        className="text-red-500 hover:text-red-700 text-sm font-medium px-3 py-1 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label={
+                          deletingCardId === card.id
+                            ? "Removing payment method"
+                            : "Remove payment method"
+                        }
+                        title={
+                          deletingCardId === card.id
+                            ? "Removing..."
+                            : "Remove card"
+                        }
+                        className="shrink-0 inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-red-200 bg-white text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {deletingCardId === card.id ? "Removing..." : "Remove"}
+                        {deletingCardId === card.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                        ) : (
+                          <Trash2 className="w-4 h-4" aria-hidden />
+                        )}
                       </button>
                     </div>
                   ))}
@@ -374,7 +438,7 @@ const ASESubscriptionDashboard = () => {
             </div>
 
             {/* Recent Transactions */}
-            <div className="p-6 w-full">
+            <div className="p-4 sm:p-6 w-full">
               <h2 className="text-lg font-bold text-[#1A3E32] mb-4">
                 Recent Transactions
               </h2>
@@ -383,17 +447,17 @@ const ASESubscriptionDashboard = () => {
                   {recentTransactions.slice(0, 5).map((txn) => (
                     <div
                       key={txn.id}
-                      className="flex items-center justify-between bg-gray-50 rounded-lg p-4 border border-gray-200"
+                      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-gray-50 rounded-lg p-4 border border-gray-200"
                     >
-                      <div>
+                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 min-w-0">
                         <span className="font-semibold text-gray-900 capitalize">
                           {txn.plan_type || txn.transaction_type}
                         </span>
-                        <span className="text-gray-500 ml-3">
+                        <span className="text-gray-500 text-sm sm:text-base">
                           ₦{Number(txn.amount).toLocaleString("en-NG")}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
                         <span
                           className={`px-3 py-1 text-xs font-bold rounded-full ${
                             txn.status === "success"

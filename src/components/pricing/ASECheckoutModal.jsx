@@ -48,7 +48,7 @@ const ASECheckoutModal = ({
         {/* Modal Content */}
         <div className="p-6 overflow-y-auto space-y-6">
           {/* Payment Summary */}
-          <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between border border-gray-100">
+          <div className="bg-gray-50 rounded-2xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border border-gray-100">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
                 Total Price Due Now
@@ -59,7 +59,7 @@ const ASECheckoutModal = ({
                   : "Billed Monthly"}
               </p>
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <p className="text-2xl font-black text-[#1A3E32]">
                 {getDisplayPrice(plan)}
               </p>

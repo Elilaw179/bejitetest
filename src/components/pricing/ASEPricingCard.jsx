@@ -36,18 +36,18 @@ const ASEPricingCard = ({
 
       <div>
         {/* Header Details */}
-        <div>
+        <div className="text-center space-y-2">
           <h3 className="text-xl font-black text-gray-900 tracking-tight">
             {plan.name}
           </h3>
-          <p className="text-xs text-gray-400 mt-1 leading-snug font-medium min-h-[32px]">
+          <p className="text-xs sm:text-sm text-gray-400 leading-snug font-medium min-h-[2.5rem] px-2">
             {plan.subtitle}
           </p>
         </div>
 
         {/* Price display container */}
-        <div className="mt-5 border-b border-gray-100 pb-5">
-          <div className="flex flex-baseline items-baseline flex-wrap gap-1">
+        <div className="mt-6 border-b border-gray-100 pb-6 text-center">
+          <div className="flex items-baseline justify-center flex-wrap gap-x-1.5 gap-y-1">
             <span className="text-3xl sm:text-4xl font-black text-[#1A3E32] leading-none tracking-tight">
               {getDisplayPrice(plan)}
             </span>
@@ -57,11 +57,11 @@ const ASEPricingCard = ({
           </div>
 
           {billingInterval === "yearly" && (
-            <div className="mt-2 space-y-1">
-              <p className="text-xs font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md inline-block">
+            <div className="mt-3 space-y-1.5 flex flex-col items-center">
+              <p className="text-xs font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-md inline-block">
                 {getSaveText(plan)}
               </p>
-              <p className="text-2xs text-gray-400 font-semibold block">
+              <p className="text-2xs text-gray-400 font-semibold">
                 Equivalent to {getMonthlyEquivalent(plan)}
               </p>
             </div>
