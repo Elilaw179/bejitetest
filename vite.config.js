@@ -10,12 +10,11 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 function manualChunkForPackage(id) {
   if (!id.includes("node_modules")) return undefined;
 
+  // Only split heavy, route-level libraries. Do NOT manually chunk React or
+  // react-dependent packages — that creates circular chunk imports and breaks
+  // production (e.g. @react-oauth/google: "Cannot read createContext").
   if (id.includes("recharts") || id.includes("d3-")) return "vendor-charts";
   if (id.includes("xlsx")) return "vendor-xlsx";
-  if (id.includes("framer-motion")) return "vendor-motion";
-  if (id.includes("@sentry")) return "vendor-sentry";
-  if (id.includes("socket.io-client")) return "vendor-socket";
-  if (id.includes("emoji-picker-react")) return "vendor-emoji";
   if (
     id.includes("country-state-city/lib/assets/state") ||
     id.includes("country-state-city/lib/state")
@@ -24,19 +23,8 @@ function manualChunkForPackage(id) {
   }
   if (id.includes("country-state-city")) return "vendor-geo-country";
   if (id.includes("nigeria-state-lga-data")) return "vendor-geo-nigeria";
-  if (id.includes("libphonenumber-js")) return "vendor-phone";
-  if (
-    id.includes("react-dom") ||
-    id.includes("react-router") ||
-    id.includes("/react/")
-  ) {
-    return "vendor-react";
-  }
-  if (id.includes("@reduxjs") || id.includes("react-redux")) return "vendor-redux";
-  if (id.includes("lucide-react") || id.includes("react-icons")) return "vendor-icons";
-  if (id.includes("axios")) return "vendor-http";
 
-  return "vendor";
+  return undefined;
 }
 
 export default defineConfig(({ mode }) => {
@@ -45,6 +33,9 @@ export default defineConfig(({ mode }) => {
   const sentryAuthToken = env.SENTRY_AUTH_TOKEN;
 
   return {
+    resolve: {
+      dedupe: ["react", "react-dom"],
+    },
     plugins: [
       react(),
       tailwindcss(),
