@@ -5,6 +5,7 @@ import { API_URL } from '../../config'
 import NewsFeedLayout from '../../components/layout/NewsFeedLayout'
 import { getPostDetailPath } from '../../utils/postNavigation'
 import FeedLoadMoreButton from '../../components/FeedLoadMoreButton'
+import { markAllNotificationsRead } from '../../services/notificationService'
 
 const NOTIFICATIONS_PAGE_SIZE = 20
 
@@ -119,16 +120,20 @@ const Notifications = () => {
     }
   }
 
-  const handleNotificationClick = async (notification) => {
-    console.log('Notification clicked:', notification);
-
-    // Mark as read
-    if (!notification.is_read) {
-      await markAsRead(notification.id)
+  const markAllAsRead = async () => {
+    try {
+      await markAllNotificationsRead()
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
+    } catch (err) {
+      console.error('Error marking all notifications as read:', err)
     }
+  }
 
-    console.log('Notification type:', notification.type);
-    console.log('Notification data:', notification.data);
+  const handleNotificationClick = (notification) => {
+    // Mark as read in the background so navigation is not delayed on mobile
+    if (!notification.is_read) {
+      void markAsRead(notification.id)
+    }
 
     // Check if it's an interview invitation - try multiple approaches
     let invitationId = null;
@@ -174,7 +179,8 @@ const Notifications = () => {
       notification.type === 'post_liked' ||
       notification.type === 'post_commented' ||
       notification.type === 'post_shared' ||
-      notification.type === 'post_saved'
+      notification.type === 'post_saved' ||
+      notification.type === 'mention'
     ) {
       const postId = parsedData?.postId
       if (postId) {
@@ -182,6 +188,20 @@ const Notifications = () => {
         return
       }
       navigate('/news-feed')
+      return
+    }
+
+    if (notification.type === 'platform_announcement') {
+      const url = parsedData?.url || notification.link
+      if (url && String(url).startsWith('http')) {
+        window.location.href = url
+        return
+      }
+      if (url) {
+        const path = String(url).replace(/^https?:\/\/[^/]+/, '') || '/notifications'
+        navigate(path)
+        return
+      }
       return
     }
 
@@ -306,6 +326,10 @@ const Notifications = () => {
         return '🔁'
       case 'post_saved':
         return '🔖'
+      case 'mention':
+        return '🏷️'
+      case 'platform_announcement':
+        return '📢'
       case 'connection_request':
         return '🤝'
       case 'connection_accepted':
@@ -351,9 +375,20 @@ const Notifications = () => {
         {/* <NewsFeedHeader /> */}
 
         <div className="max-w-2xl mx-auto p-4">
-          <h1 className="text-2xl font-semibold text-[#16730F] text-center mb-4">
-            Notifications
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-semibold text-[#16730F]">
+              Notifications
+            </h1>
+            {!showInvitations && notifications.some((n) => !n.is_read) && (
+              <button
+                type="button"
+                onClick={markAllAsRead}
+                className="text-sm font-medium text-[#16730F] hover:underline"
+              >
+                Mark all as read
+              </button>
+            )}
+          </div>
 
           {/* Toggle between Notifications and Invitations */}
           <div className="flex justify-center gap-2 mb-6">
@@ -465,17 +500,18 @@ const Notifications = () => {
               ) : (
                 <div className="space-y-3">
                   {notifications.map((notification) => (
-                    <div
+                    <button
+                      type="button"
                       key={notification.id}
                       onClick={() => handleNotificationClick(notification)}
-                      className={`p-4 rounded-lg cursor-pointer transition-colors ${notification.is_read
+                      className={`w-full text-left p-4 rounded-lg cursor-pointer transition-colors select-none [-webkit-tap-highlight-color:transparent] touch-manipulation active:bg-gray-50 ${notification.is_read
                         ? 'bg-white border border-gray-200'
                         : 'bg-[#16730F]/5 border-l-4 border-[#16730F]'
                         }`}
                     >
                       <div className="flex items-start gap-3">
-                        <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
-                        <div className="flex-1">
+                        <span className="text-2xl pointer-events-none">{getNotificationIcon(notification.type)}</span>
+                        <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-[#16730F]">{notification.title}</h3>
                           <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                           <p className="text-xs text-gray-400 mt-2">
@@ -483,10 +519,10 @@ const Notifications = () => {
                           </p>
                         </div>
                         {!notification.is_read && (
-                          <span className="w-2 h-2 bg-[#16730F] rounded-full"></span>
+                          <span className="w-2 h-2 bg-[#16730F] rounded-full shrink-0"></span>
                         )}
                       </div>
-                    </div>
+                    </button>
                   ))}
                   <FeedLoadMoreButton
                     hasMore={hasMore}

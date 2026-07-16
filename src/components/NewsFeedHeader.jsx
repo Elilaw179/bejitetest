@@ -41,6 +41,8 @@ import { filterAdminUsersFromSearch, filterAdminSearchResults } from "../utils/f
 import PersonName from "./PersonName";
 import RecruitmentRightMobileMenu from "./recruitment/RecruitmentRightMobileMenu";
 import InviteFriendsModal from "./InviteFriendsModal";
+import NotificationDropdown from "./notifications/NotificationDropdown";
+import { onNotificationNew } from "../services/socketClient";
 
 const NewsFeedHeader = ({ user: propUser }) => {
   useSyncProfilePhoto();
@@ -326,11 +328,17 @@ const NewsFeedHeader = ({ user: propUser }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetch notification count on mount and periodically
+  // Fetch notification count on mount and periodically; live updates via socket
   useEffect(() => {
     fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchNotificationCount, 30000);
+    const unsubscribe = onNotificationNew(() => {
+      setNotificationCount((prev) => prev + 1);
+    });
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
   }, []);
 
   // Fetch unread message count on mount and periodically
@@ -446,7 +454,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
   const iconToPathsMap = {
     "home-icon": ["/news-feed", "/post-page"],
     CHAT: ["/chats"],
-    notifications: ["/notification"],
+    notifications: ["/notification", "/notifications"],
     connection: ["/connection"],
     "job-vacancy": ["/job-vacancy"],
     recruitment: ["/candidate-search-page", "/subscription-pricing", "/subscription-dashboard"],
@@ -469,7 +477,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
         navigate("/chats");
         break;
       case "notifications":
-        navigate("/notification");
+        navigate("/notifications");
         break;
       case "recruitment":
         navigate("/candidate-search-page");
@@ -701,7 +709,16 @@ const NewsFeedHeader = ({ user: propUser }) => {
         <div className="hidden lg:flex gap-3 md:gap-4 items-center">
           {menuItems.map((name, i) => (
             <div key={i} className="relative flex items-center gap-1">
-              {renderNavIcon(name, { onClick: () => handleIconClick(name) })}
+              {name === "notifications" ? (
+                <NotificationDropdown
+                  variant="header"
+                  unreadCount={notificationCount}
+                  onUnreadChange={setNotificationCount}
+                  isActive={isIconActive(name)}
+                />
+              ) : (
+                renderNavIcon(name, { onClick: () => handleIconClick(name) })
+              )}
               {isIconActive(name) && (
                 <span className="px-3 py-1.5 text-xs bg-[#1A3E32] rounded-r-2xl text-white font-medium whitespace-nowrap">
                   {getNavLabel(name)}

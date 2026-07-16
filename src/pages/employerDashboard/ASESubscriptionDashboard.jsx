@@ -5,6 +5,7 @@ import { Loader2, Trash2 } from "lucide-react";
 import NewsFeedHeader from "../../components/NewsFeedHeader";
 import {
   getSubscriptionStatus,
+  getPaymentTransactions,
   deleteSavedCard,
 } from "../../services/paymentApi";
 import CardBrandIcon from "../../components/pricing/CardBrandIcon";
@@ -47,6 +48,70 @@ const getLoadErrorMessage = (error) => {
   }
   return "Failed to load subscription data. Please try again.";
 };
+
+const TRANSACTIONS_PER_PAGE = 10;
+
+const formatTransactionLabel = (txn) => {
+  const planLabels = {
+    standard: "Standard Plan",
+    premium: "Premium Plan",
+    jumbo: "Jumbo Plan",
+    job_extension: "Job Extension",
+    verified_badge: "Verified Badge",
+  };
+  const planKey = String(txn?.plan_type || "").toLowerCase();
+  if (planLabels[planKey]) return planLabels[planKey];
+
+  const typeLabels = {
+    one_time: "One-time Payment",
+    subscription: "Subscription",
+    subscription_renewal: "Subscription Renewal",
+    job_extension: "Job Extension",
+    top_up: "Top-up",
+  };
+  return (
+    typeLabels[txn?.transaction_type] ||
+    txn?.plan_type ||
+    txn?.transaction_type ||
+    "Payment"
+  );
+};
+
+function TransactionRow({ txn }) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-gray-50 rounded-lg p-4 border border-gray-200">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 min-w-0">
+        <span className="font-semibold text-gray-900">
+          {formatTransactionLabel(txn)}
+        </span>
+        <span className="text-gray-500 text-sm sm:text-base">
+          ₦{Number(txn.amount).toLocaleString("en-NG")}
+        </span>
+        {txn.reference && (
+          <span className="text-gray-400 text-xs truncate max-w-full sm:max-w-[200px]">
+            Ref: {txn.reference}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+        <span
+          className={`px-3 py-1 text-xs font-bold rounded-full ${
+            txn.status === "success"
+              ? "bg-green-100 text-green-700"
+              : txn.status === "pending"
+                ? "bg-yellow-100 text-yellow-700"
+                : "bg-red-100 text-red-700"
+          }`}
+        >
+          {txn.status?.toUpperCase()}
+        </span>
+        <span className="text-gray-400 text-sm">
+          {formatDashboardDate(txn.paid_at || txn.created_at)}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function MobileDashboardNav({ navigate }) {
   const navItems = [
@@ -97,6 +162,53 @@ const ASESubscriptionDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deletingCardId, setDeletingCardId] = useState(null);
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
+  const [allTransactions, setAllTransactions] = useState([]);
+  const [transactionsPage, setTransactionsPage] = useState(1);
+  const [transactionsPagination, setTransactionsPagination] = useState(null);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [transactionsError, setTransactionsError] = useState(null);
+
+  const loadAllTransactions = useCallback(async (page = 1) => {
+    setTransactionsLoading(true);
+    setTransactionsError(null);
+
+    try {
+      const data = await getPaymentTransactions({
+        page,
+        limit: TRANSACTIONS_PER_PAGE,
+      });
+      if (data?.success === false) {
+        throw new Error(data.message || "Failed to load transactions");
+      }
+      setAllTransactions(data.transactions || []);
+      setTransactionsPagination(data.pagination || null);
+      setTransactionsPage(page);
+    } catch (err) {
+      console.error("Error loading payment transactions:", err);
+      const message = getLoadErrorMessage(err);
+      setTransactionsError(message);
+      setAllTransactions([]);
+      setTransactionsPagination(null);
+      toast.error(message);
+    } finally {
+      setTransactionsLoading(false);
+    }
+  }, []);
+
+  const handleToggleAllTransactions = async () => {
+    if (showAllTransactions) {
+      setShowAllTransactions(false);
+      return;
+    }
+
+    setShowAllTransactions(true);
+    await loadAllTransactions(1);
+  };
+
+  const handleTransactionsPageChange = async (nextPage) => {
+    await loadAllTransactions(nextPage);
+  };
 
   const loadStatus = useCallback(async () => {
     setLoading(true);
@@ -201,7 +313,16 @@ const ASESubscriptionDashboard = () => {
     );
   }
 
-  const { subscription, usage, savedCards, recentTransactions } = status || {};
+  const { subscription, usage, savedCards, recentTransactions, transactionCount } =
+    status || {};
+  const totalTransactions = transactionCount ?? recentTransactions?.length ?? 0;
+  const totalTransactionPages = transactionsPagination?.totalPages || 0;
+  const transactionStartIdx =
+    totalTransactionPages > 0 ? (transactionsPage - 1) * TRANSACTIONS_PER_PAGE : 0;
+  const transactionEndIdx = Math.min(
+    transactionStartIdx + (allTransactions?.length || 0),
+    transactionsPagination?.total || 0,
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -438,42 +559,14 @@ const ASESubscriptionDashboard = () => {
             </div>
 
             {/* Recent Transactions */}
-            <div className="p-4 sm:p-6 w-full">
+            <div className="p-4 sm:p-6 w-full border-b">
               <h2 className="text-lg font-bold text-[#1A3E32] mb-4">
                 Recent Transactions
               </h2>
               {recentTransactions && recentTransactions.length > 0 ? (
                 <div className="space-y-3">
-                  {recentTransactions.slice(0, 5).map((txn) => (
-                    <div
-                      key={txn.id}
-                      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-gray-50 rounded-lg p-4 border border-gray-200"
-                    >
-                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 min-w-0">
-                        <span className="font-semibold text-gray-900 capitalize">
-                          {txn.plan_type || txn.transaction_type}
-                        </span>
-                        <span className="text-gray-500 text-sm sm:text-base">
-                          ₦{Number(txn.amount).toLocaleString("en-NG")}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
-                        <span
-                          className={`px-3 py-1 text-xs font-bold rounded-full ${
-                            txn.status === "success"
-                              ? "bg-green-100 text-green-700"
-                              : txn.status === "pending"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {txn.status?.toUpperCase()}
-                        </span>
-                        <span className="text-gray-400 text-sm">
-                          {formatDashboardDate(txn.paid_at || txn.created_at)}
-                        </span>
-                      </div>
-                    </div>
+                  {recentTransactions.map((txn) => (
+                    <TransactionRow key={txn.id} txn={txn} />
                   ))}
                 </div>
               ) : (
@@ -481,7 +574,94 @@ const ASESubscriptionDashboard = () => {
                   <p className="text-gray-500">No recent transactions</p>
                 </div>
               )}
+
+              {totalTransactions > 0 && (
+                <button
+                  type="button"
+                  onClick={handleToggleAllTransactions}
+                  className="mt-4 text-sm font-medium text-[#16730F] hover:underline"
+                >
+                  {showAllTransactions
+                    ? "Hide all transactions"
+                    : `View all transactions (${totalTransactions})`}
+                </button>
+              )}
             </div>
+
+            {/* All Transactions */}
+            {showAllTransactions && (
+              <div className="p-4 sm:p-6 w-full">
+                <h2 className="text-lg font-bold text-[#1A3E32] mb-4">
+                  All Transactions
+                </h2>
+
+                {transactionsLoading ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="w-8 h-8 animate-spin text-[#16730F]" />
+                  </div>
+                ) : transactionsError ? (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                    <p className="text-red-700 mb-3">{transactionsError}</p>
+                    <button
+                      type="button"
+                      onClick={() => loadAllTransactions(transactionsPage)}
+                      className="text-sm font-medium text-[#16730F] hover:underline"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                ) : allTransactions.length > 0 ? (
+                  <>
+                    <div className="space-y-3">
+                      {allTransactions.map((txn) => (
+                        <TransactionRow key={txn.id} txn={txn} />
+                      ))}
+                    </div>
+
+                    {totalTransactionPages > 1 && (
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t border-gray-200 text-sm">
+                        <div className="text-gray-500">
+                          Showing {transactionStartIdx + 1}–{transactionEndIdx} of{" "}
+                          {transactionsPagination?.total || 0}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleTransactionsPageChange(transactionsPage - 1)
+                            }
+                            disabled={transactionsPage <= 1 || transactionsLoading}
+                            className="px-3 py-1.5 rounded-lg border text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Previous
+                          </button>
+                          <span className="px-2 text-gray-700 font-medium">
+                            Page {transactionsPage} of {totalTransactionPages}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleTransactionsPageChange(transactionsPage + 1)
+                            }
+                            disabled={
+                              transactionsPage >= totalTransactionPages ||
+                              transactionsLoading
+                            }
+                            className="px-3 py-1.5 rounded-lg border text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-4 text-center">
+                    <p className="text-gray-500">No transactions found</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
