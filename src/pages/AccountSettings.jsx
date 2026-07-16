@@ -11,7 +11,6 @@ import {
   Smartphone,
   ChevronRight,
   Shield,
-  Mail,
   AlertTriangle,
   Check,
   X,
@@ -209,7 +208,7 @@ export default function AccountSettings() {
           icon: Bell,
           iconBg: "bg-amber-50",
           label: "Email Notifications",
-          sublabel: "Receive updates via email",
+          sublabel: "All Bejite emails on or off",
           action: (
             <button
               onClick={(e) => {

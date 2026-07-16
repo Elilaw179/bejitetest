@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   Star,
   Calendar,
@@ -18,7 +19,8 @@ import {
   getBadgePlans,
   initializeBadgeSubscription,
 } from "../../services/verifiedBadgeApi";
-import { getUser } from "../../utils/tokenManager";
+import { getUser, mergeAuthUsers } from "../../utils/tokenManager";
+import { userHasVerifiedBadge } from "../../utils/verifiedBadge";
 
 const BADGE_BENEFITS = [
   {
@@ -58,35 +60,63 @@ const RECRUITER_NOTE =
 
 export default function BadgeStatus() {
   const navigate = useNavigate();
-  const user = getUser();
+  const reduxUser = useSelector((state) => state.auth?.user);
+  const sessionUser = useMemo(
+    () => mergeAuthUsers(getUser() || {}, reduxUser || {}),
+    [reduxUser],
+  );
+  const sessionHasBadge = userHasVerifiedBadge(sessionUser);
+
   const [showModal, setShowModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [badgeStatus, setBadgeStatus] = useState(null);
   const [plans, setPlans] = useState([]);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState(null);
 
   const isRecruiter =
-    user?.role === "recruiter" || user?.role === "employer";
+    sessionUser?.role === "recruiter" || sessionUser?.role === "employer";
+
+  // If session already knows the user is verified, skip the marketing page.
+  useEffect(() => {
+    if (sessionHasBadge) {
+      navigate("/badge-holder", { replace: true });
+    }
+  }, [sessionHasBadge, navigate]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       try {
         const [statusRes, plansRes] = await Promise.all([
           getBadgeStatus().catch(() => null),
           getBadgePlans(),
         ]);
-        if (statusRes) setBadgeStatus(statusRes);
+        if (cancelled) return;
+
+        if (statusRes?.hasVerifiedBadge) {
+          navigate("/badge-holder", { replace: true });
+          return;
+        }
+
         setPlans(plansRes?.plans || []);
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
-    load();
-  }, []);
+
+    // Still confirm with the API even if session already redirected.
+    if (!sessionHasBadge) {
+      load();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, sessionHasBadge]);
 
   const badgePlan = plans[0];
   const uiPlan = badgePlan
@@ -101,10 +131,6 @@ export default function BadgeStatus() {
     : null;
 
   const handleCTA = () => {
-    if (badgeStatus?.hasVerifiedBadge) {
-      navigate("/badge-holder");
-      return;
-    }
     if (isRecruiter) {
       navigate("/subscription-pricing");
       return;
@@ -131,6 +157,16 @@ export default function BadgeStatus() {
       setPaying(false);
     }
   };
+
+  if (sessionHasBadge || loading) {
+    return (
+      <NewsFeedLayout classes={false} showSidebars={false}>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1A3E32]" />
+        </div>
+      </NewsFeedLayout>
+    );
+  }
 
   return (
     <NewsFeedLayout classes={false} showSidebars={false}>
@@ -161,29 +197,23 @@ export default function BadgeStatus() {
                 Bejite Verified Badge
               </p>
               <h2 className="text-2xl sm:text-3xl font-bold mb-2 break-words">
-                {badgeStatus?.hasVerifiedBadge
-                  ? "You're a verified subscriber"
-                  : "Stand out with a verified profile"}
+                Stand out with a verified profile
               </h2>
               <p className="text-green-100 text-sm leading-relaxed max-w-xl">
                 {isRecruiter
                   ? RECRUITER_NOTE
                   : "Subscribe monthly to unlock your verified badge, employment reports, and exclusive events."}
               </p>
-              {!loading && (
-                <button
-                  type="button"
-                  onClick={handleCTA}
-                  disabled={paying}
-                  className="mt-5 w-full sm:w-auto px-6 py-2.5 bg-white text-[#1A3E32] font-semibold rounded-xl hover:bg-green-50 transition-colors text-sm sm:text-base"
-                >
-                  {badgeStatus?.hasVerifiedBadge
-                    ? "Go to Badge Dashboard"
-                    : isRecruiter
-                      ? "View ASE Plans"
-                      : `Subscribe — ₦${uiPlan?.price || "10,000"}/month`}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleCTA}
+                disabled={paying}
+                className="mt-5 w-full sm:w-auto px-6 py-2.5 bg-white text-[#1A3E32] font-semibold rounded-xl hover:bg-green-50 transition-colors text-sm sm:text-base"
+              >
+                {isRecruiter
+                  ? "View ASE Plans"
+                  : `Subscribe — ₦${uiPlan?.price || "10,000"}/month`}
+              </button>
               {error && <p className="text-red-200 text-sm mt-3 break-words">{error}</p>}
               </div>
             </div>

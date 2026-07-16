@@ -34,5 +34,6 @@ export const socialRoutes = (
       <Route path="/chats" element={<Chat />} />
       <Route path="/connection" element={<Connections />} />
       <Route path="/notification" element={<Notifications />} />
+      <Route path="/notifications" element={<Notifications />} />
   </>
 );

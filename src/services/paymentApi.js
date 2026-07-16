@@ -146,6 +146,18 @@ export const getSubscriptionStatus = async () => {
   }
 };
 
+export const getPaymentTransactions = async ({ page = 1, limit = 10 } = {}) => {
+  try {
+    const response = await axiosInstance.get(`${PAYSTACK_API_URL}/ase/transactions`, {
+      params: { page, limit },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching payment transactions:', error);
+    throw error;
+  }
+};
+
 export const recordASESearch = async (payload = {}) => {
   try {
     const response = await axiosInstance.post(
@@ -187,6 +199,7 @@ export default {
   deleteSavedCard,
   chargeSavedCard,
   getSubscriptionStatus,
+  getPaymentTransactions,
   recordASESearch,
   completeASESearch,
 };

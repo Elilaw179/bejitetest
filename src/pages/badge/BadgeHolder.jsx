@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { BadgeCheck, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EventModal } from "../../components/modal/confirmBadgeModal";
@@ -13,6 +14,8 @@ import {
   openMonthlyReport,
   registerForPartnerEvent,
 } from "../../services/verifiedBadgeApi";
+import { getUser, mergeAuthUsers } from "../../utils/tokenManager";
+import { getVerifiedBadgeLabel } from "../../utils/verifiedBadge";
 
 const CATEGORY_STYLES = {
   Technology: { color: "from-blue-600 to-indigo-700" },
@@ -54,12 +57,27 @@ function mapApiEvent(event) {
 
 export default function BadgeHolder() {
   const navigate = useNavigate();
+  const reduxUser = useSelector((state) => state.auth?.user);
+  const sessionUser = useMemo(
+    () => mergeAuthUsers(getUser() || {}, reduxUser || {}),
+    [reduxUser],
+  );
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [events, setEvents] = useState([]);
   const [reports, setReports] = useState([]);
   const [badgeStatus, setBadgeStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeReport, setActiveReport] = useState(null);
+
+  const badgeRole =
+    badgeStatus?.role ||
+    sessionUser?.role ||
+    (badgeStatus?.source === "recruiter" ||
+    badgeStatus?.source === "employer_standalone"
+      ? "recruiter"
+      : null);
+
+  const badgeLabel = getVerifiedBadgeLabel(badgeRole || sessionUser);
 
   useEffect(() => {
     const load = async () => {
@@ -125,7 +143,9 @@ export default function BadgeHolder() {
                 </h1>
                 <VerifiedBadge
                   size="sm"
-                  role={badgeStatus?.role}
+                  role={badgeRole}
+                  user={sessionUser}
+                  label={badgeLabel}
                   responsiveLabel
                 />
               </div>
