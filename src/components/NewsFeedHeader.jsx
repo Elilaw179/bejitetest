@@ -59,6 +59,44 @@ const NewsFeedHeader = ({ user: propUser }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isProfileRowHidden, setIsProfileRowHidden] = useState(false);
+
+  useEffect(() => {
+    if (isMobileSearchOpen) {
+      searchRef.current?.querySelector("input")?.focus();
+    }
+  }, [isMobileSearchOpen]);
+
+  // On mobile, hide the profile row while scrolling down; show it again on scroll up.
+  useEffect(() => {
+    const targets = [
+      window,
+      ...document.querySelectorAll(".nfl-scroll"),
+    ].filter((el) => !searchRef.current?.contains(el instanceof Element ? el : null));
+
+    const lastTops = new Map();
+    const getTop = (el) =>
+      el === window ? window.scrollY : el.scrollTop;
+
+    const handlers = targets.map((el) => {
+      lastTops.set(el, getTop(el));
+      const onScroll = () => {
+        const top = getTop(el);
+        const delta = top - lastTops.get(el);
+        if (Math.abs(delta) < 8) return;
+        setIsProfileRowHidden(delta > 0 && top > 48);
+        lastTops.set(el, top);
+      };
+      el.addEventListener("scroll", onScroll, { passive: true });
+      return { el, onScroll };
+    });
+
+    return () =>
+      handlers.forEach(({ el, onScroll }) =>
+        el.removeEventListener("scroll", onScroll),
+      );
+  }, [location.pathname]);
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
@@ -597,46 +635,66 @@ const NewsFeedHeader = ({ user: propUser }) => {
   return (
     <header className="bg-[#F5F5F5] w-full relative z-50">
       <div className="max-w-[1440px] w-full mx-auto flex flex-col lg:flex-row items-center justify-between px-4 py-3 gap-3 lg:gap-4">
-        <div className="w-full lg:w-auto flex items-center justify-between">
+        <div className="w-full lg:w-auto flex items-center justify-between border-b border-gray-300 pb-2.5 lg:border-b-0 lg:pb-0">
           <img
             onClick={() => navigate("/news-feed")}
             src="/assets/images/logo.png"
             alt="Logo"
-            className="h-10 cursor-pointer"
+            className="h-8 lg:h-10 cursor-pointer"
           />
+          <div className="flex items-center gap-1 lg:hidden">
+            <button
+              type="button"
+              onClick={() => setIsMobileSearchOpen((prev) => !prev)}
+              aria-label={isMobileSearchOpen ? "Close search" : "Open search"}
+              aria-expanded={isMobileSearchOpen}
+              className={`inline-flex items-center justify-center w-8 h-8 rounded-full transition-colors active:scale-95 ${
+                isMobileSearchOpen
+                  ? "bg-[#16730F]/10 text-[#16730F]"
+                  : "text-[#1A3E32]"
+              }`}
+            >
+              <FaSearch className="h-4 w-4" />
+            </button>
           <button
             type="button"
             onClick={toggleSidebar}
             aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
             aria-expanded={isSidebarOpen}
-            className="lg:hidden relative inline-flex items-center justify-center w-11 h-11 text-[#1A3E32] transition-all duration-300 active:scale-95"
+            className="lg:hidden relative inline-flex items-center justify-center p-0 text-[#1A3E32] transition-all duration-300 active:scale-95"
           >
             <span className="sr-only">{isSidebarOpen ? "Close menu" : "Open menu"}</span>
-            <span className="relative w-[18px] h-[12px] flex flex-col justify-between">
+            <span className="relative w-[22px] h-[15px] flex flex-col justify-between">
               <span
                 className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
                   isSidebarOpen
-                    ? "translate-y-[5px] rotate-45 w-[18px]"
-                    : "w-[18px]"
+                    ? "translate-y-[6.5px] rotate-45 w-[22px]"
+                    : "w-[22px]"
                 }`}
               />
               <span
                 className={`block h-[2px] rounded-full bg-current transition-all duration-200 ease-out ${
-                  isSidebarOpen ? "opacity-0 scale-x-0" : "w-[12px] ml-auto"
+                  isSidebarOpen ? "opacity-0 scale-x-0" : "w-[15px] ml-auto"
                 }`}
               />
               <span
                 className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
                   isSidebarOpen
-                    ? "-translate-y-[5px] -rotate-45 w-[18px]"
-                    : "w-[15px]"
+                    ? "-translate-y-[6.5px] -rotate-45 w-[22px]"
+                    : "w-[18px]"
                 }`}
               />
             </span>
           </button>
+          </div>
         </div>
 
-        <div ref={searchRef} className="relative w-full lg:max-w-[500px]">
+        <div
+          ref={searchRef}
+          className={`relative w-full lg:max-w-[500px] ${
+            isMobileSearchOpen ? "block" : "hidden lg:block"
+          }`}
+        >
           <input
             type="text"
             placeholder="Search people, jobs, posts..."
@@ -728,6 +786,14 @@ const NewsFeedHeader = ({ user: propUser }) => {
           ))}
         </div>
 
+        <div
+          className={`grid w-full lg:w-auto lg:block transition-[grid-template-rows,opacity,margin-top] duration-300 ease-out ${
+            isProfileRowHidden
+              ? "grid-rows-[0fr] opacity-0 -mt-3 pointer-events-none lg:opacity-100 lg:mt-0 lg:pointer-events-auto"
+              : "grid-rows-[1fr] opacity-100 mt-0"
+          }`}
+        >
+        <div className={`min-h-0 lg:min-h-full ${isProfileRowHidden ? "overflow-hidden lg:overflow-visible" : ""}`}>
         <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto justify-between lg:justify-normal">
           <img
             className="w-10 h-10 lg:w-14 lg:h-14 rounded-full object-cover"
@@ -880,6 +946,8 @@ const NewsFeedHeader = ({ user: propUser }) => {
               </div>
             </div>
           </div>
+        </div>
+        </div>
         </div>
       </div>
 
