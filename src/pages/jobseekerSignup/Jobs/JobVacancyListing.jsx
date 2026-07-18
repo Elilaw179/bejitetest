@@ -319,7 +319,7 @@ const JobVacancyListing = () => {
 
   return (
     <NewsFeedLayout showSidebars={false}>
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 w-full box-border">
         <HeroSection />
         <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
 
@@ -329,8 +329,8 @@ const JobVacancyListing = () => {
           </div>
         )}
 
-        <div className="grid lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
+        <div className="grid lg:grid-cols-4 gap-6 min-w-0">
+          <div className="lg:col-span-1 min-w-0">
             <FilterSidebar
               industries={industries}
               workModes={workModes}
@@ -350,7 +350,7 @@ const JobVacancyListing = () => {
             />
           </div>
 
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 min-w-0">
             <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
               <p className="text-gray-600 text-sm">
                 Showing{" "}
@@ -370,100 +370,111 @@ const JobVacancyListing = () => {
               </div>
             </div>
 
-            {isLoading ? (
-              <div className="flex justify-center py-20">
-                <FaSpinner className="animate-spin text-[#16730F] text-4xl" />
-              </div>
-            ) : jobs.length > 0 ? (
-              <>
-                <div className="space-y-4">
-                  {currentJobs.map((job) => (
-                    <JobCard
-                      key={job.id}
-                      job={job}
-                      isSaved={isJobSaved(job.id)}
-                      onSave={handleSaveJob}
-                      onUnsave={handleUnsaveJob}
-                      onClick={() => setSelectedJob(job)}
-                    />
-                  ))}
+            <div className="relative min-h-[28rem]">
+              {isLoading && (
+                <div className="absolute inset-0 z-10 flex items-start justify-center pt-20 bg-[#F5F5F5]/70 backdrop-blur-[1px]">
+                  <FaSpinner className="animate-spin text-[#16730F] text-4xl" />
                 </div>
+              )}
 
-                {totalPages > 1 && (
-                  <div className="flex flex-wrap justify-center items-center gap-2 mt-8 pt-4 border-t border-gray-200">
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={currentPage === 1}
-                      className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-all ${
-                        currentPage === 1
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : "bg-white text-gray-700 hover:bg-[#16730F] hover:text-white border border-gray-300"
-                      }`}
-                      aria-label="Previous page"
-                    >
-                      <FaChevronLeft size={14} />
-                      <span className="text-sm hidden sm:inline">Prev</span>
-                    </button>
-
-                    <div className="flex gap-2 flex-wrap justify-center">
-                      {pageNumbers.map((page, index) => (
-                        <button
-                          key={index}
-                          onClick={() =>
-                            typeof page === "number" && handlePageChange(page)
-                          }
-                          className={`w-10 h-10 rounded-lg font-medium transition-all ${
-                            currentPage === page
-                              ? "bg-[#16730F] text-white shadow-md"
-                              : page === "..."
-                                ? "bg-transparent text-gray-400 cursor-default"
-                                : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
-                          }`}
-                          disabled={page === "..."}
-                          aria-label={`Page ${page}`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages}
-                      className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-all ${
-                        currentPage === totalPages
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : "bg-white text-gray-700 hover:bg-[#16730F] hover:text-white border border-gray-300"
-                      }`}
-                      aria-label="Next page"
-                    >
-                      <span className="text-sm hidden sm:inline">Next</span>
-                      <FaChevronRight size={14} />
-                    </button>
-                  </div>
-                )}
-
-                <div className="text-center mt-4 text-sm text-gray-500 lg:hidden">
-                  Page {currentPage} of {totalPages || 1}
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-20 bg-gray-50 rounded-2xl">
-                <div className="text-5xl mb-4">🔍</div>
-                <h3 className="text-xl font-semibold text-gray-700">
-                  No jobs found
-                </h3>
-                <p className="text-gray-500 mt-2">
-                  Try adjusting your search or filters
-                </p>
-                <button
-                  onClick={clearFilters}
-                  className="mt-4 text-[#16730F] hover:underline font-medium"
+              {jobs.length > 0 ? (
+                <div
+                  className={
+                    isLoading ? "pointer-events-none opacity-50" : undefined
+                  }
+                  aria-busy={isLoading}
                 >
-                  Clear all filters
-                </button>
-              </div>
-            )}
+                  <div className="space-y-4">
+                    {currentJobs.map((job) => (
+                      <JobCard
+                        key={job.id}
+                        job={job}
+                        isSaved={isJobSaved(job.id)}
+                        onSave={handleSaveJob}
+                        onUnsave={handleUnsaveJob}
+                        onClick={() => setSelectedJob(job)}
+                      />
+                    ))}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="flex flex-wrap justify-center items-center gap-2 mt-8 pt-4 border-t border-gray-200">
+                      <button
+                        onClick={handlePrevPage}
+                        disabled={currentPage === 1 || isLoading}
+                        className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-all ${
+                          currentPage === 1
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-white text-gray-700 hover:bg-[#16730F] hover:text-white border border-gray-300"
+                        }`}
+                        aria-label="Previous page"
+                      >
+                        <FaChevronLeft size={14} />
+                        <span className="text-sm hidden sm:inline">Prev</span>
+                      </button>
+
+                      <div className="flex gap-2 flex-wrap justify-center">
+                        {pageNumbers.map((page, index) => (
+                          <button
+                            key={index}
+                            onClick={() =>
+                              typeof page === "number" && handlePageChange(page)
+                            }
+                            className={`w-10 h-10 rounded-lg font-medium transition-all ${
+                              currentPage === page
+                                ? "bg-[#16730F] text-white shadow-md"
+                                : page === "..."
+                                  ? "bg-transparent text-gray-400 cursor-default"
+                                  : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+                            }`}
+                            disabled={page === "..." || isLoading}
+                            aria-label={`Page ${page}`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages || isLoading}
+                        className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-all ${
+                          currentPage === totalPages
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-white text-gray-700 hover:bg-[#16730F] hover:text-white border border-gray-300"
+                        }`}
+                        aria-label="Next page"
+                      >
+                        <span className="text-sm hidden sm:inline">Next</span>
+                        <FaChevronRight size={14} />
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="text-center mt-4 text-sm text-gray-500 lg:hidden">
+                    Page {currentPage} of {totalPages || 1}
+                  </div>
+                </div>
+              ) : isLoading ? (
+                <div className="h-72" aria-hidden />
+              ) : (
+                <div className="text-center py-20 bg-gray-50 rounded-2xl">
+                  <div className="text-5xl mb-4">🔍</div>
+                  <h3 className="text-xl font-semibold text-gray-700">
+                    No jobs found
+                  </h3>
+                  <p className="text-gray-500 mt-2">
+                    Try adjusting your search or filters
+                  </p>
+                  <button
+                    onClick={clearFilters}
+                    className="mt-4 text-[#16730F] hover:underline font-medium"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
