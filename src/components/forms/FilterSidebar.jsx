@@ -180,7 +180,7 @@ export const FilterSidebar = ({
 
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
-          <div className="absolute right-0 top-0 h-full w-80 bg-white shadow-xl p-5 overflow-y-auto">
+          <div className="absolute right-0 top-0 h-full w-[min(20rem,100vw)] bg-white shadow-xl p-5 overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-bold">Filters</h2>
               <button onClick={() => setIsMobileOpen(false)} className="p-2">
