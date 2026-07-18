@@ -22,6 +22,7 @@ import {
   FaTrash,
   FaArrowLeft,
   FaEye,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
 
 const INDUSTRY_SUGGESTIONS = INDUSTRY_OPTIONS.filter(
@@ -41,6 +42,22 @@ const formatSalaryRangePreview = (salaryMin, salaryMax, currencyLabel) => {
   return null;
 };
 
+const normalizeApplicationUrl = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const candidate = /^[a-z][a-z\d+.-]*:\/\//i.test(raw)
+    ? raw
+    : `https://${raw}`;
+  try {
+    const parsed = new URL(candidate);
+    return ["http:", "https:"].includes(parsed.protocol)
+      ? parsed.toString()
+      : "";
+  } catch {
+    return "";
+  }
+};
+
 const CreateJob = () => {
   const navigate = useNavigate();
   const [skills, setSkills] = useState([{ skill: "", experience: "" }]);
@@ -55,6 +72,8 @@ const CreateJob = () => {
     salaryMin: "",
     salaryMax: "",
     currency: "",
+    applicationMethod: "bejite",
+    applicationUrl: "",
   });
   const { countries, states } = useCountryStateOptions(formData.country);
   const [showPreview, setShowPreview] = useState(false);
@@ -106,6 +125,14 @@ const CreateJob = () => {
       !formData.currency.trim()
     ) {
       return "Currency is required when specifying a salary range";
+    }
+    if (formData.applicationMethod === "external") {
+      if (!formData.applicationUrl.trim()) {
+        return "External application link is required";
+      }
+      if (!normalizeApplicationUrl(formData.applicationUrl)) {
+        return "Enter a valid application website link";
+      }
     }
     return null;
   };
@@ -164,6 +191,10 @@ const CreateJob = () => {
         currency: formData.currency.trim()
           ? currencyCodeFromLabel(formData.currency.trim())
           : undefined,
+        applicationUrl:
+          formData.applicationMethod === "external"
+            ? normalizeApplicationUrl(formData.applicationUrl)
+            : undefined,
       });
 
       if (!response?.success) {
@@ -285,6 +316,27 @@ const CreateJob = () => {
                 <p className="text-gray-600 whitespace-pre-wrap">
                   {formData.responsibilities || "No responsibilities provided"}
                 </p>
+              </div>
+
+              <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h3 className="text-sm font-bold text-gray-900 mb-1">
+                  Application destination
+                </h3>
+                {formData.applicationMethod === "external" ? (
+                  <a
+                    href={normalizeApplicationUrl(formData.applicationUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-[#16730F] hover:underline break-all"
+                  >
+                    Apply on external website
+                    <FaExternalLinkAlt className="shrink-0" />
+                  </a>
+                ) : (
+                  <p className="text-sm text-gray-600">
+                    Candidates will apply directly through Bejite.
+                  </p>
+                )}
               </div>
 
               <div className="bg-yellow-50 rounded-xl p-4 mb-6">
@@ -509,6 +561,105 @@ const CreateJob = () => {
                   }
                 />
               </div>
+
+              {/* Application Destination */}
+              <fieldset>
+                <legend className="block mb-2 font-semibold text-[#1A3E32]">
+                  Where should candidates apply?
+                </legend>
+                <p className="text-sm text-gray-500 mb-3">
+                  Use Bejite&apos;s application form or send candidates to the
+                  original job website.
+                </p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <label
+                    className={`cursor-pointer rounded-xl border-2 p-4 transition-colors ${
+                      formData.applicationMethod === "bejite"
+                        ? "border-[#16730F] bg-green-50"
+                        : "border-gray-200 hover:border-[#16730F]/50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="applicationMethod"
+                      value="bejite"
+                      checked={formData.applicationMethod === "bejite"}
+                      onChange={() =>
+                        setFormData({
+                          ...formData,
+                          applicationMethod: "bejite",
+                        })
+                      }
+                      className="mr-2 accent-[#16730F]"
+                    />
+                    <span className="font-semibold text-gray-900">
+                      Apply on Bejite
+                    </span>
+                    <span className="block text-xs text-gray-500 mt-1 ml-5">
+                      Receive and manage applications in your dashboard.
+                    </span>
+                  </label>
+                  <label
+                    className={`cursor-pointer rounded-xl border-2 p-4 transition-colors ${
+                      formData.applicationMethod === "external"
+                        ? "border-[#16730F] bg-green-50"
+                        : "border-gray-200 hover:border-[#16730F]/50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="applicationMethod"
+                      value="external"
+                      checked={formData.applicationMethod === "external"}
+                      onChange={() =>
+                        setFormData({
+                          ...formData,
+                          applicationMethod: "external",
+                        })
+                      }
+                      className="mr-2 accent-[#16730F]"
+                    />
+                    <span className="font-semibold text-gray-900">
+                      Apply on external website
+                    </span>
+                    <span className="block text-xs text-gray-500 mt-1 ml-5">
+                      Redirect candidates to another company or job website.
+                    </span>
+                  </label>
+                </div>
+
+                {formData.applicationMethod === "external" && (
+                  <div className="mt-4">
+                    <label
+                      htmlFor="job-application-url"
+                      className="block mb-2 text-sm font-medium text-gray-700"
+                    >
+                      External application link{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <FaExternalLinkAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        id="job-application-url"
+                        type="url"
+                        inputMode="url"
+                        placeholder="https://company.com/jobs/apply"
+                        className="w-full border rounded-xl pl-11 pr-4 py-3 outline-none focus:ring-2 focus:ring-[#16730F]"
+                        value={formData.applicationUrl}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            applicationUrl: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      The Apply button will open this link in a new tab.
+                    </p>
+                  </div>
+                )}
+              </fieldset>
 
               {/* Salary Range */}
               <div>
