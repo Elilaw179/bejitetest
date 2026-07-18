@@ -36,6 +36,18 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
   const recruiterPhotoSrc = profilePhotoUrl(
     job.recruiter?.profilePhoto || job.recruiterProfilePhoto || job.companyLogo,
   );
+  const hasExternalApplication = Boolean(job.applicationUrl?.trim());
+  const applyLabel = hasExternalApplication
+    ? "Apply on Company Website"
+    : "Apply Now";
+
+  const handleApplyClick = () => {
+    if (hasExternalApplication) {
+      window.open(job.applicationUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    setIsApplying(true);
+  };
 
   const socialLinks = [
     { key: "linkedin", href: job.companyLinkedin, icon: FaLinkedin, label: "LinkedIn" },
@@ -131,10 +143,11 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
       </p>
       <button
         type="button"
-        onClick={() => setIsApplying(true)}
-        className="w-full bg-[#16730F] text-white py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-[#145A0C] transition text-sm sm:text-base"
+        onClick={handleApplyClick}
+        className="w-full bg-[#16730F] text-white py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-[#145A0C] transition text-sm sm:text-base inline-flex items-center justify-center gap-2"
       >
-        Apply Now
+        {applyLabel}
+        {hasExternalApplication && <FaExternalLinkAlt size={12} />}
       </button>
     </div>
   );
@@ -168,10 +181,11 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsApplying(true)}
-                  className="hidden sm:inline-flex bg-[#16730F] text-white px-4 sm:px-6 py-2 rounded-xl font-semibold hover:bg-[#145A0C] transition text-sm sm:text-base"
+                  onClick={handleApplyClick}
+                  className="hidden sm:inline-flex items-center gap-2 bg-[#16730F] text-white px-4 sm:px-6 py-2 rounded-xl font-semibold hover:bg-[#145A0C] transition text-sm sm:text-base"
                 >
-                  Apply Now
+                  {applyLabel}
+                  {hasExternalApplication && <FaExternalLinkAlt size={12} />}
                 </button>
               </div>
             </div>
@@ -516,10 +530,11 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
             <div className="sm:hidden shrink-0 border-t border-gray-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <button
                 type="button"
-                onClick={() => setIsApplying(true)}
-                className="w-full bg-[#16730F] text-white py-3 rounded-xl font-semibold hover:bg-[#145A0C] transition text-sm"
+                onClick={handleApplyClick}
+                className="w-full bg-[#16730F] text-white py-3 rounded-xl font-semibold hover:bg-[#145A0C] transition text-sm inline-flex items-center justify-center gap-2"
               >
-                Apply Now
+                {applyLabel}
+                {hasExternalApplication && <FaExternalLinkAlt size={12} />}
               </button>
             </div>
           </>
