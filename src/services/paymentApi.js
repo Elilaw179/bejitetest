@@ -1,4 +1,5 @@
 import axiosInstance from '../utils/axiosInstance';
+import { getUser } from '../utils/tokenManager';
 
 const PAYSTACK_API_URL = '/api/paystack';
 
@@ -14,7 +15,7 @@ export const getSubscriptionPlans = async () => {
 
 export const checkASEEligibility = async () => {
   try {
-    const employerId = localStorage.getItem('userId');
+    const employerId = getUser()?.id;
     const response = await axiosInstance.get(`${PAYSTACK_API_URL}/ase/eligibility`, {
       params: employerId ? { employer_id: employerId } : {},
     });
@@ -75,6 +76,36 @@ export const verifySubscriptionPayment = async (reference) => {
   }
 };
 
+export const getTopUpProducts = async () => {
+  try {
+    const response = await axiosInstance.get(`${PAYSTACK_API_URL}/topups`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching top-up products:', error);
+    throw error;
+  }
+};
+
+export const initializeTopUpPayment = async (data) => {
+  try {
+    const response = await axiosInstance.post(`${PAYSTACK_API_URL}/topup/init`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error initializing top-up payment:', error);
+    throw error;
+  }
+};
+
+export const verifyTopUpPayment = async (reference) => {
+  try {
+    const response = await axiosInstance.post(`${PAYSTACK_API_URL}/topup/verify`, { reference });
+    return response.data;
+  } catch (error) {
+    console.error('Error verifying top-up payment:', error);
+    throw error;
+  }
+};
+
 export const getSavedCards = async () => {
   try {
     const response = await axiosInstance.get(`${PAYSTACK_API_URL}/cards`);
@@ -115,6 +146,18 @@ export const getSubscriptionStatus = async () => {
   }
 };
 
+export const getPaymentTransactions = async ({ page = 1, limit = 10 } = {}) => {
+  try {
+    const response = await axiosInstance.get(`${PAYSTACK_API_URL}/ase/transactions`, {
+      params: { page, limit },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching payment transactions:', error);
+    throw error;
+  }
+};
+
 export const recordASESearch = async (payload = {}) => {
   try {
     const response = await axiosInstance.post(
@@ -149,10 +192,14 @@ export default {
   verifyOneTimePayment,
   initializeSubscriptionPayment,
   verifySubscriptionPayment,
+  getTopUpProducts,
+  initializeTopUpPayment,
+  verifyTopUpPayment,
   getSavedCards,
   deleteSavedCard,
   chargeSavedCard,
   getSubscriptionStatus,
+  getPaymentTransactions,
   recordASESearch,
   completeASESearch,
 };

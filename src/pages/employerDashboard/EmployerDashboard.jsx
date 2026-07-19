@@ -254,7 +254,7 @@ const EmployerDashboard = () => {
 
   return (
     <NewsFeedLayout showSidebars={false}>
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -385,7 +385,7 @@ const EmployerDashboard = () => {
               </p>
             </div>
             <button
-              onClick={() => navigate("/ase/pricing")}
+              onClick={() => navigate("/subscription-pricing")}
               className="px-6 py-3 bg-white text-[#16730F] rounded-xl font-semibold hover:shadow-lg transition-shadow"
             >
               Get Started

@@ -9,14 +9,11 @@ import {
   FaMoneyBillWave,
   FaGraduationCap,
 } from "react-icons/fa";
-import {
-  MdVerified,
-  MdWorkOutline,
-  MdAccessTime,
-  MdAttachMoney,
-} from "react-icons/md";
+import { MdWorkOutline, MdAccessTime } from "react-icons/md";
 import { formatSalary, formatTimeRemaining } from "../../utils/checksFormat";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
+import { getJobCardExcerpt } from "../../utils/jobDescription";
+import VerifiedBadge from "../VerifiedBadge";
 
 export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
   const timeRemaining = formatTimeRemaining(job.expiresAt);
@@ -24,6 +21,7 @@ export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
   const companyLogoSrc = profilePhotoUrl(
     job.recruiterProfilePhoto || job.companyLogo,
   );
+  const excerpt = getJobCardExcerpt(job);
 
   return (
     <div
@@ -94,9 +92,7 @@ export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
               </span>
 
               {job.isVerified && (
-                <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                  <MdVerified size={12} /> Verified
-                </span>
+                <VerifiedBadge size="xs" role="recruiter" />
               )}
 
               {timeRemaining.isUrgent && (
@@ -129,10 +125,11 @@ export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
               </span>
             </div>
 
-            {/* Description - Hidden on very small, visible on sm */}
-            <p className="hidden sm:block text-gray-500 text-sm line-clamp-2 mb-3">
-              {job.description}
-            </p>
+            {excerpt && (
+              <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 overflow-hidden mb-3">
+                {excerpt}
+              </p>
+            )}
 
             {/* Skills Tags */}
             <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3">

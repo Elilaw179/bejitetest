@@ -51,6 +51,7 @@ import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
 import PostActions from "../components/feed/PostActions";
 import UsersListModal from "../components/UsersListModal";
 import { formatDisplayPersonName } from "../utils/personDisplayName";
+import DisplayNameWithBadge from "../components/DisplayNameWithBadge";
 import { getAuthorSubtitle } from "../utils/authorDisplay";
 import PostMediaGallery from "../components/PostMediaGallery";
 import FeedLoadMoreButton from "../components/FeedLoadMoreButton";
@@ -382,14 +383,19 @@ const ActivityLogPostCard = ({
               className="rounded-full w-10 h-10 sm:w-12 sm:h-12 object-cover border-2 border-green-50 cursor-pointer hover:opacity-90"
             />
           </button>
-          <div>
+          <div className="min-w-0 flex-1">
             <button
               type="button"
               onClick={goToAuthorProfile}
               disabled={!post.authorId}
-              className="font-semibold text-base sm:text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline leading-tight"
+              className="font-semibold text-base sm:text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline leading-tight max-w-full min-w-0"
             >
-              {authorName}
+              <DisplayNameWithBadge
+                user={post.author}
+                fallback={authorName}
+                badgeSize="xs"
+                responsiveBadge
+              />
             </button>
             <p className="text-gray-500 text-xs sm:text-sm">
               {authorJobTitle}
@@ -611,7 +617,7 @@ const ActivityLogPostCard = ({
                   <div className="flex-1">
                     <div className="bg-gray-50 rounded-2xl rounded-tl-none px-4 py-3 inline-block">
                       <p className="font-semibold text-sm text-gray-900 mb-0.5">
-                        {getDisplayName(comment.author)}
+                        <DisplayNameWithBadge user={comment.author} badgeSize="xs" />
                       </p>
                       <p className="text-sm text-gray-700">{comment.body}</p>
                     </div>

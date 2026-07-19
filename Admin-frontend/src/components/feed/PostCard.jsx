@@ -119,7 +119,7 @@ const PostHeader = ({
             className="font-semibold text-base sm:text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline inline-flex items-center gap-1"
           >
             {displayName}
-            {author?.hasVerifiedBadge && <VerifiedBadge size="xs" />}
+            {author?.hasVerifiedBadge && <VerifiedBadge size="xs" user={author} />}
           </button>
           <p className="text-[#1A3E32] text-xs sm:text-sm">{displayJobTitle}</p>
           <p className="text-[#1A3E32] text-xs sm:text-sm">

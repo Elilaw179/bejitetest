@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
-  FaList,
   FaSearch,
   FaChevronDown,
   FaUserEdit,
@@ -39,8 +38,11 @@ import {
 } from "../utils/personDisplayName";
 import { formatDisplayText } from "../utils/displayFormatUtils";
 import { filterAdminUsersFromSearch, filterAdminSearchResults } from "../utils/filterAdminUsers";
+import PersonName from "./PersonName";
 import RecruitmentRightMobileMenu from "./recruitment/RecruitmentRightMobileMenu";
 import InviteFriendsModal from "./InviteFriendsModal";
+import NotificationDropdown from "./notifications/NotificationDropdown";
+import { onNotificationNew } from "../services/socketClient";
 
 const NewsFeedHeader = ({ user: propUser }) => {
   useSyncProfilePhoto();
@@ -57,6 +59,44 @@ const NewsFeedHeader = ({ user: propUser }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isProfileRowHidden, setIsProfileRowHidden] = useState(false);
+
+  useEffect(() => {
+    if (isMobileSearchOpen) {
+      searchRef.current?.querySelector("input")?.focus();
+    }
+  }, [isMobileSearchOpen]);
+
+  // On mobile, hide the profile row while scrolling down; show it again on scroll up.
+  useEffect(() => {
+    const targets = [
+      window,
+      ...document.querySelectorAll(".nfl-scroll"),
+    ].filter((el) => !searchRef.current?.contains(el instanceof Element ? el : null));
+
+    const lastTops = new Map();
+    const getTop = (el) =>
+      el === window ? window.scrollY : el.scrollTop;
+
+    const handlers = targets.map((el) => {
+      lastTops.set(el, getTop(el));
+      const onScroll = () => {
+        const top = getTop(el);
+        const delta = top - lastTops.get(el);
+        if (Math.abs(delta) < 8) return;
+        setIsProfileRowHidden(delta > 0 && top > 48);
+        lastTops.set(el, top);
+      };
+      el.addEventListener("scroll", onScroll, { passive: true });
+      return { el, onScroll };
+    });
+
+    return () =>
+      handlers.forEach(({ el, onScroll }) =>
+        el.removeEventListener("scroll", onScroll),
+      );
+  }, [location.pathname]);
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
@@ -172,6 +212,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
               subtitle: u.jobTitle || "Professional",
               image: pickAuthorProfilePhoto(u),
               url: `/user-profile/${u.id}`,
+              hasVerifiedBadge: Boolean(u.hasVerifiedBadge),
             })),
           }))
           .catch(() => ({ type: "people", results: [] })),
@@ -199,6 +240,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       formatDisplayText(candidate.title) || "Professional",
                     image: pickAuthorProfilePhoto(candidate),
                     url: `/user-profile/${userId}`,
+                    hasVerifiedBadge: Boolean(candidate.hasVerifiedBadge),
                   };
                 })
               : [],
@@ -324,11 +366,17 @@ const NewsFeedHeader = ({ user: propUser }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetch notification count on mount and periodically
+  // Fetch notification count on mount and periodically; live updates via socket
   useEffect(() => {
     fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchNotificationCount, 30000);
+    const unsubscribe = onNotificationNew(() => {
+      setNotificationCount((prev) => prev + 1);
+    });
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
   }, []);
 
   // Fetch unread message count on mount and periodically
@@ -444,10 +492,10 @@ const NewsFeedHeader = ({ user: propUser }) => {
   const iconToPathsMap = {
     "home-icon": ["/news-feed", "/post-page"],
     CHAT: ["/chats"],
-    notifications: ["/notification"],
+    notifications: ["/notification", "/notifications"],
     connection: ["/connection"],
     "job-vacancy": ["/job-vacancy"],
-    recruitment: ["/candidate-search-page", "/ase/pricing", "/ase/dashboard"],
+    recruitment: ["/candidate-search-page", "/subscription-pricing", "/subscription-dashboard"],
     adpro: ["/adpro"],
   };
 
@@ -467,7 +515,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
         navigate("/chats");
         break;
       case "notifications":
-        navigate("/notification");
+        navigate("/notifications");
         break;
       case "recruitment":
         navigate("/candidate-search-page");
@@ -587,20 +635,66 @@ const NewsFeedHeader = ({ user: propUser }) => {
   return (
     <header className="bg-[#F5F5F5] w-full relative z-50">
       <div className="max-w-[1440px] w-full mx-auto flex flex-col lg:flex-row items-center justify-between px-4 py-3 gap-3 lg:gap-4">
-        <div className="w-full lg:w-auto flex items-center justify-between">
+        <div className="w-full lg:w-auto flex items-center justify-between border-b border-gray-300 pb-2.5 lg:border-b-0 lg:pb-0">
           <img
             onClick={() => navigate("/news-feed")}
             src="/assets/images/logo.png"
             alt="Logo"
-            className="h-10 cursor-pointer"
+            className="h-8 lg:h-10 cursor-pointer"
           />
-          <FaList
-            className="text-2xl text-[#333] block lg:hidden cursor-pointer"
+          <div className="flex items-center gap-1 lg:hidden">
+            <button
+              type="button"
+              onClick={() => setIsMobileSearchOpen((prev) => !prev)}
+              aria-label={isMobileSearchOpen ? "Close search" : "Open search"}
+              aria-expanded={isMobileSearchOpen}
+              className={`inline-flex items-center justify-center w-8 h-8 rounded-full transition-colors active:scale-95 ${
+                isMobileSearchOpen
+                  ? "bg-[#16730F]/10 text-[#16730F]"
+                  : "text-[#1A3E32]"
+              }`}
+            >
+              <FaSearch className="h-4 w-4" />
+            </button>
+          <button
+            type="button"
             onClick={toggleSidebar}
-          />
+            aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isSidebarOpen}
+            className="lg:hidden relative inline-flex items-center justify-center p-0 text-[#1A3E32] transition-all duration-300 active:scale-95"
+          >
+            <span className="sr-only">{isSidebarOpen ? "Close menu" : "Open menu"}</span>
+            <span className="relative w-[22px] h-[15px] flex flex-col justify-between">
+              <span
+                className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
+                  isSidebarOpen
+                    ? "translate-y-[6.5px] rotate-45 w-[22px]"
+                    : "w-[22px]"
+                }`}
+              />
+              <span
+                className={`block h-[2px] rounded-full bg-current transition-all duration-200 ease-out ${
+                  isSidebarOpen ? "opacity-0 scale-x-0" : "w-[15px] ml-auto"
+                }`}
+              />
+              <span
+                className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
+                  isSidebarOpen
+                    ? "-translate-y-[6.5px] -rotate-45 w-[22px]"
+                    : "w-[18px]"
+                }`}
+              />
+            </span>
+          </button>
+          </div>
         </div>
 
-        <div ref={searchRef} className="relative w-full lg:max-w-[500px]">
+        <div
+          ref={searchRef}
+          className={`relative w-full lg:max-w-[500px] ${
+            isMobileSearchOpen ? "block" : "hidden lg:block"
+          }`}
+        >
           <input
             type="text"
             placeholder="Search people, jobs, posts..."
@@ -646,7 +740,11 @@ const NewsFeedHeader = ({ user: propUser }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-[#1A3E32] truncate">
-                      {result.name}
+                      <PersonName
+                        user={result}
+                        fallback={result.name}
+                        badgeSize="xs"
+                      />
                     </div>
                     <div className="text-sm text-gray-500 truncate">
                       {result.subtitle}
@@ -669,7 +767,16 @@ const NewsFeedHeader = ({ user: propUser }) => {
         <div className="hidden lg:flex gap-3 md:gap-4 items-center">
           {menuItems.map((name, i) => (
             <div key={i} className="relative flex items-center gap-1">
-              {renderNavIcon(name, { onClick: () => handleIconClick(name) })}
+              {name === "notifications" ? (
+                <NotificationDropdown
+                  variant="header"
+                  unreadCount={notificationCount}
+                  onUnreadChange={setNotificationCount}
+                  isActive={isIconActive(name)}
+                />
+              ) : (
+                renderNavIcon(name, { onClick: () => handleIconClick(name) })
+              )}
               {isIconActive(name) && (
                 <span className="px-3 py-1.5 text-xs bg-[#1A3E32] rounded-r-2xl text-white font-medium whitespace-nowrap">
                   {getNavLabel(name)}
@@ -679,6 +786,14 @@ const NewsFeedHeader = ({ user: propUser }) => {
           ))}
         </div>
 
+        <div
+          className={`grid w-full lg:w-auto lg:block transition-[grid-template-rows,opacity,margin-top] duration-300 ease-out ${
+            isProfileRowHidden
+              ? "grid-rows-[0fr] opacity-0 -mt-3 pointer-events-none lg:opacity-100 lg:mt-0 lg:pointer-events-auto"
+              : "grid-rows-[1fr] opacity-100 mt-0"
+          }`}
+        >
+        <div className={`min-h-0 lg:min-h-full ${isProfileRowHidden ? "overflow-hidden lg:overflow-visible" : ""}`}>
         <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto justify-between lg:justify-normal">
           <img
             className="w-10 h-10 lg:w-14 lg:h-14 rounded-full object-cover"
@@ -689,7 +804,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
           <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
             <div ref={dropdownRef} className="relative">
               <p className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32]">
-                {getDisplayName()}
+                <PersonName user={user} showBadge={false} />
               </p>
 
               {/* Custom Dropdown for Role */}
@@ -706,20 +821,25 @@ const NewsFeedHeader = ({ user: propUser }) => {
 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 left-auto mt-2 w-[min(18rem,calc(100vw-1rem))] bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden max-h-[70vh] overflow-y-auto nfl-scroll">
+                  <div className="absolute right-0 left-auto mt-1.5 sm:mt-2 w-[min(14.5rem,calc(100vw-1.25rem))] sm:w-[min(18rem,calc(100vw-1rem))] md:w-[min(20rem,calc(100vw-1rem))] bg-white rounded-lg sm:rounded-xl shadow-xl border border-gray-100 py-1 sm:py-2 z-50 overflow-hidden max-h-[min(60vh,22rem)] sm:max-h-[70vh] overflow-y-auto nfl-scroll">
                     {/* User Info Header */}
-                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                      <div className="flex items-center gap-3">
+                    <div className="px-3 py-2 sm:px-4 sm:py-3 border-b border-gray-100 bg-gray-50">
+                      <div className="flex items-start gap-2 sm:gap-3 min-w-0">
                         <img
                           src={avatarSrc(user.image)}
                           alt={getDisplayName()}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-[#16730F]"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-[#16730F] shrink-0"
                         />
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-sm text-[#1A3E32]">
-                            {getDisplayName()}
-                          </span>
-                          <span className="text-xs text-gray-500">
+                        <div className="flex flex-col gap-1 sm:gap-1.5 min-w-0 flex-1 overflow-visible">
+                          <PersonName
+                            user={user}
+                            badgeSize="xs"
+                            badgePlacement="below"
+                            responsiveBadge={false}
+                            className="font-semibold text-xs sm:text-sm text-[#1A3E32] w-full"
+                            nameClassName="leading-snug"
+                          />
+                          <span className="text-[10px] sm:text-xs text-gray-500 truncate">
                             {getDisplayRole()}
                           </span>
                         </div>
@@ -727,7 +847,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                     </div>
 
                     {/* Section 1: Profile */}
-                    <div className="py-1">
+                    <div className="py-0.5 sm:py-1">
                       <button
                         onClick={() => {
                           navigate(
@@ -737,53 +857,53 @@ const NewsFeedHeader = ({ user: propUser }) => {
                           );
                           setIsDropdownOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                        className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
                           location.pathname.startsWith("/edit-profile")
                             ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
-                            : "text-gray-700 hover:bg-gray-50 hover:pl-5"
+                            : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
                         }`}
                       >
-                        <FaUserEdit className="text-base" />
+                        <FaUserEdit className="text-sm sm:text-base shrink-0" />
                         <span>Edit Profile</span>
                       </button>
                     </div>
 
                     {/* Divider */}
-                    <div className="border-t border-gray-100 my-1"></div>
+                    <div className="border-t border-gray-100 my-0.5 sm:my-1"></div>
 
                     {/* Section 2: Navigation */}
-                    <div className="py-1">
+                    <div className="py-0.5 sm:py-1">
                       {user?.role !== "jobseeker" && (
                         <button
                           onClick={() => {
                             navigate("/candidate-search-page");
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                          className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
                             location.pathname === "/candidate-search-page"
                               ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
-                              : "text-gray-700 hover:bg-gray-50 hover:pl-5"
+                              : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
                           }`}
                         >
-                          <FaSearch className="text-base" />
+                          <FaSearch className="text-sm sm:text-base shrink-0" />
                           <span>Candidate Search</span>
                         </button>
                       )}
                       {user?.role !== "jobseeker" && (
                         <button
                           onClick={() => {
-                            navigate("/ase/dashboard");
+                            navigate("/subscription-dashboard");
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
-                            ["/ase/dashboard", "/ase/pricing"].includes(
+                          className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
+                            ["/subscription-dashboard", "/subscription-pricing"].includes(
                               location.pathname,
                             )
                               ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
-                              : "text-gray-700 hover:bg-gray-50 hover:pl-5"
+                              : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
                           }`}
                         >
-                          <FaCreditCard className="text-base" />
+                          <FaCreditCard className="text-sm sm:text-base shrink-0" />
                           <span>My Subscription</span>
                         </button>
                       )}
@@ -793,13 +913,13 @@ const NewsFeedHeader = ({ user: propUser }) => {
                             navigate("/employer/dashboard");
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                          className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
                             location.pathname.startsWith("/employer/")
                               ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
-                              : "text-gray-700 hover:bg-gray-50 hover:pl-5"
+                              : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
                           }`}
                         >
-                          <FaBriefcase className="text-base" />
+                          <FaBriefcase className="text-sm sm:text-base shrink-0" />
                           <span>Job Postings</span>
                         </button>
                       )}
@@ -809,13 +929,13 @@ const NewsFeedHeader = ({ user: propUser }) => {
                             navigate("/adpro");
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
+                          className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
                             location.pathname.startsWith("/adpro")
                               ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
-                              : "text-gray-700 hover:bg-gray-50 hover:pl-5"
+                              : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
                           }`}
                         >
-                          <FaBullhorn className="text-base" />
+                          <FaBullhorn className="text-sm sm:text-base shrink-0" />
                           <span>AdPro</span>
                         </button>
                       )}
@@ -826,6 +946,8 @@ const NewsFeedHeader = ({ user: propUser }) => {
               </div>
             </div>
           </div>
+        </div>
+        </div>
         </div>
       </div>
 
@@ -838,15 +960,13 @@ const NewsFeedHeader = ({ user: propUser }) => {
             className="fixed inset-0 bg-black/40 z-40 lg:hidden"
             onClick={toggleSidebar}
           />
-          <div className="fixed top-0 left-0 w-[min(85vw,300px)] h-full bg-white shadow-lg z-50 flex flex-col lg:hidden">
+          <div className="fixed top-0 left-0 w-[min(85vw,300px)] h-full bg-white shadow-2xl z-50 flex flex-col lg:hidden">
             <div className="p-4 border-b border-gray-100 shrink-0">
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                className="text-[#16730F] font-bold text-lg"
-              >
-                ✕ Close
-              </button>
+              <img
+                src="/assets/images/logo.png"
+                alt="Bejite"
+                className="h-8"
+              />
             </div>
 
             <div className="flex-1 overflow-y-auto nfl-scroll p-4 pt-2">

@@ -3,13 +3,13 @@ import { Search } from "lucide-react";
 import {
   getAllCountryNames,
   getStateOptionsForCountries,
-  getCityOptionsForStates,
   getLgaOptionsForStates,
   hasNigeriaSelected,
   stateKeyBelongsToCountry,
   cityKeyBelongsToState,
   lgaKeyBelongsToState,
 } from "../../utils/countryStateData";
+import { getCityOptionsForStates } from "../../utils/countryCityData";
 
 const SearchableMultiSelect = ({
   label,
@@ -152,15 +152,51 @@ export default function GeographicTargetingSection({ audience, onUpdate }) {
 
   const countryOptions = useMemo(() => getAllCountryNames(), []);
 
-  const stateOptions = useMemo(
-    () => getStateOptionsForCountries(countries),
-    [countries],
-  );
+  const [stateOptions, setStateOptions] = useState([]);
 
-  const cityOptions = useMemo(
-    () => getCityOptionsForStates(states),
-    [states],
-  );
+  useEffect(() => {
+    if (countries.length === 0) {
+      setStateOptions([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    getStateOptionsForCountries(countries)
+      .then((options) => {
+        if (!cancelled) setStateOptions(options);
+      })
+      .catch(() => {
+        if (!cancelled) setStateOptions([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [countries]);
+
+  const [cityOptions, setCityOptions] = useState([]);
+
+  useEffect(() => {
+    if (states.length === 0) {
+      setCityOptions([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    getCityOptionsForStates(states)
+      .then((options) => {
+        if (!cancelled) setCityOptions(options);
+      })
+      .catch(() => {
+        if (!cancelled) setCityOptions([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [states]);
 
   const nigerianStateKeys = useMemo(
     () =>

@@ -7,7 +7,8 @@ import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
 import useRecruiterProfile from "../../services/recruiterProfile";
-import { COUNTRY_OPTIONS, getStateOptions } from "../../data/jobTypeData";
+import { COUNTRY_OPTIONS } from "../../data/jobTypeData";
+import useCountryStateOptions from "../../hooks/useCountryStateOptions";
 
 const selectClassName =
   "w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm appearance-none cursor-pointer";
@@ -35,13 +36,14 @@ const Location = () => {
       city: recruiterData.city || "",
       country: recruiterData.country || "",
     });
-    if (recruiterData.city && recruiterData.country) {
-      const options = getStateOptions(recruiterData.country) || [];
-      setIsManualCity(!options.includes(recruiterData.city));
-    }
   }, [isEditMode, recruiterData]);
 
-  const stateOptions = getStateOptions(formData.country) || [];
+  const { states: stateOptions } = useCountryStateOptions(formData.country);
+
+  useEffect(() => {
+    if (!recruiterData?.city || !formData.country || stateOptions.length === 0) return;
+    setIsManualCity(!stateOptions.includes(recruiterData.city));
+  }, [recruiterData?.city, formData.country, stateOptions]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

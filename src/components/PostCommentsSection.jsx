@@ -11,6 +11,7 @@ import {
 } from "../services/postsApi";
 import { getAuthorProfileImageUrl } from "../utils/profileImageUtils";
 import { formatDisplayPersonName } from "../utils/personDisplayName";
+import DisplayNameWithBadge from "./DisplayNameWithBadge";
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
 
@@ -110,7 +111,7 @@ function CommentItem({
                 disabled={!comment.authorId}
                 className="font-semibold text-sm text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
               >
-                {getDisplayName(comment.author)}
+                <DisplayNameWithBadge user={comment.author} badgeSize="xs" />
               </button>
               {parentComment && depth > 1 && (
                 <p className="text-xs text-gray-500">
@@ -119,9 +120,9 @@ function CommentItem({
                     type="button"
                     onClick={goToParentProfile}
                     disabled={!parentComment.authorId}
-                    className="font-medium text-[#16730F] hover:underline disabled:cursor-default disabled:no-underline"
+                    className="font-medium text-[#16730F] hover:underline disabled:cursor-default disabled:no-underline inline-flex items-center gap-1"
                   >
-                    {getDisplayName(parentComment.author)}
+                    <DisplayNameWithBadge user={parentComment.author} badgeSize="xs" />
                   </button>
                 </p>
               )}

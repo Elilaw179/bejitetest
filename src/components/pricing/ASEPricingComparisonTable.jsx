@@ -2,12 +2,16 @@ import React from "react";
 
 const ASEPricingComparisonTable = () => {
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8">
-      <h3 className="text-xl font-black text-gray-900 tracking-tight text-center mb-6">
+    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8">
+      <h3 className="text-lg sm:text-xl font-black text-gray-900 tracking-tight text-center mb-4 sm:mb-6">
         Compare Subscriptions Tiers
       </h3>
 
-      <div className="overflow-x-auto">
+      <p className="text-xs text-gray-400 text-center mb-3 sm:hidden">
+        Swipe horizontally to compare plans →
+      </p>
+
+      <div className="overflow-x-auto -mx-1 px-1 pb-1">
         <table className="w-full text-sm text-left border-collapse min-w-[650px]">
           <thead>
             <tr className="border-b-2 border-gray-100">
@@ -77,11 +81,11 @@ const ASEPricingComparisonTable = () => {
               <td className="py-3.5 text-gray-500 font-semibold">
                 AdPro credits
               </td>
-              <td className="py-3.5 text-center">$10 Credit</td>
+              <td className="py-3.5 text-center">₦10,000 Credit</td>
               <td className="py-3.5 text-center text-[#1A3E32] font-bold">
-                $20 Credit
+                ₦20,000 Credit
               </td>
-              <td className="py-3.5 text-center">$30 Credit</td>
+              <td className="py-3.5 text-center">₦30,000 Credit</td>
             </tr>
             <tr>
               <td className="py-3.5 text-gray-500 font-semibold">

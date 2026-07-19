@@ -22,7 +22,7 @@ import PostPoll from "./PostPoll";
 import PostCommentsSection from "../PostCommentsSection";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import { getAuthorSubtitle } from "../../utils/authorDisplay";
-import VerifiedBadge from "../VerifiedBadge";
+import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import { getPostDetailPath } from "../../utils/postNavigation";
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
@@ -112,15 +112,19 @@ const PostHeader = ({
             className="rounded-full w-10 h-10 sm:w-12 sm:h-12 cursor-pointer hover:opacity-90"
           />
         </button>
-        <div>
+        <div className="min-w-0 flex-1">
           <button
             type="button"
             onClick={goToAuthorProfile}
             disabled={!authorId}
-            className="font-semibold text-base sm:text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline inline-flex items-center gap-1"
+            className="font-semibold text-base sm:text-lg text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline max-w-full min-w-0"
           >
-            {displayName}
-            {author?.hasVerifiedBadge && <VerifiedBadge size="xs" />}
+            <DisplayNameWithBadge
+              user={author}
+              fallback={displayName}
+              badgeSize="xs"
+              responsiveBadge
+            />
           </button>
           <p className="text-[#1A3E32] text-xs sm:text-sm">{displayJobTitle}</p>
           <p className="text-[#1A3E32] text-xs sm:text-sm">{formatDate(createdAt)}</p>
@@ -503,7 +507,7 @@ const PostCard = ({
           }}
           className={!isDetailView ? "cursor-pointer" : undefined}
         >
-          <PostMediaGallery media={post.media} />
+          <PostMediaGallery media={post.media} showFullMedia={isDetailView} />
         </div>
       )}
       {post.poll && (

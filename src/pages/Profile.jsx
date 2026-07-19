@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
-  FaUser,
-  FaEnvelope,
   FaEdit,
   FaArrowLeft,
   FaGlobe,
@@ -40,7 +38,7 @@ import { formatDisplayText } from '../utils/displayFormatUtils';
 import { truncateText } from '../utils/checksFormat';
 import ProfileConnectActions from '../components/ProfileConnectActions';
 import ProfilePostsSection from '../components/ProfilePostsSection';
-import VerifiedBadge from '../components/VerifiedBadge';
+import DisplayNameWithBadge from '../components/DisplayNameWithBadge';
 
 const ABOUT_WORD_LIMIT = 100;
 
@@ -324,7 +322,12 @@ const Profile = () => {
 
 
   const [isAboutExpanded, setIsAboutExpanded] = useState(false);
-  const aboutText = profileData?.bio || profileData?.summary;
+  const aboutTextRaw =
+    (typeof profileData?.bio === 'string' && profileData.bio.trim()) ||
+    (typeof profileData?.summary === 'string' && profileData.summary.trim()) ||
+    (typeof cvData?.bio?.bio === 'string' && cvData.bio.bio.trim()) ||
+    '';
+  const aboutText = aboutTextRaw || null;
   const aboutPreview = aboutText
     ? truncateText(aboutText, ABOUT_WORD_LIMIT, 'words')
     : { text: '', needsTruncation: false };
@@ -444,8 +447,7 @@ const Profile = () => {
             />
             <div className="w-full min-w-0 text-center sm:text-left">
               <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] break-words flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
-                {formatDisplayPersonName(profileData, 'User')}
-                {profileData?.hasVerifiedBadge && <VerifiedBadge size="md" />}
+                <DisplayNameWithBadge user={profileData} fallback="User" badgeSize="md" />
               </h1>
               <p className="text-[#16730F] font-medium text-sm sm:text-base mt-0.5">
                 {formatDisplayRole(viewedRole)}
@@ -481,7 +483,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {isRecruiterProfile ? (
+        {isRecruiterProfile && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
               <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4 flex items-center gap-2">
                 <FaGlobe className="shrink-0" />
@@ -518,25 +520,13 @@ const Profile = () => {
                 />
               </div>
             </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4 flex items-center gap-2">
-              <FaUser className="shrink-0" />
-              Basic Information
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <ProfileDetailRow
-                icon={FaEnvelope}
-                label="Email"
-                value={profileData.email}
-              />
-            </div>
-          </div>
         )}
 
-        {isRecruiterProfile && (
+        {(isRecruiterProfile || isJobseekerProfile) && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4">About Company</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4">
+              {isRecruiterProfile ? 'About Company' : 'About'}
+            </h2>
             <div className="relative">
               {aboutText ? (
                 <>

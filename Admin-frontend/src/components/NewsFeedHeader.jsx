@@ -399,7 +399,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
     CHAT: ["/chats"],
     notifications: ["/notification"],
     connection: ["/connection"],
-    recruitment: ["/candidate-search-page", "/ase/pricing", "/ase/dashboard"],
+    recruitment: ["/candidate-search-page", "/subscription-pricing", "/subscription-dashboard"],
     adpro: ["/adpro"],
   };
 
@@ -713,11 +713,11 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       {user?.role !== "jobseeker" && (
                         <button
                           onClick={() => {
-                            navigate("/ase/dashboard");
+                            navigate("/subscription-dashboard");
                             setIsDropdownOpen(false);
                           }}
                           className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
-                            ["/ase/dashboard", "/ase/pricing"].includes(
+                            ["/subscription-dashboard", "/subscription-pricing"].includes(
                               location.pathname,
                             )
                               ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"

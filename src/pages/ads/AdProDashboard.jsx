@@ -109,6 +109,7 @@ export default function AdProDashboard() {
     activeCampaigns: 0,
     avgCtr: 0,
   });
+  const [adCreditBalance, setAdCreditBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -141,6 +142,7 @@ export default function AdProDashboard() {
           avgCtr: 0,
         },
       );
+      setAdCreditBalance(Number(response.data?.adCreditBalance) || 0);
     } catch (err) {
       console.error("AdPro dashboard load error:", err);
       setError(
@@ -173,6 +175,13 @@ export default function AdProDashboard() {
   const activeCampaigns = dashboardMetrics.activeCampaigns;
 
   const metrics = [
+    {
+      title: "Ad Credit Balance",
+      value: formatAdProCurrency(adCreditBalance),
+      change: "From ASE plan",
+      icon: Wallet,
+      color: "from-[#1A3E32] to-emerald-700",
+    },
     {
       title: "Total Spend",
       value: formatAdProCurrency(dashboardMetrics.totalSpend),
@@ -274,8 +283,8 @@ export default function AdProDashboard() {
   };
 
   return (
-    <NewsFeedLayout classes={false} showSidebars={false}>
-      <div className="min-h-screen bg-[#F8FAFC]">
+    <NewsFeedLayout showSidebars={false}>
+      <div className="bg-[#F8FAFC]">
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 py-4">

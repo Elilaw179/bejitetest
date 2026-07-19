@@ -5,7 +5,8 @@ import { FaMapMarkerAlt } from "react-icons/fa";
 import NavigationButtons from "../../components/NavigationButtons";
 import useRecruiterProfile from "../../services/recruiterProfile";
 import OnboardingLayout from "../../components/layout/onboardingLayout";
-import { COUNTRY_OPTIONS, getStateOptions } from "../../data/jobTypeData";
+import { COUNTRY_OPTIONS } from "../../data/jobTypeData";
+import useCountryStateOptions from "../../hooks/useCountryStateOptions";
 import {
   RecruiterFormShell,
   RecruiterPageHero,
@@ -35,7 +36,7 @@ const CoperateLocation = () => {
     if (path) navigate(path);
   };
 
-  const stateOptions = getStateOptions(formData.country) || [];
+  const { states: stateOptions } = useCountryStateOptions(formData.country);
 
   useEffect(() => {
     if (isEditMode && recruiterData && !dataLoaded) {
@@ -46,13 +47,20 @@ const CoperateLocation = () => {
         city: city,
         country: country,
       });
-      const options = getStateOptions(country) || [];
-      if (country && options.length === 0) {
-        setIsManualCity(true);
-      }
       setDataLoaded(true);
     }
   }, [isEditMode, recruiterData, dataLoaded]);
+
+  useEffect(() => {
+    if (!formData.country) return;
+    if (stateOptions.length === 0) {
+      setIsManualCity(true);
+      return;
+    }
+    if (formData.city) {
+      setIsManualCity(!stateOptions.includes(formData.city));
+    }
+  }, [formData.country, formData.city, stateOptions]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

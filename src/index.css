@@ -12,14 +12,16 @@
 
 body {
   font-family: "Montserrat";
+  overflow-x: hidden;
+}
+
+html {
+  /* Reserve scrollbar space so page width does not jump */
+  scrollbar-gutter: stable;
 }
 
 input[type="date"].hide-calendar-icon::-webkit-calendar-picker-indicator {
   opacity: 0;
-}
-
-body {
-  overflow-x: hidden;
 }
 
 /* Consistent affordance for clickable UI/text across the app */
@@ -71,6 +73,7 @@ input:disabled,
 .nfl-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(26, 62, 50, 0.2) transparent;
+  scrollbar-gutter: stable;
 }
 
 .nfl-scroll::-webkit-scrollbar {

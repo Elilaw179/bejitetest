@@ -32,15 +32,11 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   }, []);
 
   const scrollToBottom = useCallback((behavior = 'auto') => {
-    const end = messagesEndRef.current;
-    if (end) {
-      end.scrollIntoView({ behavior, block: 'end' });
-      return;
-    }
-
     const container = messagesContainerRef.current;
     if (!container) return;
 
+    // Scroll only the messages pane — never scrollIntoView (that scrolls the
+    // page on mobile and pushes the composer off-screen behind the keyboard).
     container.scrollTo({
       top: container.scrollHeight,
       behavior,
@@ -88,7 +84,17 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     try {
       if (!silent) setLoading(true);
       const data = await messagingService.getMessages(conversationId);
-      setMessages((data || []).reverse());
+      const next = (data || []).reverse();
+      setMessages((prev) => {
+        if (
+          prev.length === next.length &&
+          prev.length > 0 &&
+          prev[prev.length - 1]?.id === next[next.length - 1]?.id
+        ) {
+          return prev;
+        }
+        return next;
+      });
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
@@ -241,11 +247,11 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   return (
 <main className="w-full h-full min-h-0 flex flex-col overflow-hidden bg-gray-100">
   {/* Header */}
-  <div className="bg-gray-200 shrink-0 flex items-center justify-between px-4 py-4 md:py-7">
-    <div className="flex items-center gap-2 md:gap-3">
+  <div className="bg-gray-200 shrink-0 flex items-center justify-between gap-2 px-3 py-3 sm:px-4 sm:py-4 md:py-7">
+    <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
       <button
         onClick={onShowChatList}
-        className="md:hidden text-gray-600 hover:text-gray-800 transition-colors"
+        className="md:hidden shrink-0 text-gray-600 hover:text-gray-800 transition-colors"
         aria-label="Back to conversations"
       >
         <FaArrowLeft />
@@ -254,33 +260,33 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
         <img
           src={selectedProfileImage}
           alt={selectedFullName}
-          className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover lg:hidden"
+          className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full object-cover lg:hidden shrink-0"
         />
       ) : (
-        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#556B1F] text-white font-semibold flex items-center justify-center lg:hidden">
+        <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-[#556B1F] text-white text-xs sm:text-sm font-semibold flex items-center justify-center lg:hidden shrink-0">
           {getInitials(selectedFirstName, selectedLastName)}
         </div>
       )}
-      <div>
-          <h1 className="text-lg md:text-2xl font-semibold text-[#16730F]">
+      <div className="min-w-0">
+          <h1 className="text-sm sm:text-base md:text-2xl font-semibold text-[#16730F] truncate">
             {selectedFullName}
           </h1>
-          <p className="text-xs md:text-sm text-[#16730F]">Online</p>
+          <p className="text-[10px] sm:text-xs md:text-sm text-[#16730F]">Online</p>
        </div>
     </div>
 
-    <div className='flex items-center gap-2'>
-      <button className="bg-[#16730F] text-white p-2 rounded-full hover:bg-[#1a5c13] transition">
-        <FaPhone className="text-sm" />
+    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <button className="bg-[#16730F] text-white p-1.5 sm:p-2 rounded-full hover:bg-[#1a5c13] transition">
+        <FaPhone className="text-xs sm:text-sm" />
       </button>
-      <button className="bg-[#16730F] text-white p-2 rounded-full hover:bg-[#1a5c13] transition">
-        <FaVideo className="text-sm" />
+      <button className="bg-[#16730F] text-white p-1.5 sm:p-2 rounded-full hover:bg-[#1a5c13] transition">
+        <FaVideo className="text-xs sm:text-sm" />
       </button>
       <button 
         onClick={onShowChatInfo}
-        className="lg:hidden text-gray-600 hover:text-gray-800 transition-colors ml-2"
+        className="lg:hidden text-gray-600 hover:text-gray-800 transition-colors ml-0.5 sm:ml-2"
       >
-        <FaBars />
+        <FaBars className="text-sm" />
       </button>
     </div>
   </div>
@@ -289,7 +295,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   <div
     ref={messagesContainerRef}
     onScroll={handleMessagesScroll}
-    className="flex-1 min-h-0 overflow-y-auto nfl-scroll scroll-smooth p-3 md:p-5 bg-[#F7F7F7]"
+    className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain nfl-scroll scroll-smooth p-3 md:p-5 bg-[#F7F7F7]"
   >
     {loading ? (
       <div className="text-center text-[#16730F] py-2 md:py-4">
@@ -332,6 +338,12 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
               message={msg}
               isOwnMessage={ownMessage}
               senderName={senderName}
+              senderHasVerifiedBadge={Boolean(msg.hasVerifiedBadge)}
+              senderBadgeUser={
+                ownMessage
+                  ? currentUser
+                  : selectedChat?.other_user
+              }
               senderAvatar={senderAvatar}
               senderInitials={senderInitials}
               messageTime={messageTime}

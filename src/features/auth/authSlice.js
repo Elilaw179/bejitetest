@@ -1,15 +1,13 @@
 // src/redux/authSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-//import axios from 'axios';
-import axiosInstance from '../../utils/axiosInstance';
+import { loginUserRequest, signupUserRequest } from '../../services/authApi';
 
 // ✅ Async thunk for signup
 export const signupUser = createAsyncThunk(
   "auth/signupUser",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/auth/signup', userData);
-      const data = response.data;
+      const data = await signupUserRequest(userData);
       return {
         success: data?.success ?? true,
         message: data?.message,
@@ -31,11 +29,8 @@ export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(
-        '/auth/login',
-        credentials
-      );
-      return response.data;
+      const data = await loginUserRequest(credentials);
+      return data;
     } catch (err) {
       console.error("Login API error:", err);
       if (err.response?.data) {
@@ -131,7 +126,10 @@ const authSlice = createSlice({
         const userData = action.payload.user;
         const userWithImage = {
           ...userData,
-          image: action.payload.profilePhoto || userData.image || null
+          image: action.payload.profilePhoto || userData.image || null,
+          hasVerifiedBadge: Boolean(
+            userData.hasVerifiedBadge ?? userData.has_verified_badge,
+          ),
         };
         state.user = userWithImage;
         localStorage.setItem("user", JSON.stringify(userWithImage));
@@ -200,6 +198,10 @@ const authSlice = createSlice({
           const userWithProfileStatus = {
             ...userData,
             profileCompleted: action.payload.profileCompleted || false,
+            hasVerifiedBadge: Boolean(
+              action.payload.user?.hasVerifiedBadge ??
+                userData.hasVerifiedBadge,
+            ),
             ...(normalizedPhoto
               ? {
                   profile_photo: normalizedPhoto,

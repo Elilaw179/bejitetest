@@ -65,9 +65,8 @@ export const isAuthenticated = () => {
 
 /** Sync localStorage tokens/user into Redux (dynamic import avoids circular deps). */
 export async function dispatchHydrateAuth() {
-  const { default: store } = await import('../store/store.js');
-  const { hydrateAuth } = await import('../features/auth/authSlice.js');
-  store.dispatch(hydrateAuth());
+  const { hydrateAuthFromStorage } = await import('./authHydration.js');
+  hydrateAuthFromStorage();
 }
 
 /** OAuth callback routes hand tokens via URL — AuthBootstrap must not race them. */
@@ -143,10 +142,11 @@ export async function restoreUserFromServer() {
   }
 
   try {
-    const { data } = await axios.get(`${API_URL}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-      withCredentials: true,
-    });
+      const { data } = await axios.get(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
+        timeout: 12_000,
+      });
     const me = data?.user ?? data;
     if (me && typeof me === 'object' && (me.id || me.email)) {
       const merged = mergeAuthUsers(existing || {}, me);
@@ -178,6 +178,7 @@ export const refreshAccessToken = async () => {
       const { data } = await axios.get(`${API_URL}/auth/refresh`, {
         params: { refreshToken },
         withCredentials: true,
+        timeout: 12_000,
       });
 
       if (data.accessToken) {
@@ -190,6 +191,11 @@ export const refreshAccessToken = async () => {
 
       await dispatchHydrateAuth();
       return data;
+    } catch (err) {
+      if (isRefreshAuthError(err)) {
+        discardStaleRefreshToken();
+      }
+      throw err;
     } finally {
       refreshInFlight = null;
     }
@@ -204,9 +210,33 @@ export const decodeToken = (token) => {
     const payload = JSON.parse(atob(token.split('.')[1]));
     return payload;
   } catch (error) {
-    console.error('Error decoding token:', error);
+    if (import.meta.env.DEV) {
+      console.warn('Error decoding token:', error);
+    }
     return null;
   }
+};
+
+/** True when JWT is missing, malformed, or past exp (tokens without exp never expire). */
+export const isTokenExpired = (token, bufferSeconds = 30) => {
+  if (!token) return true;
+  const payload = decodeToken(token);
+  if (!payload?.exp) return false;
+  return Date.now() >= payload.exp * 1000 - bufferSeconds * 1000;
+};
+
+export const hasValidAccessToken = () => {
+  const token = getAccessToken();
+  return Boolean(token && !isTokenExpired(token));
+};
+
+const isRefreshAuthError = (err) =>
+  err?.response?.status === 401 &&
+  typeof err?.response?.data?.error === 'string';
+
+/** Drop stale refresh token after a failed rotation attempt. */
+export const discardStaleRefreshToken = () => {
+  localStorage.removeItem('refreshToken');
 };
 
 /**
