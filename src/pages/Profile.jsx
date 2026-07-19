@@ -322,7 +322,12 @@ const Profile = () => {
 
 
   const [isAboutExpanded, setIsAboutExpanded] = useState(false);
-  const aboutText = profileData?.bio || profileData?.summary;
+  const aboutTextRaw =
+    (typeof profileData?.bio === 'string' && profileData.bio.trim()) ||
+    (typeof profileData?.summary === 'string' && profileData.summary.trim()) ||
+    (typeof cvData?.bio?.bio === 'string' && cvData.bio.bio.trim()) ||
+    '';
+  const aboutText = aboutTextRaw || null;
   const aboutPreview = aboutText
     ? truncateText(aboutText, ABOUT_WORD_LIMIT, 'words')
     : { text: '', needsTruncation: false };
@@ -517,9 +522,11 @@ const Profile = () => {
             </div>
         )}
 
-        {isRecruiterProfile && (
+        {(isRecruiterProfile || isJobseekerProfile) && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4">About Company</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4">
+              {isRecruiterProfile ? 'About Company' : 'About'}
+            </h2>
             <div className="relative">
               {aboutText ? (
                 <>

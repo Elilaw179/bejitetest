@@ -283,8 +283,8 @@ export default function AdProDashboard() {
   };
 
   return (
-    <NewsFeedLayout classes={false} showSidebars={false}>
-      <div className="min-h-screen bg-[#F8FAFC]">
+    <NewsFeedLayout showSidebars={false}>
+      <div className="bg-[#F8FAFC]">
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 py-4">
