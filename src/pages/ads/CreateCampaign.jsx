@@ -521,8 +521,8 @@ export default function CreateCampaign() {
   };
 
   return (
-    <NewsFeedLayout classes={false} showSidebars={false}>
-      <div className="min-h-screen bg-[#F8FAFC] w-full min-w-0 overflow-x-hidden">
+    <NewsFeedLayout showSidebars={false}>
+      <div className="bg-[#F8FAFC] w-full min-w-0 overflow-x-hidden">
         <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
           <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 min-w-0">
             <div className="py-3 sm:py-4">
