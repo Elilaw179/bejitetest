@@ -15,6 +15,7 @@ import {
   Shield,
   Megaphone,
   Mail,
+  Calendar,
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -39,6 +40,7 @@ const AdminLayout = () => {
     { name: "Jobs List", path: "/admin/jobs", icon: Briefcase },
     { name: "AdPro Review", path: "/admin/adpro", icon: Megaphone },
     { name: "Email Outreach", path: "/admin/email-outreach", icon: Mail },
+    { name: "Events Manager", path: "/admin/events", icon: Calendar },
     { name: "Settings", path: "#", icon: Settings },
   ];
 
