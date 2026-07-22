@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { X, Calendar, Clock, MapPin, Video, Users, ExternalLink, Tag } from "lucide-react";
+import PhysicalLocationModal from "./PhysicalLocationModal";
 
 const GRADIENT_COLORS = {
   Technology: "from-blue-600 to-indigo-700",
@@ -8,7 +10,11 @@ const GRADIENT_COLORS = {
 };
 
 export default function LiveCardPreview({ item, activeTab, onClose }) {
+  const [showLocationModal, setShowLocationModal] = useState(false);
+
   if (!item) return null;
+
+  const isPhysical = item.type === "physical" || item.locationType === "physical" || item.type === "In Person";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -30,7 +36,7 @@ export default function LiveCardPreview({ item, activeTab, onClose }) {
             {/* Cover */}
             <div className="relative h-48 overflow-hidden rounded-t-2xl">
               <img src={item.coverImg} alt={item.title} className="w-full h-full object-cover" />
-              <div className={`absolute inset-0 bg-gradient-to-t ${GRADIENT_COLORS[item.category] || "from-gray-600 to-gray-800"} opacity-50`} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-4 left-5 right-5">
                 <span className="inline-block text-[10px] font-bold bg-white/20 backdrop-blur text-white px-2.5 py-1 rounded-full mb-2">
                   {item.category}
@@ -99,15 +105,26 @@ export default function LiveCardPreview({ item, activeTab, onClose }) {
               )}
 
               {(item.link || item.location) && (
-                <a
-                  href={item.link || "#"}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#16730F] text-white text-sm font-bold rounded-xl hover:bg-[#0e4a09] transition-all"
-                >
-                  <ExternalLink size={14} />
-                  {item.type === "virtual" ? "Join Meeting" : "View Location"}
-                </a>
+                isPhysical ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowLocationModal(true)}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#16730F] text-white text-sm font-bold rounded-xl hover:bg-[#0e4a09] transition-all cursor-pointer shadow-sm"
+                  >
+                    <MapPin size={14} />
+                    View Physical Venue Address
+                  </button>
+                ) : (
+                  <a
+                    href={item.link || "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#16730F] text-white text-sm font-bold rounded-xl hover:bg-[#0e4a09] transition-all shadow-sm cursor-pointer"
+                  >
+                    <ExternalLink size={14} />
+                    Join Meeting
+                  </a>
+                )
               )}
             </div>
           </>
@@ -135,6 +152,17 @@ export default function LiveCardPreview({ item, activeTab, onClose }) {
           </div>
         )}
       </div>
+
+      <PhysicalLocationModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        location={item.location}
+        title={item.title}
+        host={item.host}
+        date={item.date}
+        time={item.time}
+        category={item.category}
+      />
     </div>
   );
 }

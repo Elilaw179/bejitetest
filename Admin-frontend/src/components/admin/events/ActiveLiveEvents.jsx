@@ -1,6 +1,8 @@
-import React from "react";
-import { Calendar, Clock, MapPin, Video, ExternalLink, Users } from "lucide-react";
+import React, { useState } from "react";
+import { Calendar, Clock, MapPin, Video, ExternalLink, Users, Navigation } from "lucide-react";
 import { motion } from "framer-motion";
+import coverFallback from "../../../assets/Ellipse 32 (3).png";
+import PhysicalLocationModal from "./PhysicalLocationModal";
 
 const CATEGORY_STYLES = {
   Technology: { color: "from-blue-600 to-indigo-700", text: "text-blue-600", bg: "bg-blue-50" },
@@ -10,11 +12,15 @@ const CATEGORY_STYLES = {
 };
 
 export default function ActiveLiveEvents({ eventsList }) {
-  const handleJoin = (link, type) => {
-    if (type === "virtual" && link) {
-      window.open(link, "_blank");
+  const [selectedPhysicalEvent, setSelectedPhysicalEvent] = useState(null);
+
+  const handleJoin = (event) => {
+    if (event.locationType === "virtual") {
+      if (event.location && event.location.startsWith("http")) {
+        window.open(event.location, "_blank");
+      }
     } else {
-      alert(`This is a physical event located at: ${link || "Main Conference Center"}`);
+      setSelectedPhysicalEvent(event);
     }
   };
 
@@ -68,9 +74,12 @@ export default function ActiveLiveEvents({ eventsList }) {
                   {/* Cover image header */}
                   <div className="relative h-40 overflow-hidden">
                     <img
-                      src={event.coverImg}
+                      src={event.coverImg || coverFallback}
                       alt={event.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        e.currentTarget.src = coverFallback;
+                      }}
                     />
                     <div className={`absolute inset-0 bg-gradient-to-t ${style.color} opacity-50`} />
 
@@ -116,8 +125,15 @@ export default function ActiveLiveEvents({ eventsList }) {
                         <Clock size={13} className="text-[#16730F]" />
                         <span>{event.time}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin size={13} className="text-[#16730F]" />
+                      <div
+                        onClick={() => handleJoin(event)}
+                        className={`flex items-center gap-2 ${
+                          event.locationType !== "virtual"
+                            ? "cursor-pointer text-[#16730F] font-semibold hover:underline"
+                            : ""
+                        }`}
+                      >
+                        <MapPin size={13} className="text-[#16730F] shrink-0" />
                         <span className="truncate">{event.location}</span>
                       </div>
                     </div>
@@ -131,11 +147,20 @@ export default function ActiveLiveEvents({ eventsList }) {
                     <span>{limit} delivery pool</span>
                   </div>
                   <button
-                    onClick={() => handleJoin(event.location, event.locationType)}
+                    onClick={() => handleJoin(event)}
                     className="w-full py-2 bg-gray-50 hover:bg-[#16730F]/10 text-gray-700 hover:text-[#16730F] text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <ExternalLink size={12} />
-                    {event.locationType === "virtual" ? "Join Meeting" : "Get Directions"}
+                    {event.locationType === "virtual" ? (
+                      <>
+                        <ExternalLink size={12} />
+                        Join Meeting
+                      </>
+                    ) : (
+                      <>
+                        <MapPin size={12} />
+                        View Venue Address
+                      </>
+                    )}
                   </button>
                 </div>
               </motion.div>
@@ -143,6 +168,18 @@ export default function ActiveLiveEvents({ eventsList }) {
           })}
         </div>
       )}
+
+      {/* Physical Location Modal */}
+      <PhysicalLocationModal
+        isOpen={!!selectedPhysicalEvent}
+        onClose={() => setSelectedPhysicalEvent(null)}
+        location={selectedPhysicalEvent?.location}
+        title={selectedPhysicalEvent?.title}
+        host={selectedPhysicalEvent?.host}
+        date={selectedPhysicalEvent?.date}
+        time={selectedPhysicalEvent?.time}
+        category={selectedPhysicalEvent?.category}
+      />
     </motion.div>
   );
 }

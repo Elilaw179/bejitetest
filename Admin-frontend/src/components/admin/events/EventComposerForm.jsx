@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import coverFallback from "../../../assets/Ellipse 32 (3).png";
 import {
   ArrowLeft,
   Image as ImageIcon,
@@ -14,11 +15,14 @@ import {
   Send,
   Loader2,
   Users,
+  Upload,
+  Trash2,
 } from "lucide-react";
 
 const CATEGORIES = ["Technology", "Finance", "Product", "Creative"];
 
 const COVER_PRESETS = [
+  { name: "Default Banner", url: coverFallback },
   { name: "Tech & AI", url: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80" },
   { name: "Finance", url: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&q=80" },
   { name: "UX Design", url: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&q=80" },
@@ -58,7 +62,7 @@ export default function EventComposerForm({ initialData, onSubmit, onCancel, isS
     time: initialData?.time || "",
     host: initialData?.host || "",
     seats: initialData?.seats || 50,
-    coverImg: initialData?.coverImg || COVER_PRESETS[0].url,
+    coverImg: initialData?.coverImg || "",
     tags: initialData?.tags || [],
     link: initialData?.link || "",
     location: initialData?.location || "",
@@ -67,6 +71,31 @@ export default function EventComposerForm({ initialData, onSubmit, onCancel, isS
   const [tagInput, setTagInput] = useState("");
 
   const handleChange = (key, val) => setForm((p) => ({ ...p, [key]: val }));
+
+  const fileInputRef = useRef(null);
+
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        handleChange("coverImg", event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        handleChange("coverImg", event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const addTag = () => {
     const tag = tagInput.trim();
@@ -112,34 +141,73 @@ export default function EventComposerForm({ initialData, onSubmit, onCancel, isS
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Cover Presets */}
+          {/* Cover Image Upload */}
           <div>
             <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-2">
               <ImageIcon size={13} className="text-gray-400" /> Cover Image
             </label>
-            <div className="flex gap-2 flex-wrap">
-              {COVER_PRESETS.map((preset) => (
-                <button
-                  type="button"
-                  key={preset.url}
-                  onClick={() => handleChange("coverImg", preset.url)}
-                  className={`relative w-20 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                    form.coverImg === preset.url
-                      ? "border-[#16730F] ring-2 ring-[#16730F]/20"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <img src={preset.url} alt={preset.name} className="w-full h-full object-cover" />
-                  {form.coverImg === preset.url && (
-                    <div className="absolute inset-0 bg-[#16730F]/30 flex items-center justify-center">
-                      <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-[#16730F]" />
-                      </div>
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleImageFileChange}
+              className="hidden"
+            />
+
+            {form.coverImg ? (
+              <div className="relative w-full h-36 rounded-xl overflow-hidden border border-gray-200 group bg-gray-50">
+                <img
+                  src={form.coverImg}
+                  alt="Cover Preview"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = coverFallback;
+                  }}
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-[2px]">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-white text-gray-800 text-xs font-semibold rounded-lg shadow hover:bg-gray-100 transition-all cursor-pointer"
+                  >
+                    <Upload size={13} />
+                    Change Image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChange("coverImg", "")}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-rose-600 text-white text-xs font-semibold rounded-lg shadow hover:bg-rose-700 transition-all cursor-pointer"
+                  >
+                    <Trash2 size={13} />
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                className="w-full h-36 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50 hover:bg-emerald-50/30 hover:border-[#16730F]/40 transition-all cursor-pointer flex flex-col items-center justify-center text-center group relative overflow-hidden"
+              >
+                <img
+                  src={coverFallback}
+                  alt="Fallback Banner"
+                  className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity"
+                />
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="w-10 h-10 rounded-full bg-emerald-50/90 backdrop-blur-sm text-[#16730F] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-sm">
+                    <Upload size={18} />
+                  </div>
+                  <p className="text-xs font-semibold text-gray-800">
+                    Click to upload cover image from your file manager
+                  </p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    PNG, JPG, WEBP or GIF (Drag & Drop supported)
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Title & Summary */}

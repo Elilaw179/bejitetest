@@ -73,7 +73,7 @@ export default function EventHeader({
             <div>
               <h1
                 style={{ fontFamily: "NunitoBold" }}
-                className="text-2xl font-extrabold text-[#000] tracking-tight"
+                className="text-2xl font-extrabold text-[#fff] tracking-tight"
               >
                 Event Broadcast Studio
               </h1>

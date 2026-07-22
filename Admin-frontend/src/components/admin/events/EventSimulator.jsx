@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, Calendar, Clock, MapPin, Video, Users, Tag, ExternalLink } from "lucide-react";
+import { Eye, Calendar, Clock, MapPin, Video, Users, Tag, ExternalLink, Navigation } from "lucide-react";
+import coverFallback from "../../../assets/Ellipse 32 (3).png";
+import PhysicalLocationModal from "./PhysicalLocationModal";
 
 const GRADIENT_MAP = {
   Technology: "from-blue-600 to-indigo-700",
@@ -16,9 +19,21 @@ const BADGE_MAP = {
 };
 
 export default function EventSimulator({ form }) {
+  const [showLocationModal, setShowLocationModal] = useState(false);
+
   const gradient = GRADIENT_MAP[form.category] || "from-gray-600 to-gray-800";
   const badge = BADGE_MAP[form.category] || "bg-gray-500/20 text-gray-200";
   const hasContent = form.title || form.summary;
+
+  const handleCtaClick = () => {
+    if (form.locationType === "virtual") {
+      if (form.location && form.location.startsWith("http")) {
+        window.open(form.location, "_blank");
+      }
+    } else {
+      setShowLocationModal(true);
+    }
+  };
 
   return (
     <motion.div
@@ -56,15 +71,15 @@ export default function EventSimulator({ form }) {
               className="rounded-2xl overflow-hidden border border-gray-100 shadow-md"
             >
               {/* Cover */}
-              <div className={`relative h-40 bg-gradient-to-br ${gradient}`}>
-                {form.coverImg && (
-                  <img
-                    src={form.coverImg}
-                    alt="cover"
-                    className="w-full h-full object-cover mix-blend-overlay opacity-60"
-                  />
-                )}
-                <div className={`absolute inset-0 bg-gradient-to-t ${gradient} opacity-70`} />
+              <div className="relative h-40 bg-gray-100 overflow-hidden">
+                <img
+                  src={form.coverImg || coverFallback}
+                  alt="cover"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = coverFallback;
+                  }}
+                />
 
                 {/* Category badge */}
                 <div className="absolute top-3 left-3">
@@ -118,7 +133,14 @@ export default function EventSimulator({ form }) {
                     </div>
                   )}
                   {form.location && (
-                    <div className="flex items-center gap-1.5 text-[11px] text-gray-500 bg-gray-50 px-2.5 py-2 rounded-lg">
+                    <div
+                      onClick={handleCtaClick}
+                      className={`flex items-center gap-1.5 text-[11px] px-2.5 py-2 rounded-lg transition-colors ${
+                        form.locationType === "virtual"
+                          ? "text-gray-500 bg-gray-50"
+                          : "text-[#16730F] bg-emerald-50/60 hover:bg-emerald-100/60 cursor-pointer font-semibold"
+                      }`}
+                    >
                       {form.locationType === "virtual" ? (
                         <ExternalLink size={12} className="text-[#16730F] shrink-0" />
                       ) : (
@@ -147,16 +169,38 @@ export default function EventSimulator({ form }) {
                 {/* CTA */}
                 <button
                   type="button"
-                  className="w-full py-2.5 bg-[#16730F] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 hover:bg-[#0e4a09] transition-colors cursor-pointer"
+                  onClick={handleCtaClick}
+                  className="w-full py-2.5 bg-[#16730F] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 hover:bg-[#0e4a09] transition-all shadow-sm cursor-pointer"
                 >
-                  <ExternalLink size={12} />
-                  {form.locationType === "virtual" ? "Join Event" : "Get Directions"}
+                  {form.locationType === "virtual" ? (
+                    <>
+                      <ExternalLink size={12} />
+                      Join Event
+                    </>
+                  ) : (
+                    <>
+                      <MapPin size={12} />
+                      View Physical Venue
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>
           )}
         </div>
       </div>
+
+      {/* Physical Location Modal */}
+      <PhysicalLocationModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        location={form.location}
+        title={form.title}
+        host={form.host}
+        date={form.date}
+        time={form.time}
+        category={form.category}
+      />
     </motion.div>
   );
 }
