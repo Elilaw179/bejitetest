@@ -37,6 +37,12 @@ export const registerForPartnerEvent = async (eventId) => {
   return response.data;
 };
 
+export const trackPartnerEventClick = async (eventId) => {
+  if (!eventId) return null;
+  const response = await axiosInstance.post(`${API}/events/${eventId}/click`);
+  return response.data;
+};
+
 export const getMonthlyReports = async () => {
   const response = await axiosInstance.get(`${API}/reports`);
   return response.data;

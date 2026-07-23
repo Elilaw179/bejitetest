@@ -123,7 +123,7 @@ export default function EventHistory({ eventsList, onDeleteEvent, onResendEvent,
                         <p className="font-bold text-gray-700">{total.toLocaleString()}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-[10px] text-gray-400 font-medium">Open Rate</p>
+                        <p className="text-[10px] text-gray-400 font-medium">Click Rate</p>
                         <p className="font-bold text-emerald-600">{openRate}%</p>
                       </div>
                       <div className="text-center">

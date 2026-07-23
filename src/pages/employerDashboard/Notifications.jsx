@@ -6,6 +6,7 @@ import NewsFeedLayout from '../../components/layout/NewsFeedLayout'
 import { getPostDetailPath } from '../../utils/postNavigation'
 import FeedLoadMoreButton from '../../components/FeedLoadMoreButton'
 import { markAllNotificationsRead } from '../../services/notificationService'
+import { trackPartnerEventClick } from '../../services/verifiedBadgeApi'
 
 const NOTIFICATIONS_PAGE_SIZE = 20
 
@@ -150,6 +151,19 @@ const Notifications = () => {
       } catch (e) {
         console.error('Error parsing notification data:', e);
       }
+    }
+
+    const partnerEventId =
+      notification.entity_type === 'partner_event' && notification.entity_id
+        ? String(notification.entity_id)
+        : parsedData?.eventId != null
+          ? String(parsedData.eventId)
+          : null;
+
+    if (partnerEventId) {
+      void trackPartnerEventClick(partnerEventId).catch(() => {
+        /* ignore analytics failures */
+      });
     }
 
     // Connection posted — open news feed at the post

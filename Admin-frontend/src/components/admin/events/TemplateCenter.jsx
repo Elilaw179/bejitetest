@@ -1,5 +1,4 @@
-import React from "react";
-import { LayoutTemplate, ChevronRight, CheckCircle2, Video, MapPin, Tag, Users } from "lucide-react";
+import { ChevronRight, CheckCircle2, Video, MapPin, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 
 const CATEGORY_COLORS = {

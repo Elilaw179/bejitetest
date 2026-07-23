@@ -26,14 +26,6 @@ import {
   Upload,
 } from "lucide-react";
 
-const COVER_PRESETS = [
-  { name: "Default Banner", url: coverFallback },
-  { name: "Tech & AI", url: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80" },
-  { name: "Finance", url: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&q=80" },
-  { name: "UX Design", url: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&q=80" },
-  { name: "Networking", url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80" },
-];
-
 const CATEGORIES = ["Technology", "Finance", "Product", "Creative"];
 
 const AUDIENCE_OPTIONS = [

@@ -14,6 +14,9 @@ import {
 export default function EventHeader({
   onCreateEvent,
   eventsCount,
+  verifiedSubscribers = 0,
+  upcomingCount = 0,
+  totalRegistrations = 0,
   currentTab,
   setCurrentTab,
 }) {
@@ -27,21 +30,21 @@ export default function EventHeader({
     },
     {
       label: "Verified Subscribers",
-      value: "1,248",
+      value: Number(verifiedSubscribers || 0).toLocaleString(),
       Icon: Users,
       iconColor: "text-blue-600",
       bg: "bg-blue-50",
     },
     {
       label: "Upcoming Events",
-      value: "2",
+      value: upcomingCount || 0,
       Icon: Calendar,
       iconColor: "text-amber-600",
       bg: "bg-amber-50",
     },
     {
-      label: "Avg. Open Rate",
-      value: "87.4%",
+      label: "Total Registrations",
+      value: Number(totalRegistrations || 0).toLocaleString(),
       Icon: TrendingUp,
       iconColor: "text-violet-600",
       bg: "bg-violet-50",
