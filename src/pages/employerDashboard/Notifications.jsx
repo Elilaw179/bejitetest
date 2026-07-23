@@ -369,56 +369,52 @@ const Notifications = () => {
   }
 
   return (
-    <NewsFeedLayout scrollable={true} classes={false} showSidebars={false}>
+    <NewsFeedLayout showSidebars={false}>
+      <div className="max-w-2xl mx-auto p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-semibold text-[#16730F]">
+            Notifications
+          </h1>
+          {!showInvitations && notifications.some((n) => !n.is_read) && (
+            <button
+              type="button"
+              onClick={markAllAsRead}
+              className="text-sm font-medium text-[#16730F] hover:underline"
+            >
+              Mark all as read
+            </button>
+          )}
+        </div>
 
-      <div>
-        {/* <NewsFeedHeader /> */}
-
-        <div className="max-w-2xl mx-auto p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-semibold text-[#16730F]">
-              Notifications
-            </h1>
-            {!showInvitations && notifications.some((n) => !n.is_read) && (
-              <button
-                type="button"
-                onClick={markAllAsRead}
-                className="text-sm font-medium text-[#16730F] hover:underline"
-              >
-                Mark all as read
-              </button>
+        {/* Toggle between Notifications and Invitations */}
+        <div className="flex justify-center gap-2 mb-6">
+          <button
+            onClick={() => setShowInvitations(false)}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${!showInvitations
+              ? 'bg-[#16730F] text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+          >
+            Notifications
+          </button>
+          <button
+            onClick={() => {
+              setShowInvitations(true)
+              fetchInvitations()
+            }}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${showInvitations
+              ? 'bg-[#16730F] text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+          >
+            My Interview Invitations
+            {invitations.length > 0 && (
+              <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                {invitations.length}
+              </span>
             )}
-          </div>
-
-          {/* Toggle between Notifications and Invitations */}
-          <div className="flex justify-center gap-2 mb-6">
-            <button
-              onClick={() => setShowInvitations(false)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${!showInvitations
-                ? 'bg-[#16730F] text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-            >
-              Notifications
-            </button>
-            <button
-              onClick={() => {
-                setShowInvitations(true)
-                fetchInvitations()
-              }}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${showInvitations
-                ? 'bg-[#16730F] text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-            >
-              My Interview Invitations
-              {invitations.length > 0 && (
-                <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                  {invitations.length}
-                </span>
-              )}
-            </button>
-          </div>
+          </button>
+        </div>
 
           {/* Interview Invitations View */}
           {showInvitations ? (
@@ -596,7 +592,6 @@ const Notifications = () => {
             </div>
           </div>
         )}
-      </div>
     </NewsFeedLayout>
   )
 }

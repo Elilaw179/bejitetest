@@ -170,7 +170,7 @@ export default function BadgeStatus() {
 
   return (
     <NewsFeedLayout classes={false} showSidebars={false}>
-      <div className="h-full w-full max-w-screen-xl mx-auto flex flex-col">
+      <div className="h-full min-h-0 w-full max-w-screen-xl mx-auto flex flex-col">
         <div className="bg-[#1A3E32] px-4 sm:px-6 py-5 flex-shrink-0 relative overflow-hidden">
           <div className="absolute right-0 top-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
           <div className="flex items-start sm:items-center gap-3 relative min-w-0">
@@ -186,7 +186,7 @@ export default function BadgeStatus() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto nfl-scroll scroll-smooth">
           <div className="max-w-4xl mx-auto px-4 py-8 space-y-10">
             <div className="bg-gradient-to-br from-[#1A3E32] to-[#2d6a54] rounded-2xl p-5 sm:p-8 text-white relative overflow-hidden">
               <div className="absolute right-4 top-4 opacity-10 pointer-events-none">

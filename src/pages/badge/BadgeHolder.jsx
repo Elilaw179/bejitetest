@@ -129,7 +129,7 @@ export default function BadgeHolder() {
 
   return (
     <NewsFeedLayout classes={false} showSidebars={false}>
-      <div className="h-full w-full max-w-screen-xl mx-auto flex flex-col">
+      <div className="h-full min-h-0 w-full max-w-screen-xl mx-auto flex flex-col">
         <div className="bg-[#1A3E32] px-4 sm:px-6 py-5 flex-shrink-0 relative overflow-hidden">
           <div className="absolute right-0 top-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
           <div className="flex items-start sm:items-center gap-3 relative min-w-0">
@@ -156,7 +156,7 @@ export default function BadgeHolder() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto nfl-scroll scroll-smooth">
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-8">
             <div className="bg-gradient-to-r from-[#1A3E32] to-[#2d6a54] rounded-2xl p-4 sm:p-5 text-white flex items-start gap-3 sm:gap-4">
               <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shrink-0">

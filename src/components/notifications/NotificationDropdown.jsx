@@ -146,7 +146,7 @@ export default function NotificationDropdown({
             </button>
           </div>
 
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-80 overflow-y-auto nfl-scroll">
             {loading && (
               <p className="px-4 py-6 text-sm text-gray-500 text-center">
                 Loading…

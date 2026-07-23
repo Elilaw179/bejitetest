@@ -312,7 +312,7 @@ export default function AccountSettings() {
 
   return (
     <NewsFeedLayout classes={false} showSidebars={false}>
-      <div className="h-full w-full max-w-screen-xl mx-auto flex flex-col">
+      <div className="h-full min-h-0 w-full max-w-screen-xl mx-auto flex flex-col">
         {/* Header */}
         <div className="bg-[#1A3E32] px-6 py-4 flex-shrink-0">
           <h1 className="text-white font-bold text-xl">Account Settings</h1>
@@ -321,7 +321,7 @@ export default function AccountSettings() {
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto nfl-scroll scroll-smooth">
           <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
             {/* Profile preview */}
             <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-4">

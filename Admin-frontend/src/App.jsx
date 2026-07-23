@@ -26,6 +26,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import AdminRevenue from "./page/admin/AdminRevenue";
 import AdminRecruitment from "./page/admin/AdminRecruitment";
 import AdminEmailOutreach from "./page/admin/AdminEmailOutreach";
+import AdminEvents from "./page/admin/AdminEvents";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
@@ -58,6 +59,7 @@ function App() {
               <Route path="admins" element={<AdminList />} />
               <Route path="adpro" element={<AdminAdPro />} />
               <Route path="email-outreach" element={<AdminEmailOutreach />} />
+              <Route path="events" element={<AdminEvents />} />
             </Route>
 
             <Route path="/auth/email-sent" element={<EmailSent />} />
