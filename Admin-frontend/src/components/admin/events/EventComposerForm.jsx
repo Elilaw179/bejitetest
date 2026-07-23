@@ -21,16 +21,6 @@ import {
 
 const CATEGORIES = ["Technology", "Finance", "Product", "Creative"];
 
-const COVER_PRESETS = [
-  { name: "Default Banner", url: coverFallback },
-  { name: "Tech & AI", url: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80" },
-  { name: "Finance", url: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&q=80" },
-  { name: "UX Design", url: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&q=80" },
-  { name: "Marketing", url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&q=80" },
-  { name: "Healthcare", url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80" },
-  { name: "Education", url: "https://images.unsplash.com/photo-1523050854058-8df90110c476?w=600&q=80" },
-];
-
 /* ─── Reusable Field Wrapper ─── */
 const Field = ({ label, icon: Icon, required, children }) => (
   <div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { BadgeCheck, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +13,7 @@ import {
   getMonthlyReports,
   openMonthlyReport,
   registerForPartnerEvent,
+  trackPartnerEventClick,
 } from "../../services/verifiedBadgeApi";
 import { getUser, mergeAuthUsers } from "../../utils/tokenManager";
 import { getVerifiedBadgeLabel } from "../../utils/verifiedBadge";
@@ -57,6 +58,7 @@ function mapApiEvent(event) {
 
 export default function BadgeHolder() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const reduxUser = useSelector((state) => state.auth?.user);
   const sessionUser = useMemo(
     () => mergeAuthUsers(getUser() || {}, reduxUser || {}),
@@ -90,13 +92,28 @@ export default function BadgeHolder() {
           return;
         }
 
+        const deepLinkEventId = searchParams.get("eventId");
+        if (deepLinkEventId) {
+          void trackPartnerEventClick(deepLinkEventId).catch(() => {
+            /* ignore analytics failures */
+          });
+        }
+
         const [eventsRes, reportsRes] = await Promise.all([
           getPartnerEvents(),
           getMonthlyReports(),
         ]);
 
-        setEvents((eventsRes?.events || []).map(mapApiEvent));
+        const mapped = (eventsRes?.events || []).map(mapApiEvent);
+        setEvents(mapped);
         setReports(reportsRes?.reports || []);
+
+        if (deepLinkEventId) {
+          const match = mapped.find(
+            (e) => String(e.id) === String(deepLinkEventId),
+          );
+          if (match) setSelectedEvent(match);
+        }
       } catch (err) {
         console.error(err);
         if (err.response?.status === 403) {
@@ -107,7 +124,7 @@ export default function BadgeHolder() {
       }
     };
     load();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const handleOpenReport = async (reportId) => {
     const res = await openMonthlyReport(reportId);

@@ -6,6 +6,8 @@ import {
   markNotificationRead,
 } from "../../services/notificationService";
 import { getPostDetailPath } from "../../utils/postNavigation";
+import { trackPartnerEventClick } from "../../services/verifiedBadgeApi";
+import { getPartnerEventIdFromNotification } from "../../utils/partnerEventClick";
 
 function resolveNotificationLink(notification) {
   if (notification?.link) return notification.link;
@@ -83,6 +85,14 @@ export default function NotificationDropdown({
           /* ignore */
         });
     }
+
+    const eventId = getPartnerEventIdFromNotification(notification);
+    if (eventId) {
+      void trackPartnerEventClick(eventId).catch(() => {
+        /* ignore analytics failures */
+      });
+    }
+
     setOpen(false);
     const path = resolveNotificationLink(notification);
     if (path.startsWith("http")) {

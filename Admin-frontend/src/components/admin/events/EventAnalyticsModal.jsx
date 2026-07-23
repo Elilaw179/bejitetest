@@ -21,7 +21,7 @@ export default function EventAnalyticsModal({ selectedAnalyticsEvent: evt, onClo
       pct: 100,
     },
     {
-      label: "Opened",
+      label: "Clicked",
       value: opened.toLocaleString(),
       icon: Eye,
       color: "text-emerald-600",
@@ -82,7 +82,7 @@ export default function EventAnalyticsModal({ selectedAnalyticsEvent: evt, onClo
           <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 text-center">
             <TrendingUp size={18} className="text-emerald-600 mx-auto" />
             <p className="text-2xl font-extrabold text-emerald-700 mt-2">{openRate}%</p>
-            <p className="text-[10px] font-semibold text-emerald-500 mt-0.5">Open Rate</p>
+            <p className="text-[10px] font-semibold text-emerald-500 mt-0.5">Click Rate</p>
           </div>
           <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl p-4 text-center">
             <UserCheck size={18} className="text-violet-600 mx-auto" />

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Calendar, Clock, MapPin, Video, ExternalLink, Users, Navigation } from "lucide-react";
+import { useState } from "react";
+import { Calendar, Clock, MapPin, Video, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import coverFallback from "../../../assets/Ellipse 32 (3).png";
 import PhysicalLocationModal from "./PhysicalLocationModal";

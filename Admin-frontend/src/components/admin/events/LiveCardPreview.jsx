@@ -2,13 +2,6 @@ import { useState } from "react";
 import { X, Calendar, Clock, MapPin, Video, Users, ExternalLink, Tag } from "lucide-react";
 import PhysicalLocationModal from "./PhysicalLocationModal";
 
-const GRADIENT_COLORS = {
-  Technology: "from-blue-600 to-indigo-700",
-  Finance: "from-emerald-600 to-teal-700",
-  Product: "from-purple-600 to-violet-700",
-  Creative: "from-rose-500 to-pink-700",
-};
-
 export default function LiveCardPreview({ item, activeTab, onClose }) {
   const [showLocationModal, setShowLocationModal] = useState(false);
 

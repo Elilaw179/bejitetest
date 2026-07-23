@@ -1,4 +1,3 @@
-import React from 'react';
 import { VOICE_WAVEFORM_BARS, placeholderWaveformLevels } from '../../utils/voiceWaveform';
 
 function VoiceWaveform({
