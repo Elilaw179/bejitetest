@@ -966,7 +966,7 @@ export default function ActivityLog() {
 
   return (
     <NewsFeedLayout classes={false} showSidebars={false}>
-      <div className="h-full w-full max-w-screen-xl mx-auto flex flex-col bg-[#F8FAFC]">
+      <div className="h-full min-h-0 w-full max-w-screen-xl mx-auto flex flex-col bg-[#F8FAFC]">
         {/* Header Section */}
         <div className="bg-[#1A3E32] px-6 py-8 flex-shrink-0 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
@@ -985,7 +985,7 @@ export default function ActivityLog() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto nfl-scroll scroll-smooth">
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
             
             {/* Metrics Dashboard */}

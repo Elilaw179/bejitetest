@@ -178,7 +178,6 @@ export default function ActiveLiveEvents({ eventsList }) {
         host={selectedPhysicalEvent?.host}
         date={selectedPhysicalEvent?.date}
         time={selectedPhysicalEvent?.time}
-        category={selectedPhysicalEvent?.category}
       />
     </motion.div>
   );

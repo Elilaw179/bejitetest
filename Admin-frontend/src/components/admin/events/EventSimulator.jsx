@@ -4,13 +4,6 @@ import { Eye, Calendar, Clock, MapPin, Video, Users, Tag, ExternalLink, Navigati
 import coverFallback from "../../../assets/Ellipse 32 (3).png";
 import PhysicalLocationModal from "./PhysicalLocationModal";
 
-const GRADIENT_MAP = {
-  Technology: "from-blue-600 to-indigo-700",
-  Finance: "from-emerald-600 to-teal-700",
-  Product: "from-purple-600 to-violet-700",
-  Creative: "from-rose-500 to-pink-600",
-};
-
 const BADGE_MAP = {
   Technology: "bg-blue-500/20 text-blue-200",
   Finance: "bg-emerald-500/20 text-emerald-200",
@@ -21,7 +14,6 @@ const BADGE_MAP = {
 export default function EventSimulator({ form }) {
   const [showLocationModal, setShowLocationModal] = useState(false);
 
-  const gradient = GRADIENT_MAP[form.category] || "from-gray-600 to-gray-800";
   const badge = BADGE_MAP[form.category] || "bg-gray-500/20 text-gray-200";
   const hasContent = form.title || form.summary;
 
@@ -199,7 +191,6 @@ export default function EventSimulator({ form }) {
         host={form.host}
         date={form.date}
         time={form.time}
-        category={form.category}
       />
     </motion.div>
   );

@@ -22,7 +22,6 @@ export default function PhysicalLocationModal({
   host,
   date,
   time,
-  category,
 }) {
   const [copied, setCopied] = useState(false);
 

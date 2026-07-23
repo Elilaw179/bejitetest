@@ -161,7 +161,6 @@ export default function LiveCardPreview({ item, activeTab, onClose }) {
         host={item.host}
         date={item.date}
         time={item.time}
-        category={item.category}
       />
     </div>
   );
