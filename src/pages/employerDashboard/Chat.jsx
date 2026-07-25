@@ -12,7 +12,9 @@ function Chat() {
   const [currentView, setCurrentView] = useState('chatList'); // 'chatList', 'chatView', 'chatInfo'
 
   useEffect(() => {
-    const openConversationId = location.state?.openConversationId;
+    const params = new URLSearchParams(location.search);
+    const openConversationId =
+      location.state?.openConversationId || params.get('conversation');
     if (!openConversationId) return;
 
     let cancelled = false;
@@ -28,14 +30,14 @@ function Chat() {
           setCurrentView('chatView');
         }
       } catch (err) {
-        console.error('Error opening conversation from profile:', err);
+        console.error('Error opening conversation from notification/profile:', err);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [location.state?.openConversationId]);
+  }, [location.state?.openConversationId, location.search]);
 
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);

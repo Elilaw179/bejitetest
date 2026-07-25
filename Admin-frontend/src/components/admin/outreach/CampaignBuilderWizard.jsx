@@ -11,12 +11,15 @@ const CampaignBuilderWizard = ({
   campaignForm = {},
   setCampaignForm = () => {},
   matchingCount = 0,
+  audienceLoading = false,
+  sampleRecipient = null,
   onSubmit = () => {},
   onNavigateTemplates = () => {},
 }) => {
   const [step, setStep] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleLaunchCampaign = () => {
+  const handleLaunchCampaign = async () => {
     if (!campaignForm.name || !campaignForm.subject || !campaignForm.body) {
       toast.error("Please fill in Campaign Name, Subject, and Email Body!");
       return;
@@ -25,7 +28,18 @@ const CampaignBuilderWizard = ({
       toast.error("You must confirm compliance with GDPR/CASL regulations!");
       return;
     }
-    onSubmit(matchingCount);
+    if (campaignForm.sendType === "scheduled") {
+      if (!campaignForm.scheduledDate || !campaignForm.scheduledTime) {
+        toast.error("Please choose a scheduled date and time!");
+        return;
+      }
+    }
+    setSubmitting(true);
+    try {
+      await onSubmit(matchingCount);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -127,6 +141,8 @@ const CampaignBuilderWizard = ({
             campaignForm={campaignForm}
             setCampaignForm={setCampaignForm}
             matchingCount={matchingCount}
+            audienceLoading={audienceLoading}
+            sampleRecipient={sampleRecipient}
           />
         )}
 
@@ -142,7 +158,8 @@ const CampaignBuilderWizard = ({
           <PreviewScheduleStep
             campaignForm={campaignForm}
             setCampaignForm={setCampaignForm}
-            onNavigateStep={setStep}
+            sampleRecipient={sampleRecipient}
+            matchingCount={matchingCount}
           />
         )}
 
@@ -171,12 +188,15 @@ const CampaignBuilderWizard = ({
             <button
               type="button"
               onClick={handleLaunchCampaign}
-              className="flex items-center gap-1.5 text-sm font-extrabold text-white bg-[#16730F] hover:bg-green-700 px-6 py-3 rounded-xl shadow-lg cursor-pointer transition-all ml-auto hover:scale-105"
+              disabled={submitting}
+              className="flex items-center gap-1.5 text-sm font-extrabold text-white bg-[#16730F] hover:bg-green-700 px-6 py-3 rounded-xl shadow-lg cursor-pointer transition-all ml-auto hover:scale-105 disabled:opacity-60 disabled:hover:scale-100"
             >
               <Send size={16} />
-              {campaignForm.sendType === "scheduled"
-                ? "Schedule Campaign"
-                : "Launch Outreach Campaign"}
+              {submitting
+                ? "Submitting…"
+                : campaignForm.sendType === "scheduled"
+                  ? "Schedule Campaign"
+                  : "Launch Outreach Campaign"}
             </button>
           )}
         </div>

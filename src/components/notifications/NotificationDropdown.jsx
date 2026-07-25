@@ -9,8 +9,31 @@ import { getPostDetailPath } from "../../utils/postNavigation";
 import { trackPartnerEventClick } from "../../services/verifiedBadgeApi";
 import { getPartnerEventIdFromNotification } from "../../utils/partnerEventClick";
 
+function normalizeNotificationPath(path) {
+  if (!path || typeof path !== "string") return path;
+
+  try {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+      const url = new URL(path);
+      if (url.pathname === "/messages" || url.pathname.startsWith("/messages/")) {
+        url.pathname = url.pathname.replace(/^\/messages/, "/chats");
+        return `${url.pathname}${url.search}${url.hash}`;
+      }
+      return path;
+    }
+
+    if (path === "/messages" || path.startsWith("/messages?") || path.startsWith("/messages/")) {
+      return path.replace(/^\/messages/, "/chats");
+    }
+  } catch {
+    /* keep original path */
+  }
+
+  return path;
+}
+
 function resolveNotificationLink(notification) {
-  if (notification?.link) return notification.link;
+  if (notification?.link) return normalizeNotificationPath(notification.link);
 
   let data = notification?.data;
   if (typeof data === "string") {
@@ -23,7 +46,7 @@ function resolveNotificationLink(notification) {
 
   if (data?.postId) return getPostDetailPath(data.postId);
   if (data?.conversationId) {
-    return `/messages?conversation=${encodeURIComponent(data.conversationId)}`;
+    return `/chats?conversation=${encodeURIComponent(data.conversationId)}`;
   }
   if (data?.jobId) {
     return `/job-vacancy?jobId=${encodeURIComponent(data.jobId)}`;

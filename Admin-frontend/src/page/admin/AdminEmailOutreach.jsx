@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { Mail, Plus } from "lucide-react";
 
@@ -10,12 +10,46 @@ import TemplatePresetsGrid from "../../components/admin/outreach/TemplatePresets
 
 import DeleteCampaignConfirmModal from "../../components/admin/outreach/DeleteCampaignConfirmModal";
 import TemplateEditorModal from "../../components/admin/outreach/TemplateEditorModal";
-import { MOCK_CAMPAIGNS_DATA, PRESETS_TEMPLATES } from "../../data/usersData";
+import {
+  createOutreachTemplate,
+  deleteOutreachCampaign,
+  getOutreachAudienceCount,
+  launchOutreachCampaign,
+  listOutreachCampaigns,
+  listOutreachTemplates,
+  updateOutreachTemplate,
+} from "../../services/emailOutreachAdminApi";
+
+const EMPTY_CAMPAIGN_FORM = {
+  name: "",
+  subject: "",
+  previewText: "",
+  senderName: "Bejite Support",
+  senderEmail: "info@bejite.com",
+  role: "Jobseeker",
+  profession: "All",
+  skills: "",
+  location: "",
+  completeness: "All",
+  consentChecked: true,
+  body: "",
+  ctaText: "",
+  ctaLink: "",
+  logoUrl: "/assets/images/logo.png",
+  attachments: [],
+  sendType: "now",
+  scheduledDate: "",
+  scheduledTime: "",
+};
 
 const AdminEmailOutreach = () => {
   const [activeTab, setActiveTab] = useState("campaigns");
-  const [campaigns, setCampaigns] = useState(MOCK_CAMPAIGNS_DATA);
-  const [templates, setTemplates] = useState(PRESETS_TEMPLATES);
+  const [campaigns, setCampaigns] = useState([]);
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [matchingCount, setMatchingCount] = useState(0);
+  const [sampleRecipient, setSampleRecipient] = useState(null);
+  const [audienceLoading, setAudienceLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedCampaign, setSelectedCampaign] = useState(null);
@@ -33,111 +67,108 @@ const AdminEmailOutreach = () => {
     category: "Job Alert",
   });
 
-  const [campaignForm, setCampaignForm] = useState({
-    name: "",
-    subject: "",
-    previewText: "",
-    senderName: "Bejite Support",
-    senderEmail: "info@bejite.com",
-    role: "Jobseeker",
-    profession: "All",
-    skills: "",
-    location: "",
-    completeness: "All",
-    consentChecked: true,
-    body: "",
-    ctaText: "",
-    ctaLink: "",
-    logoUrl: "/assets/images/logo.png",
-    attachments: [],
-    sendType: "now",
-    scheduledDate: "",
-    scheduledTime: "",
-  });
+  const [campaignForm, setCampaignForm] = useState(EMPTY_CAMPAIGN_FORM);
 
-  const getMatchingCount = () => {
-    let base = 25000;
-    if (campaignForm.role === "Jobseeker") {
-      base = 18500;
-      if (campaignForm.profession !== "All") base = Math.floor(base * 0.15);
-      if (campaignForm.completeness === "high") base = Math.floor(base * 0.6);
-    } else if (campaignForm.role === "Employer") {
-      base = 4200;
-      if (campaignForm.profession !== "All") base = Math.floor(base * 0.08);
-    } else if (campaignForm.role === "Partners") {
-      base = 1830;
-    }
+  const refreshCampaigns = useCallback(async () => {
+    const data = await listOutreachCampaigns();
+    setCampaigns(data.campaigns || []);
+  }, []);
 
-    if (campaignForm.skills) base = Math.floor(base * 0.4);
-    if (campaignForm.location) base = Math.floor(base * 0.3);
+  const refreshTemplates = useCallback(async () => {
+    const data = await listOutreachTemplates();
+    setTemplates(data.templates || []);
+  }, []);
 
-    return Math.max(12, base);
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        await Promise.all([refreshCampaigns(), refreshTemplates()]);
+      } catch (error) {
+        if (!cancelled) {
+          toast.error(
+            error?.response?.data?.error || "Failed to load email outreach data",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshCampaigns, refreshTemplates]);
 
-  const matchingCount = getMatchingCount();
+  useEffect(() => {
+    if (activeTab !== "create") return undefined;
+
+    const timer = setTimeout(async () => {
+      setAudienceLoading(true);
+      try {
+        const data = await getOutreachAudienceCount({
+          role: campaignForm.role,
+          profession: campaignForm.profession,
+          skills: campaignForm.skills,
+          location: campaignForm.location,
+          completeness: campaignForm.completeness,
+          consentChecked: campaignForm.consentChecked,
+        });
+        setMatchingCount(Number(data.count) || 0);
+        setSampleRecipient(data.sample || null);
+      } catch (error) {
+        console.warn("audience count failed:", error?.message || error);
+        setSampleRecipient(null);
+        toast.error(
+          error?.response?.data?.error || "Could not refresh audience count",
+        );
+      } finally {
+        setAudienceLoading(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [
+    activeTab,
+    campaignForm.role,
+    campaignForm.profession,
+    campaignForm.skills,
+    campaignForm.location,
+    campaignForm.completeness,
+    campaignForm.consentChecked,
+  ]);
+
+  // Refresh list while a campaign may still be sending
+  useEffect(() => {
+    const hasSending = campaigns.some((c) => c.status === "Sending");
+    if (!hasSending) return undefined;
+    const timer = setInterval(() => {
+      refreshCampaigns().catch(() => {});
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [campaigns, refreshCampaigns]);
+
   const campaignFormWithCount = { ...campaignForm, matchingCount };
 
-  const handleLaunchCampaignSubmit = (targetRecipientsCount) => {
-    const isScheduled = campaignForm.sendType === "scheduled";
-    const newCamp = {
-      id: `cmp_${Date.now()}`,
-      name: campaignForm.name,
-      subject: campaignForm.subject,
-      senderName: campaignForm.senderName,
-      senderEmail: campaignForm.senderEmail,
-      role: campaignForm.role,
-      profession: campaignForm.profession,
-      status: isScheduled ? "Scheduled" : "Sent",
-      sentAt: isScheduled ? null : new Date().toISOString(),
-      scheduledAt: isScheduled
-        ? `${campaignForm.scheduledDate}T${campaignForm.scheduledTime}`
-        : null,
-      sentCount: targetRecipientsCount,
-      deliveredCount: isScheduled
-        ? 0
-        : Math.floor(targetRecipientsCount * 0.995),
-      openedCount: isScheduled ? 0 : Math.floor(targetRecipientsCount * 0.68),
-      clickedCount: isScheduled ? 0 : Math.floor(targetRecipientsCount * 0.24),
-      bouncedCount: isScheduled ? 0 : Math.floor(targetRecipientsCount * 0.005),
-      unsubscribedCount: isScheduled
-        ? 0
-        : Math.floor(targetRecipientsCount * 0.001),
-      body: campaignForm.body,
-      ctaText: campaignForm.ctaText,
-      ctaLink: campaignForm.ctaLink,
-      attachments: campaignForm.attachments,
-      logoUrl: campaignForm.logoUrl,
-    };
-
-    setCampaigns([newCamp, ...campaigns]);
-    toast.success(
-      isScheduled
-        ? `Campaign successfully scheduled for ${campaignForm.scheduledDate}!`
-        : `Email outreach campaign launched successfully to ${targetRecipientsCount.toLocaleString()} recipients!`,
-    );
-
-    setCampaignForm({
-      name: "",
-      subject: "",
-      previewText: "",
-      senderName: "Bejite Support",
-      senderEmail: "info@bejite.com",
-      role: "Jobseeker",
-      profession: "All",
-      skills: "",
-      location: "",
-      completeness: "All",
-      consentChecked: true,
-      body: "",
-      ctaText: "",
-      ctaLink: "",
-      logoUrl: "/assets/images/logo.png",
-      attachments: [],
-      sendType: "now",
-      scheduledDate: "",
-      scheduledTime: "",
-    });
-    setActiveTab("campaigns");
+  const handleLaunchCampaignSubmit = async () => {
+    try {
+      const data = await launchOutreachCampaign(campaignForm);
+      toast.success(
+        data.message ||
+          (campaignForm.sendType === "scheduled"
+            ? "Campaign scheduled successfully"
+            : "Campaign launched successfully"),
+      );
+      setCampaignForm(EMPTY_CAMPAIGN_FORM);
+      setActiveTab("campaigns");
+      await refreshCampaigns();
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          "Failed to launch campaign",
+      );
+    }
   };
 
   const handleSelectTemplate = (template) => {
@@ -156,14 +187,14 @@ const AdminEmailOutreach = () => {
     setCampaignForm({
       name: `Copy of ${camp.name}`,
       subject: camp.subject,
-      previewText: "",
+      previewText: camp.previewText || "",
       senderName: camp.senderName,
       senderEmail: camp.senderEmail,
-      role: camp.role,
+      role: camp.role || "Jobseeker",
       profession: camp.profession || "All",
-      skills: "",
-      location: "",
-      completeness: "All",
+      skills: camp.skills || "",
+      location: camp.location || "",
+      completeness: camp.completeness || "All",
       consentChecked: true,
       body: camp.body,
       ctaText: camp.ctaText || "",
@@ -175,17 +206,22 @@ const AdminEmailOutreach = () => {
       scheduledTime: "",
     });
     setActiveTab("create");
-    toast.success("Duplicate loader applied. Stepper wizard loaded details.");
+    toast.success("Duplicate loaded into the campaign builder.");
   };
 
   const triggerDeleteCampaignModal = (id) => {
     setDeletingCampaignId(id);
   };
 
-  const confirmDeleteCampaign = () => {
-    setCampaigns(campaigns.filter((c) => c.id !== deletingCampaignId));
-    setDeletingCampaignId(null);
-    toast.success("Campaign record removed from history.");
+  const confirmDeleteCampaign = async () => {
+    try {
+      await deleteOutreachCampaign(deletingCampaignId);
+      setDeletingCampaignId(null);
+      toast.success("Campaign removed.");
+      await refreshCampaigns();
+    } catch (error) {
+      toast.error(error?.response?.data?.error || "Failed to delete campaign");
+    }
   };
 
   const handleOpenCreateTemplate = () => {
@@ -214,7 +250,7 @@ const AdminEmailOutreach = () => {
     setShowTemplateModal(true);
   };
 
-  const handleSaveTemplateSubmit = (e) => {
+  const handleSaveTemplateSubmit = async (e) => {
     e.preventDefault();
     if (!templateForm.name || !templateForm.subject || !templateForm.body) {
       toast.error(
@@ -223,23 +259,21 @@ const AdminEmailOutreach = () => {
       return;
     }
 
-    if (editingTemplateId) {
-      const updated = templates.map((t) =>
-        t.id === editingTemplateId ? { ...t, ...templateForm } : t,
-      );
-      setTemplates(updated);
-      toast.success(`Preset "${templateForm.name}" updated successfully.`);
-    } else {
-      const newTpl = {
-        ...templateForm,
-        id: `tpl_${Date.now()}`,
-      };
-      setTemplates([...templates, newTpl]);
-      toast.success(
-        `Custom template "${templateForm.name}" added to presets library.`,
-      );
+    try {
+      if (editingTemplateId) {
+        await updateOutreachTemplate(editingTemplateId, templateForm);
+        toast.success(`Preset "${templateForm.name}" updated successfully.`);
+      } else {
+        await createOutreachTemplate(templateForm);
+        toast.success(
+          `Custom template "${templateForm.name}" added to presets library.`,
+        );
+      }
+      setShowTemplateModal(false);
+      await refreshTemplates();
+    } catch (error) {
+      toast.error(error?.response?.data?.error || "Failed to save template");
     }
-    setShowTemplateModal(false);
   };
 
   return (
@@ -291,7 +325,11 @@ const AdminEmailOutreach = () => {
         </div>
       </div>
 
-      {activeTab === "campaigns" && (
+      {loading && (
+        <p className="text-sm text-gray-500">Loading outreach data…</p>
+      )}
+
+      {activeTab === "campaigns" && !loading && (
         <div className="space-y-8">
           <OutreachMetricsDashboard campaigns={campaigns} />
 
@@ -313,12 +351,14 @@ const AdminEmailOutreach = () => {
           campaignForm={campaignFormWithCount}
           setCampaignForm={setCampaignForm}
           matchingCount={matchingCount}
+          audienceLoading={audienceLoading}
+          sampleRecipient={sampleRecipient}
           onNavigateTemplates={() => setActiveTab("templates")}
           onSubmit={handleLaunchCampaignSubmit}
         />
       )}
 
-      {activeTab === "templates" && (
+      {activeTab === "templates" && !loading && (
         <TemplatePresetsGrid
           templates={templates}
           onSelectTemplate={handleSelectTemplate}
