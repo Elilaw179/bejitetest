@@ -1,4 +1,4 @@
-import { Route } from "react-router-dom";
+import { Navigate, Route, useLocation } from "react-router-dom";
 import {
   Recruitment,
   PostDetailPage,
@@ -17,6 +17,11 @@ import {
   JobVacancyListing,
 } from "../lazyPages.js";
 
+function MessagesToChatsRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={`/chats${search}`} replace />;
+}
+
 export const socialRoutes = (
   <>
       <Route path="/post-page" element={<PostPage />} />
@@ -32,6 +37,7 @@ export const socialRoutes = (
       <Route path="/badge-holder" element={<BadgeHolder />} />
       <Route path="/job-vacancy" element={<JobVacancyListing />} />
       <Route path="/chats" element={<Chat />} />
+      <Route path="/messages" element={<MessagesToChatsRedirect />} />
       <Route path="/connection" element={<Connections />} />
       <Route path="/notification" element={<Notifications />} />
       <Route path="/notifications" element={<Notifications />} />

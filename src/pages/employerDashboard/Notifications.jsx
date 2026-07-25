@@ -228,6 +228,19 @@ const Notifications = () => {
       return
     }
 
+    // New message — open the conversation in chats
+    if (notification.type === 'new_message') {
+      const conversationId =
+        parsedData?.conversationId ||
+        (notification.entity_type === 'conversation' ? notification.entity_id : null)
+      if (conversationId) {
+        navigate(`/chats?conversation=${encodeURIComponent(conversationId)}`)
+        return
+      }
+      navigate('/chats')
+      return
+    }
+
     // If we found an invitation ID, show the modal
     if (invitationId) {
       setSelectedNotification({

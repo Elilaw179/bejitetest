@@ -47,6 +47,13 @@ const CampaignHistoryTable = ({
             Scheduled
           </span>
         );
+      case "Sending":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+            Sending
+          </span>
+        );
       case "Draft":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
@@ -106,8 +113,10 @@ const CampaignHistoryTable = ({
           >
             <option value="All">All Statuses</option>
             <option value="Sent">Sent</option>
+            <option value="Sending">Sending</option>
             <option value="Scheduled">Scheduled</option>
             <option value="Draft">Draft</option>
+            <option value="Failed">Failed</option>
           </select>
         </div>
       </div>
