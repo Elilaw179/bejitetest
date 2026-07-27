@@ -174,8 +174,17 @@ const ASEPricingPage = () => {
     return defaultPlans;
   }, [plans, defaultPlans]);
 
+  const isCurrentPlan = useCallback(
+    (plan) =>
+      eligibility?.accessType === "subscription" &&
+      eligibility.planType === plan.id &&
+      eligibility.billingInterval === billingInterval,
+    [eligibility, billingInterval],
+  );
+
   // Trigger checkout confirmation popup
   const handleSelectPlan = (plan) => {
+    if (isCurrentPlan(plan)) return;
     setSelectedCheckoutPlan(plan);
     setIsCheckoutModalOpen(true);
   };
@@ -415,6 +424,7 @@ const ASEPricingPage = () => {
                 getDisplayPrice={getDisplayPrice}
                 getSaveText={getSaveText}
                 getMonthlyEquivalent={getMonthlyEquivalent}
+                isCurrentPlan={isCurrentPlan(plan)}
               />
             ))}
           </div>

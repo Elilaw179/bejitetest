@@ -8,6 +8,7 @@ const ASEPricingCard = ({
   getDisplayPrice,
   getSaveText,
   getMonthlyEquivalent,
+  isCurrentPlan = false,
 }) => {
   const isPopular = plan.id === "premium";
   const isBestValue = plan.id === "jumbo";
@@ -97,18 +98,21 @@ const ASEPricingCard = ({
       {/* Pricing action button */}
       <div className="mt-8 pt-4">
         <button
-          onClick={() => onSelectPlan(plan)}
-          className={`w-full py-3.5 px-4 rounded-xl font-bold transition-all active:scale-98 shadow-sm ${
-            isPopular
-              ? "bg-[#1A3E32] text-white hover:bg-[#2d5a47] hover:shadow-md"
-              : isBestValue
-                ? "bg-[#1A3E32] text-white hover:bg-[#2d5a47] hover:shadow-md"
-                : "bg-gray-100 text-[#1A3E32] hover:bg-gray-200"
+          onClick={() => !isCurrentPlan && onSelectPlan(plan)}
+          disabled={isCurrentPlan}
+          className={`w-full py-3.5 px-4 rounded-xl font-bold transition-all shadow-sm ${
+            isCurrentPlan
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : isPopular || isBestValue
+                ? "bg-[#1A3E32] text-white hover:bg-[#2d5a47] hover:shadow-md active:scale-98"
+                : "bg-gray-100 text-[#1A3E32] hover:bg-gray-200 active:scale-98"
           }`}
         >
-          {billingInterval === "monthly"
-            ? "Subscribe Monthly"
-            : "Subscribe Annually"}
+          {isCurrentPlan
+            ? "Current Plan"
+            : billingInterval === "monthly"
+              ? "Subscribe Monthly"
+              : "Subscribe Annually"}
         </button>
       </div>
     </div>
