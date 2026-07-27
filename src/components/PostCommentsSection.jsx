@@ -352,7 +352,7 @@ export default function PostCommentsSection({
       const data = await addComment(postId, newComment);
       setNewComment("");
       if (data?.comment) {
-        setComments((prev) => [...prev, data.comment]);
+        setComments((prev) => [data.comment, ...prev]);
         onCommentCountChange?.(1);
       } else {
         await onReload();
@@ -370,7 +370,7 @@ export default function PostCommentsSection({
       setReplyText("");
       setReplyingTo(null);
       if (data?.comment) {
-        setComments((prev) => [...prev, data.comment]);
+        setComments((prev) => [data.comment, ...prev]);
         onCommentCountChange?.(1);
       } else {
         await onReload();
