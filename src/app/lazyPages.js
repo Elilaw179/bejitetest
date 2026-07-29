@@ -34,6 +34,7 @@ export const CoperateVerify = lazy(() => import("../pages/corporate/Verify.jsx")
 export const CoperateUploadDoc = lazy(() => import("../pages/corporate/UploadDoc.jsx"));
 export const CoperateInReview = lazy(() => import("../pages/corporate/InReview.jsx"));
 export const Recruitment = lazy(() => import("../pages/employerDashboard/Recruitment.jsx"));
+export const RecruitmentManagement = lazy(() => import("../pages/employerDashboard/RecruitmentManagement.jsx"));
 export const PostDetailPage = lazy(() => import("../pages/PostDetailPage.jsx"));
 export const SharedPostRedirect = lazy(() => import("../pages/SharedPostRedirect.jsx"));
 export const SharedJobRedirect = lazy(() => import("../pages/SharedJobRedirect.jsx"));

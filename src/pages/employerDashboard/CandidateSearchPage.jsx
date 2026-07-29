@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { FaSlidersH, FaTimes, FaArrowLeft } from "react-icons/fa";
+import { FaSlidersH, FaTimes, FaArrowLeft, FaBriefcase } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import SearchCriteria from "../../components/candidate-search-page/SearchCriteria";
 import CandidateSearchResults from "../../components/candidate-search-page/CandidateSearchResults";
 import NewsFeedHeader from "../../components/NewsFeedHeader";
@@ -28,6 +29,7 @@ function useIsDesktop() {
 }
 
 const CandidateSearchPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     jobInput: "",
     industryInput: "",
@@ -170,6 +172,21 @@ const CandidateSearchPage = () => {
   return (
     <NewsFeedLayout scrollable={false} classes={false} showSidebars={false}>
       <div className="flex flex-col h-[calc(100vh-72px)] min-h-0 w-full max-w-[1440px] mx-auto bg-[#FFFFFF]">
+        {/* Top Header Bar */}
+        <div className="shrink-0 flex items-center justify-between px-4 py-2.5 bg-white border-b border-gray-200">
+          <span className="text-sm font-bold text-[#1A3E32] hidden sm:inline">
+            Candidate Search
+          </span>
+          <button
+            type="button"
+            onClick={() => navigate("/employer/recruitment-management")}
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold rounded-full bg-[#16730F] hover:bg-[#125B0C] text-white shadow-xs transition-all duration-200 active:scale-95 cursor-pointer ml-auto"
+          >
+            <FaBriefcase className="w-3.5 h-3.5" />
+            Recruitment Management
+          </button>
+        </div>
+
         {showMobileToolbar && (
           <div className="lg:hidden shrink-0 flex flex-wrap items-center gap-2 px-3 py-2 bg-white border-b border-gray-200">
             {showResults && !viewProfile && (
