@@ -10,6 +10,7 @@ import {
   JobApplications,
   RecruitWithASE,
   RepostJob,
+  RecruitmentManagement,
 } from "../lazyPages.js";
 
 export const employerRoutes = (
@@ -19,6 +20,22 @@ export const employerRoutes = (
         element={
           <ProtectedRoute redirectMessage="Your session has expired. Please log in again.">
             <CandidateSearchPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/employer/recruitment-management"
+        element={
+          <ProtectedRoute redirectMessage="Your session has expired. Please log in again.">
+            <RecruitmentManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/employer/recruitment-management/:id"
+        element={
+          <ProtectedRoute redirectMessage="Your session has expired. Please log in again.">
+            <RecruitmentManagement />
           </ProtectedRoute>
         }
       />

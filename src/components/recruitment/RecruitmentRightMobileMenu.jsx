@@ -26,9 +26,17 @@ export default function RecruitmentRightMobileMenu({ onNavigate }) {
             alt={displayName}
             className="w-14 h-14 rounded-full object-cover border-2 border-white/30"
           />
-          <p className="text-sm font-bold mt-2">
-            <DisplayNameWithBadge user={userData} fallback={displayName} badgeSize="xs" />
-          </p>
+          <div className="text-sm font-bold mt-2">
+            <DisplayNameWithBadge
+              user={userData}
+              fallback={displayName}
+              badgeSize="xs"
+              badgePlacement="below"
+              responsiveBadge={false}
+              as="div"
+              className="items-center"
+            />
+          </div>
           {username && (
             <p className="text-[11px] font-semibold text-white/80">{username}</p>
           )}
