@@ -146,8 +146,8 @@ const ASECheckoutModal = ({
                 Unused search/job credits do not roll over.
               </li>
               <li>
-                Top-ups: Extra search block (10 results) is ₦10,000; extra job
-                slot is ₦10,000.
+                Top-ups: Extra search pack (5 credits, 10 results each) is
+                ₦10,000; extra job pack (5 posts) is ₦10,000.
               </li>
             </ul>
           </div>

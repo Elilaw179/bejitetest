@@ -8,6 +8,7 @@ import UserProfilePanel from "../../components/candidate-search-page/UserProfile
 import JobSearchFormGreen from "../../components/candidate-search-page/JobSearchFormGreen";
 import UserMainProfileCard from "../../components/candidate-search-page/UserMainProfileCard";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
+import AseSearchCreditNotice from "../../components/candidate-search-page/AseSearchCreditNotice";
 
 const DESKTOP_MEDIA_QUERY = "(min-width: 1024px)";
 
@@ -270,6 +271,7 @@ const CandidateSearchPage = () => {
                 showResults && !viewProfile ? "p-0 lg:p-3 lg:sm:p-4 lg:md:p-6" : "p-3 sm:p-4 md:p-6"
               }`}
             >
+              {!showResults && !viewProfile && <AseSearchCreditNotice />}
               {renderMainContent()}
             </main>
 

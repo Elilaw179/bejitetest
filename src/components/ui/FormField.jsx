@@ -13,7 +13,7 @@ export default function FormField({
   helperText,
   className = "",
   inputClassName = "",
-  children,
+  children: _children,
   ...props
 }) {
   return (

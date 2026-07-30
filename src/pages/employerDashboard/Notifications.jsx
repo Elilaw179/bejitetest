@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import NewsFeedHeader from '../../components/NewsFeedHeader'
 import { API_URL } from '../../config'
 import NewsFeedLayout from '../../components/layout/NewsFeedLayout'
@@ -7,11 +8,27 @@ import { getPostDetailPath } from '../../utils/postNavigation'
 import FeedLoadMoreButton from '../../components/FeedLoadMoreButton'
 import { markAllNotificationsRead } from '../../services/notificationService'
 import { trackPartnerEventClick } from '../../services/verifiedBadgeApi'
+import { getUser } from '../../utils/tokenManager'
 
 const NOTIFICATIONS_PAGE_SIZE = 20
+const INVITATIONS_PAGE_SIZE = 50
+
+const INVITATION_STATUS_FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'accepted', label: 'Accepted' },
+  { value: 'declined', label: 'Declined' },
+  { value: 'expired', label: 'Expired' },
+]
 
 const Notifications = () => {
   const navigate = useNavigate()
+  const reduxUser = useSelector((state) => state.auth?.user)
+  const user = useMemo(() => reduxUser || getUser() || {}, [reduxUser])
+  const isRecruiter = ['recruiter', 'employer'].includes(
+    String(user.role || '').toLowerCase(),
+  )
+
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -20,35 +37,86 @@ const Notifications = () => {
   const [error, setError] = useState('')
   const [selectedNotification, setSelectedNotification] = useState(null)
   const [invitations, setInvitations] = useState([])
+  const [invitationsLoading, setInvitationsLoading] = useState(false)
+  const [invitationsLoadingMore, setInvitationsLoadingMore] = useState(false)
+  const [invitationsError, setInvitationsError] = useState('')
+  const [invitationsHasMore, setInvitationsHasMore] = useState(false)
+  const [invitationsPage, setInvitationsPage] = useState(1)
+  const [invitationStatusFilter, setInvitationStatusFilter] = useState('all')
   const [showInvitations, setShowInvitations] = useState(false)
 
   useEffect(() => {
     fetchNotifications()
-    fetchInvitations()
   }, [])
 
-  const fetchInvitations = async () => {
+  const fetchInvitations = useCallback(async (pageNum = 1, append = false, statusFilter = invitationStatusFilter) => {
     try {
+      if (append) {
+        setInvitationsLoadingMore(true)
+      } else {
+        setInvitationsLoading(true)
+      }
+      setInvitationsError('')
+
       const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token')
 
-      if (!token) return
+      if (!token) {
+        setInvitationsError('Please log in to view interview invitations')
+        return
+      }
 
-      const response = await fetch(`${API_URL}/api/interview-invitations/candidate?status=pending`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
+      const endpoint = isRecruiter ? 'employer' : 'candidate'
+      const params = new URLSearchParams({
+        page: String(pageNum),
+        limit: String(INVITATIONS_PAGE_SIZE),
       })
+      if (statusFilter && statusFilter !== 'all') {
+        params.set('status', statusFilter)
+      }
+
+      const response = await fetch(
+        `${API_URL}/api/interview-invitations/${endpoint}?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        },
+      )
 
       const data = await response.json()
 
-      if (response.ok && data.data) {
-        setInvitations(data.data)
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch interview invitations')
       }
+
+      const nextInvitations = data.data || []
+      setInvitations((prev) => (append ? [...prev, ...nextInvitations] : nextInvitations))
+
+      const pagination = data.pagination
+      setInvitationsHasMore(Boolean(pagination && pagination.page < pagination.pages))
+      setInvitationsPage(pageNum)
     } catch (err) {
       console.error('Error fetching invitations:', err)
+      setInvitationsError(err.message)
+      if (!append) {
+        setInvitations([])
+      }
+    } finally {
+      setInvitationsLoading(false)
+      setInvitationsLoadingMore(false)
     }
-  }
+  }, [invitationStatusFilter, isRecruiter])
+
+  useEffect(() => {
+    if (!showInvitations) return
+    fetchInvitations(1, false, invitationStatusFilter)
+  }, [showInvitations, invitationStatusFilter, fetchInvitations])
+
+  const pendingInvitationCount = useMemo(
+    () => invitations.filter((invitation) => invitation.status === 'pending').length,
+    [invitations],
+  )
 
   const fetchNotifications = async (pageNum = 1, append = false) => {
     try {
@@ -295,6 +363,7 @@ const Notifications = () => {
       )
       setSelectedNotification(null)
       alert('You have accepted the interview invitation!')
+      fetchInvitations(1, false, invitationStatusFilter)
     } catch (err) {
       alert(err.message)
     }
@@ -327,9 +396,33 @@ const Notifications = () => {
       )
       setSelectedNotification(null)
       alert('You have declined the interview invitation.')
+      fetchInvitations(1, false, invitationStatusFilter)
     } catch (err) {
       alert(err.message)
     }
+  }
+
+  const getInvitationStatusClasses = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'accepted':
+        return 'bg-green-100 text-green-800'
+      case 'declined':
+        return 'bg-red-100 text-red-800'
+      case 'expired':
+        return 'bg-gray-100 text-gray-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const formatInvitationTime = (timeValue) => {
+    if (!timeValue) return 'N/A'
+    return new Date(`2000-01-01T${timeValue}`).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
   }
 
   const getNotificationIcon = (type) => {
@@ -425,19 +518,16 @@ const Notifications = () => {
             Notifications
           </button>
           <button
-            onClick={() => {
-              setShowInvitations(true)
-              fetchInvitations()
-            }}
+            onClick={() => setShowInvitations(true)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${showInvitations
               ? 'bg-[#16730F] text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
           >
-            My Interview Invitations
-            {invitations.length > 0 && (
+            {isRecruiter ? 'Sent Interview Invitations' : 'My Interview Invitations'}
+            {pendingInvitationCount > 0 && (
               <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                {invitations.length}
+                {pendingInvitationCount}
               </span>
             )}
           </button>
@@ -446,11 +536,51 @@ const Notifications = () => {
           {/* Interview Invitations View */}
           {showInvitations ? (
             <div>
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Pending Interview Invitations</h2>
-              {invitations.length === 0 ? (
+              <h2 className="text-lg font-semibold text-gray-700 mb-2">
+                {isRecruiter ? 'Interview invitations you sent' : 'Interview invitations you received'}
+              </h2>
+              <p className="text-sm text-gray-500 mb-4">
+                {isRecruiter
+                  ? 'Track every invite you have sent to candidates, including pending, accepted, declined, and expired.'
+                  : 'View every interview invite sent to you, and respond to pending ones.'}
+              </p>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                {INVITATION_STATUS_FILTERS.map((filter) => (
+                  <button
+                    key={filter.value}
+                    type="button"
+                    onClick={() => setInvitationStatusFilter(filter.value)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      invitationStatusFilter === filter.value
+                        ? 'bg-[#16730F] text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+
+              {invitationsError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-center">
+                  {invitationsError}
+                </div>
+              )}
+
+              {invitationsLoading ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#16730F]"></div>
+                  <p className="text-[#16730F] mt-4">Loading interview invitations...</p>
+                </div>
+              ) : invitations.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">📅</p>
-                  <p className="text-gray-500 mt-2">No pending interview invitations</p>
+                  <p className="text-gray-500 mt-2">
+                    {invitationStatusFilter === 'all'
+                      ? 'No interview invitations yet'
+                      : `No ${invitationStatusFilter} interview invitations`}
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -459,21 +589,30 @@ const Notifications = () => {
                       key={invitation.id}
                       className="bg-white border border-gray-200 rounded-lg p-4"
                     >
-                      <div className="flex justify-between items-start">
+                      <div className="flex justify-between items-start gap-3">
                         <div>
                           <h3 className="font-medium text-[#16730F]">
                             {invitation.job_title || 'Interview Invitation'}
                           </h3>
                           <p className="text-sm text-gray-600 mt-1">
-                            From: {invitation.employer_first_name} {invitation.employer_last_name}
-                            {invitation.company_name && ` (${invitation.company_name})`}
+                            {isRecruiter ? (
+                              <>
+                                To: {invitation.first_name} {invitation.last_name}
+                                {invitation.candidate_title ? ` · ${invitation.candidate_title}` : ''}
+                              </>
+                            ) : (
+                              <>
+                                From: {invitation.employer_first_name} {invitation.employer_last_name}
+                                {invitation.company_name && ` (${invitation.company_name})`}
+                              </>
+                            )}
                           </p>
                           <div className="mt-2 text-sm text-gray-500">
                             <p><strong>Date:</strong> {new Date(invitation.interview_date).toLocaleDateString()}</p>
-                            <p><strong>Time:</strong> {invitation.interview_time}</p>
+                            <p><strong>Time:</strong> {formatInvitationTime(invitation.interview_time)}</p>
                             <p><strong>Type:</strong> {invitation.interview_type === 'online' ? 'Online (Video Call)' : 'In-Person'}</p>
                             {invitation.interview_type === 'online' && invitation.meeting_link && (
-                              <p><strong>Link:</strong> <a href={invitation.meeting_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{invitation.meeting_link}</a></p>
+                              <p><strong>Link:</strong> <a href={invitation.meeting_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline break-all">{invitation.meeting_link}</a></p>
                             )}
                             {invitation.interview_type === 'offline' && invitation.venue && (
                               <p><strong>Venue:</strong> {invitation.venue}</p>
@@ -481,28 +620,43 @@ const Notifications = () => {
                             {invitation.message && (
                               <p className="mt-2"><strong>Message:</strong> {invitation.message}</p>
                             )}
-                            <p className="mt-2 text-red-500">
-                              Expires: {new Date(invitation.expires_at).toLocaleString()}
-                            </p>
+                            {invitation.status === 'pending' && invitation.expires_at && (
+                              <p className="mt-2 text-red-500">
+                                Expires: {new Date(invitation.expires_at).toLocaleString()}
+                              </p>
+                            )}
                           </div>
                         </div>
-                      </div>
-                      <div className="flex gap-3 mt-4">
-                        <button
-                          onClick={() => handleDecline(invitation.id)}
-                          className="flex-1 py-2 px-4 border-2 border-red-500 text-red-500 rounded-lg font-medium hover:bg-red-50 transition-colors"
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 ${getInvitationStatusClasses(invitation.status)}`}
                         >
-                          Decline
-                        </button>
-                        <button
-                          onClick={() => handleAccept(invitation.id)}
-                          className="flex-1 py-2 px-4 bg-[#16730F] text-white rounded-lg font-medium hover:bg-[#125a0c] transition-colors"
-                        >
-                          Accept
-                        </button>
+                          {invitation.status.charAt(0).toUpperCase() + invitation.status.slice(1)}
+                        </span>
                       </div>
+                      {!isRecruiter && invitation.status === 'pending' && (
+                        <div className="flex gap-3 mt-4">
+                          <button
+                            onClick={() => handleDecline(invitation.id)}
+                            className="flex-1 py-2 px-4 border-2 border-red-500 text-red-500 rounded-lg font-medium hover:bg-red-50 transition-colors"
+                          >
+                            Decline
+                          </button>
+                          <button
+                            onClick={() => handleAccept(invitation.id)}
+                            className="flex-1 py-2 px-4 bg-[#16730F] text-white rounded-lg font-medium hover:bg-[#125a0c] transition-colors"
+                          >
+                            Accept
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
+                  <FeedLoadMoreButton
+                    hasMore={invitationsHasMore}
+                    loading={invitationsLoadingMore}
+                    onLoadMore={() => fetchInvitations(invitationsPage + 1, true, invitationStatusFilter)}
+                    label="Load more invitations"
+                  />
                 </div>
               )}
             </div>

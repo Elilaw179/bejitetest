@@ -328,6 +328,9 @@ const SearchButton = ({ onSearch, disabled }) => {
           />
         </svg>
       </button>
+      <p className="text-center text-xs text-white/70 mt-3 px-2 leading-relaxed">
+        Each search uses 1 ASE credit. Narrow your filters to get better matches.
+      </p>
     </div>
   );
 };
