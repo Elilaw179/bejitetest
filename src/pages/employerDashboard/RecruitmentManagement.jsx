@@ -266,7 +266,7 @@ export default function RecruitmentManagement() {
   };
 
   // Candidate action handlers
-  const handleSaveFeedback = (candidate, { feedback, rating }) => {
+  const handleSaveFeedback = (candidate, { rating }) => {
     toast.success(`Feedback saved for ${candidate.name} (${rating})`);
   };
 

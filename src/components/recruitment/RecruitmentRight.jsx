@@ -1,7 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserProfileImage } from "../../utils/profileImageUtils";
-import { formatDisplayPersonName, formatDisplayHandle } from "../../utils/personDisplayName";
+import {
+  formatDisplayPersonName,
+  formatDisplayHandle,
+} from "../../utils/personDisplayName";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import useRecruitmentRightStats from "../../hooks/useRecruitmentRightStats";
 import { RECRUITMENT_RIGHT_LINKS } from "./recruitmentRightLinks";
@@ -30,18 +33,21 @@ function RecruitmentRight() {
                 alt=""
               />
             </div>
-            <div className="text-[#FFFFFF] text-center mt-[-40px] w-full px-3">
-              <p className="text-[16px] font-bold leading-snug break-words">
+            <div className="text-[#FFFFFF] text-center mt-[-40px] w-full px-2 min-w-0">
+              <div className="text-[14px] sm:text-[16px] font-bold min-w-0">
                 <DisplayNameWithBadge
                   user={userData}
                   fallback={displayName}
                   badgeSize="xs"
                   badgePlacement="below"
-                  className="items-center justify-center flex-wrap"
+                  responsiveBadge={false}
+                  as="div"
+                  className="items-center w-full justify-center"
+                  nameClassName="whitespace-normal break-words text-center leading-snug"
                 />
-              </p>
+              </div>
               {username && (
-                <p className="text-[11px] font-bold break-words">{username}</p>
+                <p className="text-[11px] font-bold break-words mt-0.5">{username}</p>
               )}
             </div>
           </div>
@@ -126,11 +132,7 @@ function RecruitmentRight() {
                 <img src={item.icon} alt="" />
                 <p className="text-[#F5F5F5] font-bold">{item.label}</p>
                 {item.secondaryIcon && (
-                  <img
-                    src={item.secondaryIcon}
-                    className="w-4"
-                    alt=""
-                  />
+                  <img src={item.secondaryIcon} className="w-4" alt="" />
                 )}
               </div>
             ))}

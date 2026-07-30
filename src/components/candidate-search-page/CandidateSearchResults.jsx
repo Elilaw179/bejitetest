@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { API_URL } from "../../config";
 import { pickAuthorProfilePhoto } from "../../utils/profileImageUtils";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
@@ -9,6 +9,7 @@ import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import { formatDisplayText } from "../../utils/displayFormatUtils";
 import { filterAdminUsersFromSearch } from "../../utils/filterAdminUsers";
 import AvailabilityStatusDot from "./AvailabilityStatusDot";
+import { buildCandidateSearchParams } from "./buildCandidateSearchParams";
 
 const CandidateSearchResults = ({
   onViewProfile,
@@ -19,113 +20,105 @@ const CandidateSearchResults = ({
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
+  const [loadMoreError, setLoadMoreError] = useState(null);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState(false);
   const [accessBlock, setAccessBlock] = useState(null);
+  const [pagination, setPagination] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Refs to track and cancel duplicate requests (handles React StrictMode)
   const abortControllerRef = useRef(null);
   const requestIdRef = useRef(0);
 
-  useEffect(() => {
-    if (!enabled) {
-      setLoading(false);
-      setCandidates([]);
-      setError(null);
-      setAccessBlock(null);
-      return;
+  const formatCandidates = useCallback((candidatesData) => {
+    const filtered = filterAdminUsersFromSearch(candidatesData);
+    if (!Array.isArray(filtered)) {
+      throw new Error("Invalid data format received from API");
     }
 
-    const hasCriteria = Object.values(searchCriteria).some(
-      (value) => String(value ?? "").trim() !== "",
-    );
-    if (!hasCriteria) {
-      setLoading(false);
-      setCandidates([]);
-      return;
-    }
+    return filtered.map((candidate) => {
+      const bioRow = Array.isArray(candidate.user_bio)
+        ? candidate.user_bio[0]
+        : candidate.user_bio;
+      const photoPath = pickAuthorProfilePhoto({
+        profile_photo: candidate.profile_photo,
+        profilePhoto: candidate.profilePhoto,
+        image: bioRow?.profile_photo,
+      });
 
-    // Abort any pending request from previous render
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+      return {
+        id: candidate.id,
+        user_id: candidate.user_id ?? candidate.userId ?? null,
+        name: formatDisplayPersonName(candidate, "Unknown User"),
+        type: formatDisplayRole("jobseeker"),
+        jobTitle: formatDisplayText(candidate.title) || "N/A",
+        location:
+          formatDisplayText(candidate.location || candidate.preferred_country) ||
+          "Unknown",
+        skills: candidate.skills || [],
+        availability: candidate.availability || "Unknown",
+        experienceYears: candidate.experience_years || 0,
+        initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
+        image: profilePhotoUrl(photoPath) ?? null,
+        hasVerifiedBadge: Boolean(candidate.hasVerifiedBadge),
+        first_name: candidate.first_name,
+        last_name: candidate.last_name,
+      };
+    });
+  }, []);
 
-    const fetchCandidates = async () => {
-      // Create new abort controller for this request
+  const fetchCandidates = useCallback(
+    async (pageNum, { append = false } = {}) => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
       abortControllerRef.current = new AbortController();
       const currentRequestId = ++requestIdRef.current;
 
       try {
-        setLoading(true);
-        setError(null);
-        setAccessBlock(null);
-
-        // Build query parameters from search criteria
-        const queryParams = new URLSearchParams();
-        
-        // Use 'q' for general text search - combine job title and skills
-        // This searches across multiple fields: name, title, bio, industry, etc.
-        const searchTerms = [];
-        if (searchCriteria.jobInput) searchTerms.push(searchCriteria.jobInput);
-        // Don't add skill to q - use separate skills filter
-        
-        if (searchTerms.length > 0) {
-          queryParams.append('q', searchTerms.join(' '));
+        if (append) {
+          setLoadingMore(true);
+          setLoadMoreError(null);
+        } else {
+          setLoading(true);
+          setError(null);
+          setAccessBlock(null);
+          setLoadMoreError(null);
         }
-        
-        // Individual filters - these work independently of 'q'
-        if (searchCriteria.industryInput) queryParams.append('industry', searchCriteria.industryInput);
-        if (searchCriteria.countryInput) queryParams.append('preferred_country', searchCriteria.countryInput);
-        if (searchCriteria.stateInput) queryParams.append('preferred_state', searchCriteria.stateInput);
-        if (searchCriteria.workTypeInput) queryParams.append('work_type', searchCriteria.workTypeInput);
-        if (searchCriteria.salaryInput) queryParams.append('salary_min', searchCriteria.salaryInput);
-        if (searchCriteria.currencyInput) queryParams.append('currency', searchCriteria.currencyInput);
-        if (searchCriteria.remoteInput) queryParams.append('remote_preference', searchCriteria.remoteInput);
-        if (searchCriteria.availabilityInput) queryParams.append('availability', searchCriteria.availabilityInput);
-        if (searchCriteria.rateInput) queryParams.append('rate', searchCriteria.rateInput);
-        if (searchCriteria.educationInput) queryParams.append('education_level', searchCriteria.educationInput);
-        // Always pass skills filter separately (not as part of q)
-        if (searchCriteria.skillInput) queryParams.append('skills', searchCriteria.skillInput);
-        if (searchCriteria.tribeInput) queryParams.append('tribe', searchCriteria.tribeInput);
-        if (searchCriteria.ageInput) queryParams.append('age', searchCriteria.ageInput);
-        if (searchCriteria.genderInput) queryParams.append('gender', searchCriteria.genderInput);
-        if (searchCriteria.maritalInput) queryParams.append('marital_status', searchCriteria.maritalInput);
 
-        // Add default pagination
-        queryParams.append('page', '1');
-        queryParams.append('limit', '10');
-
-        // Get auth token from localStorage (check multiple keys for compatibility)
-        const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
-
-        // Build the API URL with query parameters
+        const queryParams = buildCandidateSearchParams(searchCriteria, pageNum, 10);
+        const token =
+          localStorage.getItem("accessToken") ||
+          localStorage.getItem("authToken") ||
+          localStorage.getItem("token");
         const url = `${API_URL}/api/cv/employee/search?${queryParams.toString()}`;
 
         const response = await fetch(url, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": token ? `Bearer ${token}` : ""
+            Authorization: token ? `Bearer ${token}` : "",
           },
           credentials: "include",
-          signal: abortControllerRef.current.signal
+          signal: abortControllerRef.current.signal,
         });
 
-        // Check if this request was aborted (stale request)
         if (currentRequestId !== requestIdRef.current) {
           return;
         }
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          
-          // Check if this request was aborted (stale request)
+
           if (currentRequestId !== requestIdRef.current) {
             return;
           }
-          
+
           console.error("API Error Response:", errorData);
 
           const errorCode = errorData.code;
@@ -135,14 +128,27 @@ const CandidateSearchResults = ({
             "Something went wrong. Please try again.";
 
           if (response.status === 403 && errorCode === "PAYMENT_REQUIRED") {
-            setAccessBlock("free_trial");
-            setError(errorMessage);
+            if (append) {
+              setLoadMoreError(
+                errorMessage ||
+                  "You've used your free ASE search. Subscribe to keep finding candidates.",
+              );
+            } else {
+              setAccessBlock("free_trial");
+              setError(errorMessage);
+            }
             return;
           }
 
           if (response.status === 403 && errorCode === "SEARCH_LIMIT_REACHED") {
-            setAccessBlock("search_limit");
-            setError(errorMessage);
+            if (append) {
+              setLoadMoreError(
+                "You've used all searches included in your plan this billing period.",
+              );
+            } else {
+              setAccessBlock("search_limit");
+              setError(errorMessage);
+            }
             return;
           }
 
@@ -151,84 +157,97 @@ const CandidateSearchResults = ({
 
         const data = await response.json();
 
-        // Check if this request was aborted (stale request)
         if (currentRequestId !== requestIdRef.current) {
           return;
         }
 
-        // Validate & format - handle different response formats
-        const candidatesData = filterAdminUsersFromSearch(
-          data.data || data.candidates || [],
-        );
-        if (Array.isArray(candidatesData)) {
-          const formatted = candidatesData.map((candidate) => {
-            const bioRow = Array.isArray(candidate.user_bio)
-              ? candidate.user_bio[0]
-              : candidate.user_bio;
-            const photoPath = pickAuthorProfilePhoto({
-              profile_photo: candidate.profile_photo,
-              profilePhoto: candidate.profilePhoto,
-              image: bioRow?.profile_photo,
-            });
+        const candidatesData = data.data || data.candidates || [];
+        const formatted = formatCandidates(candidatesData);
+        const nextPagination = data.pagination || null;
 
-            return {
-              id: candidate.id,
-              user_id: candidate.user_id ?? candidate.userId ?? null,
-              name: formatDisplayPersonName(candidate, 'Unknown User'),
-              type: formatDisplayRole("jobseeker"),
-              jobTitle:
-                formatDisplayText(candidate.title) || "N/A",
-              location:
-                formatDisplayText(
-                  candidate.location || candidate.preferred_country,
-                ) || "Unknown",
-              skills: candidate.skills || [],
-              availability: candidate.availability || "Unknown",
-              experienceYears: candidate.experience_years || 0,
-              initials: `${candidate.first_name?.[0] || ""}${candidate.last_name?.[0] || ""}`,
-              image: profilePhotoUrl(photoPath) ?? null,
-              hasVerifiedBadge: Boolean(candidate.hasVerifiedBadge),
-              first_name: candidate.first_name,
-              last_name: candidate.last_name,
-            };
+        setPagination(nextPagination);
+        setCurrentPage(pageNum);
+
+        if (append) {
+          setCandidates((prev) => {
+            const existingIds = new Set(prev.map((candidate) => candidate.id));
+            const newCandidates = formatted.filter(
+              (candidate) => !existingIds.has(candidate.id),
+            );
+            return [...prev, ...newCandidates];
           });
-
-          setCandidates(formatted);
         } else {
-          throw new Error("Invalid data format received from API");
+          setCandidates(formatted);
         }
-      } catch (error) {
-        // Ignore abort errors - they're expected when cancelling stale requests
-        if (error.name === 'AbortError') {
-          console.log('Request aborted');
+      } catch (fetchError) {
+        if (fetchError.name === "AbortError") {
           return;
         }
-        
-        console.error("Error fetching candidates:", error);
-        
-        // Check if this request was aborted (stale request)
+
+        console.error("Error fetching candidates:", fetchError);
+
         if (currentRequestId !== requestIdRef.current) {
           return;
         }
-        
-        setError(error.message);
+
+        if (append) {
+          setLoadMoreError(fetchError.message);
+        } else {
+          setError(fetchError.message);
+        }
       } finally {
-        // Check if this request is still the latest one before updating loading state
         if (currentRequestId === requestIdRef.current) {
-          setLoading(false);
+          if (append) {
+            setLoadingMore(false);
+          } else {
+            setLoading(false);
+          }
         }
       }
-    };
+    },
+    [formatCandidates, searchCriteria],
+  );
 
-    fetchCandidates();
+  useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      setLoadingMore(false);
+      setCandidates([]);
+      setError(null);
+      setLoadMoreError(null);
+      setAccessBlock(null);
+      setPagination(null);
+      setCurrentPage(1);
+      return;
+    }
 
-    // Cleanup: abort request when component unmounts or searchCriteria changes
+    const hasCriteria = Object.values(searchCriteria).some(
+      (value) => String(value ?? "").trim() !== "",
+    );
+    if (!hasCriteria) {
+      setLoading(false);
+      setCandidates([]);
+      setPagination(null);
+      setCurrentPage(1);
+      return;
+    }
+
+    setCurrentPage(1);
+    fetchCandidates(1);
+
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, [searchCriteria, enabled]);
+  }, [searchCriteria, enabled, fetchCandidates]);
+
+  const handleLoadMore = () => {
+    if (loadingMore || !pagination?.hasNext) {
+      return;
+    }
+    fetchCandidates(currentPage + 1, { append: true });
+  };
 
   if (loading) {
     return (
@@ -276,7 +295,11 @@ const CandidateSearchResults = ({
           Interview invitation sent successfully!
         </div>
       )}
-      <SearchResultsHeader count={candidates.length} compact={compact} />
+      <SearchResultsHeader
+        count={candidates.length}
+        total={pagination?.total}
+        compact={compact}
+      />
       <div>
         {candidates.length > 0 ? (
           candidates.map((candidate) => (
@@ -294,6 +317,15 @@ const CandidateSearchResults = ({
           <NoCandidatesFound navigate={navigate} compact={compact} />
         )}
       </div>
+      {candidates.length > 0 && pagination?.hasNext && (
+        <LoadMoreSection
+          compact={compact}
+          loading={loadingMore}
+          error={loadMoreError}
+          onLoadMore={handleLoadMore}
+          onUpgrade={() => navigate("/subscription-pricing")}
+        />
+      )}
       <InterviewInviteModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
@@ -442,10 +474,46 @@ const ActionButton = ({ label, onClick, primary = false }) => (
   </button>
 );
 
-const SearchResultsHeader = ({ count, compact }) => (
+const SearchResultsHeader = ({ count, total, compact }) => (
   <div className={compact ? "px-2 py-3 border-b border-[#556B1F]/50" : "text-center p-5"}>
     <p className={`text-white font-semibold ${compact ? "text-base" : "text-[20px]"}`}>Search Results</p>
-    <p className={`text-white/90 ${compact ? "text-xs mt-0.5" : ""}`}>{count} Candidates found</p>
+    <p className={`text-white/90 ${compact ? "text-xs mt-0.5" : ""}`}>
+      {typeof total === "number" && total > count
+        ? `Showing ${count} of ${total} candidates`
+        : `${count} candidate${count === 1 ? "" : "s"} found`}
+    </p>
+  </div>
+);
+
+const LoadMoreSection = ({ compact, loading, error, onLoadMore, onUpgrade }) => (
+  <div className={`${compact ? "px-2 py-4" : "px-2 py-5"} text-center`}>
+    {error && (
+      <div className="mb-3 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-red-200 text-xs leading-relaxed">
+        <p>{error}</p>
+        {(error.includes("limit") || error.includes("Subscribe") || error.includes("free ASE")) && (
+          <button
+            type="button"
+            onClick={onUpgrade}
+            className="mt-2 text-[#6B8E23] hover:text-white font-medium underline"
+          >
+            View plans
+          </button>
+        )}
+      </div>
+    )}
+    <button
+      type="button"
+      onClick={onLoadMore}
+      disabled={loading}
+      className={`rounded-3xl bg-[#6B8E23] hover:bg-[#556B1F] disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium transition-colors ${
+        compact ? "w-full px-4 py-2.5 text-xs" : "px-6 py-2.5 text-sm"
+      }`}
+    >
+      {loading ? "Loading more candidates..." : "Load more candidates"}
+    </button>
+    <p className={`text-white/70 mt-2 ${compact ? "text-[10px]" : "text-xs"}`}>
+      Uses 1 search credit
+    </p>
   </div>
 );
 
