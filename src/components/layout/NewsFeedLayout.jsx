@@ -49,7 +49,7 @@ export default function NewsFeedLayout({
 
       {/* Main Content */}
       {showSidebars ? (
-        <div className="flex-1 min-h-0 min-w-0 w-full grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_280px] gap-0 max-w-screen-xl mx-auto">
+        <div className="flex-1 min-h-0 min-w-0 w-full grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_280px] gap-0">
           {/* Left Sidebar */}
           <div className="hidden lg:block h-full overflow-y-scroll nfl-sidebar-scroll">
             {leftSidebar || <RecruitmentLeft />}
