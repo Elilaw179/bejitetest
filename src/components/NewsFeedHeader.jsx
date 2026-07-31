@@ -153,6 +153,14 @@ const NewsFeedHeader = ({ user: propUser }) => {
 
   const getDisplayName = () => formatDisplayPersonName(user);
 
+  const getGreetingFirstName = () => {
+    const rawFirst = String(user?.firstName ?? user?.first_name ?? "").trim();
+    if (rawFirst) return formatDisplayPersonName(rawFirst, "there");
+    const fullName = getDisplayName();
+    if (!fullName || fullName === "Guest") return "there";
+    return fullName.split(/\s+/)[0] || "there";
+  };
+
   const getDisplayRole = () => formatDisplayRole(user?.role);
 
   const avatarSrc = (stored) => profileAvatarSrc(stored);
@@ -803,8 +811,11 @@ const NewsFeedHeader = ({ user: propUser }) => {
 
           <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
             <div ref={dropdownRef} className="relative">
-              <p className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32]">
-                <PersonName user={user} showBadge={false} />
+              <p
+                className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32] tracking-wide"
+                style={{ fontFamily: '"DynaPuff", cursive' }}
+              >
+                Hello {getGreetingFirstName()}!
               </p>
 
               {/* Custom Dropdown for Role */}
