@@ -342,12 +342,12 @@ const PostCreationModal = ({
                       <img
                         src={media.url}
                         alt={`Media ${index + 1}`}
-                        className="w-24 h-24 object-cover rounded-lg border"
+                        className="w-24 h-24 object-cover rounded-lg border-2 border-[#6B8E23]"
                       />
                     ) : (
                       <video
                         src={media.url}
-                        className="w-24 h-24 object-cover rounded-lg border"
+                        className="w-24 h-24 object-cover rounded-lg border-2 border-[#6B8E23]"
                       />
                     )}
                     <button
