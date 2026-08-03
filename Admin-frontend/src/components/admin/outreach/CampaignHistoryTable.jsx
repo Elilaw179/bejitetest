@@ -129,7 +129,6 @@ const CampaignHistoryTable = ({
               <th className="py-4 px-6">Audience Targeted</th>
               <th className="py-4 px-6">Sent/Scheduled Date</th>
               <th className="py-4 px-6">Delivery Details</th>
-              <th className="py-4 px-6">Engagement (Open / Click)</th>
               <th className="py-4 px-6 text-right">Actions</th>
             </tr>
           </thead>
@@ -138,12 +137,6 @@ const CampaignHistoryTable = ({
               paginatedCampaigns.map((camp) => {
                 const deliveryPercent = camp.sentCount
                   ? ((camp.deliveredCount / camp.sentCount) * 100).toFixed(0)
-                  : "0";
-                const openPercent = camp.deliveredCount
-                  ? ((camp.openedCount / camp.deliveredCount) * 100).toFixed(0)
-                  : "0";
-                const clickPercent = camp.openedCount
-                  ? ((camp.clickedCount / camp.openedCount) * 100).toFixed(0)
                   : "0";
 
                 return (
@@ -216,30 +209,6 @@ const CampaignHistoryTable = ({
                         </div>
                       )}
                     </td>
-                    <td className="py-4 px-6">
-                      {camp.status === "Sent" ? (
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between text-xs font-semibold text-gray-600">
-                            <span>Opens: {openPercent}%</span>
-                            <span>Clicks: {clickPercent}%</span>
-                          </div>
-                          <div className="flex h-1.5 w-full overflow-hidden bg-gray-100 rounded-full">
-                            <div
-                              className="bg-blue-500 h-1.5 rounded-full"
-                              style={{ width: `${openPercent}%` }}
-                            />
-                            <div
-                              className="bg-purple-500 h-1.5 rounded-full"
-                              style={{ width: `${clickPercent}%` }}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-xs italic">
-                          Analytics pending send
-                        </span>
-                      )}
-                    </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {camp.status === "Sent" && (
@@ -272,7 +241,7 @@ const CampaignHistoryTable = ({
               })
             ) : (
               <tr>
-                <td colSpan="6" className="py-12 text-center text-gray-400">
+                <td colSpan="5" className="py-12 text-center text-gray-400">
                   <Inbox size={48} className="mx-auto text-gray-300 mb-3" />
                   No outreach campaigns match search conditions.
                 </td>

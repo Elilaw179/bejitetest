@@ -8,6 +8,7 @@ import {
   Activity,
   TrendingUp,
   BarChart2,
+  Download,
 } from "lucide-react";
 import {
   LineChart,
@@ -20,7 +21,21 @@ import {
   BarChart,
   Bar,
   Cell,
+  Legend,
 } from "recharts";
+
+function escapeCsvValue(value) {
+  const str = String(value ?? "");
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function rowsToCsv(rows) {
+  return rows.map((row) => row.map(escapeCsvValue).join(",")).join("\n");
+}
+
 const AdminDashboard = () => {
   const [overview, setOverview] = useState(null);
   const [userMetrics, setUserMetrics] = useState(null);
@@ -120,6 +135,98 @@ const AdminDashboard = () => {
     fetchMetrics();
   }, []);
 
+  const handleExportDashboard = () => {
+    if (!overview) {
+      toast.error("No dashboard data to export yet");
+      return;
+    }
+
+    const exportedAt = new Date().toISOString();
+    const sections = [];
+
+    sections.push("Overview");
+    sections.push(
+      rowsToCsv([
+        ["Metric", "Value"],
+        ["Total Users", overview.totalUsers ?? 0],
+        ["Weekly Signups", overview.weeklySignups ?? 0],
+        ["Active Job Postings (Recruiters)", overview.activeJobPostings ?? 0],
+        [
+          "Active Jobseeker Job Posts",
+          overview.activeJobseekerJobPosts ?? 0,
+        ],
+        ["Active Jobs (Total)", overview.activeJobs ?? 0],
+        ["Total Applications", overview.totalApplications ?? 0],
+        ["Exported At", exportedAt],
+      ]),
+    );
+
+    sections.push("");
+    sections.push("User Roles");
+    sections.push(
+      rowsToCsv([
+        ["Role", "Count"],
+        ...(userMetrics?.roles || []).map((r) => [r.role, r.count ?? 0]),
+      ]),
+    );
+
+    sections.push("");
+    sections.push("User Growth (Last 30 Days)");
+    sections.push(
+      rowsToCsv([
+        ["Date", "New Users"],
+        ...(userMetrics?.signupsTrend || []).map((r) => [
+          r.date,
+          r.count ?? 0,
+        ]),
+      ]),
+    );
+
+    sections.push("");
+    sections.push("Active Users DAU & MAU (Last 30 Days)");
+    sections.push(
+      rowsToCsv([
+        ["Date", "DAU", "MAU"],
+        ...(advancedUserMetrics?.trend || []).map((r) => [
+          r.date,
+          r.dau ?? 0,
+          r.mau ?? 0,
+        ]),
+      ]),
+    );
+
+    sections.push("");
+    sections.push("Top Candidate Sectors");
+    sections.push(
+      rowsToCsv([
+        ["Industry", "Candidates"],
+        ...topSectors.map((r) => [r.industry, r.count]),
+      ]),
+    );
+
+    sections.push("");
+    sections.push("Top Job Titles Applied");
+    sections.push(
+      rowsToCsv([
+        ["Title", "Applications"],
+        ...topJobTitles.map((r) => [r.title, r.count]),
+      ]),
+    );
+
+    const csv = sections.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const stamp = exportedAt.slice(0, 10);
+    link.href = url;
+    link.download = `bejite-admin-dashboard-${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    toast.success("Dashboard metrics exported");
+  };
+
   if (loading) {
     return (
       <div className="flex h-[calc(100vh-100px)] items-center justify-center">
@@ -130,6 +237,23 @@ const AdminDashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto w-full space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Platform overview and engagement metrics
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleExportDashboard}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#16730F] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#125a0c] transition-colors"
+        >
+          <Download size={16} />
+          Export CSV
+        </button>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4">
@@ -155,17 +279,36 @@ const AdminDashboard = () => {
 
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4">
           <div className="flex justify-between items-center">
-            <span className="text-gray-500 font-medium">Active Jobs</span>
+            <span className="text-gray-500 font-medium">Job Postings</span>
             <div className="p-2 bg-green-50 text-green-600 rounded-lg">
               <Briefcase size={20} />
             </div>
           </div>
           <div>
             <h3 className="text-3xl font-bold text-gray-800">
-              {overview?.activeJobs.toLocaleString()}
+              {(overview?.activeJobPostings ?? 0).toLocaleString()}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              Currently open listings
+              Active recruiter listings
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500 font-medium">
+              Job Posts
+            </span>
+            <div className="p-2 bg-teal-50 text-teal-600 rounded-lg">
+              <Briefcase size={20} />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-3xl font-bold text-gray-800">
+              {(overview?.activeJobseekerJobPosts ?? 0).toLocaleString()}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Active posts by jobseekers
             </p>
           </div>
         </div>
@@ -184,28 +327,6 @@ const AdminDashboard = () => {
               {overview?.totalApplications.toLocaleString()}
             </h3>
             <p className="text-sm text-gray-500 mt-1">Across all jobs</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-500 font-medium">
-              Daily Active Users (DAU)
-            </span>
-            <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
-              <Activity size={20} />
-            </div>
-          </div>
-          <div>
-            <h3 className="text-3xl font-bold text-gray-800">
-              {advancedUserMetrics?.latest?.dau?.toLocaleString() || 0}
-            </h3>
-            <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-              <span className="font-medium text-gray-700">
-                {advancedUserMetrics?.latest?.mau?.toLocaleString() || 0}
-              </span>{" "}
-              MAU
-            </p>
           </div>
         </div>
       </div>
@@ -337,6 +458,86 @@ const AdminDashboard = () => {
 
           {/* Explicit totals for Jobseekers and Recruiters from /api/admin/metrics/users */}
         </div>
+      </div>
+
+      {/* DAU / MAU Activity Chart */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="flex items-center gap-2 mb-6">
+          <Activity className="text-gray-400" size={20} />
+          <h3 className="text-lg font-bold text-gray-800">
+            Active Users — DAU &amp; MAU (Last 30 Days)
+          </h3>
+        </div>
+        <div className="h-80 w-full">
+          {advancedUserMetrics?.trend?.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={advancedUserMetrics.trend}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#f0f0f0"
+                />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(tick) =>
+                    new Date(tick).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })
+                  }
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#9ca3af", fontSize: 12 }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#9ca3af", fontSize: 12 }}
+                  dx={-10}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "none",
+                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                  }}
+                  labelFormatter={(label) =>
+                    new Date(label).toLocaleDateString()
+                  }
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="dau"
+                  name="DAU"
+                  stroke="#f59e0b"
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="mau"
+                  name="MAU"
+                  stroke="#16730F"
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex items-center justify-center text-gray-400">
+              No activity data available
+            </div>
+          )}
+        </div>
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          DAU = unique users active that day · MAU = unique users active in the
+          trailing 30 days
+        </p>
       </div>
 
       {/* Bottom Section: Top Sectors & Jobs */}
