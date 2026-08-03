@@ -8,23 +8,90 @@ import {
   Briefcase,
   ChevronLeft,
   ChevronRight,
+  UserRound,
+  Eye,
 } from "lucide-react";
+import AdminJobDetailModal from "../../components/admin/AdminJobDetailModal";
+
+const SEGMENTS = [
+  {
+    id: "recruiter",
+    label: "Recruiter Listings",
+    description: "Jobs posted by recruiters and employers.",
+  },
+  {
+    id: "jobseeker",
+    label: "Jobseeker Posts",
+    description: "Open-to-work / availability posts from jobseekers.",
+  },
+];
 
 const AdminJobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [segment, setSegment] = useState("recruiter");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalJobs, setTotalJobs] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [counts, setCounts] = useState({
+    all: 0,
+    recruiter: 0,
+    jobseeker: 0,
+  });
+  const [selectedJobId, setSelectedJobId] = useState(null);
   const itemsPerPage = 10;
+
+  const activeSegment =
+    SEGMENTS.find((item) => item.id === segment) || SEGMENTS[0];
+  const isJobseekerSegment = segment === "jobseeker";
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, segment]);
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get("/api/admin/data/jobs");
-        setJobs(response.data.jobs);
-        setTotalJobs(response.data.jobs.length);
+        const params = new URLSearchParams({
+          page: String(currentPage),
+          limit: String(itemsPerPage),
+          source: segment,
+        });
+
+        if (debouncedSearch) {
+          params.append("q", debouncedSearch);
+        }
+
+        const response = await axiosInstance.get(
+          `/api/admin/data/jobs?${params.toString()}`,
+        );
+        setJobs(response.data.jobs || []);
+
+        if (response.data.pagination) {
+          setTotalJobs(response.data.pagination.total);
+          setTotalPages(response.data.pagination.pages);
+        } else {
+          setTotalJobs((response.data.jobs || []).length);
+          setTotalPages(1);
+        }
+
+        if (response.data.counts) {
+          setCounts({
+            all: response.data.counts.all ?? 0,
+            recruiter: response.data.counts.recruiter ?? 0,
+            jobseeker: response.data.counts.jobseeker ?? 0,
+          });
+        }
       } catch (error) {
         console.error("Error fetching jobs", error);
         toast.error("Failed to load jobs data");
@@ -34,27 +101,11 @@ const AdminJobs = () => {
     };
 
     fetchJobs();
-  }, []);
+  }, [currentPage, debouncedSearch, segment]);
 
-  // Filter jobs based on search term
-  const filteredJobs = jobs.filter(
-    (job) =>
-      job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      "" ||
-      job.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      "" ||
-      job.industry_sector?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      "",
-  );
+  const startIndex = totalJobs === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalJobs);
 
-  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage) || 1;
-
-  // Get current page jobs
-  const indexOfLastJob = currentPage * itemsPerPage;
-  const indexOfFirstJob = indexOfLastJob - itemsPerPage;
-  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
-
-  // Change page
   const goToPage = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -74,7 +125,6 @@ const AdminJobs = () => {
     }
   };
 
-  // Generate page numbers to display
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxVisible = 5;
@@ -83,31 +133,37 @@ const AdminJobs = () => {
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
       }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pageNumbers.push(i);
-        }
-        pageNumbers.push("...");
-        pageNumbers.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pageNumbers.push(1);
-        pageNumbers.push("...");
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pageNumbers.push(i);
-        }
-      } else {
-        pageNumbers.push(1);
-        pageNumbers.push("...");
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pageNumbers.push(i);
-        }
-        pageNumbers.push("...");
-        pageNumbers.push(totalPages);
+    } else if (currentPage <= 3) {
+      for (let i = 1; i <= 4; i++) {
+        pageNumbers.push(i);
       }
+      pageNumbers.push("...");
+      pageNumbers.push(totalPages);
+    } else if (currentPage >= totalPages - 2) {
+      pageNumbers.push(1);
+      pageNumbers.push("...");
+      for (let i = totalPages - 3; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      pageNumbers.push(1);
+      pageNumbers.push("...");
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        pageNumbers.push(i);
+      }
+      pageNumbers.push("...");
+      pageNumbers.push(totalPages);
     }
 
     return pageNumbers;
+  };
+
+  const posterName = (job) => {
+    const name = [job.poster_first_name, job.poster_last_name]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    return name || job.poster_email || "Unknown poster";
   };
 
   return (
@@ -117,10 +173,10 @@ const AdminJobs = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Job Listings</h1>
           <p className="text-gray-500 text-sm mt-1">
-            View and monitor all job postings on the platform.
-            {totalJobs > 0 && (
+            {activeSegment.description}
+            {counts.all > 0 && (
               <span className="ml-1 text-[#16730F] font-medium">
-                ({totalJobs} total jobs)
+                ({counts.all} total across platform)
               </span>
             )}
           </p>
@@ -129,16 +185,55 @@ const AdminJobs = () => {
         <div className="relative w-full sm:w-72">
           <input
             type="text"
-            placeholder="Search jobs or companies..."
+            placeholder={
+              isJobseekerSegment
+                ? "Search posts or posters..."
+                : "Search jobs or companies..."
+            }
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl outline-none focus:border-[#16730F] focus:ring-1 focus:ring-[#16730F] transition"
           />
           <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
         </div>
+      </div>
+
+      {/* Segment tabs */}
+      <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
+        {SEGMENTS.map((item) => {
+          const isActive = segment === item.id;
+          const count =
+            item.id === "recruiter" ? counts.recruiter : counts.jobseeker;
+
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setSegment(item.id)}
+              className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+                isActive
+                  ? "bg-[#16730F] text-white shadow-sm"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              }`}
+            >
+              {item.id === "recruiter" ? (
+                <Building2 size={16} />
+              ) : (
+                <UserRound size={16} />
+              )}
+              {item.label}
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  isActive
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {count.toLocaleString()}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Table */}
@@ -147,30 +242,45 @@ const AdminJobs = () => {
           <table className="w-full whitespace-nowrap">
             <thead className="bg-gray-50 border-b border-gray-100 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
               <tr>
-                <th className="px-6 py-4">Job Details</th>
-                <th className="px-6 py-4">Company</th>
+                <th className="px-6 py-4">
+                  {isJobseekerSegment ? "Post Details" : "Job Details"}
+                </th>
+                <th className="px-6 py-4">
+                  {isJobseekerSegment ? "Posted By" : "Company"}
+                </th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Posted Date</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-12 text-center">
+                  <td colSpan="5" className="px-6 py-12 text-center">
                     <div className="animate-spin inline-block rounded-full h-8 w-8 border-b-2 border-[#16730F]"></div>
                     <p className="text-gray-500 mt-2">Loading jobs...</p>
                   </td>
                 </tr>
-              ) : currentJobs.length > 0 ? (
-                currentJobs.map((job) => (
+              ) : jobs.length > 0 ? (
+                jobs.map((job) => (
                   <tr
                     key={job.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center text-green-600 shrink-0">
-                          <Briefcase size={20} />
+                        <div
+                          className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
+                            isJobseekerSegment
+                              ? "bg-blue-50 text-blue-600"
+                              : "bg-green-50 text-green-600"
+                          }`}
+                        >
+                          {isJobseekerSegment ? (
+                            <UserRound size={20} />
+                          ) : (
+                            <Briefcase size={20} />
+                          )}
                         </div>
                         <div>
                           <p className="max-w-74 text-sm font-medium text-gray-900 break-words whitespace-normal">
@@ -188,15 +298,27 @@ const AdminJobs = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-800 font-medium flex items-center gap-1.5">
-                          <Building2 size={14} className="text-gray-400" />
-                          {job.company || "Unknown Company"}
-                        </span>
-                        <span className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-                          {job.industry_sector}
-                        </span>
-                      </div>
+                      {isJobseekerSegment ? (
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-800 font-medium flex items-center gap-1.5">
+                            <UserRound size={14} className="text-gray-400" />
+                            {posterName(job)}
+                          </span>
+                          <span className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                            {job.industry_sector || job.poster_email || "—"}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-800 font-medium flex items-center gap-1.5">
+                            <Building2 size={14} className="text-gray-400" />
+                            {job.company || "Unknown Company"}
+                          </span>
+                          <span className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                            {job.industry_sector}
+                          </span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span
@@ -219,15 +341,29 @@ const AdminJobs = () => {
                         day: "numeric",
                       })}
                     </td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedJobId(job.id)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#16730F] hover:bg-[#16730F]/10 rounded-lg transition-colors"
+                        >
+                          <Eye size={16} />
+                          View
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="5"
                     className="px-6 py-12 text-center text-gray-500"
                   >
-                    No jobs found matching your search.
+                    {debouncedSearch
+                      ? `No ${isJobseekerSegment ? "jobseeker posts" : "recruiter listings"} match your search.`
+                      : `No ${isJobseekerSegment ? "jobseeker posts" : "recruiter listings"} found.`}
                   </td>
                 </tr>
               )}
@@ -236,29 +372,16 @@ const AdminJobs = () => {
         </div>
 
         {/* Pagination */}
-        {!loading && filteredJobs.length > 0 && (
+        {!loading && totalJobs > 0 && (
           <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              {/* Showing info */}
               <div className="text-sm text-gray-500">
                 Showing{" "}
-                <span className="font-medium text-gray-700">
-                  {indexOfFirstJob + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-medium text-gray-700">
-                  {Math.min(indexOfLastJob, filteredJobs.length)}
-                </span>{" "}
+                <span className="font-medium text-gray-700">{startIndex}</span>{" "}
+                to <span className="font-medium text-gray-700">{endIndex}</span>{" "}
                 of{" "}
-                <span className="font-medium text-gray-700">
-                  {filteredJobs.length}
-                </span>{" "}
-                jobs
-                {searchTerm && filteredJobs.length !== totalJobs && (
-                  <span className="ml-1 text-gray-400">
-                    (filtered from {totalJobs})
-                  </span>
-                )}
+                <span className="font-medium text-gray-700">{totalJobs}</span>{" "}
+                {isJobseekerSegment ? "posts" : "listings"}
               </div>
 
               <div className="flex items-center gap-1">
@@ -320,6 +443,13 @@ const AdminJobs = () => {
           </div>
         )}
       </div>
+
+      {selectedJobId != null && (
+        <AdminJobDetailModal
+          jobId={selectedJobId}
+          onClose={() => setSelectedJobId(null)}
+        />
+      )}
     </div>
   );
 };
