@@ -11,6 +11,11 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from "recharts";
+import ChartPeriodSelect from "../../components/admin/ChartPeriodSelect";
+import {
+  DEFAULT_CHART_PERIOD,
+  getChartPeriodLabel,
+} from "../../constants/chartPeriods";
 
 // StatCard component
 const StatCard = ({ title, value, icon: Icon, colorClass, subtitle }) => (
@@ -36,14 +41,17 @@ const AdminRevenue = () => {
   const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [period, setPeriod] = useState(DEFAULT_CHART_PERIOD);
+  const periodLabel = getChartPeriodLabel(period);
 
   const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
     const fetchRevenueData = async () => {
       try {
+        setLoading(true);
         const [revenueRes, overviewRes] = await Promise.all([
-          axiosInstance.get("/api/admin/metrics/revenue"),
+          axiosInstance.get(`/api/admin/metrics/revenue?period=${period}`),
           axiosInstance.get("/api/admin/metrics/overview"),
         ]);
 
@@ -59,7 +67,7 @@ const AdminRevenue = () => {
     };
 
     fetchRevenueData();
-  }, []);
+  }, [period]);
 
   if (loading) {
     return (
@@ -88,13 +96,20 @@ const AdminRevenue = () => {
   return (
     <div className="max-w-7xl mx-auto w-full space-y-6">
       {/* Header */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Revenue Performance
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Monitor platform earnings and payment transactions.
-        </p>
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Revenue Performance
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Monitor platform earnings and payment transactions.
+          </p>
+        </div>
+        <ChartPeriodSelect
+          id="revenue-chart-period"
+          value={period}
+          onChange={setPeriod}
+        />
       </div>
 
       {/* KPI Cards */}
@@ -219,7 +234,7 @@ const AdminRevenue = () => {
         {/* Revenue Chart */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h2 className="text-lg font-bold text-gray-800 mb-6">
-            Monthly Revenue (Last 6 Months)
+            Revenue ({periodLabel})
           </h2>
           <div className="h-[300px]">
             {metrics.monthlyRevenue && metrics.monthlyRevenue.length > 0 ? (
@@ -255,7 +270,7 @@ const AdminRevenue = () => {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-400">
-                No revenue data available for the last 6 months.
+                No revenue data available for this period.
               </div>
             )}
           </div>

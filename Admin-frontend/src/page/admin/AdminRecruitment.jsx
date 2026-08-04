@@ -14,6 +14,12 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import ChartPeriodSelect from "../../components/admin/ChartPeriodSelect";
+import {
+  DEFAULT_CHART_PERIOD,
+  getChartPeriodLabel,
+  formatChartTick,
+} from "../../constants/chartPeriods";
 
 // StatCard component
 const StatCard = ({ title, value, icon: Icon, colorClass, subtitle }) => (
@@ -32,12 +38,15 @@ const StatCard = ({ title, value, icon: Icon, colorClass, subtitle }) => (
 const AdminRecruitment = () => {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState(DEFAULT_CHART_PERIOD);
+  const periodLabel = getChartPeriodLabel(period);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         const response = await axiosInstance.get(
-          "/api/admin/metrics/recruitment",
+          `/api/admin/metrics/recruitment?period=${period}`,
         );
         setMetrics(response.data);
       } catch (error) {
@@ -49,7 +58,7 @@ const AdminRecruitment = () => {
     };
 
     fetchData();
-  }, []);
+  }, [period]);
 
   if (loading) {
     return (
@@ -58,14 +67,6 @@ const AdminRecruitment = () => {
       </div>
     );
   }
-
-  // Format date for charts
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   // New data structure expected from backend
   const recruitmentTrendData = (metrics?.recruitment_trend || []).slice(0, 10);
@@ -79,13 +80,20 @@ const AdminRecruitment = () => {
   return (
     <div className="max-w-7xl mx-auto w-full space-y-8">
       {/* Header */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Recruitment Analytics
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Track ASE search trends and recruiter activity on the platform.
-        </p>
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Recruitment Analytics
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Track ASE search trends and recruiter activity on the platform.
+          </p>
+        </div>
+        <ChartPeriodSelect
+          id="recruitment-chart-period"
+          value={period}
+          onChange={setPeriod}
+        />
       </div>
 
       {/* KPI Cards */}
@@ -182,7 +190,9 @@ const AdminRecruitment = () => {
 
         {/* Hiring Trend - ASE Usage by Recruiters */}
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-800 mb-6">Hiring Trend</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-6">
+            Hiring Trend ({periodLabel})
+          </h3>
           <p className="text-xs text-gray-500 -mt-4 mb-4">
             Recruiter usage of Advanced Search (ASE)
           </p>
@@ -197,10 +207,12 @@ const AdminRecruitment = () => {
                   />
                   <XAxis
                     dataKey="date"
-                    tickFormatter={formatDate}
+                    tickFormatter={formatChartTick}
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: "#9ca3af", fontSize: 12 }}
+                    interval="preserveStartEnd"
+                    minTickGap={28}
                   />
                   <YAxis
                     axisLine={false}
@@ -213,9 +225,7 @@ const AdminRecruitment = () => {
                       border: "none",
                       boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                     }}
-                    labelFormatter={(label) =>
-                      new Date(label).toLocaleDateString()
-                    }
+                    labelFormatter={formatChartTick}
                   />
                   <Legend />
                   <Line

@@ -23,6 +23,12 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import ChartPeriodSelect from "../../components/admin/ChartPeriodSelect";
+import {
+  DEFAULT_CHART_PERIOD,
+  getChartPeriodLabel,
+  formatChartTick,
+} from "../../constants/chartPeriods";
 
 function escapeCsvValue(value) {
   const str = String(value ?? "");
@@ -42,6 +48,8 @@ const AdminDashboard = () => {
   const [jobMetrics, setJobMetrics] = useState(null);
   const [advancedUserMetrics, setAdvancedUserMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState(DEFAULT_CHART_PERIOD);
+  const periodLabel = getChartPeriodLabel(period);
 
   // Canonical industry list (matches jobseekerSignup/JobType.jsx)
   const industries = [
@@ -112,12 +120,15 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
+        setLoading(true);
         const [overviewRes, userRes, jobRes, advancedUserRes] =
           await Promise.all([
             axiosInstance.get("/api/admin/metrics/overview"),
-            axiosInstance.get("/api/admin/metrics/users"),
+            axiosInstance.get(`/api/admin/metrics/users?period=${period}`),
             axiosInstance.get("/api/admin/metrics/jobs"),
-            axiosInstance.get("/api/admin/metrics/users-advanced"),
+            axiosInstance.get(
+              `/api/admin/metrics/users-advanced?period=${period}`,
+            ),
           ]);
 
         setOverview(overviewRes.data);
@@ -133,7 +144,7 @@ const AdminDashboard = () => {
     };
 
     fetchMetrics();
-  }, []);
+  }, [period]);
 
   const handleExportDashboard = () => {
     if (!overview) {
@@ -171,7 +182,7 @@ const AdminDashboard = () => {
     );
 
     sections.push("");
-    sections.push("User Growth (Last 30 Days)");
+    sections.push(`User Growth (${periodLabel})`);
     sections.push(
       rowsToCsv([
         ["Date", "New Users"],
@@ -183,7 +194,7 @@ const AdminDashboard = () => {
     );
 
     sections.push("");
-    sections.push("Active Users DAU & MAU (Last 30 Days)");
+    sections.push(`Active Users DAU & MAU (${periodLabel})`);
     sections.push(
       rowsToCsv([
         ["Date", "DAU", "MAU"],
@@ -244,14 +255,21 @@ const AdminDashboard = () => {
             Platform overview and engagement metrics
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleExportDashboard}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#16730F] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#125a0c] transition-colors"
-        >
-          <Download size={16} />
-          Export CSV
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <ChartPeriodSelect
+            id="dashboard-chart-period"
+            value={period}
+            onChange={setPeriod}
+          />
+          <button
+            type="button"
+            onClick={handleExportDashboard}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#16730F] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#125a0c] transition-colors"
+          >
+            <Download size={16} />
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -338,7 +356,7 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-2 mb-6">
             <BarChart2 className="text-gray-400" size={20} />
             <h3 className="text-lg font-bold text-gray-800">
-              User Growth (Last 30 Days)
+              User Growth ({periodLabel})
             </h3>
           </div>
           <div className="h-72 w-full">
@@ -352,16 +370,13 @@ const AdminDashboard = () => {
                   />
                   <XAxis
                     dataKey="date"
-                    tickFormatter={(tick) =>
-                      new Date(tick).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })
-                    }
+                    tickFormatter={formatChartTick}
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: "#9ca3af", fontSize: 12 }}
                     dy={10}
+                    interval="preserveStartEnd"
+                    minTickGap={28}
                   />
                   <YAxis
                     axisLine={false}
@@ -375,9 +390,7 @@ const AdminDashboard = () => {
                       border: "none",
                       boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                     }}
-                    labelFormatter={(label) =>
-                      new Date(label).toLocaleDateString()
-                    }
+                    labelFormatter={formatChartTick}
                   />
                   <Line
                     type="monotone"
@@ -465,7 +478,7 @@ const AdminDashboard = () => {
         <div className="flex items-center gap-2 mb-6">
           <Activity className="text-gray-400" size={20} />
           <h3 className="text-lg font-bold text-gray-800">
-            Active Users — DAU &amp; MAU (Last 30 Days)
+            Active Users — DAU &amp; MAU ({periodLabel})
           </h3>
         </div>
         <div className="h-80 w-full">
@@ -479,16 +492,13 @@ const AdminDashboard = () => {
                 />
                 <XAxis
                   dataKey="date"
-                  tickFormatter={(tick) =>
-                    new Date(tick).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                    })
-                  }
+                  tickFormatter={formatChartTick}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: "#9ca3af", fontSize: 12 }}
                   dy={10}
+                  interval="preserveStartEnd"
+                  minTickGap={28}
                 />
                 <YAxis
                   axisLine={false}
@@ -503,9 +513,7 @@ const AdminDashboard = () => {
                     border: "none",
                     boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                   }}
-                  labelFormatter={(label) =>
-                    new Date(label).toLocaleDateString()
-                  }
+                  labelFormatter={formatChartTick}
                 />
                 <Legend />
                 <Line

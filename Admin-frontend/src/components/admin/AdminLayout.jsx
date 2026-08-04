@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Users,
   Briefcase,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -17,6 +16,10 @@ import {
   Mail,
   Calendar,
 } from "lucide-react";
+import {
+  canAccessPath,
+  getAdminRoleLabel,
+} from "../../constants/adminPermissions";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,8 +44,13 @@ const AdminLayout = () => {
     { name: "AdPro Review", path: "/admin/adpro", icon: Megaphone },
     { name: "Email Outreach", path: "/admin/email-outreach", icon: Mail },
     { name: "Events Manager", path: "/admin/events", icon: Calendar },
-    { name: "Settings", path: "#", icon: Settings },
-  ];
+  ].filter((item) => canAccessPath(user?.admin_role, item.path));
+
+  const roleLabel = getAdminRoleLabel(user?.admin_role);
+  const displayName =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    user?.username ||
+    "Admin";
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
@@ -84,7 +92,7 @@ const AdminLayout = () => {
                 className={({ isActive }) => `
                   flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
                   ${
-                    isActive && item.path !== "#"
+                    isActive
                       ? "bg-[#16730F] text-white shadow-md"
                       : "text-gray-600 hover:bg-gray-50 hover:text-[#16730F]"
                   }
@@ -105,13 +113,13 @@ const AdminLayout = () => {
           <div className="shrink-0 border-t border-gray-100 px-4 py-4">
             <div className="flex items-center gap-3 px-3 py-3 mb-2">
               <div className="h-10 w-10 bg-[#16730F]/10 rounded-full flex items-center justify-center text-[#16730F] font-bold">
-                {user?.firstName?.[0] || "A"}
+                {displayName?.[0]?.toUpperCase() || "A"}
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-gray-800">
-                  {user?.firstName} {user?.lastName}
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-semibold text-gray-800 truncate">
+                  {displayName}
                 </span>
-                <span className="text-xs text-gray-500">Administrator</span>
+                <span className="text-xs text-gray-500">{roleLabel}</span>
               </div>
             </div>
 
@@ -140,7 +148,7 @@ const AdminLayout = () => {
             <span className="font-semibold text-gray-800">Admin Portal</span>
           </div>
           <div className="h-8 w-8 bg-[#16730F]/10 rounded-full flex items-center justify-center text-[#16730F] font-bold text-sm">
-            {user?.firstName?.[0] || "A"}
+            {displayName?.[0]?.toUpperCase() || "A"}
           </div>
         </header>
 

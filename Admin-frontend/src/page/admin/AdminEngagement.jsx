@@ -3,6 +3,12 @@ import axiosInstance from '../../utils/axiosInstance';
 import { toast } from 'react-toastify';
 import { Search, Heart, MessageSquare, Share2, TrendingUp, Users, Activity } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
+import ChartPeriodSelect from '../../components/admin/ChartPeriodSelect';
+import {
+  DEFAULT_CHART_PERIOD,
+  getChartPeriodLabel,
+  formatChartTick,
+} from '../../constants/chartPeriods';
 
 // StatCard component
 const StatCard = ({ title, value, icon: Icon, colorClass, subtitle }) => (
@@ -22,15 +28,18 @@ const AdminEngagement = () => {
   const [searchMetrics, setSearchMetrics] = useState(null);
   const [contentMetrics, setContentMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState(DEFAULT_CHART_PERIOD);
+  const periodLabel = getChartPeriodLabel(period);
 
   const COLORS = ['#16730F', '#2563eb', '#f59e0b', '#8b5cf6'];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         const [searchRes, contentRes] = await Promise.all([
-          axiosInstance.get('/api/admin/metrics/search'),
-          axiosInstance.get('/api/admin/metrics/content')
+          axiosInstance.get(`/api/admin/metrics/search?period=${period}`),
+          axiosInstance.get(`/api/admin/metrics/content?period=${period}`)
         ]);
         setSearchMetrics(searchRes.data);
         setContentMetrics(contentRes.data);
@@ -43,7 +52,7 @@ const AdminEngagement = () => {
     };
 
     fetchData();
-  }, []);
+  }, [period]);
 
   if (loading) {
     return (
@@ -53,18 +62,20 @@ const AdminEngagement = () => {
     );
   }
 
-  // Format date for charts
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  };
-
   return (
     <div className="max-w-7xl mx-auto w-full space-y-8">
         
         {/* Header */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h1 className="text-2xl font-bold text-gray-800">Engagement & Search Analytics</h1>
-          <p className="text-gray-500 text-sm mt-1">Track user searches, content creation, and platform interactions.</p>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Engagement & Search Analytics</h1>
+            <p className="text-gray-500 text-sm mt-1">Track user searches, content creation, and platform interactions.</p>
+          </div>
+          <ChartPeriodSelect
+            id="engagement-chart-period"
+            value={period}
+            onChange={setPeriod}
+          />
         </div>
 
         {/* Section: Search Metrics */}
@@ -102,7 +113,7 @@ const AdminEngagement = () => {
           </div>
 
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-800 mb-6">Search Volume Trend (Last 30 Days)</h3>
+            <h3 className="text-lg font-bold text-gray-800 mb-6">Search Volume Trend ({periodLabel})</h3>
             <div className="h-72 w-full">
               {searchMetrics?.trend?.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -110,15 +121,17 @@ const AdminEngagement = () => {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                     <XAxis 
                       dataKey="date" 
-                      tickFormatter={formatDate}
+                      tickFormatter={formatChartTick}
                       axisLine={false}
                       tickLine={false}
                       tick={{fill: '#9ca3af', fontSize: 12}}
+                      interval="preserveStartEnd"
+                      minTickGap={28}
                     />
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
                     <RechartsTooltip 
                       contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                      labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                      labelFormatter={formatChartTick}
                     />
                     <Legend />
                     <Line type="monotone" dataKey="total_searches" name="Searches" stroke="#2563eb" strokeWidth={3} dot={false} />
@@ -203,7 +216,7 @@ const AdminEngagement = () => {
 
             {/* Engagement Trend Bar Chart */}
             <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h3 className="text-lg font-bold text-gray-800 mb-6">Engagement Trend (Last 30 Days)</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-6">Engagement Trend ({periodLabel})</h3>
               <div className="h-64 w-full">
                 {contentMetrics?.trend?.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -211,15 +224,17 @@ const AdminEngagement = () => {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                       <XAxis 
                         dataKey="date" 
-                        tickFormatter={formatDate}
+                        tickFormatter={formatChartTick}
                         axisLine={false}
                         tickLine={false}
                         tick={{fill: '#9ca3af', fontSize: 12}}
+                        interval="preserveStartEnd"
+                        minTickGap={28}
                       />
                       <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
                       <RechartsTooltip 
                         contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                        labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                        labelFormatter={formatChartTick}
                       />
                       <Legend />
                       <Bar dataKey="total_likes" name="Likes" fill="#ec4899" radius={[4, 4, 0, 0]} stackId="a" />
