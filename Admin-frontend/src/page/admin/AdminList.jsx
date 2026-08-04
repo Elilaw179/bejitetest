@@ -15,10 +15,32 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import {
+  ADMIN_ROLES,
+  ADMIN_ROLE_LABELS,
+  getAdminRoleLabel,
+} from "../../constants/adminPermissions";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]{3,50}$/;
 
-const emptyForm = { username: "", password: "", isActive: true };
+const ROLE_OPTIONS = [
+  {
+    value: ADMIN_ROLES.SUPER_ADMIN,
+    label: ADMIN_ROLE_LABELS[ADMIN_ROLES.SUPER_ADMIN],
+  },
+  { value: ADMIN_ROLES.ADMIN, label: ADMIN_ROLE_LABELS[ADMIN_ROLES.ADMIN] },
+  {
+    value: ADMIN_ROLES.ACCOUNT,
+    label: ADMIN_ROLE_LABELS[ADMIN_ROLES.ACCOUNT],
+  },
+];
+
+const emptyForm = {
+  username: "",
+  password: "",
+  isActive: true,
+  admin_role: ADMIN_ROLES.ADMIN,
+};
 
 const AdminList = () => {
   const currentUser = useSelector((state) => state.auth.user);
@@ -30,7 +52,8 @@ const AdminList = () => {
     (admin) => String(admin.id) === String(currentUser?.id),
   );
   const isSuperAdmin =
-    (currentUser?.admin_role ?? selfRecord?.admin_role) === "super_admin";
+    (currentUser?.admin_role ?? selfRecord?.admin_role) ===
+    ADMIN_ROLES.SUPER_ADMIN;
 
   const [modalMode, setModalMode] = useState(null);
   const [editingAdmin, setEditingAdmin] = useState(null);
@@ -88,6 +111,7 @@ const AdminList = () => {
       username: admin.username || "",
       password: "",
       isActive: admin.isActive !== false,
+      admin_role: admin.admin_role || ADMIN_ROLES.ADMIN,
     });
     setShowPassword(false);
   };
@@ -128,6 +152,7 @@ const AdminList = () => {
       const response = await axiosInstance.post("/api/admin-auth/admins", {
         username,
         password,
+        admin_role: formData.admin_role,
       });
       toast.success(response.data.message || "Admin added successfully");
       closeModal();
@@ -157,6 +182,7 @@ const AdminList = () => {
     const payload = {
       username,
       isActive: formData.isActive,
+      admin_role: formData.admin_role,
     };
     if (password) payload.password = password;
 
@@ -310,9 +336,7 @@ const AdminList = () => {
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-blue-50 text-blue-700">
-                        {user.admin_role === "super_admin"
-                          ? "Super Admin"
-                          : user.role || "Admin"}
+                        {getAdminRoleLabel(user.admin_role)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -389,8 +413,7 @@ const AdminList = () => {
 
       {!isSuperAdmin && !loading && (
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
-          You can view admins, but only super admins can create, edit, or delete
-          admin accounts.
+          Only super admins can manage admin accounts.
         </p>
       )}
 
@@ -472,6 +495,28 @@ const AdminList = () => {
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Role
+                  </label>
+                  <select
+                    name="admin_role"
+                    value={formData.admin_role}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16730F]/20 focus:border-[#16730F] bg-white"
+                  >
+                    {ROLE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500">
+                    Super Admin: all pages. Admin: analytics &amp; ops pages.
+                    Account: Revenue only.
+                  </p>
                 </div>
 
                 {modalMode === "edit" && (

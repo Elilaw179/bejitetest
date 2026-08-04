@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import { useSelector } from "react-redux";
 
 import AuthBootstrap from "./components/AuthBootstrap";
 import PushNotificationBootstrap from "./components/PushNotificationBootstrap";
@@ -27,8 +28,14 @@ import AdminRevenue from "./page/admin/AdminRevenue";
 import AdminRecruitment from "./page/admin/AdminRecruitment";
 import AdminEmailOutreach from "./page/admin/AdminEmailOutreach";
 import AdminEvents from "./page/admin/AdminEvents";
+import { getDefaultAdminPath } from "./constants/adminPermissions";
 
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+
+function AdminIndexRedirect() {
+  const { user } = useSelector((state) => state.auth);
+  return <Navigate to={getDefaultAdminPath(user?.admin_role)} replace />;
+}
 
 function App() {
   return (
@@ -48,7 +55,7 @@ function App() {
                 </AdminProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route index element={<AdminIndexRedirect />} />
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="jobs" element={<AdminJobs />} />

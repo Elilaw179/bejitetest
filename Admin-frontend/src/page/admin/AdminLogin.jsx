@@ -9,6 +9,7 @@ import {
 } from "../../features/auth/authSlice";
 import { toast } from "react-toastify";
 import axiosInstance from "../../utils/axiosInstance";
+import { getDefaultAdminPath } from "../../constants/adminPermissions";
 
 const bejiteLogoUrl = "/assets/images/logo.png";
 
@@ -52,8 +53,9 @@ function AdminLogin() {
       );
 
       toast.success(data.message || "Admin login successful! Redirecting...");
+      const destination = getDefaultAdminPath(data.admin?.admin_role);
       setTimeout(() => {
-        navigate("/admin/dashboard");
+        navigate(destination);
       }, 500);
     } catch (err) {
       const message =

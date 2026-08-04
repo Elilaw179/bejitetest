@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Send, BarChart3, Clock } from "lucide-react";
 import {
   LineChart,
@@ -8,6 +9,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import ChartPeriodSelect from "../ChartPeriodSelect";
+import {
+  DEFAULT_CHART_PERIOD,
+  getChartPeriodDays,
+  getChartPeriodLabel,
+} from "../../../constants/chartPeriods";
 
 const DAY_FMT = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -43,6 +50,10 @@ function buildDailyVolume(sentCampaigns, daysBack = 14) {
 }
 
 const OutreachMetricsDashboard = ({ campaigns = [] }) => {
+  const [period, setPeriod] = useState(DEFAULT_CHART_PERIOD);
+  const periodLabel = getChartPeriodLabel(period);
+  const daysBack = getChartPeriodDays(period);
+
   const sentCampaigns = campaigns.filter((c) => c.status === "Sent");
   const totalSent = sentCampaigns.reduce(
     (sum, c) => sum + (Number(c.sentCount) || 0),
@@ -53,7 +64,7 @@ const OutreachMetricsDashboard = ({ campaigns = [] }) => {
   ).length;
   const sendingCount = campaigns.filter((c) => c.status === "Sending").length;
 
-  const chartData = buildDailyVolume(sentCampaigns, 14);
+  const chartData = buildDailyVolume(sentCampaigns, daysBack);
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -102,9 +113,16 @@ const OutreachMetricsDashboard = ({ campaigns = [] }) => {
 
       {sentCampaigns.length > 0 ? (
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <h3 className="text-sm font-bold text-gray-900 mb-4">
-            Recent campaign volume
-          </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h3 className="text-sm font-bold text-gray-900">
+              Campaign volume ({periodLabel})
+            </h3>
+            <ChartPeriodSelect
+              id="outreach-chart-period"
+              value={period}
+              onChange={setPeriod}
+            />
+          </div>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
