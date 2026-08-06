@@ -28,6 +28,24 @@ export const getConnections = async (page = 1, limit = 10, q = '') => {
 };
 
 /**
+ * Get mutual connections with another user
+ */
+export const getMutualConnections = async (otherUserId, page = 1, limit = 20) => {
+  try {
+    const response = await axiosInstance.get(
+      `/api/connections/mutual/${encodeURIComponent(String(otherUserId))}`,
+      {
+        params: { page, limit },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching mutual connections:', error);
+    throw error;
+  }
+};
+
+/**
  * Get connection status with another user
  */
 export const getConnectionStatus = async (otherUserId) => {

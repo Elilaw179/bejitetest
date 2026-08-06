@@ -66,19 +66,19 @@ function ChatsRight({ selectedChat, onBack }) {
     <div className="bg-[#F5F5F5] h-full p-2">
       <aside className="bg-[#1A3E32] rounded-2xl h-full overflow-hidden">
         <div className="bg-[#16730F] rounded-t-2xl">
-          <div className="p-5">
+          <div className="p-5 lg:hidden">
             <button
               type="button"
               onClick={onBack}
               aria-label="Go back"
-              className="flex items-center text-white hover:text-[#FFB547] transition lg:hidden"
+              className="flex items-center text-white hover:text-[#FFB547] transition"
             >
               <FaArrowLeft />
             </button>
           </div>
 
           <div className="flex flex-col items-center pb-6">
-            <div className="relative -mt-10 rounded-full border-[5px] border-[#16730F]">
+            <div className="relative mt-6 rounded-full border-[5px] border-[#16730F]">
               {profileImage ? (
                 <img
                   className="w-20 h-20 rounded-full object-cover"
@@ -93,10 +93,15 @@ function ChatsRight({ selectedChat, onBack }) {
               )}
             </div>
             <div className="text-white text-center mt-3">
-              <h1 className="text-lg font-semibold">
-                <DisplayNameWithBadge user={otherUser} fallback={getDisplayName()} badgeSize="sm" />
-              </h1>
-              <p className="text-sm opacity-80">{getDisplayRole()}</p>
+              <DisplayNameWithBadge
+                user={otherUser}
+                fallback={getDisplayName()}
+                badgeSize="sm"
+                badgePlacement="below"
+                className="items-center"
+                nameClassName="text-lg font-semibold text-white"
+              />
+              <p className="text-sm opacity-80 mt-1">{getDisplayRole()}</p>
             </div>
             <div className="w-36 mx-auto mt-4">
               <button

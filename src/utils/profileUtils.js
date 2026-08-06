@@ -36,6 +36,23 @@ export function normalizeProfileData(raw) {
       instagram: raw.instagram_url ?? raw.instagram ?? null,
       portfolio: raw.website ?? null,
     },
+    connectionCount:
+      typeof raw.connectionCount === "number"
+        ? raw.connectionCount
+        : typeof raw.connection_count === "number"
+          ? raw.connection_count
+          : Number(raw.connectionCount ?? raw.connection_count) || 0,
+    mutualConnectionCount:
+      typeof raw.mutualConnectionCount === "number"
+        ? raw.mutualConnectionCount
+        : typeof raw.mutual_connection_count === "number"
+          ? raw.mutual_connection_count
+          : Number(raw.mutualConnectionCount ?? raw.mutual_connection_count) || 0,
+    mutualConnections: Array.isArray(raw.mutualConnections)
+      ? raw.mutualConnections
+      : Array.isArray(raw.mutual_connections)
+        ? raw.mutual_connections
+        : [],
   };
 }
 

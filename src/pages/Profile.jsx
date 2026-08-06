@@ -39,8 +39,47 @@ import { truncateText } from '../utils/checksFormat';
 import ProfileConnectActions from '../components/ProfileConnectActions';
 import ProfilePostsSection from '../components/ProfilePostsSection';
 import DisplayNameWithBadge from '../components/DisplayNameWithBadge';
+import MutualConnectionsModal from '../components/MutualConnectionsModal';
 
 const ABOUT_WORD_LIMIT = 100;
+
+const formatConnectionCount = (count) => {
+  const n = Number(count);
+  if (!Number.isFinite(n) || n <= 0) return "0";
+  if (n > 600) return "600+";
+  return String(Math.floor(n));
+};
+
+const formatMutualConnectionsLabel = (count, samples = []) => {
+  const n = Number(count) || 0;
+  if (n <= 0) return null;
+
+  const names = (Array.isArray(samples) ? samples : [])
+    .map((person) =>
+      [person?.firstName, person?.lastName].filter(Boolean).join(" ").trim(),
+    )
+    .filter(Boolean);
+
+  const countLabel = formatConnectionCount(n);
+  if (names.length === 0) {
+    return `${countLabel} mutual ${n === 1 ? "connection" : "connections"}`;
+  }
+
+  if (n === 1) return `${names[0]} is a mutual connection`;
+  if (n === 2 && names.length >= 2) {
+    return `${names[0]} and ${names[1]} are mutual connections`;
+  }
+
+  const shown = names.slice(0, 2);
+  const remaining = Math.max(n - shown.length, 0);
+  if (remaining <= 0) {
+    return `${shown.join(" and ")} are mutual connections`;
+  }
+
+  return `${shown.join(", ")} and ${formatConnectionCount(remaining)} other${
+    remaining === 1 ? "" : "s"
+  }`;
+};
 
 const toExternalHref = (url) => {
   if (!url || typeof url !== 'string') return null;
@@ -128,6 +167,7 @@ const Profile = () => {
   const [avatarCandidates, setAvatarCandidates] = useState([]);
   const [avatarIndex, setAvatarIndex] = useState(0);
   const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
+  const [showMutualConnections, setShowMutualConnections] = useState(false);
 
   const user = getUser();
 
@@ -433,53 +473,139 @@ const Profile = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-start items-center gap-4 sm:gap-6">
-            <img
-              src={activeAvatarSrc}
-              alt="Profile"
-              className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-full object-cover border-4 border-[#16730F] cursor-zoom-in"
-              onClick={() => setIsPhotoViewerOpen(true)}
-              onError={() => {
-                setAvatarIndex((prev) =>
-                  prev < avatarCandidates.length - 1 ? prev + 1 : prev,
-                );
-              }}
-            />
-            <div className="w-full min-w-0 text-center sm:text-left">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] break-words flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
-                <DisplayNameWithBadge user={profileData} fallback="User" badgeSize="md" />
-              </h1>
-              <p className="text-[#16730F] font-medium text-sm sm:text-base mt-0.5">
-                {formatDisplayRole(viewedRole)}
-              </p>
-              {isRecruiterProfile && profileData.company_name && (
-                <p className="text-gray-700 mt-1 text-sm sm:text-base break-words font-medium">
-                  {formatDisplayText(profileData.company_name)}
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-start items-center gap-4 sm:gap-6 flex-1 min-w-0">
+              <img
+                src={activeAvatarSrc}
+                alt="Profile"
+                className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-full object-cover border-4 border-[#16730F] cursor-zoom-in"
+                onClick={() => setIsPhotoViewerOpen(true)}
+                onError={() => {
+                  setAvatarIndex((prev) =>
+                    prev < avatarCandidates.length - 1 ? prev + 1 : prev,
+                  );
+                }}
+              />
+              <div className="w-full min-w-0 text-center sm:text-left">
+                <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] break-words flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
+                  <DisplayNameWithBadge user={profileData} fallback="User" badgeSize="md" />
+                </h1>
+                <p className="text-[#16730F] font-medium text-sm sm:text-base mt-0.5">
+                  {formatDisplayRole(viewedRole)}
                 </p>
-              )}
-              {(profileData.job_title || profileData.title) && (
-                <p className="text-gray-600 mt-1 text-sm sm:text-base break-words">
-                  {formatDisplayText(profileData.job_title || profileData.title)}
-                </p>
-              )}
-              {displayHandle && (
-                <p className="text-gray-500 mt-1 text-sm break-words">
-                  {displayHandle}
-                </p>
-              )}
-              {isRecruiterProfile && recruiterPublicLocation && (
-                <p className="flex items-center justify-center sm:justify-start gap-1.5 text-gray-600 mt-2 text-sm sm:text-base">
-                  <FaMapMarkerAlt className="text-[#16730F] shrink-0" aria-hidden />
-                  <span className="break-words">{recruiterPublicLocation}</span>
-                </p>
-              )}
-              {!isViewingOwnProfile && viewedProfileId && (
-                <ProfileConnectActions
-                  userId={viewedProfileId}
-                  displayName={formatDisplayPersonName(profileData, 'User')}
-                />
-              )}
+                {isRecruiterProfile && profileData.company_name && (
+                  <p className="text-gray-700 mt-1 text-sm sm:text-base break-words font-medium">
+                    {formatDisplayText(profileData.company_name)}
+                  </p>
+                )}
+                {(profileData.job_title || profileData.title) && (
+                  <p className="text-gray-600 mt-1 text-sm sm:text-base break-words">
+                    {formatDisplayText(profileData.job_title || profileData.title)}
+                  </p>
+                )}
+                {displayHandle && (
+                  <p className="text-gray-500 mt-1 text-sm break-words">
+                    {displayHandle}
+                  </p>
+                )}
+                {isRecruiterProfile && recruiterPublicLocation && (
+                  <p className="flex items-center justify-center sm:justify-start gap-1.5 text-gray-600 mt-2 text-sm sm:text-base">
+                    <FaMapMarkerAlt className="text-[#16730F] shrink-0" aria-hidden />
+                    <span className="break-words">{recruiterPublicLocation}</span>
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isViewingOwnProfile) {
+                      navigate("/connection");
+                    }
+                  }}
+                  className={`mt-2 text-[10px] sm:text-xs text-gray-600 ${
+                    isViewingOwnProfile
+                      ? "hover:underline cursor-pointer"
+                      : "cursor-default"
+                  }`}
+                  title={
+                    isViewingOwnProfile
+                      ? "View all your connections"
+                      : undefined
+                  }
+                >
+                  <span className="font-semibold text-[#16730F]">
+                    {formatConnectionCount(profileData.connectionCount)}
+                  </span>{" "}
+                  <span className="text-[#1A3E32]">
+                    {Number(profileData.connectionCount) === 1
+                      ? "Connection"
+                      : "Connections"}
+                  </span>
+                </button>
+                {!isViewingOwnProfile && viewedProfileId && (
+                  <ProfileConnectActions
+                    userId={viewedProfileId}
+                    displayName={formatDisplayPersonName(profileData, 'User')}
+                  />
+                )}
+              </div>
             </div>
+
+            {!isViewingOwnProfile &&
+              Number(profileData.mutualConnectionCount) > 0 && (
+                <div className="shrink-0 w-full sm:w-auto sm:max-w-[240px] flex flex-col items-center sm:items-end gap-2 sm:pt-1">
+                  <p className="text-[10px] sm:text-xs font-semibold text-[#1A3E32]">
+                    Mutual connections
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowMutualConnections(true)}
+                    className="flex items-center -space-x-2 focus:outline-none"
+                    title="See all mutual connections"
+                  >
+                    {(profileData.mutualConnections || [])
+                      .slice(0, 3)
+                      .map((person) => {
+                        const name = [person?.firstName, person?.lastName]
+                          .filter(Boolean)
+                          .join(" ")
+                          .trim();
+                        return (
+                          <span
+                            key={String(person.id)}
+                            className="relative h-9 w-9 rounded-full border-2 border-white shadow-sm overflow-hidden bg-gray-100"
+                          >
+                            <img
+                              src={profileAvatarSrc(person.profile_photo)}
+                              alt={name || "Mutual connection"}
+                              className="h-full w-full object-cover"
+                            />
+                          </span>
+                        );
+                      })}
+                    {Number(profileData.mutualConnectionCount) > 3 && (
+                      <span className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#16730F]/10 text-[10px] font-semibold text-[#16730F] shadow-sm">
+                        +
+                        {formatConnectionCount(
+                          Number(profileData.mutualConnectionCount) - 3,
+                        )}
+                      </span>
+                    )}
+                  </button>
+                  <p className="text-[10px] sm:text-xs text-gray-500 text-center sm:text-right leading-snug">
+                    {formatMutualConnectionsLabel(
+                      profileData.mutualConnectionCount,
+                      profileData.mutualConnections,
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowMutualConnections(true)}
+                    className="text-[10px] sm:text-xs font-semibold text-[#16730F] hover:underline"
+                  >
+                    See all
+                  </button>
+                </div>
+              )}
           </div>
         </div>
 
@@ -591,6 +717,13 @@ const Profile = () => {
           </button>
         </div>
       )}
+
+      <MutualConnectionsModal
+        open={showMutualConnections}
+        onClose={() => setShowMutualConnections(false)}
+        otherUserId={viewedProfileId}
+        otherUserName={formatDisplayPersonName(profileData, "User")}
+      />
     </NewsFeedLayout>
   );
 };
