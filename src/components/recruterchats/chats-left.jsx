@@ -200,10 +200,17 @@ function ChatsLeft({ onSelectChat }) {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-white text-sm font-medium truncate">
-                          <DisplayNameWithBadge user={user} fallback={displayName} badgeSize="xs" />
-                        </h3>
+                      <div className="flex items-center justify-between mb-1 gap-2">
+                        <div className="min-w-0 flex-1">
+                          <DisplayNameWithBadge
+                            user={user}
+                            fallback={displayName}
+                            badgeSize="xs"
+                            badgePlacement="below"
+                            className="items-start"
+                            nameClassName="text-white text-sm font-medium"
+                          />
+                        </div>
                       </div>
                       <p className="text-[#fff] text-xs truncate">
                         {user.jobTitle || 'Click to start conversation'}
@@ -250,11 +257,18 @@ conversations.map((conversation) => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className={`text-sm truncate ${unreadCount > 0 ? 'text-white font-bold' : 'text-white font-medium'}`}>
-                          <DisplayNameWithBadge user={otherUser} fallback={displayName} badgeSize="xs" />
-                        </h3>
-                        <span className={`text-xs flex-shrink-0 ${unreadCount > 0 ? 'text-white font-semibold' : 'text-[#fff]'}`}>{lastMessageTime}</span>
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="min-w-0 flex-1">
+                          <DisplayNameWithBadge
+                            user={otherUser}
+                            fallback={displayName}
+                            badgeSize="xs"
+                            badgePlacement="below"
+                            className="items-start"
+                            nameClassName={`text-sm truncate ${unreadCount > 0 ? 'text-white font-bold' : 'text-white font-medium'}`}
+                          />
+                        </div>
+                        <span className={`text-xs flex-shrink-0 pt-0.5 ${unreadCount > 0 ? 'text-white font-semibold' : 'text-[#fff]'}`}>{lastMessageTime}</span>
                       </div>
                       <p className={`text-xs truncate ${unreadCount > 0 ? 'text-white/80 font-semibold' : 'text-[#fff]'}`}>
                         {formatConversationPreview(conversation)}

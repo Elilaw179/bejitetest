@@ -39,8 +39,47 @@ import { truncateText } from '../utils/checksFormat';
 import ProfileConnectActions from '../components/ProfileConnectActions';
 import ProfilePostsSection from '../components/ProfilePostsSection';
 import DisplayNameWithBadge from '../components/DisplayNameWithBadge';
+import MutualConnectionsModal from '../components/MutualConnectionsModal';
 
 const ABOUT_WORD_LIMIT = 100;
+
+const formatConnectionCount = (count) => {
+  const n = Number(count);
+  if (!Number.isFinite(n) || n <= 0) return "0";
+  if (n > 600) return "600+";
+  return String(Math.floor(n));
+};
+
+const formatMutualConnectionsLabel = (count, samples = []) => {
+  const n = Number(count) || 0;
+  if (n <= 0) return null;
+
+  const names = (Array.isArray(samples) ? samples : [])
+    .map((person) =>
+      [person?.firstName, person?.lastName].filter(Boolean).join(" ").trim(),
+    )
+    .filter(Boolean);
+
+  const countLabel = formatConnectionCount(n);
+  if (names.length === 0) {
+    return `${countLabel} mutual ${n === 1 ? "connection" : "connections"}`;
+  }
+
+  if (n === 1) return `${names[0]} is a mutual connection`;
+  if (n === 2 && names.length >= 2) {
+    return `${names[0]} and ${names[1]} are mutual connections`;
+  }
+
+  const shown = names.slice(0, 2);
+  const remaining = Math.max(n - shown.length, 0);
+  if (remaining <= 0) {
+    return `${shown.join(" and ")} are mutual connections`;
+  }
+
+  return `${shown.join(", ")} and ${formatConnectionCount(remaining)} other${
+    remaining === 1 ? "" : "s"
+  }`;
+};
 
 const toExternalHref = (url) => {
   if (!url || typeof url !== 'string') return null;
@@ -128,10 +167,13 @@ const Profile = () => {
   const [avatarCandidates, setAvatarCandidates] = useState([]);
   const [avatarIndex, setAvatarIndex] = useState(0);
   const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
+  const [showMutualConnections, setShowMutualConnections] = useState(false);
 
   const user = getUser();
 
-  const fetchProfileData = async () => {
+  const fetchProfileData = async ({ cancelled } = {}) => {
+    const isCancelled = () => Boolean(cancelled?.());
+
     try {
       setLoading(true);
       setError(null);
@@ -158,6 +200,7 @@ const Profile = () => {
 
       if (targetUserId) {
         const full = await fetchFullUserProfile(targetUserId);
+        if (isCancelled()) return;
         if (full?.user) {
           merged = normalizeProfileData({ ...merged, ...full.user });
           cv = full.cv;
@@ -171,6 +214,7 @@ const Profile = () => {
             const { data: cvRes } = await axiosInstance.get(
               `/api/cv-builder/complete/${targetUserId}`,
             );
+            if (isCancelled()) return;
             if (cvRes?.success && cvRes.data) {
               cv = mergeCvWithCandidateSkills(
                 {
@@ -196,6 +240,7 @@ const Profile = () => {
           const { data: candidateRes } = await axiosInstance.get(
             `/api/candidates/${targetUserId}`,
           );
+          if (isCancelled()) return;
           const candidateRow = candidateRes?.data ?? candidateRes;
           const candidatePhoto = pickAuthorProfilePhoto(candidateRow);
           if (candidatePhoto) {
@@ -216,6 +261,7 @@ const Profile = () => {
         if (!profileFound) {
           try {
             const { data } = await axiosInstance.get('/auth/me');
+            if (isCancelled()) return;
             const row = unwrapAuthProfileBody(data);
             merged = normalizeProfileData({ ...merged, ...row });
             profileFound = profilePayloadLooksUsable(merged);
@@ -228,6 +274,7 @@ const Profile = () => {
         if (role === 'recruiter') {
           try {
             const response = await axiosInstance.get('/auth/user/profile');
+            if (isCancelled()) return;
             const row = unwrapAuthProfileBody(response.data);
             merged = normalizeProfileData({ ...merged, ...row });
             profileFound = true;
@@ -243,6 +290,7 @@ const Profile = () => {
       if (viewingOwn) {
         try {
           const photoUrl = await fetchCurrentUserProfilePhoto();
+          if (isCancelled()) return;
           if (photoUrl) {
             merged = merged
               ? { ...merged, profile_photo: photoUrl }
@@ -260,7 +308,17 @@ const Profile = () => {
         }
       }
 
+      if (isCancelled()) return;
+
       if (merged) {
+        // Never paint a profile for a different route user (race after back/forward).
+        if (
+          userId &&
+          merged.id != null &&
+          String(merged.id) !== String(userId)
+        ) {
+          return;
+        }
         setProfileData(merged);
         setCvData(cv);
       }
@@ -269,20 +327,43 @@ const Profile = () => {
         setError('Profile data not found. Please complete your profile setup.');
       }
     } catch (err) {
+      if (isCancelled()) return;
       console.error('Error fetching profile:', err);
       setError('Failed to load profile data');
     } finally {
-      setLoading(false);
+      if (!isCancelled()) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProfileData();
+    let active = true;
+
+    // Drop the previous profile immediately so we never flash the wrong photo.
+    setProfileData(null);
+    setCvData(null);
+    setAvatarCandidates([]);
+    setAvatarIndex(0);
+    setIsPhotoViewerOpen(false);
+    setShowMutualConnections(false);
+    setError(null);
+    setLoading(true);
+
+    fetchProfileData({ cancelled: () => !active });
+
+    return () => {
+      active = false;
+    };
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   const isViewingOwnProfile =
     !userId || String(userId) === String(user?.id ?? '');
+  const profileMatchesRoute =
+    !userId ||
+    !profileData?.id ||
+    String(profileData.id) === String(userId);
+  const showProfileLoading = loading || Boolean(userId && profileData && !profileMatchesRoute);
+
   const profileAvatarStored = isViewingOwnProfile
     ? pickProfilePhotoPath(user) || pickAuthorProfilePhoto(profileData)
     : pickAuthorProfilePhoto(profileData);
@@ -344,7 +425,7 @@ const Profile = () => {
     .join(', ');
   const viewedProfileId = userId || profileData?.id;
 
-  if (loading) {
+  if (showProfileLoading) {
     return (
       <NewsFeedLayout showSidebars={false}>
         <div className="min-h-[60vh] flex items-center justify-center px-4">
@@ -364,7 +445,7 @@ const Profile = () => {
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
             <button
-              onClick={fetchProfileData}
+              onClick={() => fetchProfileData()}
               className="bg-[#16730F] text-white px-4 py-2 rounded-lg hover:bg-[#145a0c]"
             >
               Try Again
@@ -375,7 +456,7 @@ const Profile = () => {
     );
   }
 
-  if (!profileData && !loading) {
+  if (!profileData && !showProfileLoading) {
     return (
       <NewsFeedLayout classes={false} scrollable={false} showSidebars={false}>
         <div className="min-h-[60vh] flex items-center justify-center">
@@ -433,53 +514,146 @@ const Profile = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-start items-center gap-4 sm:gap-6">
-            <img
-              src={activeAvatarSrc}
-              alt="Profile"
-              className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-full object-cover border-4 border-[#16730F] cursor-zoom-in"
-              onClick={() => setIsPhotoViewerOpen(true)}
-              onError={() => {
-                setAvatarIndex((prev) =>
-                  prev < avatarCandidates.length - 1 ? prev + 1 : prev,
-                );
-              }}
-            />
-            <div className="w-full min-w-0 text-center sm:text-left">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] break-words flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
-                <DisplayNameWithBadge user={profileData} fallback="User" badgeSize="md" />
-              </h1>
-              <p className="text-[#16730F] font-medium text-sm sm:text-base mt-0.5">
-                {formatDisplayRole(viewedRole)}
-              </p>
-              {isRecruiterProfile && profileData.company_name && (
-                <p className="text-gray-700 mt-1 text-sm sm:text-base break-words font-medium">
-                  {formatDisplayText(profileData.company_name)}
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-start items-center gap-4 sm:gap-6 flex-1 min-w-0">
+              <img
+                src={activeAvatarSrc}
+                alt="Profile"
+                className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-full object-cover border-4 border-[#16730F] cursor-zoom-in"
+                onClick={() => setIsPhotoViewerOpen(true)}
+                onError={() => {
+                  setAvatarIndex((prev) =>
+                    prev < avatarCandidates.length - 1 ? prev + 1 : prev,
+                  );
+                }}
+              />
+              <div className="w-full min-w-0 text-center sm:text-left">
+                <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] break-words flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
+                  <DisplayNameWithBadge user={profileData} fallback="User" badgeSize="md" />
+                </h1>
+                <p className="text-[#16730F] font-medium text-sm sm:text-base mt-0.5">
+                  {formatDisplayRole(viewedRole)}
                 </p>
-              )}
-              {(profileData.job_title || profileData.title) && (
-                <p className="text-gray-600 mt-1 text-sm sm:text-base break-words">
-                  {formatDisplayText(profileData.job_title || profileData.title)}
-                </p>
-              )}
-              {displayHandle && (
-                <p className="text-gray-500 mt-1 text-sm break-words">
-                  {displayHandle}
-                </p>
-              )}
-              {isRecruiterProfile && recruiterPublicLocation && (
-                <p className="flex items-center justify-center sm:justify-start gap-1.5 text-gray-600 mt-2 text-sm sm:text-base">
-                  <FaMapMarkerAlt className="text-[#16730F] shrink-0" aria-hidden />
-                  <span className="break-words">{recruiterPublicLocation}</span>
-                </p>
-              )}
-              {!isViewingOwnProfile && viewedProfileId && (
-                <ProfileConnectActions
-                  userId={viewedProfileId}
-                  displayName={formatDisplayPersonName(profileData, 'User')}
-                />
-              )}
+                {isRecruiterProfile && profileData.company_name && (
+                  <p className="text-gray-700 mt-1 text-sm sm:text-base break-words font-medium">
+                    {formatDisplayText(profileData.company_name)}
+                  </p>
+                )}
+                {(profileData.job_title || profileData.title) && (
+                  <p className="text-gray-600 mt-1 text-sm sm:text-base break-words">
+                    {formatDisplayText(profileData.job_title || profileData.title)}
+                  </p>
+                )}
+                {displayHandle && (
+                  <p className="text-gray-500 mt-1 text-sm break-words">
+                    {displayHandle}
+                  </p>
+                )}
+                {isRecruiterProfile && recruiterPublicLocation && (
+                  <p className="flex items-center justify-center sm:justify-start gap-1.5 text-gray-600 mt-2 text-sm sm:text-base">
+                    <FaMapMarkerAlt className="text-[#16730F] shrink-0" aria-hidden />
+                    <span className="break-words">{recruiterPublicLocation}</span>
+                  </p>
+                )}
+                {isViewingOwnProfile ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/connection")}
+                    className="mt-2 text-[10px] sm:text-xs text-gray-600 hover:underline cursor-pointer"
+                    title="View all your connections"
+                  >
+                    <span className="font-semibold text-[#16730F]">
+                      {formatConnectionCount(profileData.connectionCount)}
+                    </span>{" "}
+                    <span className="text-[#1A3E32]">
+                      {Number(profileData.connectionCount) === 1
+                        ? "Connection"
+                        : "Connections"}
+                    </span>
+                  </button>
+                ) : (
+                  <p className="mt-2 text-[10px] sm:text-xs text-gray-600">
+                    <span className="font-semibold text-[#16730F]">
+                      {formatConnectionCount(profileData.connectionCount)}
+                    </span>{" "}
+                    <span className="text-[#1A3E32]">
+                      {Number(profileData.connectionCount) === 1
+                        ? "Connection"
+                        : "Connections"}
+                    </span>
+                  </p>
+                )}
+                {!isViewingOwnProfile && viewedProfileId && (
+                  <ProfileConnectActions
+                    userId={viewedProfileId}
+                    displayName={formatDisplayPersonName(profileData, 'User')}
+                  />
+                )}
+              </div>
             </div>
+
+            {!isViewingOwnProfile &&
+              Number(profileData.mutualConnectionCount) > 0 && (
+                <div className="shrink-0 w-full sm:w-auto sm:max-w-[240px] flex flex-col items-center sm:items-end gap-2 sm:pt-1">
+                  <p className="text-[10px] sm:text-xs font-semibold text-[#1A3E32]">
+                    Mutual connections
+                  </p>
+                  <div className="flex items-center -space-x-2">
+                    {(profileData.mutualConnections || [])
+                      .slice(0, 3)
+                      .map((person) => {
+                        const name = [person?.firstName, person?.lastName]
+                          .filter(Boolean)
+                          .join(" ")
+                          .trim();
+                        return (
+                          <button
+                            key={String(person.id)}
+                            type="button"
+                            onClick={() => navigate(`/user-profile/${person.id}`)}
+                            className="relative h-9 w-9 rounded-full border-2 border-white shadow-sm overflow-hidden bg-gray-100 hover:z-10 focus:z-10 focus:outline-none focus:ring-2 focus:ring-[#16730F]/40"
+                            title={name ? `View ${name}'s profile` : "View profile"}
+                            aria-label={name ? `View ${name}'s profile` : "View mutual connection profile"}
+                          >
+                            <img
+                              src={profileAvatarSrc(person.profile_photo)}
+                              alt={name || "Mutual connection"}
+                              className="h-full w-full object-cover"
+                            />
+                          </button>
+                        );
+                      })}
+                    {Number(profileData.mutualConnectionCount) > 3 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowMutualConnections(true)}
+                        className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#16730F]/10 text-[10px] font-semibold text-[#16730F] shadow-sm hover:bg-[#16730F]/20"
+                        title="See all mutual connections"
+                      >
+                        +
+                        {formatConnectionCount(
+                          Number(profileData.mutualConnectionCount) - 3,
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] sm:text-xs text-gray-500 text-center sm:text-right leading-snug">
+                    {formatMutualConnectionsLabel(
+                      profileData.mutualConnectionCount,
+                      profileData.mutualConnections,
+                    )}
+                  </p>
+                  {Number(profileData.mutualConnectionCount) > 3 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowMutualConnections(true)}
+                      className="text-[10px] sm:text-xs font-semibold text-[#16730F] hover:underline"
+                    >
+                      See all
+                    </button>
+                  )}
+                </div>
+              )}
           </div>
         </div>
 
@@ -591,6 +765,13 @@ const Profile = () => {
           </button>
         </div>
       )}
+
+      <MutualConnectionsModal
+        open={showMutualConnections}
+        onClose={() => setShowMutualConnections(false)}
+        otherUserId={viewedProfileId}
+        otherUserName={formatDisplayPersonName(profileData, "User")}
+      />
     </NewsFeedLayout>
   );
 };
