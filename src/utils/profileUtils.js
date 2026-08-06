@@ -102,6 +102,13 @@ export function mergeCvBioIntoProfile(base, bioRow) {
 /** Build profile row from search dropdown navigation state. */
 export function profileFromSearchPreview(preview, userId) {
   if (!preview || typeof preview !== 'object') return null;
+  if (
+    userId != null &&
+    preview.id != null &&
+    String(preview.id) !== String(userId)
+  ) {
+    return null;
+  }
   const name = preview.name || '';
   const parts = name.trim().split(/\s+/);
   return normalizeProfileData({
