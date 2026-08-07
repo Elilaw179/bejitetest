@@ -122,14 +122,15 @@ export function getFormattedWorkHistoryFields(work, { legacy = false } = {}) {
   return {
     title: formatDisplayText(legacy ? work.title : work.job_title ?? work.jobTitle),
     company: formatDisplayText(legacy ? work.company : work.company_name ?? work.companyName),
-    description: formatDisplayText(
+    description: formatPreservedText(
       legacy ? work.description : work.responsibilities ?? work.description,
     ),
   };
 }
 
-const INLINE_BULLET_SPLIT = /\s*[•●·▪◦‣⁃]\s*/;
-const LEADING_BULLET = /^[\s\-*•●·▪◦‣⁃]+\s*/;
+const INLINE_BULLET_SPLIT = /\s*(?:[•●·▪◦‣⁃]|\*+|(?:^|\s)-+\s)\s*/;
+const LEADING_BULLET = /^(?:[\s\-*•●·▪◦‣⁃]+|\(?\d+[\.\)]\s*)/;
+const TRAILING_BULLET_CLEAN = /[\s\-*•●·▪◦‣⁃]+$/;
 
 /** Split stored responsibility text into separate bullet items for display. */
 export function parseResponsibilitiesList(value) {
@@ -147,8 +148,13 @@ export function parseResponsibilitiesList(value) {
       : [trimmed];
 
     for (const part of parts) {
-      const cleaned = part.replace(LEADING_BULLET, '').trim();
-      if (cleaned) items.push(cleaned);
+      const cleaned = part
+        .replace(LEADING_BULLET, '')
+        .replace(TRAILING_BULLET_CLEAN, '')
+        .trim();
+      if (cleaned && !/^[\s\-*•●·▪◦‣⁃\(\)]+$/.test(cleaned)) {
+        items.push(cleaned);
+      }
     }
   }
 
