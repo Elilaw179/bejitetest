@@ -2,6 +2,8 @@ import { Send, Calendar, Users } from "lucide-react";
 import { toast } from "react-toastify";
 import { sendOutreachTestEmail } from "../../../services/emailOutreachAdminApi";
 
+const OUTREACH_CTA_URL = "https://bejite.com/";
+
 function applyPreviewPlaceholders(html, { firstName, profession, ctaText, ctaLink }) {
   let text = String(html || "");
   text = text.replace(/\{([^}]+)\}/g, (_, inner) => {
@@ -12,7 +14,8 @@ function applyPreviewPlaceholders(html, { firstName, profession, ctaText, ctaLin
     return `{${cleaned}}`;
   });
 
-  const jobLink = `<a href="${ctaLink || "#"}" class="text-[#16730F] font-semibold underline">${ctaText || "View openings"}</a>`;
+  const resolvedLink = ctaLink || OUTREACH_CTA_URL;
+  const jobLink = `<a href="${resolvedLink}" class="text-[#16730F] font-semibold underline">${ctaText || "View openings"}</a>`;
   return text
     .replaceAll("{First Name}", firstName || "there")
     .replaceAll("{Profession}", profession || "your field")
@@ -44,7 +47,7 @@ const PreviewScheduleStep = ({
         firstName,
         profession,
         ctaText: campaignForm.ctaText,
-        ctaLink: campaignForm.ctaLink,
+        ctaLink: OUTREACH_CTA_URL,
       },
     ),
   };
@@ -53,7 +56,7 @@ const PreviewScheduleStep = ({
     firstName,
     profession,
     ctaText: campaignForm.ctaText,
-    ctaLink: campaignForm.ctaLink,
+    ctaLink: OUTREACH_CTA_URL,
   }).replace(/<[^>]+>/g, "");
 
   const handleSendTestEmail = async () => {
@@ -75,7 +78,7 @@ const PreviewScheduleStep = ({
         body: campaignForm.body,
         senderName: campaignForm.senderName,
         ctaText: campaignForm.ctaText,
-        ctaLink: campaignForm.ctaLink,
+        ctaLink: OUTREACH_CTA_URL,
         logoUrl: campaignForm.logoUrl,
         previewText: campaignForm.previewText,
         profession,
@@ -180,18 +183,16 @@ const PreviewScheduleStep = ({
                   dangerouslySetInnerHTML={bodyHtml}
                 />
 
-                {campaignForm.ctaText && campaignForm.ctaLink ? (
-                  <div className="text-center pt-2 border-t border-gray-100">
+                <div className="text-center pt-2 border-t border-gray-100">
                     <a
-                      href={campaignForm.ctaLink}
+                      href={OUTREACH_CTA_URL}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-block bg-[#16730F] text-white font-bold text-sm px-6 py-3 rounded-xl shadow-md hover:bg-green-700"
                     >
-                      {campaignForm.ctaText}
+                      {campaignForm.ctaText || "Visit Bejite"}
                     </a>
                   </div>
-                ) : null}
               </div>
             </div>
           </div>

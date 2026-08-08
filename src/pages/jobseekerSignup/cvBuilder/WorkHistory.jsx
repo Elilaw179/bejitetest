@@ -14,7 +14,7 @@ import {
   removeEntryByIndex,
   loadExistingEntries,
 } from "../../../features/workHistory/workHistorySlice";
-import { FaPlus, FaChevronDown, FaTrash, FaCheck, FaBriefcase } from "react-icons/fa";
+import { FaPlus, FaChevronDown, FaTrash, FaCheck, FaBriefcase, FaBuilding, FaCalendarAlt } from "react-icons/fa";
 import Loader from "../../../components/ui/Loader";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
 import { InputWithIcon } from "../../../components/forms/InputIcon";
@@ -22,6 +22,7 @@ import FormLabel from "../../../components/forms/FormLabel";
 import { JOB_TITLES } from "../../../data/teamData";
 import { formatDateRange } from "../../../utils/checksFormat";
 import axiosInstance from "../../../utils/axiosInstance";
+import ResponsibilitiesList from "../../../components/ResponsibilitiesList";
 
 const buildWorkHistoryApiPayload = (entry) => ({
   userId: entry.userId,
@@ -415,34 +416,62 @@ function WorkHistory() {
           </div>
         </div>
 
-        <div className="flex items-start justify-center">
-          <div className="mt-6 space-y-4 max-w-4xl mx-auto">
-            {allWorkHistory.length > 0 &&
-              allWorkHistory.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="bg-gradient-to-r from-[#16730F] to-[#145a0c] text-white rounded-lg flex justify-between items-center p-4 shadow-md hover:shadow-xl transition-all"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <FaBriefcase className="text-sm opacity-80" />
-                      <p className="font-semibold text-lg">{item.jobTitle}</p>
+        <div className="w-full max-w-4xl mx-auto mt-6 space-y-4 px-1">
+          {allWorkHistory.length > 0 &&
+            allWorkHistory.map((item, idx) => (
+              <div
+                key={item.id ?? idx}
+                className="w-full bg-white border border-gray-200 hover:border-[#16730F]/40 shadow-sm hover:shadow-md transition-all rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group relative overflow-hidden"
+              >
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#16730F] rounded-l-xl"></div>
+                <div className="flex items-start gap-4 flex-1 min-w-0 pl-1">
+                  <div className="w-11 h-11 rounded-xl bg-[#16730F]/10 text-[#16730F] flex items-center justify-center shrink-0 group-hover:bg-[#16730F] group-hover:text-white transition-colors duration-200">
+                    <FaBriefcase className="text-lg" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <h4 className="font-bold text-base sm:text-lg text-[#1A3E32] tracking-tight truncate">
+                        {item.jobTitle}
+                      </h4>
+                      {item.isCurrentJob && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#16730F]/10 text-[#16730F] border border-[#16730F]/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#16730F] animate-pulse"></span>
+                          Currently Working Here
+                        </span>
+                      )}
                     </div>
-                    <p className="text-sm opacity-90">@ {item.companyName}</p>
-                    <p className="text-xs opacity-75 mt-2">
-                      <span className="font-medium">Duration:</span>{" "}
-                      {formatDateRange(item.startDate, item.endDate, item.isCurrentJob)}
-                    </p>
-                    {item.isCurrentJob && (
-                      <p className="text-xs text-[#16730F]/50 mt-1 flex items-center gap-1">
-                        <span className="inline-block w-2 h-2 bg-[#16730F]/50 rounded-full animate-pulse"></span>
-                        Currently working here
-                      </p>
+
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-gray-700 mt-1">
+                      <span className="flex items-center gap-1 text.16730F font-semibold text-[#16730F]">
+                        <FaBuilding className="text-xs opacity-75" />
+                        {item.companyName}
+                      </span>
+                      <span className="text-gray-300">•</span>
+                      <span className="flex items-center gap-1 text-xs text-gray-500 font-normal">
+                        <FaCalendarAlt className="text-xs text-gray-400" />
+                        {formatDateRange(item.startDate, item.endDate, item.isCurrentJob)}
+                      </span>
+                    </div>
+
+                    {item.responsibilities && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                          Key Responsibilities
+                        </p>
+                        <ResponsibilitiesList
+                          text={item.responsibilities}
+                          className="space-y-1.5 list-disc list-outside pl-4 text-xs text-gray-700 break-words"
+                        />
+                      </div>
                     )}
                   </div>
+                </div>
 
+                <div className="flex items-center justify-end w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100 shrink-0">
                   <button
-                    className="text-white text-xl hover:text-red-400 transition-colors p-2 hover:bg-white/10 rounded-lg"
+                    type="button"
+                    title="Delete work history entry"
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-gray-200 hover:border-red-200 transition-all cursor-pointer"
                     onClick={async () => {
                       if (item.id) {
                         const result = await dispatch(
@@ -459,11 +488,12 @@ function WorkHistory() {
                       }
                     }}
                   >
-                    <FaTrash />
+                    <FaTrash className="text-sm" />
+                    <span>Delete</span>
                   </button>
                 </div>
-              ))}
-          </div>
+              </div>
+            ))}
         </div>
 
         <NavigationButtons

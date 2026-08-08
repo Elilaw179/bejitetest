@@ -5,7 +5,7 @@ import StepTabs from "../components/StepTabs";
 import ProgressBar from "../components/ProgressBar";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import NavigationButtons from "../components/NavigationButtons";
-import { FaPlus, FaCheckCircle, FaChevronDown, FaTrash } from "react-icons/fa";
+import { FaPlus, FaCheckCircle, FaChevronDown, FaTrash, FaBriefcase } from "react-icons/fa";
 import { FaDeleteLeft } from "react-icons/fa6";
 
 const optionsJob = [
@@ -212,19 +212,39 @@ function WorkHistory() {
       </div>
 
 
-         {allFilled && (
-              <div className="max-w-4xl px-4 mt-6  m-auto">
-                <div className="max-w-2xs m-auto  bg-[#16730F] text-white rounded-lg flex flex-col sm:flex-row justify-between  sm:items-center p-4 space-y-2 sm:space-y-0">
-                  <div>
-              <p className="font-semibold">{jobTitle}</p>
-              <p className="text-sm">@ {companyName}</p>
-            </div>
-                  <button onClick={clearForm} className="text-white text-xl  ">
-                    <FaTrash />
-                  </button>
-                </div>
+      {allFilled && (
+        <div className="w-full max-w-4xl mx-auto mt-6 px-1">
+          <div className="w-full bg-white border border-gray-200 hover:border-[#16730F]/40 shadow-sm hover:shadow-md transition-all rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden">
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#16730F] rounded-l-xl"></div>
+            <div className="flex items-start gap-4 flex-1 min-w-0 pl-1">
+              <div className="w-11 h-11 rounded-xl bg-[#16730F]/10 text-[#16730F] flex items-center justify-center shrink-0">
+                <FaBriefcase className="text-lg" />
               </div>
-            )}
+              <div className="min-w-0 flex-1">
+                <h4 className="font-bold text-base sm:text-lg text-[#1A3E32] tracking-tight truncate">
+                  {jobTitle}
+                </h4>
+                <p className="text-sm font-semibold text-[#16730F] mt-0.5">
+                  @ {companyName}
+                </p>
+                {(startDate || endDate) && (
+                  <p className="text-xs text-gray-500 font-medium mt-1">
+                    {startDate} — {endDate || "Present"}
+                  </p>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={clearForm}
+              title="Delete entry"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-gray-200 hover:border-red-200 transition-all cursor-pointer"
+            >
+              <FaTrash className="text-sm" />
+              <span>Delete</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <NavigationButtons
         isFormComplete={allFilled}
