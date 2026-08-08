@@ -26,12 +26,33 @@ const SEGMENTS = [
   },
 ];
 
+const STATUS_FILTERS = [
+  { id: "all", label: "All" },
+  { id: "active", label: "Active" },
+  { id: "expired", label: "Expired" },
+];
+
+const listingStatusMeta = (job) => {
+  const listingStatus = String(job.listing_status || "").toLowerCase();
+  if (listingStatus === "active") {
+    return {
+      label: "Active",
+      className: "bg-green-50 text-green-700",
+    };
+  }
+  return {
+    label: "Expired",
+    className: "bg-amber-50 text-amber-800",
+  };
+};
+
 const AdminJobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [segment, setSegment] = useState("recruiter");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalJobs, setTotalJobs] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -39,6 +60,9 @@ const AdminJobs = () => {
     all: 0,
     recruiter: 0,
     jobseeker: 0,
+    active: 0,
+    expired: 0,
+    status_all: 0,
   });
   const [selectedJobId, setSelectedJobId] = useState(null);
   const itemsPerPage = 10;
@@ -56,7 +80,7 @@ const AdminJobs = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, segment]);
+  }, [debouncedSearch, segment, statusFilter]);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -66,6 +90,7 @@ const AdminJobs = () => {
           page: String(currentPage),
           limit: String(itemsPerPage),
           source: segment,
+          status: statusFilter,
         });
 
         if (debouncedSearch) {
@@ -90,6 +115,9 @@ const AdminJobs = () => {
             all: response.data.counts.all ?? 0,
             recruiter: response.data.counts.recruiter ?? 0,
             jobseeker: response.data.counts.jobseeker ?? 0,
+            active: response.data.counts.active ?? 0,
+            expired: response.data.counts.expired ?? 0,
+            status_all: response.data.counts.status_all ?? 0,
           });
         }
       } catch (error) {
@@ -101,7 +129,7 @@ const AdminJobs = () => {
     };
 
     fetchJobs();
-  }, [currentPage, debouncedSearch, segment]);
+  }, [currentPage, debouncedSearch, segment, statusFilter]);
 
   const startIndex = totalJobs === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalJobs);
@@ -164,6 +192,12 @@ const AdminJobs = () => {
       .join(" ")
       .trim();
     return name || job.poster_email || "Unknown poster";
+  };
+
+  const statusFilterCount = (id) => {
+    if (id === "active") return counts.active;
+    if (id === "expired") return counts.expired;
+    return counts.status_all || counts.active + counts.expired;
   };
 
   return (
@@ -236,6 +270,37 @@ const AdminJobs = () => {
         })}
       </div>
 
+      {/* Active / Expired filter */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 mr-1">
+          Listing status
+        </span>
+        {STATUS_FILTERS.map((item) => {
+          const isActive = statusFilter === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setStatusFilter(item.id)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                isActive
+                  ? "bg-green-800 text-white"
+                  : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              {item.label}
+              <span
+                className={`ml-1.5 text-xs ${
+                  isActive ? "text-white/80" : "text-gray-400"
+                }`}
+              >
+                {statusFilterCount(item.id).toLocaleString()}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
@@ -262,107 +327,112 @@ const AdminJobs = () => {
                   </td>
                 </tr>
               ) : jobs.length > 0 ? (
-                jobs.map((job) => (
-                  <tr
-                    key={job.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
-                            isJobseekerSegment
-                              ? "bg-blue-50 text-blue-600"
-                              : "bg-green-50 text-green-600"
-                          }`}
-                        >
-                          {isJobseekerSegment ? (
-                            <UserRound size={20} />
-                          ) : (
-                            <Briefcase size={20} />
-                          )}
-                        </div>
-                        <div>
-                          <p className="max-w-74 text-sm font-medium text-gray-900 break-words whitespace-normal">
-                            {job.title}
-                          </p>
-                          <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                            <span className="flex items-center gap-1">
-                              <MapPin size={12} /> {job.location || "Remote"}
-                            </span>
-                            <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600">
-                              {job.work_type || "Full-time"}
-                            </span>
+                jobs.map((job) => {
+                  const statusMeta = listingStatusMeta(job);
+                  return (
+                    <tr
+                      key={job.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
+                              isJobseekerSegment
+                                ? "bg-blue-50 text-blue-600"
+                                : "bg-green-50 text-green-600"
+                            }`}
+                          >
+                            {isJobseekerSegment ? (
+                              <UserRound size={20} />
+                            ) : (
+                              <Briefcase size={20} />
+                            )}
+                          </div>
+                          <div>
+                            <p className="max-w-74 text-sm font-medium text-gray-900 break-words whitespace-normal">
+                              {job.title}
+                            </p>
+                            <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                              <span className="flex items-center gap-1">
+                                <MapPin size={12} /> {job.location || "Remote"}
+                              </span>
+                              <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600">
+                                {job.work_type || "Full-time"}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {isJobseekerSegment ? (
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-800 font-medium flex items-center gap-1.5">
-                            <UserRound size={14} className="text-gray-400" />
-                            {posterName(job)}
+                      </td>
+                      <td className="px-6 py-4">
+                        {isJobseekerSegment ? (
+                          <div className="flex flex-col">
+                            <span className="text-sm text-gray-800 font-medium flex items-center gap-1.5">
+                              <UserRound size={14} className="text-gray-400" />
+                              {posterName(job)}
+                            </span>
+                            <span className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                              {job.industry_sector || job.poster_email || "—"}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col">
+                            <span className="text-sm text-gray-800 font-medium flex items-center gap-1.5">
+                              <Building2 size={14} className="text-gray-400" />
+                              {job.company || "Unknown Company"}
+                            </span>
+                            <span className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                              {job.industry_sector}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <span
+                            className={`inline-flex w-fit items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusMeta.className}`}
+                          >
+                            {statusMeta.label}
                           </span>
-                          <span className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-                            {job.industry_sector || job.poster_email || "—"}
-                          </span>
+                          {job.status &&
+                            job.status !== "Active" &&
+                            statusMeta.label === "Expired" && (
+                              <span className="text-[11px] text-gray-400 capitalize">
+                                {job.status}
+                              </span>
+                            )}
                         </div>
-                      ) : (
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-800 font-medium flex items-center gap-1.5">
-                            <Building2 size={14} className="text-gray-400" />
-                            {job.company || "Unknown Company"}
-                          </span>
-                          <span className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-                            {job.industry_sector}
-                          </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {new Date(job.created_at).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedJobId(job.id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#16730F] hover:bg-[#16730F]/10 rounded-lg transition-colors"
+                          >
+                            <Eye size={16} />
+                            View
+                          </button>
                         </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${
-                            job.status === "Active"
-                              ? "bg-green-50 text-green-700"
-                              : job.status === "Closed"
-                                ? "bg-red-50 text-red-700"
-                                : "bg-gray-100 text-gray-700"
-                          }`}
-                      >
-                        {job.status || "Draft"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {new Date(job.created_at).toLocaleDateString(undefined, {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedJobId(job.id)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#16730F] hover:bg-[#16730F]/10 rounded-lg transition-colors"
-                        >
-                          <Eye size={16} />
-                          View
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td
                     colSpan="5"
                     className="px-6 py-12 text-center text-gray-500"
                   >
-                    {debouncedSearch
-                      ? `No ${isJobseekerSegment ? "jobseeker posts" : "recruiter listings"} match your search.`
+                    {debouncedSearch || statusFilter !== "all"
+                      ? `No ${isJobseekerSegment ? "jobseeker posts" : "recruiter listings"} match your filters.`
                       : `No ${isJobseekerSegment ? "jobseeker posts" : "recruiter listings"} found.`}
                   </td>
                 </tr>

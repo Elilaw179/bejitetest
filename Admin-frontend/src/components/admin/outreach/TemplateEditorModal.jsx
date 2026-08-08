@@ -107,10 +107,10 @@ const TemplateEditorModal = ({
               </label>
               <input
                 type="text"
-                placeholder="e.g. https://bejite.com/jobs"
-                value={templateForm.ctaLink}
-                onChange={(e) => setTemplateForm({ ...templateForm, ctaLink: e.target.value })}
-                className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:border-[#16730F]"
+                readOnly
+                value="https://bejite.com/"
+                title="Outreach buttons always open the Bejite homepage"
+                className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs bg-gray-50 text-gray-700 cursor-not-allowed"
               />
             </div>
           </div>

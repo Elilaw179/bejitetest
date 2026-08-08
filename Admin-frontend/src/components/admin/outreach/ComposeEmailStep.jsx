@@ -381,13 +381,14 @@ const ComposeEmailStep = ({
               </label>
               <input
                 type="url"
-                placeholder="https://bejite.com/..."
-                value={campaignForm.ctaLink || ""}
-                onChange={(e) =>
-                  setCampaignForm({ ...campaignForm, ctaLink: e.target.value })
-                }
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-[#16730F] text-gray-900"
+                readOnly
+                value="https://bejite.com/"
+                title="Outreach buttons always open the Bejite homepage"
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-xs text-gray-700 cursor-not-allowed"
               />
+              <p className="mt-1 text-[10px] text-gray-500">
+                All outreach email buttons open https://bejite.com/
+              </p>
             </div>
           </div>
         </div>

@@ -307,7 +307,7 @@ const AdminDashboard = () => {
               {(overview?.activeJobPostings ?? 0).toLocaleString()}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              Active recruiter listings
+              Recruiters job listings
             </p>
           </div>
         </div>
@@ -326,7 +326,7 @@ const AdminDashboard = () => {
               {(overview?.activeJobseekerJobPosts ?? 0).toLocaleString()}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              Active posts by jobseekers
+              Jobseekers job posts
             </p>
           </div>
         </div>
