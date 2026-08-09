@@ -129,6 +129,7 @@ export function RecruiterSelect({
   required = false,
   disabled = false,
   hint,
+  closeBtn = true,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -250,7 +251,7 @@ export function RecruiterSelect({
         </span>
 
         <div className="flex items-center gap-1.5 shrink-0 ml-2">
-          {value && !disabled && (
+          {Boolean(closeBtn) && value !== "" && value !== null && value !== undefined && !disabled && (
             <button
               type="button"
               onClick={handleClear}

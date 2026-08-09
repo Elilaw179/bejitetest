@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import coverFallback from "../../../assets/Ellipse 32 (3).png";
+import RecruiterSelect from "../RecruiterSelect";
 import {
   ArrowLeft,
   Image as ImageIcon,
@@ -253,18 +254,13 @@ export default function EventComposerForm({ initialData, onSubmit, onCancel, isS
           {/* Category / Type */}
           <div className="grid sm:grid-cols-3 gap-4">
             <Field label="Category" icon={Hash}>
-              <div className="relative">
-                <select
-                  value={form.category}
-                  onChange={(e) => handleChange("category", e.target.value)}
-                  className={selectClass}
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-                <ChevronDown size={14} className="absolute right-3 top-3 pointer-events-none text-gray-400" />
-              </div>
+              <RecruiterSelect
+                name="category"
+                value={form.category}
+                onChange={(e) => handleChange("category", e.target.value)}
+                options={CATEGORIES}
+                placeholder="Select category"
+              />
             </Field>
 
             <Field label="Event Type">

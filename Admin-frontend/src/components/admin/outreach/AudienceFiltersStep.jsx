@@ -1,5 +1,6 @@
 import { Users } from "lucide-react";
 import { getAllCountryNames } from "../../../utils/countryStateData";
+import RecruiterSelect from "../RecruiterSelect";
 
 const PROFESSION_SUGGESTIONS = [
   "Information Technology",
@@ -39,31 +40,25 @@ const AudienceFiltersStep = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-200 text-left">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-            Role
-          </label>
-          <select
+          <RecruiterSelect
+            label="Role"
+            name="role"
             value={campaignForm.role || "Jobseeker"}
             onChange={(e) =>
               setCampaignForm({ ...campaignForm, role: e.target.value })
             }
-            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-[#16730F] focus:outline-none text-sm font-semibold text-gray-900"
-          >
-            <optgroup label="Portal roles">
-              <option value="All Users">All users (active)</option>
-              <option value="Jobseeker">Jobseekers</option>
-              <option value="Employer">Employers / recruiters</option>
-              <option value="Partners">Partners (verified badge)</option>
-            </optgroup>
-            <optgroup label="Engagement segments">
-              <option value="Unverified">Unverified email only</option>
-              <option value="Incomplete Profile">Incomplete profile only</option>
-              <option value="Inactive">Inactive accounts only</option>
-              <option value="Re-engagement">
-                Re-engagement (unverified, incomplete, or inactive)
-              </option>
-            </optgroup>
-          </select>
+            options={[
+              { value: "All Users", label: "All users (active)" },
+              { value: "Jobseeker", label: "Jobseekers" },
+              { value: "Employer", label: "Employers / recruiters" },
+              { value: "Partners", label: "Partners (verified badge)" },
+              { value: "Unverified", label: "Unverified email only" },
+              { value: "Incomplete Profile", label: "Incomplete profile only" },
+              { value: "Inactive", label: "Inactive accounts only" },
+              { value: "Re-engagement", label: "Re-engagement (unverified, incomplete, or inactive)" },
+            ]}
+            placeholder="Select Role"
+          />
           {(campaignForm.role === "Unverified" ||
             campaignForm.role === "Incomplete Profile" ||
             campaignForm.role === "Inactive" ||
@@ -123,10 +118,9 @@ const AudienceFiltersStep = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-            Country
-          </label>
-          <select
+          <RecruiterSelect
+            label="Country"
+            name="location"
             value={campaignForm.location || ""}
             onChange={(e) =>
               setCampaignForm({
@@ -134,22 +128,18 @@ const AudienceFiltersStep = ({
                 location: e.target.value,
               })
             }
-            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-[#16730F] focus:outline-none text-sm font-semibold text-gray-900"
-          >
-            <option value="">All countries</option>
-            {COUNTRY_OPTIONS.map((country) => (
-              <option key={country} value={country}>
-                {country}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: "All countries" },
+              ...COUNTRY_OPTIONS.map((c) => ({ value: c, label: c })),
+            ]}
+            placeholder="All countries"
+          />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-            Profile completeness
-          </label>
-          <select
+          <RecruiterSelect
+            label="Profile completeness"
+            name="completeness"
             value={campaignForm.completeness || "All"}
             onChange={(e) =>
               setCampaignForm({ ...campaignForm, completeness: e.target.value })
@@ -158,13 +148,14 @@ const AudienceFiltersStep = ({
               campaignForm.role === "Incomplete Profile" ||
               campaignForm.role === "Re-engagement"
             }
-            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:border-[#16730F] focus:outline-none text-sm font-semibold text-gray-900 disabled:opacity-50"
-          >
-            <option value="All">All profiles</option>
-            <option value="high">High (most sections filled)</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
+            options={[
+              { value: "All", label: "All profiles" },
+              { value: "high", label: "High (most sections filled)" },
+              { value: "medium", label: "Medium" },
+              { value: "low", label: "Low (few sections filled)" },
+            ]}
+            placeholder="Select completeness"
+          />
         </div>
 
         <div className="flex items-center gap-2 md:mt-8 p-3 bg-[#16730F]/5 rounded-xl border border-[#16730F]/20">

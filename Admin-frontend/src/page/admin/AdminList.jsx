@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
+import RecruiterSelect from "../../components/admin/RecruiterSelect";
 import {
   Search,
   Mail,
@@ -497,23 +498,16 @@ const AdminList = () => {
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Role
-                  </label>
-                  <select
+                <div>
+                  <RecruiterSelect
+                    label="Role"
                     name="admin_role"
                     value={formData.admin_role}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16730F]/20 focus:border-[#16730F] bg-white"
-                  >
-                    {ROLE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500">
+                    options={ROLE_OPTIONS}
+                    placeholder="Select Role"
+                  />
+                  <p className="text-xs text-gray-500 mt-1.5">
                     Super Admin: all pages. Admin: analytics &amp; ops pages.
                     Account: Revenue only.
                   </p>

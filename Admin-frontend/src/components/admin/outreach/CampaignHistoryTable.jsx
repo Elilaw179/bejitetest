@@ -1,4 +1,5 @@
 import { useState } from "react";
+import RecruiterSelect from "../RecruiterSelect";
 import {
   Search,
   Filter,
@@ -102,22 +103,26 @@ const CampaignHistoryTable = ({
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-500 flex items-center gap-1.5">
+          <span className="text-sm font-medium text-gray-500 flex items-center gap-1.5 whitespace-nowrap">
             <Filter size={16} />
             Filter Status:
           </span>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-white border border-gray-200 text-sm rounded-xl px-3 py-2 text-gray-700 font-semibold focus:outline-none focus:border-[#16730F] focus:ring-2 focus:ring-green-500/10 shadow-sm"
-          >
-            <option value="All">All Statuses</option>
-            <option value="Sent">Sent</option>
-            <option value="Sending">Sending</option>
-            <option value="Scheduled">Scheduled</option>
-            <option value="Draft">Draft</option>
-            <option value="Failed">Failed</option>
-          </select>
+          <div className="min-w-[140px]">
+            <RecruiterSelect
+              name="statusFilter"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              options={[
+                { value: "All", label: "All Statuses" },
+                { value: "Sent", label: "Sent" },
+                { value: "Sending", label: "Sending" },
+                { value: "Scheduled", label: "Scheduled" },
+                { value: "Draft", label: "Draft" },
+                { value: "Failed", label: "Failed" },
+              ]}
+              placeholder="Status"
+            />
+          </div>
         </div>
       </div>
 

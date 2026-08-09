@@ -1,6 +1,7 @@
 import { Fragment, useState, useEffect, useRef } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
+import RecruiterSelect from "../../components/admin/RecruiterSelect";
 import {
   Search,
   Mail,
@@ -451,21 +452,24 @@ const AdminUsers = () => {
             <div className="flex items-center gap-4 text-gray-600">
               <div className="flex items-center gap-2">
                 <span>Rows per page:</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    const newSize = Number(e.target.value);
-                    setItemsPerPage(newSize);
-                    setCurrentPage(1);
-                  }}
-                  className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-[#16730F]"
-                >
-                  {[5, 10, 20, 50].map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
+                <div className="w-24">
+                  <RecruiterSelect
+                    name="itemsPerPage"
+                    value={String(itemsPerPage)}
+                    onChange={(e) => {
+                      const newSize = Number(e.target.value);
+                      setItemsPerPage(newSize);
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: "5", label: "5" },
+                      { value: "10", label: "10" },
+                      { value: "20", label: "20" },
+                      { value: "50", label: "50" },
+                    ]}
+                    placeholder="Rows"
+                  />
+                </div>
               </div>
 
               <span className="text-gray-400">|</span>
