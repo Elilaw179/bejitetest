@@ -1,5 +1,6 @@
 import React from "react";
 import { FaSearch, FaCalendarAlt, FaTimes } from "react-icons/fa";
+import { RecruiterSelect } from "../recruiter/recruiterOnboardingUi";
 
 export default function RecruitmentFilterBar({
   searchQuery = "",
@@ -57,47 +58,35 @@ export default function RecruitmentFilterBar({
       <div className="flex flex-wrap items-center gap-2">
         {/* Status Filter */}
         {statusOptions && (
-          <select
-            value={statusFilter}
-            onChange={(e) => onStatusChange && onStatusChange(e.target.value)}
-            className="flex-1 sm:flex-initial bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 sm:py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/40 cursor-pointer shadow-xs min-w-[120px]"
-          >
-            {statusOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-[130px]">
+            <RecruiterSelect
+              value={statusFilter}
+              onChange={(e) => onStatusChange && onStatusChange(e.target.value)}
+              options={statusOptions}
+            />
+          </div>
         )}
 
         {/* Position Filter */}
         {positionOptions && (
-          <select
-            value={positionFilter}
-            onChange={(e) => onPositionChange && onPositionChange(e.target.value)}
-            className="flex-1 sm:flex-initial bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 sm:py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/40 cursor-pointer shadow-xs min-w-[120px]"
-          >
-            {positionOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-[130px]">
+            <RecruiterSelect
+              value={positionFilter}
+              onChange={(e) => onPositionChange && onPositionChange(e.target.value)}
+              options={positionOptions}
+            />
+          </div>
         )}
 
         {/* Stage Filter */}
         {stageOptions && (
-          <select
-            value={stageFilter}
-            onChange={(e) => onStageChange && onStageChange(e.target.value)}
-            className="flex-1 sm:flex-initial bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 sm:py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/40 cursor-pointer shadow-xs min-w-[120px]"
-          >
-            {stageOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-[130px]">
+            <RecruiterSelect
+              value={stageFilter}
+              onChange={(e) => onStageChange && onStageChange(e.target.value)}
+              options={stageOptions}
+            />
+          </div>
         )}
 
         {/* Optional Date Chip */}

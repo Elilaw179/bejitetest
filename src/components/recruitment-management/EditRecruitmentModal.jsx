@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaPencilAlt, FaTimes } from "react-icons/fa";
+import { RecruiterSelect } from "../recruiter/recruiterOnboardingUi";
 
 export default function EditRecruitmentModal({
   isOpen,
@@ -101,38 +102,38 @@ export default function EditRecruitmentModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#1A3E32] mb-1">
-                Department
-              </label>
-              <select
+              <RecruiterSelect
+                label="Department"
+                name="department"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                className="w-full bg-white border border-gray-300 text-gray-800 text-sm px-3.5 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/40 font-medium cursor-pointer"
-              >
-                <option value="Engineering">Engineering</option>
-                <option value="Product & Design">Product & Design</option>
-                <option value="Operations">Operations</option>
-                <option value="Data Analytics">Data Analytics</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Sales">Sales</option>
-                <option value="HR & People">HR & People</option>
-              </select>
+                options={[
+                  { value: "Engineering", label: "Engineering" },
+                  { value: "Product & Design", label: "Product & Design" },
+                  { value: "Operations", label: "Operations" },
+                  { value: "Data Analytics", label: "Data Analytics" },
+                  { value: "Marketing", label: "Marketing" },
+                  { value: "Sales", label: "Sales" },
+                  { value: "HR & People", label: "HR & People" },
+                ]}
+                placeholder="Select Department"
+              />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#1A3E32] mb-1">
-              Recruitment Status
-            </label>
-            <select
+            <RecruiterSelect
+              label="Recruitment Status"
+              name="status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full bg-white border border-gray-300 text-gray-800 text-sm px-3.5 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/40 font-medium cursor-pointer"
-            >
-              <option value="Open">Open</option>
-              <option value="Final Stage">Final Stage</option>
-              <option value="Closed">Closed</option>
-            </select>
+              options={[
+                { value: "Open", label: "Open" },
+                { value: "Final Stage", label: "Final Stage" },
+                { value: "Closed", label: "Closed" },
+              ]}
+              placeholder="Select Status"
+            />
           </div>
 
           <div>

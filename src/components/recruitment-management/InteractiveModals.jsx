@@ -95,7 +95,7 @@ export function CandidateFeedbackModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto nfl-scroll p-6 shadow-2xl relative border border-gray-100 animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto nfl-scroll p-6 shadow-2xl relative border border-gray-100 animate-in zoom-in-95 duration-200">
         <button
           type="button"
           onClick={onClose}
@@ -104,12 +104,12 @@ export function CandidateFeedbackModal({
           <FaTimes />
         </button>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 text-[#B45309] flex items-center justify-center text-lg">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg">
             <FaComments />
           </div>
           <div>
             <h3 className="text-lg font-bold text-[#1A3E32]">
-              Candidate Feedback
+              Record Interview Feedback
             </h3>
             <p className="text-xs text-gray-500">
               Provide evaluation notes for {candidate.name}.
@@ -118,19 +118,19 @@ export function CandidateFeedbackModal({
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-[#1A3E32] mb-1">
-              Overall Recommendation
-            </label>
-            <select
+            <RecruiterSelect
+              label="Overall Recommendation"
+              name="rating"
               value={rating}
               onChange={(e) => setRating(e.target.value)}
-              className="w-full bg-white border border-gray-300 text-sm px-3.5 py-2 rounded-xl"
-            >
-              <option value="Strong Hire">Strong Hire</option>
-              <option value="Recommended">Recommended</option>
-              <option value="Neutral">Neutral</option>
-              <option value="Do Not Hire">Do Not Hire</option>
-            </select>
+              options={[
+                { value: "Strong Hire", label: "Strong Hire" },
+                { value: "Recommended", label: "Recommended" },
+                { value: "Neutral", label: "Neutral" },
+                { value: "Do Not Hire", label: "Do Not Hire" },
+              ]}
+              placeholder="Select recommendation"
+            />
           </div>
           <div>
             <label className="block text-xs font-bold text-[#1A3E32] mb-1">
@@ -184,6 +184,15 @@ export function MoveStageModal({
     onClose();
   };
 
+  const stageOptions = [
+    ...stages.map((stg) => ({
+      value: stg.name,
+      label: stg.name,
+    })),
+    { value: "Hired", label: "Hired (Offer Accepted)" },
+    { value: "Rejected", label: "Rejected" },
+  ];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto nfl-scroll p-6 shadow-2xl relative border border-gray-100 animate-in zoom-in-95 duration-200">
@@ -209,22 +218,14 @@ export function MoveStageModal({
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-[#1A3E32] mb-1">
-              Select Target Stage
-            </label>
-            <select
+            <RecruiterSelect
+              label="Select Target Stage"
+              name="targetStage"
               value={targetStage || candidate.currentStage}
               onChange={(e) => setTargetStage(e.target.value)}
-              className="w-full bg-white border border-gray-300 text-sm px-3.5 py-2.5 rounded-xl font-medium"
-            >
-              {stages.map((stg) => (
-                <option key={stg.id || stg.name} value={stg.name}>
-                  {stg.name}
-                </option>
-              ))}
-              <option value="Hired">Hired (Offer Accepted)</option>
-              <option value="Rejected">Rejected</option>
-            </select>
+              options={stageOptions}
+              placeholder="Select stage"
+            />
           </div>
           <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
             <button

@@ -20,6 +20,7 @@ import {
   downloadJobApplicationResume,
 } from "../../services/employerApi";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
+import { RecruiterSelect } from "../../components/recruiter/recruiterOnboardingUi";
 
 const ApplicantAvatar = ({
   application,
@@ -207,16 +208,20 @@ const JobApplications = () => {
         Update Status
       </label>
       <div className="flex gap-2">
-        <select
-          value={statusDraft}
-          onChange={(e) => setStatusDraft(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#16730F]"
-        >
-          <option value="pending">Pending</option>
-          <option value="reviewed">Reviewed</option>
-          <option value="shortlisted">Shortlisted</option>
-          <option value="rejected">Rejected</option>
-        </select>
+        <div className="flex-1">
+          <RecruiterSelect
+            name="statusDraft"
+            value={statusDraft}
+            onChange={(e) => setStatusDraft(e.target.value)}
+            options={[
+              { value: "pending", label: "Pending" },
+              { value: "reviewed", label: "Reviewed" },
+              { value: "shortlisted", label: "Shortlisted" },
+              { value: "rejected", label: "Rejected" },
+            ]}
+            placeholder="Select Status"
+          />
+        </div>
         <button
           type="button"
           onClick={handleStatusUpdate}

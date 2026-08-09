@@ -11,6 +11,7 @@ import NewsFeedLayout from '../components/layout/NewsFeedLayout';
 import { formatDisplayPersonName } from '../utils/personDisplayName';
 import DisplayNameWithBadge from '../components/DisplayNameWithBadge';
 import { filterAdminUsersFromSearch } from '../utils/filterAdminUsers';
+import { RecruiterSelect } from '../components/recruiter/recruiterOnboardingUi';
 
 const shuffleArray = (arr) => {
   const shuffled = [...arr];
@@ -562,15 +563,16 @@ const Connections = () => {
                 <label htmlFor="connections-page-size" className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                   Page size
                 </label>
-                <select
-                  id="connections-page-size"
-                  value={pageSize}
+                <RecruiterSelect
+                  name="pageSize"
+                  value={String(pageSize)}
                   onChange={(e) => setPageSize(Number(e.target.value))}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A3E32] focus:outline-none focus:ring-2 focus:ring-[#16730F]/30 min-h-[44px]"
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                </select>
+                  options={[
+                    { value: "10", label: "10" },
+                    { value: "20", label: "20" },
+                  ]}
+                  placeholder="Page size"
+                />
               </div>
             </div>
           </div>
