@@ -129,7 +129,7 @@ export function getFormattedWorkHistoryFields(work, { legacy = false } = {}) {
 }
 
 const INLINE_BULLET_SPLIT = /\s*(?:[•●·▪◦‣⁃]|\*+|(?:^|\s)-+\s)\s*/;
-const LEADING_BULLET = /^(?:[\s\-*•●·▪◦‣⁃]+|\(?\d+[\.\)]\s*)/;
+const LEADING_BULLET = /^(?:[\s\-*•●·▪◦‣⁃]+|\(?\d+[.)]\s*)/;
 const TRAILING_BULLET_CLEAN = /[\s\-*•●·▪◦‣⁃]+$/;
 
 /** Split stored responsibility text into separate bullet items for display. */
@@ -152,7 +152,7 @@ export function parseResponsibilitiesList(value) {
         .replace(LEADING_BULLET, '')
         .replace(TRAILING_BULLET_CLEAN, '')
         .trim();
-      if (cleaned && !/^[\s\-*•●·▪◦‣⁃\(\)]+$/.test(cleaned)) {
+      if (cleaned && !/^[\s\-*•●·▪◦‣⁃()]+$/.test(cleaned)) {
         items.push(cleaned);
       }
     }
