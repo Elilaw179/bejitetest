@@ -61,6 +61,8 @@ import {
   getRecruiterJobApplicationById,
 } from "../services/activityLogApi";
 import ActivityJobDetailsModal from "../components/jobs/ActivityJobDetailsModal";
+import { formatDisplayText } from "../utils/displayFormatUtils";
+import { formatSalaryExpectation } from "../utils/formatSalary";
 import { motion, AnimatePresence } from "framer-motion";
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
@@ -642,6 +644,15 @@ const ActivityLogPostCard = ({
 };
 
 const JobCard = ({ job, onView, isRecruiterViewer }) => {
+  const locationLabel = formatDisplayText(
+    [job.preferred_state, job.preferred_country].filter(Boolean).join(", ") ||
+      job.preferred_country,
+  );
+  const salaryLabel = formatSalaryExpectation(
+    job.expected_salary,
+    job.currency,
+  );
+
   return (
     <motion.button
       type="button"
@@ -658,20 +669,20 @@ const JobCard = ({ job, onView, isRecruiterViewer }) => {
           </div>
           <div className="min-w-0">
             <h3 className="font-bold text-gray-900 text-lg leading-tight break-words">
-              {job.title}
+              {formatDisplayText(job.title) || job.title}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
               {[job.industry_sector, job.work_type].filter(Boolean).join(" • ")}
             </p>
             <div className="flex flex-wrap gap-2 mt-3">
-              {job.preferred_country && (
+              {locationLabel && (
                 <span className="px-2.5 py-1 bg-gray-50 text-gray-600 text-xs rounded-lg border border-gray-100 font-medium">
-                  {job.preferred_country}
+                  {locationLabel}
                 </span>
               )}
-              {job.expected_salary && job.expected_salary !== "Any" && (
+              {salaryLabel && (
                 <span className="px-2.5 py-1 bg-green-50 text-green-700 text-xs rounded-lg border border-green-100 font-medium">
-                  {job.currency} {job.expected_salary}
+                  {salaryLabel}
                 </span>
               )}
               {job.remote_preference && (

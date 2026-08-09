@@ -325,11 +325,11 @@ function JobType() {
                     <FormLabel label="EXPECTED SALARY" />
                     <input
                       type="text"
-                      inputMode="numeric"
+                      inputMode="decimal"
                       value={form.salary}
                       onChange={updateField("salary")}
                       className="w-full h-11 bg-white border border-gray-200 rounded-xl px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent"
-                      placeholder="e.g. 500000"
+                      placeholder="e.g. 500000 or 500-800"
                     />
                   </div>
                   <SelectField

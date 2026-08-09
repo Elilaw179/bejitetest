@@ -204,15 +204,18 @@ const AdminJobDetailModal = ({ jobId, onClose }) => {
                       </h3>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          job.status === "Active"
+                          job.listing_status === "active"
                             ? "bg-green-50 text-green-700"
-                            : job.status === "Closed"
-                              ? "bg-red-50 text-red-700"
-                              : "bg-gray-100 text-gray-700"
+                            : "bg-amber-50 text-amber-800"
                         }`}
                       >
-                        {job.status || "Draft"}
+                        {job.listing_status === "active" ? "Active" : "Expired"}
                       </span>
+                      {job.status && job.status !== "Active" && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                          {job.status}
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
                       <span className="inline-flex items-center gap-1.5">
@@ -365,7 +368,11 @@ const AdminJobDetailModal = ({ jobId, onClose }) => {
                     <div>
                       <p className="text-gray-500">Expires</p>
                       <p className="font-medium text-gray-900">
-                        {formatDate(job.expires_at)}
+                        {isJobseeker
+                          ? "Does not expire"
+                          : formatDate(
+                              job.effective_expires_at || job.expires_at,
+                            )}
                       </p>
                     </div>
                   </div>

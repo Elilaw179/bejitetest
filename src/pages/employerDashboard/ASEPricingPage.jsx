@@ -347,7 +347,7 @@ const ASEPricingPage = () => {
                   </h4>
                   <p className="text-sm text-gray-500 mt-0.5">
                     {eligibility.accessType === "free_trial" &&
-                      "Activate your free search below to test candidate quality"}
+                      "Activate below for 7 free searches and 5 free job posts"}
                     {eligibility.accessType === "free_trial_upgrade" &&
                       eligibility.message}
                     {eligibility.accessType === "one_time" &&
@@ -462,7 +462,7 @@ const ASEPricingPage = () => {
                   {eligibility.accessType === "free_trial_upgrade"
                     ? eligibility.message ||
                       "Receive additional trial candidate searches to evaluate match compatibility."
-                    : "Unlock free search credits to experience the precision of our Advanced Search Engine first-hand."}
+                    : "Get 7 free ASE searches (20 results each) and 5 free job posts to try Bejite recruiting."}
                 </p>
                 <button
                   onClick={async () => {

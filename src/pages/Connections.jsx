@@ -96,64 +96,134 @@ const Connections = () => {
     );
   }, []);
 
-  const applySecondaryResponses = useCallback((incomingRes, outgoingRes, discoverRes) => {
+  const transformIncoming = useCallback((incomingRes, page = invitationsPage) => {
     const incomingArray = incomingRes?.requests || incomingRes || [];
-    const transformedIncoming = Array.isArray(incomingArray) ? incomingArray.map(req => ({
-      id: req.id,
-      requester: {
-        id: req.fromUser?.id,
-        name: formatUserName(req.fromUser),
-        firstName: req.fromUser?.firstName ?? req.fromUser?.first_name,
-        lastName: req.fromUser?.lastName ?? req.fromUser?.last_name,
-        email: req.fromUser?.email,
-        image: req.fromUser?.profilePhoto ?? req.fromUser?.profile_photo ?? null,
-        role: req.fromUser?.jobTitle || 'Professional',
-        hasVerifiedBadge: Boolean(req.fromUser?.hasVerifiedBadge),
-      },
-      createdAt: req.createdAt
-    })) : [];
+    const transformedIncoming = Array.isArray(incomingArray)
+      ? incomingArray.map((req) => ({
+          id: req.id,
+          requester: {
+            id: req.fromUser?.id,
+            name: formatUserName(req.fromUser),
+            firstName: req.fromUser?.firstName ?? req.fromUser?.first_name,
+            lastName: req.fromUser?.lastName ?? req.fromUser?.last_name,
+            email: req.fromUser?.email,
+            image: req.fromUser?.profilePhoto ?? req.fromUser?.profile_photo ?? null,
+            role: req.fromUser?.jobTitle || 'Professional',
+            hasVerifiedBadge: Boolean(req.fromUser?.hasVerifiedBadge),
+          },
+          createdAt: req.createdAt,
+        }))
+      : [];
 
-    const outgoingArray = outgoingRes?.requests || outgoingRes || [];
-    const transformedOutgoing = Array.isArray(outgoingArray) ? outgoingArray.map(req => ({
-      id: req.id,
-      recipient: {
-        id: req.toUser?.id,
-        name: formatUserName(req.toUser),
-        firstName: req.toUser?.firstName ?? req.toUser?.first_name,
-        lastName: req.toUser?.lastName ?? req.toUser?.last_name,
-        email: req.toUser?.email,
-        image: req.toUser?.profilePhoto ?? req.toUser?.profile_photo ?? null,
-        role: req.toUser?.jobTitle || 'Professional',
-        hasVerifiedBadge: Boolean(req.toUser?.hasVerifiedBadge),
+    setIncomingRequests(transformedIncoming);
+    setIncomingMeta(
+      incomingRes?.pagination || {
+        total: transformedIncoming.length,
+        pages: 1,
+        page,
+        limit: pageSize,
       },
-      createdAt: req.createdAt
-    })) : [];
+    );
+    return transformedIncoming;
+  }, [invitationsPage, pageSize]);
+
+  const transformOutgoing = useCallback((outgoingRes, page = sentPage) => {
+    const outgoingArray = outgoingRes?.requests || outgoingRes || [];
+    const transformedOutgoing = Array.isArray(outgoingArray)
+      ? outgoingArray.map((req) => ({
+          id: req.id,
+          recipient: {
+            id: req.toUser?.id,
+            name: formatUserName(req.toUser),
+            firstName: req.toUser?.firstName ?? req.toUser?.first_name,
+            lastName: req.toUser?.lastName ?? req.toUser?.last_name,
+            email: req.toUser?.email,
+            image: req.toUser?.profilePhoto ?? req.toUser?.profile_photo ?? null,
+            role: req.toUser?.jobTitle || 'Professional',
+            hasVerifiedBadge: Boolean(req.toUser?.hasVerifiedBadge),
+          },
+          createdAt: req.createdAt,
+        }))
+      : [];
+
+    setOutgoingRequests(transformedOutgoing);
+    setOutgoingMeta(
+      outgoingRes?.pagination || {
+        total: transformedOutgoing.length,
+        pages: 1,
+        page,
+        limit: pageSize,
+      },
+    );
+    return transformedOutgoing;
+  }, [sentPage, pageSize]);
+
+  const applySecondaryResponses = useCallback((incomingRes, outgoingRes, discoverRes) => {
+    transformIncoming(incomingRes);
+    transformOutgoing(outgoingRes);
 
     const usersArray = discoverRes?.users || discoverRes || [];
     const transformedUsers = Array.isArray(usersArray)
       ? usersArray.map(transformDiscoverableUser)
       : [];
 
-    setIncomingRequests(transformedIncoming);
-    setOutgoingRequests(transformedOutgoing);
     setDiscoverableUsers(shuffleArray(transformedUsers));
-    setIncomingMeta(
-      incomingRes?.pagination || {
-        total: transformedIncoming.length,
-        pages: 1,
-        page: invitationsPage,
-        limit: pageSize,
-      },
-    );
-    setOutgoingMeta(
-      outgoingRes?.pagination || {
-        total: transformedOutgoing.length,
-        pages: 1,
-        page: sentPage,
-        limit: pageSize,
-      },
-    );
-  }, [invitationsPage, sentPage, pageSize]);
+  }, [transformIncoming, transformOutgoing]);
+
+  /**
+   * After accept/decline/cancel, reload the current page.
+   * If that page is now empty (but earlier pages still have items), step back.
+   */
+  const refreshIncomingPage = useCallback(async (preferredPage = invitationsPage) => {
+    let page = Math.max(1, preferredPage);
+    let incomingRes = await connectionsApi.getIncomingRequests(page, pageSize);
+    let rows = transformIncoming(incomingRes, page);
+    const pages = Math.max(1, incomingRes?.pagination?.pages || 1);
+
+    if (rows.length === 0 && page > 1) {
+      page = Math.min(page - 1, pages);
+      page = Math.max(1, page);
+      incomingRes = await connectionsApi.getIncomingRequests(page, pageSize);
+      rows = transformIncoming(incomingRes, page);
+    }
+
+    if (page !== invitationsPage) {
+      setInvitationsPage(page);
+    }
+    return rows;
+  }, [invitationsPage, pageSize, transformIncoming]);
+
+  const refreshOutgoingPage = useCallback(async (preferredPage = sentPage) => {
+    let page = Math.max(1, preferredPage);
+    let outgoingRes = await connectionsApi.getOutgoingRequests(page, pageSize);
+    let rows = transformOutgoing(outgoingRes, page);
+    const pages = Math.max(1, outgoingRes?.pagination?.pages || 1);
+
+    if (rows.length === 0 && page > 1) {
+      page = Math.min(page - 1, pages);
+      page = Math.max(1, page);
+      outgoingRes = await connectionsApi.getOutgoingRequests(page, pageSize);
+      rows = transformOutgoing(outgoingRes, page);
+    }
+
+    if (page !== sentPage) {
+      setSentPage(page);
+    }
+    return rows;
+  }, [sentPage, pageSize, transformOutgoing]);
+
+  const refreshNetworkFirstPage = useCallback(async () => {
+    try {
+      const connectionsRes = await connectionsApi.getConnections(
+        networkPage,
+        pageSize,
+        debouncedNetworkSearch,
+      );
+      applyNetworkResponse(connectionsRes, networkPage, pageSize);
+    } catch (error) {
+      console.error('Error refreshing network after accept:', error);
+    }
+  }, [networkPage, pageSize, debouncedNetworkSearch, applyNetworkResponse]);
 
   // First visit only — full page spinner
   useEffect(() => {
@@ -297,13 +367,8 @@ const Connections = () => {
     try {
       await connectionsApi.acceptConnectionRequest(requestId);
       toast.success(`Connected with ${requesterName}!`);
-
-      // Update local state
-      const acceptedRequest = incomingRequests.find(req => req.id === requestId);
-      if (acceptedRequest) {
-        setIncomingRequests(prev => prev.filter(req => req.id !== requestId));
-        setConnections(prev => [...prev, acceptedRequest.requester]);
-      }
+      await refreshIncomingPage(invitationsPage);
+      await refreshNetworkFirstPage();
     } catch (error) {
       console.error('Error accepting request:', error);
       toast.error('Failed to accept connection request');
@@ -314,9 +379,7 @@ const Connections = () => {
     try {
       await connectionsApi.rejectConnectionRequest(requestId);
       toast.success(`Declined request from ${requesterName}`);
-
-      // Update local state
-      setIncomingRequests(prev => prev.filter(req => req.id !== requestId));
+      await refreshIncomingPage(invitationsPage);
     } catch (error) {
       console.error('Error rejecting request:', error);
       toast.error('Failed to reject connection request');
@@ -327,9 +390,7 @@ const Connections = () => {
     try {
       await connectionsApi.cancelConnectionRequest(requestId);
       toast.success(`Canceled request to ${recipientName}`);
-
-      // Update local state
-      setOutgoingRequests(prev => prev.filter(req => req.id !== requestId));
+      await refreshOutgoingPage(sentPage);
     } catch (error) {
       console.error('Error canceling request:', error);
       toast.error('Failed to cancel connection request');

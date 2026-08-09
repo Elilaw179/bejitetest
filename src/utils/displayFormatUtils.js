@@ -15,11 +15,15 @@ export function toTitleCaseWords(value) {
     .split(/\s+/)
     .map((word) =>
       word
-        .split(/([-'])/)
+        .split(/([-'/])/)
         .map((part) => {
-          if (part === '-' || part === "'") return part;
+          if (part === '-' || part === "'" || part === '/') return part;
           if (!part) return part;
-          return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+          // Keep trailing punctuation (e.g. "oyo,") but title-case the letters
+          const match = part.match(/^([A-Za-z0-9]+)(.*)$/);
+          if (!match) return part;
+          const [, core, suffix] = match;
+          return core.charAt(0).toUpperCase() + core.slice(1).toLowerCase() + suffix;
         })
         .join(''),
     )
