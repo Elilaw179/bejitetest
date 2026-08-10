@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import FormLabel from "./forms/FormLabel";
 import PhoneInput from "./forms/PhoneInput";
+import { RecruiterSelect } from "./recruiter/recruiterOnboardingUi";
 
 const FieldGroup = ({ formData, handleChange, countries }) => {
   const bioAges = useMemo(() => {
@@ -111,36 +112,13 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
               />
               {/* <label className="block mb-1.5 text-[11px] font-bold text-gray-600 tracking-wide">{f.label}</label> */}
               {f.type === "select" ? (
-                <div className="relative">
-                  <select
-                    name={f.name}
-                    value={formData[f.name]}
-                    onChange={handleChange}
-                    className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent transition-all shadow-sm appearance-none"
-                  >
-                    <option value="">{f.placeholder || "Select"}</option>
-                    {(f.options || []).map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
+                <RecruiterSelect
+                  name={f.name}
+                  value={formData[f.name]}
+                  onChange={handleChange}
+                  options={f.options || []}
+                  placeholder={f.placeholder || "Select"}
+                />
               ) : f.type === "datalist" ? (
                 <div className="relative">
                   <input

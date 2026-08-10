@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FaBriefcase, FaTimes } from "react-icons/fa";
 import { AutocompleteInput } from "../forms/AutocompleteInput";
 import { INDUSTRY_OPTIONS } from "../../data/jobTypeData";
+import { RecruiterSelect } from "../recruiter/recruiterOnboardingUi";
 
 const DEPARTMENT_SUGGESTIONS = INDUSTRY_OPTIONS.filter(
   (opt) => opt && opt !== "Not Available",
@@ -42,6 +43,7 @@ export default function CreateRecruitmentModal({
 
     setTitle("");
     setPosition("");
+    setDepartment("Engineering");
     setDescription("");
     setDepartment("");
     onClose();
@@ -116,6 +118,24 @@ export default function CreateRecruitmentModal({
                 formName="employer-job"
                 fieldName="industry_sector"
                 staticOptions={DEPARTMENT_SUGGESTIONS}
+              />
+            </div>
+            <div>
+              <RecruiterSelect
+                label="Department"
+                name="department"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                options={[
+                  { value: "Engineering", label: "Engineering" },
+                  { value: "Product & Design", label: "Product & Design" },
+                  { value: "Operations", label: "Operations" },
+                  { value: "Data Analytics", label: "Data Analytics" },
+                  { value: "Marketing", label: "Marketing" },
+                  { value: "Sales", label: "Sales" },
+                  { value: "HR & People", label: "HR & People" },
+                ]}
+                placeholder="Select Department"
               />
             </div>
           </div>

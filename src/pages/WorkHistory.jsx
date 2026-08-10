@@ -66,26 +66,14 @@ const optionsJob = [
 ];
 
 
-const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
-  <div className="relative w-full">
-    <select
-      value={value}
-      onChange={onChange}
-      className={`w-full h-12 border-2 rounded-[10px] px-4 pr-10 appearance-none ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      }`}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>{opt}</option>
-      ))}
-    </select>
-    {value ? (
-      <FaCheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] text-lg" />
-    ) : (
-      <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
-    )}
-  </div>
+const SelectWithIcon = ({ name, value, onChange, options, placeholder }) => (
+  <RecruiterSelect
+    name={name}
+    value={value}
+    onChange={onChange}
+    options={options || []}
+    placeholder={placeholder || "Select option"}
+  />
 );
 
 const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (

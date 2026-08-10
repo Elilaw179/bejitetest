@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
 import coverFallback from "../../../assets/Ellipse 32 (3).png";
+import RecruiterSelect from "../RecruiterSelect";
 import {
   Type,
   Users,
@@ -306,18 +307,13 @@ export default function EventComposer({
               {/* Category / Type / Date / Time */}
               <div className="grid sm:grid-cols-2 gap-4">
                 <Field label="Category" icon={Hash}>
-                  <div className="relative">
-                    <select
-                      value={form.category}
-                      onChange={(e) => handleChange("category", e.target.value)}
-                      className={selectBase}
-                    >
-                      {CATEGORIES.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} className="absolute right-3 top-3 pointer-events-none text-gray-400" />
-                  </div>
+                  <RecruiterSelect
+                    name="category"
+                    value={form.category}
+                    onChange={(e) => handleChange("category", e.target.value)}
+                    options={CATEGORIES}
+                    placeholder="Select category"
+                  />
                 </Field>
 
                 <Field label="Event Type">
@@ -433,20 +429,13 @@ export default function EventComposer({
               className="p-5 space-y-5"
             >
               <Field label="Target Audience" icon={Target}>
-                <div className="relative">
-                  <select
-                    value={form.targetAudience}
-                    onChange={(e) => handleChange("targetAudience", e.target.value)}
-                    className={selectBase}
-                  >
-                    {AUDIENCE_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-3 top-3 pointer-events-none text-gray-400" />
-                </div>
+                <RecruiterSelect
+                  name="targetAudience"
+                  value={form.targetAudience}
+                  onChange={(e) => handleChange("targetAudience", e.target.value)}
+                  options={AUDIENCE_OPTIONS}
+                  placeholder="Select audience"
+                />
               </Field>
 
               {/* Delivery Channels */}

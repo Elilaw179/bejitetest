@@ -6,6 +6,7 @@ import { INDUSTRY_OPTIONS } from "../../data/jobTypeData";
 const DEPARTMENT_SUGGESTIONS = INDUSTRY_OPTIONS.filter(
   (opt) => opt && opt !== "Not Available",
 );
+import { RecruiterSelect } from "../recruiter/recruiterOnboardingUi";
 
 export default function EditRecruitmentModal({
   isOpen,
@@ -119,13 +120,30 @@ export default function EditRecruitmentModal({
                 staticOptions={DEPARTMENT_SUGGESTIONS}
               />
             </div>
+            <div>
+              <RecruiterSelect
+                label="Department"
+                name="department"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                options={[
+                  { value: "Engineering", label: "Engineering" },
+                  { value: "Product & Design", label: "Product & Design" },
+                  { value: "Operations", label: "Operations" },
+                  { value: "Data Analytics", label: "Data Analytics" },
+                  { value: "Marketing", label: "Marketing" },
+                  { value: "Sales", label: "Sales" },
+                  { value: "HR & People", label: "HR & People" },
+                ]}
+                placeholder="Select Department"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#1A3E32] mb-1">
-              Recruitment Status
-            </label>
-            <select
+            <RecruiterSelect
+              label="Recruitment Status"
+              name="status"
               value={status}
               disabled={submitting}
               onChange={(e) => setStatus(e.target.value)}
@@ -133,7 +151,7 @@ export default function EditRecruitmentModal({
             >
               <option value="Open">Open</option>
               <option value="Closed">Closed</option>
-            </select>
+            </RecruiterSelect>
           </div>
 
           <div>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import GeographicTargetingSection from "./GeographicTargetingSection";
 import ProfessionalTargetingSection from "./ProfessionalTargetingSection";
+import RecruiterSelect from "../admin/RecruiterSelect";
 
 const filterOptions = {
   // Demographic
@@ -106,20 +107,13 @@ export default function AudienceFilterSection({
 
     return (
       <div key={filterKey} className="mb-5">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label}
-        </label>
-        <select
+        <RecruiterSelect
+          label={label}
+          name={filterKey}
           value={value}
           onChange={(e) => onUpdate(filterKey, e.target.value)}
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent text-sm"
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          options={options}
+        />
       </div>
     );
   };

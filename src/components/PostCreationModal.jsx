@@ -3,6 +3,7 @@ import { FaImage, FaVideo, FaTimes, FaClock } from 'react-icons/fa';
 import { uploadMedia } from '../services/postsApi';
 import { apiErrorMessage, getUploadSizeError } from '../utils/uploadLimits';
 import EmojiPickerButton from './common/EmojiPickerButton';
+import { RecruiterSelect } from './recruiter/recruiterOnboardingUi';
 
 function getDefaultSchedule() {
   const d = new Date();
@@ -292,17 +293,19 @@ const PostCreationModal = ({
                 <label className="mb-2 block text-sm font-medium text-[#1A3E32]">
                   Poll duration
                 </label>
-                <select
-                  value={pollDurationDays}
+                <RecruiterSelect
+                  name="pollDurationDays"
+                  value={String(pollDurationDays)}
                   onChange={(e) => setPollDurationDays(Number(e.target.value))}
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#16730F] bg-white"
-                >
-                  <option value={1}>1 day</option>
-                  <option value={3}>3 days</option>
-                  <option value={7}>7 days</option>
-                  <option value={14}>14 days</option>
-                  <option value={30}>30 days</option>
-                </select>
+                  options={[
+                    { value: "1", label: "1 day" },
+                    { value: "3", label: "3 days" },
+                    { value: "7", label: "7 days" },
+                    { value: "14", label: "14 days" },
+                    { value: "30", label: "30 days" },
+                  ]}
+                  placeholder="Select duration"
+                />
               </div>
 
               <div>
@@ -372,16 +375,20 @@ const PostCreationModal = ({
           )}
 
           <div className="mt-4">
-            <div className="flex items-center gap-2">
-              <img src="/assets/images/public-icon.svg" alt="Public" className="w-4 h-4" />
-              <select
-                value={visibility}
-                onChange={(e) => setVisibility(e.target.value)}
-                className="text-sm rounded-md border border-gray-300 px-2 py-1 text-[#1A3E32] bg-white"
-              >
-                <option value="public">Public</option>
-                <option value="connections">Connections Only</option>
-              </select>
+            <div className="flex items-center gap-2 max-w-xs">
+              <img src="/assets/images/public-icon.svg" alt="Public" className="w-4 h-4 shrink-0" />
+              <div className="flex-1">
+                <RecruiterSelect
+                  name="visibility"
+                  value={visibility}
+                  onChange={(e) => setVisibility(e.target.value)}
+                  options={[
+                    { value: "public", label: "Public" },
+                    { value: "connections", label: "Connections Only" },
+                  ]}
+                  placeholder="Select Visibility"
+                />
+              </div>
             </div>
           </div>
 

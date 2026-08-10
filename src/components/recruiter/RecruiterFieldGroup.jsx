@@ -1,5 +1,6 @@
 import React from "react";
 import FormLabel from "../forms/FormLabel";
+import { RecruiterSelect } from "./recruiterOnboardingUi";
 
 const countWords = (text) => {
   const trimmed = String(text ?? "").trim();
@@ -28,38 +29,14 @@ const RecruiterFieldGroup = ({ formData, handleChange, fieldGroups }) => (
               required={f.required !== false && !f.optional}
             />
             {f.type === "select" ? (
-              <div className="relative">
-                <select
-                  name={f.name}
-                  value={formData[f.name] ?? ""}
-                  onChange={handleChange}
-                  disabled={f.disabled}
-                  className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm appearance-none disabled:bg-gray-50 disabled:text-gray-500"
-                >
-                  <option value="">{f.placeholder || "Select"}</option>
-                  {(f.options || []).map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </div>
+              <RecruiterSelect
+                name={f.name}
+                value={formData[f.name] ?? ""}
+                onChange={handleChange}
+                disabled={f.disabled}
+                options={f.options || []}
+                placeholder={f.placeholder || "Select"}
+              />
             ) : f.type === "textarea" ? (
               <>
                 <textarea
