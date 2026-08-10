@@ -567,8 +567,6 @@ const Connections = () => {
             <p className="text-sm sm:text-base text-gray-600">Manage your professional network</p>
           </div>
 
-<<<<<<< HEAD
-=======
           <div className="mb-4 sm:mb-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="relative w-full sm:max-w-md min-w-0">
@@ -599,7 +597,6 @@ const Connections = () => {
             </div>
           </div>
 
->>>>>>> f82acc148aaa2e90cc5359da818d4e509196f038
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm overflow-hidden min-w-0">
             <div className="flex w-full border-b border-gray-200">
               {tabs.map((tab) => {
