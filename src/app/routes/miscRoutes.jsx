@@ -6,6 +6,7 @@ import {
   PrivacyPolicy,
   Contact,
   Help,
+  NotFound,
 } from "../lazyPages.js";
 
 export const miscRoutes = (
@@ -16,5 +17,6 @@ export const miscRoutes = (
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/help" element={<Help />} />
+      <Route path="*" element={<NotFound />} />
   </>
 );
