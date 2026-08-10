@@ -16,6 +16,10 @@ import useAuth from "../../../hooks/useAuth";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import { useCreateCertificate } from "../../../services/certificateService";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
+import {
+  CERTIFICATE_MAX_BYTES,
+  getUploadSizeError,
+} from "../../../utils/uploadLimits";
 
 const ALLOWED_CERTIFICATE_TYPES = new Set(["image/jpeg", "image/png"]);
 const ALLOWED_CERTIFICATE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png"]);
@@ -108,6 +112,13 @@ function Certificate() {
       return;
     }
 
+    const sizeError = getUploadSizeError(selectedFile, CERTIFICATE_MAX_BYTES);
+    if (sizeError) {
+      toast.error(sizeError);
+      event.target.value = "";
+      return;
+    }
+
     setFile(selectedFile);
   };
 
@@ -157,7 +168,15 @@ function Certificate() {
       await toast.promise(submitCertData(), {
         pending: "Saving Certificate....",
         success: "Certificate Added Successfully",
-        error: "Failed to save certificate",
+        error: {
+          render({ data }) {
+            const message =
+              data?.message ||
+              (typeof data === "string" ? data : null) ||
+              "Failed to save certificate";
+            return message;
+          },
+        },
       });
       clearForm();
       if (isEditMode) {
@@ -223,7 +242,7 @@ function Certificate() {
             <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <p className="font-semibold text-xs mb-1">
-                  UPLOAD CERTIFICATE IMAGE (JPG OR PNG)
+                  UPLOAD CERTIFICATE IMAGE (JPG OR PNG, MAX 5MB)
                 </p>
                 <label className="flex justify-between items-center bg-black text-white h-12 rounded-[10px] px-3 cursor-pointer overflow-hidden">
                   <span className="truncate">

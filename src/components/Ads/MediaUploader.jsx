@@ -8,8 +8,13 @@ export default function MediaUploader({ value, onUpload, onRemove, error }) {
   const handleFileChange = (file) => {
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      onUpload(null, "File size must be less than 10MB", null);
+    if (file.size > 10 * 1024 * 1024 && !file.type.startsWith("video/")) {
+      onUpload(null, "Image size must be less than 10MB", null);
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      onUpload(null, "Video size must be less than 50MB", null);
       return;
     }
 

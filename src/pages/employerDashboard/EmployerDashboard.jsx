@@ -34,7 +34,7 @@ const EmployerDashboard = () => {
     setError(null);
 
     try {
-      const response = await getEmployerDashboard({ status: statusFilter });
+      const response = await getEmployerDashboard({ status: statusFilter, listing_kind: "job_posting" });
 
       if (response?.success) {
         setJobs(response.data?.jobs || []);

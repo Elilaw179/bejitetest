@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaImage, FaVideo, FaTimes, FaClock } from 'react-icons/fa';
 import { uploadMedia } from '../services/postsApi';
+import { apiErrorMessage, getUploadSizeError } from '../utils/uploadLimits';
 import EmojiPickerButton from './common/EmojiPickerButton';
 import { RecruiterSelect } from './recruiter/recruiterOnboardingUi';
 
@@ -71,6 +72,13 @@ const PostCreationModal = ({
     const file = e.target.files[0];
     if (!file) return;
 
+    const sizeError = getUploadSizeError(file);
+    if (sizeError) {
+      setError(sizeError);
+      e.target.value = '';
+      return;
+    }
+
     try {
       setUploadingMedia(true);
       setError(null);
@@ -83,7 +91,7 @@ const PostCreationModal = ({
       setMediaFiles([...mediaFiles, newMedia]);
     } catch (err) {
       console.error('Error uploading media:', err.response?.data || err.message);
-      setError(err.response?.data?.error || 'Failed to upload media. Please try again.');
+      setError(apiErrorMessage(err, 'Failed to upload media. Please try again.'));
     } finally {
       setUploadingMedia(false);
       e.target.value = '';

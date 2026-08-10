@@ -817,21 +817,24 @@ const NewsFeedHeader = ({ user: propUser }) => {
         </div>
 
         <div
-          className={`grid w-full lg:w-auto lg:block transition-[grid-template-rows,opacity,margin-top] duration-300 ease-out ${
+          className={`grid w-full lg:w-auto lg:block transition-[opacity,margin-top] duration-200 ease-out motion-reduce:transition-none ${
             isProfileRowHidden
-              ? "grid-rows-[0fr] opacity-0 -mt-3 pointer-events-none lg:opacity-100 lg:mt-0 lg:pointer-events-auto"
+              ? "grid-rows-[0fr] opacity-0 -mt-3 pointer-events-none lg:grid-rows-[1fr] lg:opacity-100 lg:mt-0 lg:pointer-events-auto"
               : "grid-rows-[1fr] opacity-100 mt-0"
           }`}
         >
-          <div
-            className={`min-h-0 lg:min-h-full ${isProfileRowHidden ? "overflow-hidden lg:overflow-visible" : ""}`}
-          >
+          {/* Always clip the 0fr row — toggling overflow only while hidden causes
+            mobile WebKit/Blink to mis-composite rounded avatars during fast scroll. */}
+          <div className="min-h-0 overflow-hidden lg:overflow-visible lg:min-h-full">
             <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto justify-between lg:justify-normal">
-              <img
-                className="w-10 h-10 lg:w-14 lg:h-14 rounded-full object-cover"
-                src={avatarSrc(user.image)}
-                alt={getDisplayName()}
-              />
+              <div className="relative w-10 h-10 lg:w-14 lg:h-14 shrink-0 rounded-full overflow-hidden isolate bg-gray-200 [transform:translateZ(0)]">
+                <img
+                  className="absolute inset-0 h-full w-full object-cover"
+                  src={avatarSrc(user.image)}
+                  alt={getDisplayName()}
+                  decoding="async"
+                />
+              </div>
 
               <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
                 <div ref={dropdownRef} className="relative">
@@ -950,7 +953,10 @@ const NewsFeedHeader = ({ user: propUser }) => {
                                 setIsDropdownOpen(false);
                               }}
                               className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
-                                location.pathname.startsWith("/employer/")
+                                location.pathname.startsWith("/employer/") &&
+                                !location.pathname.startsWith(
+                                  "/employer/recruitment-management",
+                                )
                                   ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
                                   : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
                               }`}

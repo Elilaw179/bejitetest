@@ -31,7 +31,7 @@ const ImageUpload = ({
     </div>
     
     <p className="text-[11px] text-gray-500 text-center font-medium mt-3">
-      Allowed: PNG, JPEG <br/> Max size: 100kb
+      Allowed: PNG, JPEG <br/> Max size: 10MB
     </p>
 
     {bio !== undefined && onBioChange && (
