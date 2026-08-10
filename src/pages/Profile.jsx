@@ -595,12 +595,12 @@ const Profile = () => {
                 {/* Name & Title Block */}
                 <div className="w-full min-w-0 text-center sm:text-left pt-1 sm:pt-4">
                   <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight break-words">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 tracking-tight break-words min-w-0 max-w-full">
                       <DisplayNameWithBadge
                         user={profileData}
                         fallback="User"
                         badgeSize="md"
-                        className="text-[#fff] mr-[200px]"
+                        className="text-slate-900"
                       />
                     </h1>
 
@@ -694,7 +694,7 @@ const Profile = () => {
 
                   {/* Connect / Message Actions */}
                   {!isViewingOwnProfile && viewedProfileId && (
-                    <div className="mt-4 pt-2">
+                    <div className="mt-4 pt-2 w-full min-w-0">
                       <ProfileConnectActions
                         userId={viewedProfileId}
                         displayName={formatDisplayPersonName(

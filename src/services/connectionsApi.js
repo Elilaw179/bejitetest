@@ -123,6 +123,21 @@ export const acceptConnectionRequest = async (requestId) => {
 };
 
 /**
+ * Accept pending request from a specific user (profile Accept).
+ */
+export const acceptConnectionRequestFromUser = async (fromUserId) => {
+  try {
+    const response = await axiosInstance.post(
+      `/api/connections/requests/from/${encodeURIComponent(String(fromUserId))}/accept`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error accepting connection request from user:', error);
+    throw error;
+  }
+};
+
+/**
  * Reject incoming connection request
  */
 export const rejectConnectionRequest = async (requestId) => {

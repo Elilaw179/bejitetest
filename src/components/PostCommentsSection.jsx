@@ -325,6 +325,8 @@ export default function PostCommentsSection({
   onCommentCountChange,
   currentUserPhotoUrl,
   currentUserId,
+  inputRef = null,
+  sectionRef = null,
 }) {
   const navigate = useNavigate();
   const [newComment, setNewComment] = useState("");
@@ -500,7 +502,7 @@ export default function PostCommentsSection({
   };
 
   return (
-    <div className="border-t border-[#A9A9A9] pt-4 mt-4">
+    <div ref={sectionRef} className="border-t border-[#A9A9A9] pt-4 mt-4">
       <form
         onSubmit={handleAddComment}
         className="flex flex-wrap sm:flex-nowrap gap-2 mb-4 items-center"
@@ -514,6 +516,7 @@ export default function PostCommentsSection({
         )}
         <div className="flex-1 min-w-[180px] flex items-center gap-1 border border-[#D3D3D3] rounded-full px-2 py-1 focus-within:border-[#16730F]">
           <input
+            ref={inputRef}
             type="text"
             placeholder="Write a comment..."
             value={newComment}

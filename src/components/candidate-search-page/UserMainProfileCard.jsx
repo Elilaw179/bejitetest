@@ -199,11 +199,19 @@ const ProfileHeaderCard = ({
   const navigate = useNavigate();
   const connectUserId =
     resolveCandidateUserId(candidate) || connectUserIdProp || null;
-  const { sendRequest, connectLabel, connectDisabled } = useCandidateConnect(
-    connectUserId,
-    displayName,
-  );
+  const { sendRequest, acceptRequest, connectLabel, connectDisabled, status } =
+    useCandidateConnect(connectUserId, displayName);
   const [messaging, setMessaging] = useState(false);
+
+  const handleConnect = async () => {
+    if (status.pendingIncoming) {
+      await acceptRequest();
+      return;
+    }
+    if (!connectDisabled) {
+      sendRequest();
+    }
+  };
 
   const handleMessage = async () => {
     if (!connectUserId || messaging) return;
@@ -259,7 +267,7 @@ const ProfileHeaderCard = ({
           <div className="mt-4 grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 sm:gap-3 w-full max-w-lg mx-auto sm:mx-0">
             <button
               type="button"
-              onClick={sendRequest}
+              onClick={handleConnect}
               disabled={connectDisabled}
               className={`inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white transition-colors ${
                 connectDisabled

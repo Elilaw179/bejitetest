@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   FaSearch,
   FaChevronDown,
@@ -51,6 +52,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [roleMenuPos, setRoleMenuPos] = useState(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [connectionRequestCount, setConnectionRequestCount] = useState(0);
@@ -98,6 +100,8 @@ const NewsFeedHeader = ({ user: propUser }) => {
       );
   }, [location.pathname]);
   const dropdownRef = useRef(null);
+  const roleMenuButtonRef = useRef(null);
+  const roleMenuPanelRef = useRef(null);
   const searchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
   const searchRequestIdRef = useRef(0);
@@ -363,7 +367,12 @@ const NewsFeedHeader = ({ user: propUser }) => {
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      const inTrigger =
+        dropdownRef.current && dropdownRef.current.contains(event.target);
+      const inPanel =
+        roleMenuPanelRef.current &&
+        roleMenuPanelRef.current.contains(event.target);
+      if (!inTrigger && !inPanel) {
         setIsDropdownOpen(false);
       }
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -373,6 +382,31 @@ const NewsFeedHeader = ({ user: propUser }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const updateRoleMenuPos = useCallback(() => {
+    const btn = roleMenuButtonRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    setRoleMenuPos({
+      top: rect.bottom + 6,
+      right: Math.max(8, window.innerWidth - rect.right),
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isDropdownOpen) {
+      setRoleMenuPos(null);
+      return undefined;
+    }
+    updateRoleMenuPos();
+    const onReposition = () => updateRoleMenuPos();
+    window.addEventListener("resize", onReposition);
+    window.addEventListener("scroll", onReposition, true);
+    return () => {
+      window.removeEventListener("resize", onReposition);
+      window.removeEventListener("scroll", onReposition, true);
+    };
+  }, [isDropdownOpen, updateRoleMenuPos]);
 
   // Fetch notification count on mount and periodically; live updates via socket
   useEffect(() => {
@@ -801,32 +835,53 @@ const NewsFeedHeader = ({ user: propUser }) => {
               : "grid-rows-[1fr] opacity-100 mt-0"
           }`}
         >
-        {/* Always clip the 0fr row — toggling overflow only while hidden causes
-            mobile WebKit/Blink to mis-composite rounded avatars during fast scroll. */}
-        <div className="min-h-0 overflow-hidden lg:overflow-visible lg:min-h-full">
-        <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto justify-between lg:justify-normal">
-          <div className="relative w-10 h-10 lg:w-14 lg:h-14 shrink-0 rounded-full overflow-hidden isolate bg-gray-200 [transform:translateZ(0)]">
-            <img
-              className="absolute inset-0 h-full w-full object-cover"
-              src={avatarSrc(user.image)}
-              alt={getDisplayName()}
-              decoding="async"
-            />
-          </div>
+        {/* Clip while closed to avoid mobile avatar scroll glitches; open overflow when the menu is open. */}
+        <div
+          className={`min-h-0 lg:min-h-full ${
+            isDropdownOpen
+              ? "overflow-visible"
+              : "overflow-hidden lg:overflow-visible"
+          }`}
+        >
+        <div className="flex items-center gap-2.5 md:gap-3 w-full lg:w-auto min-w-0 justify-between lg:justify-normal">
+          <img
+            className="w-10 h-10 lg:w-14 lg:h-14 shrink-0 rounded-full object-cover object-center bg-gray-200 ring-1 ring-black/5"
+            src={avatarSrc(user.image)}
+            alt={getDisplayName()}
+            decoding="async"
+            width={56}
+            height={56}
+          />
 
-          <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
-            <div ref={dropdownRef} className="relative">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-1.5 lg:gap-3 min-w-0 shrink-0 lg:flex-initial text-right lg:text-left">
+            <div ref={dropdownRef} className="relative min-w-0">
               <p
-                className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32] tracking-wide"
+                className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32] tracking-wide truncate"
                 style={{ fontFamily: '"DynaPuff", cursive' }}
               >
                 Hello {getGreetingFirstName()}!
               </p>
 
               {/* Custom Dropdown for Role */}
-              <div className="relative">
+              <div className="relative self-end lg:self-auto">
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  type="button"
+                  ref={roleMenuButtonRef}
+                  onClick={() => {
+                    if (isDropdownOpen) {
+                      setIsDropdownOpen(false);
+                      return;
+                    }
+                    const btn = roleMenuButtonRef.current;
+                    if (btn) {
+                      const rect = btn.getBoundingClientRect();
+                      setRoleMenuPos({
+                        top: rect.bottom + 6,
+                        right: Math.max(8, window.innerWidth - rect.right),
+                      });
+                    }
+                    setIsDropdownOpen(true);
+                  }}
                   className="flex items-center gap-1 bg-[#16730F] text-white rounded-full px-3 py-1 mt-0.5 text-xs sm:text-sm md:text-base focus:outline-none hover:bg-[#145a0c] transition-colors"
                 >
                   <span>{getDisplayRole()}</span>
@@ -835,9 +890,19 @@ const NewsFeedHeader = ({ user: propUser }) => {
                   />
                 </button>
 
-                {/* Dropdown Menu */}
-                {isDropdownOpen && (
-                  <div className="absolute right-0 left-auto mt-1.5 sm:mt-2 w-[min(14.5rem,calc(100vw-1.25rem))] sm:w-[min(18rem,calc(100vw-1rem))] md:w-[min(20rem,calc(100vw-1rem))] bg-white rounded-lg sm:rounded-xl shadow-xl border border-gray-100 py-1 sm:py-2 z-50 overflow-hidden max-h-[min(60vh,22rem)] sm:max-h-[70vh] overflow-y-auto nfl-scroll">
+                {/* Portaled so header overflow/grid clipping cannot hide the menu */}
+                {isDropdownOpen &&
+                  roleMenuPos &&
+                  createPortal(
+                    <div
+                      ref={roleMenuPanelRef}
+                      style={{
+                        position: "fixed",
+                        top: roleMenuPos.top,
+                        right: roleMenuPos.right,
+                      }}
+                      className="w-[min(14.5rem,calc(100vw-1.25rem))] sm:w-[min(18rem,calc(100vw-1rem))] md:w-[min(20rem,calc(100vw-1rem))] bg-white rounded-lg sm:rounded-xl shadow-xl border border-gray-100 py-1 sm:py-2 z-[200] overflow-hidden max-h-[min(60vh,22rem)] sm:max-h-[70vh] overflow-y-auto nfl-scroll"
+                    >
                     {/* User Info Header */}
                     <div className="px-3 py-2 sm:px-4 sm:py-3 border-b border-gray-100 bg-gray-50">
                       <div className="flex items-start gap-2 sm:gap-3 min-w-0">
@@ -865,6 +930,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                     {/* Section 1: Profile */}
                     <div className="py-0.5 sm:py-1">
                       <button
+                        type="button"
                         onClick={() => {
                           navigate(
                             user?.role === "recruiter"
@@ -891,6 +957,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                     <div className="py-0.5 sm:py-1">
                       {user?.role !== "jobseeker" && (
                         <button
+                          type="button"
                           onClick={() => {
                             navigate("/candidate-search-page");
                             setIsDropdownOpen(false);
@@ -907,6 +974,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       )}
                       {user?.role !== "jobseeker" && (
                         <button
+                          type="button"
                           onClick={() => {
                             navigate("/subscription-dashboard");
                             setIsDropdownOpen(false);
@@ -925,6 +993,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       )}
                       {user?.role !== "jobseeker" && (
                         <button
+                          type="button"
                           onClick={() => {
                             navigate("/employer/dashboard");
                             setIsDropdownOpen(false);
@@ -944,6 +1013,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       )}
                       {isRecruiterOrEmployer && (
                         <button
+                          type="button"
                           onClick={() => {
                             navigate("/adpro");
                             setIsDropdownOpen(false);
@@ -960,8 +1030,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       )}
 
                     </div>
-                  </div>
-                )}
+                    </div>,
+                    document.body,
+                  )}
               </div>
             </div>
           </div>

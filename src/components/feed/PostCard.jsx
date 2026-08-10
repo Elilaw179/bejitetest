@@ -23,7 +23,8 @@ import PostCommentsSection from "../PostCommentsSection";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
-import { getPostDetailPath } from "../../utils/postNavigation";
+
+const PostDetailModal = React.lazy(() => import("./PostDetailModal"));
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
 
@@ -292,13 +293,13 @@ const PostCard = ({
   isDetailView = false,
   defaultShowComments = false,
 }) => {
-  const navigate = useNavigate();
   const isOwner = String(post.authorId) === String(currentUserId);
   const [showComments, setShowComments] = useState(defaultShowComments);
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [liked, setLiked] = useState(post.likedByMe === true);
   const [saved, setSaved] = useState(post.savedByMe === true);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
     setLiked(post.likedByMe === true);
@@ -307,7 +308,7 @@ const PostCard = ({
 
   const openPostDetail = () => {
     if (!isDetailView) {
-      navigate(getPostDetailPath(post.id));
+      setShowDetailModal(true);
     }
   };
 
@@ -487,7 +488,7 @@ const PostCard = ({
       ) : (
         <PostContent
           body={post.body}
-          onOpenDetail={openPostDetail}
+          onOpenDetail={undefined}
           isDetailView={isDetailView}
         />
       )}
@@ -556,6 +557,20 @@ const PostCard = ({
           currentUserPhotoUrl={getUserProfileImage()}
           currentUserId={currentUserId}
         />
+      )}
+
+      {!isDetailView && (
+        <React.Suspense fallback={null}>
+          <PostDetailModal
+            isOpen={showDetailModal}
+            onClose={() => setShowDetailModal(false)}
+            post={post}
+            onLike={onLike}
+            onSave={onSave}
+            onShare={onShare}
+            currentUserId={currentUserId}
+          />
+        </React.Suspense>
       )}
     </div>
   );
