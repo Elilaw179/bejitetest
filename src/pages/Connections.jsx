@@ -49,7 +49,7 @@ const transformConnectionUser = (user, connectedAt) => ({
 const Connections = () => {
   useSyncProfilePhoto();
   const navigate = useNavigate();
-  const DEFAULT_PAGE_SIZE = 10;
+  const DEFAULT_PAGE_SIZE = 20;
   const [activeTab, setActiveTab] = useState('network');
   const [connections, setConnections] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
@@ -428,6 +428,22 @@ const Connections = () => {
 
   const filteredConnections = connections;
 
+  const connectionSearchBar = (
+    <div className="mb-4 sm:mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative w-full sm:max-w-md min-w-0">
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none text-sm sm:text-base"
+        />
+        <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1A3E32] h-5 w-5 pointer-events-none" />
+      </div>
+
+    </div>
+  );
+
   const tabs = [
     {
       id: 'network',
@@ -436,6 +452,7 @@ const Connections = () => {
       count: networkMeta.total,
       content: (
         <>
+          {connectionSearchBar}
           {networkLoading ? (
             <div className="py-10 flex flex-col items-center justify-center gap-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#16730F]" />
@@ -464,14 +481,17 @@ const Connections = () => {
       icon: FaUserPlus,
       count: discoverableUsers.length,
       content: (
-        <PeopleList
-          users={peopleSearchResults ?? discoverableUsers}
-          onSendRequest={handleSendRequest}
-          onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
-          searchQuery={searchQuery}
-          isSearching={Boolean(searchQuery.trim())}
-          searchLoading={peopleSearchLoading}
-        />
+        <>
+          {connectionSearchBar}
+          <PeopleList
+            users={peopleSearchResults ?? discoverableUsers}
+            onSendRequest={handleSendRequest}
+            onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
+            searchQuery={searchQuery}
+            isSearching={Boolean(searchQuery.trim())}
+            searchLoading={peopleSearchLoading}
+          />
+        </>
       )
     },
     {
@@ -544,35 +564,6 @@ const Connections = () => {
           <div className="mb-4 sm:mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] mb-1 sm:mb-2">Connections</h1>
             <p className="text-sm sm:text-base text-gray-600">Manage your professional network</p>
-          </div>
-
-          <div className="mb-4 sm:mb-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="relative w-full sm:max-w-md min-w-0">
-                <input
-                  type="text"
-                  placeholder="Search by name or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none text-sm sm:text-base"
-                />
-                <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1A3E32] h-5 w-5 pointer-events-none" />
-              </div>
-              <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-                <label htmlFor="connections-page-size" className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                  Page size
-                </label>
-                <select
-                  id="connections-page-size"
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-[#1A3E32] focus:outline-none focus:ring-2 focus:ring-[#16730F]/30 min-h-[44px]"
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                </select>
-              </div>
-            </div>
           </div>
 
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm overflow-hidden min-w-0">

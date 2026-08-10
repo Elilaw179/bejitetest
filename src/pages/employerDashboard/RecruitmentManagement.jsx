@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   FaPlus,
-  FaChevronRight,
   FaUsers,
   FaUserCheck,
   FaUserTimes,
@@ -12,7 +11,6 @@ import {
   FaPencilAlt,
   FaTimes,
   FaArrowLeft,
-  FaBriefcase,
 } from "react-icons/fa";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
 import RecruitmentStatCard from "../../components/recruitment-management/RecruitmentStatCard";
@@ -20,264 +18,832 @@ import RecruitmentFilterBar from "../../components/recruitment-management/Recrui
 import RecruitmentListTable from "../../components/recruitment-management/RecruitmentListTable";
 import PipelineFlow from "../../components/recruitment-management/PipelineFlow";
 import CandidateListTable from "../../components/recruitment-management/CandidateListTable";
-import CreateRecruitmentModal from "../../components/recruitment-management/CreateRecruitmentModal";
 import EditRecruitmentModal from "../../components/recruitment-management/EditRecruitmentModal";
 import CloseRecruitmentModal from "../../components/recruitment-management/CloseRecruitmentModal";
+import CreateRecruitmentModal from "../../components/recruitment-management/CreateRecruitmentModal";
 import StageBuilderModal from "../../components/recruitment-management/StageBuilderModal";
 import EditPipelineStageModal from "../../components/recruitment-management/EditPipelineStageModal";
-import InterviewStagesList from "../../components/recruitment-management/InterviewStagesList";
 import CandidateProfileModal from "../../components/recruitment-management/CandidateProfileModal";
 import RecruitmentAuditLog from "../../components/recruitment-management/RecruitmentAuditLog";
 import CandidateFeedbackModal from "../../components/recruitment-management/CandidateFeedbackModal";
 import MoveCandidateModal from "../../components/recruitment-management/MoveCandidateModal";
+import InterviewStagesList from "../../components/recruitment-management/InterviewStagesList";
 import { toast } from "react-toastify";
-import { INITIAL_EXERCISES } from "../../utils/mockJobs";
+import {
+  getEmployerDashboard,
+  getJobApplications,
+  createEmployerJob,
+  updateEmployerJob,
+  closeEmployerJob,
+  getEmployerInterviewInvitations,
+  getJobPipeline,
+  createPipelineStage,
+  updatePipelineStage,
+  deletePipelineStage,
+  reorderPipelineStages,
+  moveApplicationStage,
+  getJobAuditLogs,
+} from "../../services/employerApi";
+import messagingService from "../../services/messagingService";
+import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 
-// Initial mock data matching the screenshot images
+const STATUS_META = {
+  pending: {
+    label: "Screening",
+    description: "Initial application screening",
+  },
+  reviewed: {
+    label: "Under Review",
+    description: "Applications currently being reviewed",
+  },
+  shortlisted: {
+    label: "Tech Interview",
+    description: "Technical interview stage",
+  },
+  hired: {
+    label: "Hired",
+    description: "Candidates successfully hired",
+  },
+  rejected: {
+    label: "Rejected",
+    description: "Candidates not moving forward",
+  },
+};
+
+const formatRelativeTime = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  const diffMs = Date.now() - date.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min${mins === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
+  return date.toLocaleDateString();
+};
+
+const formatDate = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString();
+};
+
+const statusLabel = (status) => STATUS_META[status]?.label || "Applied";
+
+const outcomeFromStatus = (status) => {
+  if (status === "hired") return "Hired";
+  if (status === "rejected") return "Rejected";
+  if (status === "shortlisted") return "Pending";
+  return "Pending";
+};
+
+const formatActiveStageLabel = (stageName, sortOrder, { closed = false } = {}) => {
+  if (closed) return "Closed";
+  if (!stageName) return "Stage 1: Screening";
+  const step = Number.isFinite(Number(sortOrder))
+    ? Number(sortOrder) + 1
+    : 1;
+  return `Stage ${step}: ${stageName}`;
+};
+
+const mapJobToExercise = (job) => {
+  const isOpen =
+    String(job.dbStatus || "").toLowerCase() !== "closed" &&
+    job.status === "active";
+  const position = job.roles || job.industry || "—";
+  const createdAt = job.postedAt || job.createdAt || null;
+  return {
+    id: String(job.id),
+    title: job.title || "Untitled job",
+    position,
+    department: job.industry || "Engineering",
+    activeStage: formatActiveStageLabel(
+      job.activeStageName,
+      job.activeStageSortOrder,
+      { closed: !isOpen },
+    ),
+    activePipelineStageId: job.activePipelineStageId || null,
+    activeStageName: job.activeStageName || null,
+    activeStageSortOrder:
+      job.activeStageSortOrder != null ? Number(job.activeStageSortOrder) : null,
+    invited: Number(job.applications) || 0,
+    accepted: 0,
+    declined: 0,
+    passed: 0,
+    failed: 0,
+    hired: 0,
+    status: isOpen ? "Open" : "Closed",
+    lastUpdated: formatRelativeTime(createdAt),
+    createdDate: formatDate(createdAt),
+    createdAt,
+    description: job.description || "",
+    rawJob: job,
+    candidates: [],
+    pipeline: [],
+    stagesList: [],
+    auditLogs: [],
+    appStats: null,
+  };
+};
+
+const mapApplicationToCandidate = (app) => ({
+  id: app.id,
+  candidateId: app.candidateId,
+  userId: app.userId,
+  name: app.name || "Unknown Candidate",
+  email: app.email || "",
+  phone: app.phone || "",
+  title: app.title || app.education || "",
+  avatar: profilePhotoUrl(app.profilePhoto),
+  currentStage: app.pipelineStageName || statusLabel(app.status),
+  pipelineStageId: app.pipelineStageId || null,
+  statusKey: app.status || "pending",
+  outcome: app.latestFeedback?.outcome || outcomeFromStatus(app.status),
+  matchScore: app.matchScore,
+  score: app.matchScore,
+  experience: app.experience,
+  skills: app.skills || [],
+  location: app.location,
+  coverLetter: app.coverLetter,
+  appliedAt: app.appliedAt,
+  applicationDate: app.appliedAt,
+  latestFeedback: app.latestFeedback || null,
+  raw: app,
+});
+
+const mapApiStagesToPipeline = (stages = []) =>
+  stages.map((stg, index) => ({
+    id: stg.id,
+    step: String(index + 1).padStart(2, "0"),
+    name: stg.name,
+    title: "Invited",
+    count: Number(stg.count) || 0,
+  }));
+
+const mapApiStagesToList = (stages = []) =>
+  stages.map((stg) => ({
+    id: stg.id,
+    name: stg.name,
+    description: stg.description || "",
+    interviewer: stg.interviewer || "Recruiter",
+    duration: stg.duration || `${stg.durationMins || 60} mins`,
+    durationMins: stg.durationMins || 60,
+    count: Number(stg.count) || 0,
+    status: stg.status || "Not Started",
+  }));
+
+const applyStoredActiveStage = (exercise, jobMeta = {}, { closed = false } = {}) => {
+  const stageName =
+    jobMeta.activeStageName ||
+    exercise?.activeStageName ||
+    null;
+  const sortOrder =
+    jobMeta.activeStageSortOrder != null
+      ? Number(jobMeta.activeStageSortOrder)
+      : exercise?.activeStageSortOrder != null
+        ? Number(exercise.activeStageSortOrder)
+        : null;
+  const stageId =
+    jobMeta.activePipelineStageId ||
+    exercise?.activePipelineStageId ||
+    null;
+
+  return {
+    activePipelineStageId: stageId,
+    activeStageName: stageName,
+    activeStageSortOrder: sortOrder,
+    activeStage: formatActiveStageLabel(stageName, sortOrder, { closed }),
+  };
+};
+
+const aggregateInviteStats = (invitations = []) => {
+  const stats = {
+    total: invitations.length,
+    accepted: 0,
+    declined: 0,
+    pending: 0,
+  };
+  invitations.forEach((inv) => {
+    const status = String(inv.status || "").toLowerCase();
+    if (status === "accepted") stats.accepted += 1;
+    else if (status === "declined") stats.declined += 1;
+    else if (status === "pending") stats.pending += 1;
+  });
+  return stats;
+};
 
 export default function RecruitmentManagement() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { id: routeExerciseId } = useParams();
+  const { id: routeJobId } = useParams();
 
-  const [exercises, setExercises] = useState(INITIAL_EXERCISES);
+  const [exercises, setExercises] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [inviteStats, setInviteStats] = useState({
+    total: 0,
+    accepted: 0,
+    declined: 0,
+    pending: 0,
+  });
 
-  // Filter States
+  const [listLoading, setListLoading] = useState(true);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [listError, setListError] = useState(null);
+  const [detailError, setDetailError] = useState(null);
+  const [closing, setClosing] = useState(false);
+  const [moving, setMoving] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [positionFilter, setPositionFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState("all");
-
-  // Detail View Tab
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [activeTab, setActiveTab] = useState("candidates");
-
-  // Candidate Filters inside Detail View
   const [candidateSearch, setCandidateSearch] = useState("");
+  const [candidateStageFilter, setCandidateStageFilter] = useState("all");
+  const [candidateOutcomeFilter, setCandidateOutcomeFilter] = useState("all");
+  const [candidateSort, setCandidateSort] = useState("newest");
 
-  // Modal States
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
   const [isStageBuilderOpen, setIsStageBuilderOpen] = useState(false);
   const [editingPipelineStage, setEditingPipelineStage] = useState(null);
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [feedbackCandidate, setFeedbackCandidate] = useState(null);
+  const [feedbackSaving, setFeedbackSaving] = useState(false);
   const [moveCandidate, setMoveCandidate] = useState(null);
   const [viewProfileCandidate, setViewProfileCandidate] = useState(null);
   const [profileInitialTab, setProfileInitialTab] = useState("overview");
 
-  // Sync selected exercise with route parameter or state
-  useEffect(() => {
-    if (routeExerciseId) {
-      const found = exercises.find((ex) => ex.id === routeExerciseId);
-      if (found) {
-        setSelectedExercise(found);
-        return;
-      }
-    }
-    // If state passed from navigation
-    if (location.state?.exerciseId) {
-      const found = exercises.find((ex) => ex.id === location.state.exerciseId);
-      if (found) {
-        setSelectedExercise(found);
-        return;
-      }
-    }
-    // Default: list view if no ID param
-    if (!routeExerciseId && !location.state?.exerciseId) {
-      setSelectedExercise(null);
-    }
-  }, [routeExerciseId, location.state, exercises]);
+  const loadList = useCallback(async () => {
+    setListLoading(true);
+    setListError(null);
+    try {
+      const [dashboardRes, invitesRes] = await Promise.all([
+        getEmployerDashboard({ status: "all", listing_kind: "recruitment" }),
+        getEmployerInterviewInvitations({ limit: 100 }).catch(() => null),
+      ]);
 
-  // Handle viewing an exercise detail
+      if (!dashboardRes?.success) {
+        throw new Error(dashboardRes?.message || "Failed to load jobs");
+      }
+
+      const jobs = dashboardRes.data?.jobs || [];
+      setExercises(jobs.map(mapJobToExercise));
+
+      const invitations = Array.isArray(invitesRes?.data)
+        ? invitesRes.data
+        : Array.isArray(invitesRes)
+          ? invitesRes
+          : [];
+      setInviteStats(aggregateInviteStats(invitations));
+    } catch (err) {
+      console.error("Recruitment list load error:", err);
+      setListError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to load recruitment exercises",
+      );
+      setExercises([]);
+    } finally {
+      setListLoading(false);
+    }
+  }, []);
+
+  const loadDetail = useCallback(async (jobId, baseExercise) => {
+    if (!jobId) return;
+    setDetailLoading(true);
+    setDetailError(null);
+    try {
+      const [appsRes, pipelineRes, auditRes] = await Promise.all([
+        getJobApplications(jobId),
+        getJobPipeline(jobId),
+        getJobAuditLogs(jobId, { limit: 50 }).catch(() => ({ data: [] })),
+      ]);
+
+      if (!appsRes?.success) {
+        throw new Error(appsRes?.message || "Failed to load applications");
+      }
+
+      const apps = appsRes.data?.applications || [];
+      const stats = appsRes.data?.stats || {};
+      const jobTitle = appsRes.data?.job?.title;
+      const apiStages = pipelineRes?.data?.stages || [];
+      const pipelineJob = pipelineRes?.data?.job || {};
+      const auditLogs = Array.isArray(auditRes?.data) ? auditRes.data : [];
+
+      const candidates = apps.map(mapApplicationToCandidate);
+      const stagesList = mapApiStagesToList(apiStages);
+      const pipeline = mapApiStagesToPipeline(apiStages);
+      const isClosed =
+        String(baseExercise?.status || "").toLowerCase() === "closed";
+      const storedActive = applyStoredActiveStage(
+        baseExercise,
+        pipelineJob,
+        { closed: isClosed },
+      );
+
+      const detail = {
+        ...(baseExercise || {}),
+        id: String(jobId),
+        title: jobTitle || baseExercise?.title || "Job",
+        invited: Number(stats.total) || apps.length,
+        accepted:
+          (Number(stats.reviewed) || 0) +
+          (Number(stats.shortlisted) || 0) +
+          (Number(stats.hired) || 0),
+        declined: Number(stats.rejected) || 0,
+        passed: Number(stats.hired) || 0,
+        failed: Number(stats.rejected) || 0,
+        hired: Number(stats.hired) || 0,
+        ...storedActive,
+        candidates,
+        pipeline,
+        stagesList,
+        appStats: stats,
+        auditLogs,
+      };
+
+      setSelectedExercise(detail);
+      setExercises((prev) =>
+        prev.map((ex) =>
+          String(ex.id) === String(jobId)
+            ? {
+                ...ex,
+                invited: detail.invited,
+                accepted: detail.accepted,
+                declined: detail.declined,
+                passed: detail.passed,
+                failed: detail.failed,
+                hired: detail.hired,
+                activeStage: detail.activeStage,
+                activePipelineStageId: detail.activePipelineStageId,
+                activeStageName: detail.activeStageName,
+                activeStageSortOrder: detail.activeStageSortOrder,
+                title: detail.title,
+              }
+            : ex,
+        ),
+      );
+    } catch (err) {
+      console.error("Recruitment detail load error:", err);
+      setDetailError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to load job applications",
+      );
+      setSelectedExercise(baseExercise || null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadList();
+  }, [loadList]);
+
+  useEffect(() => {
+    const targetId = routeJobId || location.state?.exerciseId || null;
+    if (!targetId) {
+      setSelectedExercise(null);
+      setDetailError(null);
+      return;
+    }
+
+    const base = exercises.find((ex) => String(ex.id) === String(targetId));
+    loadDetail(targetId, base);
+    // Intentionally omit `exercises` to avoid refetch loops after list load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeJobId, location.state?.exerciseId, loadDetail]);
+
+  useEffect(() => {
+    if (!selectedExercise?.id || !exercises.length) return;
+    const base = exercises.find(
+      (ex) => String(ex.id) === String(selectedExercise.id),
+    );
+    if (!base) return;
+    setSelectedExercise((prev) =>
+      prev
+        ? {
+            ...prev,
+            position: prev.position || base.position,
+            createdDate: prev.createdDate || base.createdDate,
+            status: base.status,
+            lastUpdated: base.lastUpdated,
+            description: prev.description || base.description,
+          }
+        : prev,
+    );
+  }, [exercises, selectedExercise?.id]);
+
   const handleViewExercise = (ex) => {
-    setSelectedExercise(ex);
     navigate(`/employer/recruitment-management/${ex.id}`);
   };
 
-  // Back to list view
   const handleBackToList = () => {
     setSelectedExercise(null);
     navigate("/employer/recruitment-management");
   };
 
-  // Back to candidate search
   const handleGoBackNav = () => {
-    if (selectedExercise) {
+    if (routeJobId || selectedExercise) {
       handleBackToList();
     } else {
       navigate("/candidate-search-page");
     }
   };
 
-  // Create new recruitment
-  const handleCreateExercise = (newExData) => {
-    const newEx = {
-      ...newExData,
-      id: `rec-${Date.now()}`,
-      createdDate: new Date().toISOString().split("T")[0],
-      passed: 0,
-      failed: 0,
-      hired: 0,
-      pipeline: [
-        { id: 1, step: "01", name: "Screening", title: "Invited", count: 0 },
+  const handleCreateClick = () => {
+    setIsCreateOpen(true);
+  };
+
+  const handleCreateExercise = async (formData) => {
+    setCreating(true);
+    try {
+      const title = String(formData.title || "").trim();
+      const position = String(formData.position || "General Role").trim();
+      const department = String(formData.department || "Engineering").trim();
+      const description =
+        String(formData.description || "").trim() ||
+        `Recruitment exercise for ${title}`;
+
+      const response = await createEmployerJob({
+        title,
+        industry: department,
+        roles: position,
+        responsibilities: description,
+        description,
+        workMode: "Remote",
+        country: "Nigeria",
+        skills: [{ skill: position || department || "General", experience: 0 }],
+        listing_kind: "recruitment",
+      });
+
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to create recruitment");
+      }
+
+      toast.success("Recruitment exercise created successfully!");
+      await loadList();
+      return true;
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to create recruitment exercise",
+      );
+      return false;
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleEditSave = async (updated) => {
+    if (!selectedExercise?.id) return false;
+    setEditing(true);
+    try {
+      const response = await updateEmployerJob(selectedExercise.id, {
+        title: updated.title,
+        position: updated.position,
+        department: updated.department,
+        description: updated.description,
+        status: updated.status,
+      });
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to update recruitment");
+      }
+
+      // Persist Open/Closed via API; "Final Stage" maps to Active/Open in DB
+      const persistedStatus =
+        response?.data?.status ||
+        (updated.status === "Closed" ? "Closed" : "Open");
+
+      const next = {
+        ...selectedExercise,
+        title: updated.title,
+        position: updated.position,
+        department: updated.department,
+        description: updated.description,
+        status: persistedStatus,
+        ...applyStoredActiveStage(selectedExercise, {}, {
+          closed: persistedStatus === "Closed",
+        }),
+        lastUpdated: "Just now",
+      };
+      setSelectedExercise(next);
+      setExercises((prev) =>
+        prev.map((ex) =>
+          String(ex.id) === String(next.id) ? { ...ex, ...next } : ex,
+        ),
+      );
+      toast.success("Recruitment updated successfully!");
+      await loadList();
+      return true;
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to update recruitment",
+      );
+      return false;
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const handleConfirmClose = async () => {
+    if (!selectedExercise?.id) return;
+    setClosing(true);
+    try {
+      const response = await closeEmployerJob(selectedExercise.id);
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to close recruitment");
+      }
+      toast.info(`Closed and archived "${selectedExercise.title}"`);
+      setIsCloseModalOpen(false);
+      setSelectedExercise(null);
+      navigate("/employer/recruitment-management");
+      await loadList();
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to close recruitment",
+      );
+    } finally {
+      setClosing(false);
+    }
+  };
+
+  const applyStagesToSelected = (stages) => {
+    const stagesList = mapApiStagesToList(stages);
+    const pipeline = mapApiStagesToPipeline(stages);
+    setSelectedExercise((prev) => {
+      if (!prev) return prev;
+      const matched =
+        stages.find(
+          (s) => String(s.id) === String(prev.activePipelineStageId),
+        ) || null;
+      const idx = matched
+        ? stages.findIndex((s) => String(s.id) === String(matched.id))
+        : -1;
+      const stored = matched
+        ? applyStoredActiveStage(
+            prev,
+            {
+              activePipelineStageId: matched.id,
+              activeStageName: matched.name,
+              activeStageSortOrder:
+                matched.sortOrder != null ? matched.sortOrder : idx,
+            },
+            { closed: String(prev.status).toLowerCase() === "closed" },
+          )
+        : {};
+      const next = { ...prev, stagesList, pipeline, ...stored };
+      setExercises((list) =>
+        list.map((ex) =>
+          String(ex.id) === String(next.id)
+            ? {
+                ...ex,
+                activeStage: next.activeStage,
+                activePipelineStageId: next.activePipelineStageId,
+                activeStageName: next.activeStageName,
+                activeStageSortOrder: next.activeStageSortOrder,
+              }
+            : ex,
+        ),
+      );
+      return next;
+    });
+  };
+
+  const handleAddStageFromBuilder = async (newStageData) => {
+    if (!selectedExercise?.id) return false;
+    try {
+      const response = await createPipelineStage(selectedExercise.id, {
+        name: newStageData.name,
+        description: newStageData.description,
+        interviewer: newStageData.interviewer,
+        duration: newStageData.duration,
+      });
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to create stage");
+      }
+      applyStagesToSelected(response.data?.stages || []);
+      toast.success(`Stage "${newStageData.name}" added`);
+      const auditRes = await getJobAuditLogs(selectedExercise.id).catch(
+        () => null,
+      );
+      if (auditRes?.data) {
+        setSelectedExercise((prev) =>
+          prev ? { ...prev, auditLogs: auditRes.data } : prev,
+        );
+      }
+      return true;
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || err.message || "Failed to add stage",
+      );
+      return false;
+    }
+  };
+
+  const handleUpdatePipelineStage = async (updatedStage) => {
+    if (!selectedExercise?.id || !updatedStage?.id) return;
+    try {
+      const response = await updatePipelineStage(
+        selectedExercise.id,
+        updatedStage.id,
         {
-          id: 2,
-          step: "02",
-          name: "Tech Interview",
-          title: "Invited",
-          count: 0,
+          name: updatedStage.name,
+          description: updatedStage.description,
+          interviewer: updatedStage.interviewer,
+          duration: updatedStage.duration,
         },
-      ],
-      stagesList: [
-        {
-          id: 1,
-          name: "Screening",
-          description: "Initial application screening",
-          interviewer: "Recruiter",
-          duration: "30 mins",
-          count: 0,
-          status: "Active",
-        },
-      ],
-      candidates: [],
-    };
-    setExercises((prev) => [newEx, ...prev]);
-    toast.success("Recruitment exercise created successfully!");
+      );
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to update stage");
+      }
+      applyStagesToSelected(response.data?.stages || []);
+      toast.success(`Stage "${updatedStage.name}" updated`);
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || err.message || "Failed to update stage",
+      );
+    }
   };
 
-  // Update existing exercise
-  const handleSaveExercise = (updated) => {
-    setExercises((prev) =>
-      prev.map((ex) => (ex.id === updated.id ? updated : ex)),
+  const handleDeletePipelineStage = async (stageToDelete) => {
+    if (!selectedExercise?.id || !stageToDelete?.id) return;
+
+    const fullStage =
+      (selectedExercise.stagesList || []).find(
+        (s) => String(s.id) === String(stageToDelete.id),
+      ) || stageToDelete;
+
+    const candidateCount = Number(fullStage.count ?? stageToDelete.count) || 0;
+    const confirmMsg =
+      candidateCount > 0
+        ? `Delete stage "${fullStage.name}"?\n\n${candidateCount} candidate(s) on this stage will be unassigned from the pipeline. This cannot be undone.`
+        : `Delete stage "${fullStage.name}"? This cannot be undone.`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      const response = await deletePipelineStage(
+        selectedExercise.id,
+        fullStage.id,
+      );
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to delete stage");
+      }
+      applyStagesToSelected(response.data?.stages || []);
+      toast.info(`Stage "${fullStage.name}" deleted`);
+      await loadDetail(selectedExercise.id, selectedExercise);
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || err.message || "Failed to delete stage",
+      );
+    }
+  };
+
+  const handleReorderPipelineStages = async (newOrderedList) => {
+    if (!selectedExercise?.id || !Array.isArray(newOrderedList)) return;
+
+    // Pipeline flow cards may only carry id/name/count — rebuild from stagesList
+    const byId = new Map(
+      (selectedExercise.stagesList || []).map((s) => [String(s.id), s]),
     );
-    setSelectedExercise(updated);
-  };
+    const ordered = newOrderedList
+      .map((item) => byId.get(String(item.id)) || item)
+      .filter((s) => s?.id != null);
 
-  // Confirm Close & Archive
-  const handleConfirmClose = () => {
-    if (!selectedExercise) return;
-    const closed = {
-      ...selectedExercise,
-      status: "Closed",
-      lastUpdated: "Just now",
-    };
-    handleSaveExercise(closed);
-    toast.info(`Closed and archived "${selectedExercise.title}"`);
-  };
+    if (!ordered.length) return;
 
-  // Add stage from StageBuilder
-  const handleAddStageFromBuilder = (newStageData) => {
-    if (!selectedExercise) return;
-    const currentStages = selectedExercise.stagesList || [
-      {
-        id: 1,
-        name: "Accepted",
-        description: "Candidate confirmed availability",
-        interviewer: "Recruiter Screening",
-        duration: "30 mins",
-        count: 0,
-        status: "Complete",
-      },
-      {
-        id: 2,
-        name: "Technical Assessment",
-        description: "System design & coding evaluation",
-        interviewer: "Lead Architect",
-        duration: "60 mins",
-        count: 1,
-        status: "Active",
-      },
-      {
-        id: 3,
-        name: "Invited",
-        description: "Invitation sent via email",
-        interviewer: "Bejite Team",
-        duration: "15 mins",
-        count: 1,
-        status: "Not Started",
-      },
-    ];
-
-    const updatedStages = [...currentStages, newStageData];
-
-    // Update pipeline flow as well
-    const stepNum = String(selectedExercise.pipeline.length + 1).padStart(
-      2,
-      "0",
+    const stageIds = ordered.map((s) => s.id);
+    // Optimistic UI
+    applyStagesToSelected(
+      ordered.map((s, index) => ({
+        ...s,
+        sortOrder: index,
+        durationMins: s.durationMins || 60,
+        duration: s.duration,
+      })),
     );
-    const newPipelineItem = {
-      id: newStageData.id,
-      step: stepNum,
-      name: newStageData.name,
-      title: "Invited",
-      count: 0,
-    };
-
-    const updatedEx = {
-      ...selectedExercise,
-      stagesList: updatedStages,
-      pipeline: [...selectedExercise.pipeline, newPipelineItem],
-    };
-
-    handleSaveExercise(updatedEx);
-    toast.success(`Stage "${newStageData.name}" added successfully!`);
+    try {
+      const response = await reorderPipelineStages(
+        selectedExercise.id,
+        stageIds,
+      );
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to reorder stages");
+      }
+      applyStagesToSelected(response.data?.stages || []);
+      toast.success("Pipeline stages reordered");
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to reorder stages",
+      );
+      await loadDetail(selectedExercise.id, selectedExercise);
+    }
   };
 
-  // Edit pipeline stage
-  const handleUpdatePipelineStage = (updatedStage) => {
-    if (!selectedExercise) return;
-    const currentStages = selectedExercise.stagesList || [];
-    const updatedStages = currentStages.map((stg) =>
-      stg.id === updatedStage.id ? updatedStage : stg,
-    );
-    const updatedEx = {
-      ...selectedExercise,
-      stagesList: updatedStages,
-    };
-    handleSaveExercise(updatedEx);
-    toast.success(`Stage "${updatedStage.name}" updated!`);
+  const handleMoveCandidateStage = async (candidate, targetStageValue) => {
+    if (!selectedExercise?.id || !candidate?.id) return false;
+
+    const stages = selectedExercise.stagesList || [];
+    const matched =
+      stages.find((s) => String(s.id) === String(targetStageValue)) ||
+      stages.find((s) => s.name === targetStageValue);
+
+    if (!matched?.id) {
+      toast.error("Unknown target stage");
+      return false;
+    }
+
+    setMoving(true);
+    try {
+      const response = await moveApplicationStage(
+        selectedExercise.id,
+        candidate.id,
+        matched.id,
+      );
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to move candidate");
+      }
+      toast.success(`Moved ${candidate.name} to ${matched.name}`);
+      setMoveCandidate(null);
+      await loadDetail(selectedExercise.id, selectedExercise);
+      return true;
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to move candidate",
+      );
+      return false;
+    } finally {
+      setMoving(false);
+    }
   };
 
-  // Delete pipeline stage
-  const handleDeletePipelineStage = (stageToDelete) => {
-    if (!selectedExercise) return;
-    const currentStages = selectedExercise.stagesList || [];
-    const updatedStages = currentStages.filter(
-      (stg) => stg.id !== stageToDelete.id,
-    );
-    const updatedEx = {
-      ...selectedExercise,
-      stagesList: updatedStages,
-    };
-    handleSaveExercise(updatedEx);
-    toast.info(`Stage "${stageToDelete.name}" deleted.`);
-  };
+  const handleSaveFeedback = async (candidate, payload) => {
+    if (!selectedExercise?.id || !candidate?.id || feedbackSaving) return false;
+    setFeedbackSaving(true);
+    try {
+      const recipientUserId = String(
+        candidate.userId || candidate.user_id || "",
+      ).trim();
+      if (!recipientUserId) {
+        throw new Error(
+          "This candidate has no linked account, so feedback cannot be sent in chat.",
+        );
+      }
 
-  // Reorder stages
-  const handleReorderPipelineStages = (newOrderedList) => {
-    if (!selectedExercise) return;
-    const updatedEx = {
-      ...selectedExercise,
-      stagesList: newOrderedList,
-    };
-    handleSaveExercise(updatedEx);
-    toast.success("Pipeline stages reordered!");
-  };
+      const conversation =
+        await messagingService.startConversation(recipientUserId);
+      if (!conversation?.id) {
+        throw new Error("Failed to open chat with candidate");
+      }
 
-  // Candidate action handlers
-  const handleSaveFeedback = (candidate, { rating }) => {
-    toast.success(`Feedback saved for ${candidate.name} (${rating})`);
-  };
+      const jobTitle = selectedExercise.title || "your application";
+      const outcome = payload.outcome || "Pending";
+      const feedbackBody = String(payload.feedback || "").trim();
+      const content = [
+        `Recruitment feedback — ${jobTitle}`,
+        `Outcome: ${outcome}`,
+        "",
+        feedbackBody,
+      ].join("\n");
 
-  const handleMoveCandidateStage = (candidate, targetStage) => {
-    if (!selectedExercise) return;
-    const updatedCandidates = selectedExercise.candidates.map((c) =>
-      c.id === candidate.id ? { ...c, currentStage: targetStage } : c,
-    );
-    const updatedEx = { ...selectedExercise, candidates: updatedCandidates };
-    handleSaveExercise(updatedEx);
-    toast.success(`Moved ${candidate.name} to ${targetStage}`);
+      await messagingService.sendMessage(conversation.id, content);
+
+      toast.success(
+        `Feedback sent to ${candidate.name}'s chat. They can view it on their Chats page.`,
+      );
+      setFeedbackCandidate(null);
+      return true;
+    } catch (err) {
+      toast.error(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to send feedback to candidate chat",
+      );
+      return false;
+    } finally {
+      setFeedbackSaving(false);
+    }
   };
 
   const handleViewCandidateProfile = (candidate, tab = "overview") => {
@@ -285,40 +851,155 @@ export default function RecruitmentManagement() {
     setViewProfileCandidate(candidate);
   };
 
-  // Filter logic for exercise list
-  const filteredExercises = exercises.filter((ex) => {
-    const matchesSearch =
-      !searchQuery ||
-      ex.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ex.position.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" ||
-      ex.status.toLowerCase().replace(" ", "_") === statusFilter;
-    const matchesPosition =
-      positionFilter === "all" ||
-      ex.position.toLowerCase().replace(" ", "_") === positionFilter;
-    return matchesSearch && matchesStatus && matchesPosition;
-  });
+  const normalizeFilterValue = (value) =>
+    String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
 
-  // Filter candidates inside selected exercise
-  const filteredCandidates = selectedExercise
-    ? selectedExercise.candidates.filter(
-        (c) =>
-          !candidateSearch ||
-          c.name.toLowerCase().includes(candidateSearch.toLowerCase()) ||
-          c.email.toLowerCase().includes(candidateSearch.toLowerCase()),
-      )
-    : [];
+  const listPositionOptions = useMemo(() => {
+    const seen = new Map();
+    exercises.forEach((ex) => {
+      const label = String(ex.position || "").trim();
+      if (!label || label === "—") return;
+      const value = normalizeFilterValue(label);
+      if (!seen.has(value)) seen.set(value, label);
+    });
+    return [
+      { label: "All Positions", value: "all" },
+      ...Array.from(seen.entries()).map(([value, label]) => ({ label, value })),
+    ];
+  }, [exercises]);
+
+  const listStageOptions = useMemo(() => {
+    const seen = new Map();
+    exercises.forEach((ex) => {
+      const label = String(ex.activeStage || "").trim();
+      if (!label) return;
+      const value = normalizeFilterValue(label);
+      if (!seen.has(value)) seen.set(value, label);
+    });
+    return [
+      { label: "All Stages", value: "all" },
+      ...Array.from(seen.entries()).map(([value, label]) => ({ label, value })),
+    ];
+  }, [exercises]);
+
+  const filteredExercises = useMemo(
+    () =>
+      exercises.filter((ex) => {
+        const query = String(searchQuery || "").trim().toLowerCase();
+        const matchesSearch =
+          !query ||
+          ex.title.toLowerCase().includes(query) ||
+          (ex.position || "").toLowerCase().includes(query);
+        const matchesStatus =
+          statusFilter === "all" ||
+          normalizeFilterValue(ex.status) === statusFilter;
+        const matchesPosition =
+          positionFilter === "all" ||
+          normalizeFilterValue(ex.position) === positionFilter;
+        const stageValue = normalizeFilterValue(ex.activeStage);
+        const matchesStage =
+          stageFilter === "all" ||
+          stageValue === stageFilter ||
+          stageValue.includes(stageFilter);
+
+        let matchesDate = true;
+        if (dateFrom || dateTo) {
+          const created = ex.createdAt ? new Date(ex.createdAt) : null;
+          if (!created || Number.isNaN(created.getTime())) {
+            matchesDate = false;
+          } else {
+            if (dateFrom) {
+              const from = new Date(`${dateFrom}T00:00:00`);
+              if (created < from) matchesDate = false;
+            }
+            if (matchesDate && dateTo) {
+              const to = new Date(`${dateTo}T23:59:59.999`);
+              if (created > to) matchesDate = false;
+            }
+          }
+        }
+
+        return (
+          matchesSearch &&
+          matchesStatus &&
+          matchesPosition &&
+          matchesStage &&
+          matchesDate
+        );
+      }),
+    [
+      exercises,
+      searchQuery,
+      statusFilter,
+      positionFilter,
+      stageFilter,
+      dateFrom,
+      dateTo,
+    ],
+  );
+
+  const filteredCandidates = useMemo(() => {
+    if (!selectedExercise?.candidates) return [];
+
+    const normalize = (value) =>
+      String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+    let list = selectedExercise.candidates.filter((c) => {
+      const search = String(candidateSearch || "").trim().toLowerCase();
+      const matchesSearch =
+        !search ||
+        c.name.toLowerCase().includes(search) ||
+        (c.email || "").toLowerCase().includes(search);
+
+      const stageValue = normalize(c.currentStage || c.pipelineStageName);
+      const matchesStage =
+        candidateStageFilter === "all" ||
+        stageValue === candidateStageFilter ||
+        stageValue.includes(candidateStageFilter);
+
+      const outcomeValue = normalize(c.outcome || "pending");
+      const matchesOutcome =
+        candidateOutcomeFilter === "all" ||
+        outcomeValue === candidateOutcomeFilter ||
+        (candidateOutcomeFilter === "pending" &&
+          !["passed", "failed", "hired", "rejected"].includes(outcomeValue)) ||
+        (candidateOutcomeFilter === "failed" &&
+          ["failed", "rejected"].includes(outcomeValue)) ||
+        (candidateOutcomeFilter === "passed" &&
+          ["passed", "hired"].includes(outcomeValue));
+
+      return matchesSearch && matchesStage && matchesOutcome;
+    });
+
+    list = [...list].sort((a, b) => {
+      const aTime = new Date(a.appliedAt || 0).getTime();
+      const bTime = new Date(b.appliedAt || 0).getTime();
+      if (candidateSort === "oldest") return aTime - bTime;
+      return bTime - aTime;
+    });
+
+    return list;
+  }, [
+    selectedExercise,
+    candidateSearch,
+    candidateStageFilter,
+    candidateOutcomeFilter,
+    candidateSort,
+  ]);
+
+  const openCount = exercises.filter((ex) => ex.status === "Open").length;
 
   return (
     <NewsFeedLayout showSidebars={false}>
       <div className="w-full max-w-[1440px] mx-auto p-3 sm:p-5 lg:p-6 space-y-5 pb-16">
-        {/* ========================================================================= */}
-        {/* TOP BREADCRUMB & PAGE HEADER */}
-        {/* ========================================================================= */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
-            {/* Breadcrumbs */}
             <div className="flex items-center gap-2 text-xs font-semibold text-gray-600 flex-wrap">
               <button
                 type="button"
@@ -333,7 +1014,7 @@ export default function RecruitmentManagement() {
                 type="button"
                 onClick={handleBackToList}
                 className={`hover:underline ${
-                  selectedExercise
+                  selectedExercise || routeJobId
                     ? "text-[#16730F] font-bold"
                     : "text-[#16730F]"
                 }`}
@@ -350,8 +1031,7 @@ export default function RecruitmentManagement() {
               )}
             </div>
 
-            {/* Title & Description if on List View */}
-            {!selectedExercise && (
+            {!routeJobId && !selectedExercise && (
               <div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1A3E32] tracking-tight">
                   Recruitment Management
@@ -364,11 +1044,10 @@ export default function RecruitmentManagement() {
             )}
           </div>
 
-          {/* Top Right Action Button on List View */}
-          {!selectedExercise && (
+          {!routeJobId && !selectedExercise && (
             <button
               type="button"
-              onClick={() => setIsCreateOpen(true)}
+              onClick={handleCreateClick}
               className="inline-flex items-center gap-2 bg-[#16730F] hover:bg-[#125B0C] active:scale-95 text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-2xl shadow-md transition-all shrink-0 self-start sm:self-auto"
             >
               <FaPlus className="w-3.5 h-3.5" />
@@ -377,302 +1056,355 @@ export default function RecruitmentManagement() {
           )}
         </div>
 
-        {/* ========================================================================= */}
-        {/* VIEW 1: RECRUITMENT MANAGEMENT LIST DASHBOARD */}
-        {/* ========================================================================= */}
-        {!selectedExercise && (
+        {!routeJobId && !selectedExercise && (
           <>
-            {/* Top 4 Stat Summary Cards */}
+            {listError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-2xl px-4 py-3">
+                {listError}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
               <RecruitmentStatCard
                 icon={FaUsers}
-                value="128"
+                value={listLoading ? "—" : inviteStats.total}
                 label="TOTAL INVITED"
-                sublabel="Candidates invited across"
+                sublabel="Interview invitations sent"
                 variant="green"
               />
               <RecruitmentStatCard
                 icon={FaUserCheck}
-                value="76"
+                value={listLoading ? "—" : inviteStats.accepted}
                 label="ACCEPTED"
                 sublabel="Candidates who accepted"
                 variant="green"
               />
               <RecruitmentStatCard
                 icon={FaUserTimes}
-                value="22"
+                value={listLoading ? "—" : inviteStats.declined}
                 label="DECLINED"
                 sublabel="Candidates who declined"
                 variant="red"
               />
               <RecruitmentStatCard
                 icon={FaClock}
-                value="30"
+                value={listLoading ? "—" : inviteStats.pending}
                 label="PENDING RESPONSE"
-                sublabel="Awaiting Candidate"
+                sublabel="Awaiting candidate"
                 variant="amber"
               />
             </div>
 
-            {/* Filter Bar */}
             <RecruitmentFilterBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+              searchPlaceholder="Search recruitments by title or position..."
               statusFilter={statusFilter}
               onStatusChange={setStatusFilter}
               positionFilter={positionFilter}
               onPositionChange={setPositionFilter}
               stageFilter={stageFilter}
               onStageChange={setStageFilter}
-              onApply={() => toast.info("Filter applied")}
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              onDateFromChange={setDateFrom}
+              onDateToChange={setDateTo}
+              onClearDate={() => {
+                setDateFrom("");
+                setDateTo("");
+              }}
+              statusOptions={[
+                { label: "All Statuses", value: "all" },
+                { label: "Open", value: "open" },
+                { label: "Closed", value: "closed" },
+              ]}
+              positionOptions={listPositionOptions}
+              stageOptions={listStageOptions}
+              showDateFilter
+              onApply={() => toast.success("Filters applied")}
               onReset={() => {
                 setSearchQuery("");
                 setStatusFilter("all");
                 setPositionFilter("all");
                 setStageFilter("all");
+                setDateFrom("");
+                setDateTo("");
+                toast.info("Filters reset");
               }}
             />
 
-            {/* Recruitment List Table */}
-            <RecruitmentListTable
-              exercises={filteredExercises}
-              onViewExercise={handleViewExercise}
-              activeCount={exercises.length}
-              currentPage={1}
-              totalPages={1}
-            />
+            {listLoading ? (
+              <div className="bg-white border border-gray-200 rounded-3xl p-12 text-center text-sm text-gray-500 font-medium">
+                Loading recruitment exercises…
+              </div>
+            ) : (
+              <RecruitmentListTable
+                exercises={filteredExercises}
+                onViewExercise={handleViewExercise}
+                activeCount={openCount}
+                currentPage={1}
+                totalPages={1}
+              />
+            )}
           </>
         )}
 
-        {/* ========================================================================= */}
-        {/* VIEW 2: RECRUITMENT DETAIL PAGE (Image 2 & 3) */}
-        {/* ========================================================================= */}
-        {selectedExercise && (
+        {(routeJobId || selectedExercise) && (
           <div className="space-y-5 animate-in fade-in duration-200">
-            {/* Header Card */}
-            <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] tracking-tight">
-                    {selectedExercise.title}
-                  </h1>
-                  <span className="bg-[#E6F4EA] text-[#16730F] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                    {selectedExercise.status}
-                  </span>
-                </div>
-                <div className="text-xs sm:text-sm text-gray-500 font-medium mt-1 flex items-center gap-2 flex-wrap">
-                  <span>{selectedExercise.position}</span>
-                  <span>•</span>
-                  <span>Created {selectedExercise.createdDate}</span>
-                  <span>•</span>
-                  <span>Status: {selectedExercise.status}</span>
-                </div>
+            {detailError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-2xl px-4 py-3">
+                {detailError}
               </div>
+            )}
 
-              {/* Action Buttons Top Right */}
-              <div className="flex items-center gap-2.5 self-start md:self-auto shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsEditOpen(true)}
-                  className="inline-flex items-center gap-2 bg-[#1A3E32] hover:bg-[#132E25] active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all"
-                >
-                  <FaPencilAlt className="w-3 h-3" />
-                  Edit Recruitment
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsCloseModalOpen(true)}
-                  className="inline-flex items-center gap-2 bg-[#FF3B30] hover:bg-[#E03126] active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all"
-                >
-                  <FaTimes className="w-3.5 h-3.5" />
-                  Close Recruitment
-                </button>
+            {detailLoading && !selectedExercise ? (
+              <div className="bg-white border border-gray-200 rounded-3xl p-12 text-center text-sm text-gray-500 font-medium">
+                Loading recruitment details…
               </div>
-            </div>
+            ) : selectedExercise ? (
+              <>
+                <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] tracking-tight">
+                        {selectedExercise.title}
+                      </h1>
+                      <span className="bg-[#E6F4EA] text-[#16730F] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        {selectedExercise.status}
+                      </span>
+                      {detailLoading && (
+                        <span className="text-xs text-gray-400 font-medium">
+                          Refreshing…
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs sm:text-sm text-gray-500 font-medium mt-1 flex items-center gap-2 flex-wrap">
+                      <span>{selectedExercise.position}</span>
+                      <span>•</span>
+                      <span>Created {selectedExercise.createdDate}</span>
+                      <span>•</span>
+                      <span>Status: {selectedExercise.status}</span>
+                    </div>
+                  </div>
 
-            {/* 6 Stat Summary Cards Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              <RecruitmentStatCard
-                icon={FaUsers}
-                value={selectedExercise.invited}
-                label="TOTAL INVITED"
-                sublabel="Candidates who a..."
-                variant="green"
-              />
-              <RecruitmentStatCard
-                icon={FaUserCheck}
-                value={selectedExercise.accepted}
-                label="ACCEPTED"
-                sublabel="Candidates who a..."
-                variant="green"
-              />
-              <RecruitmentStatCard
-                icon={FaUserTimes}
-                value={selectedExercise.declined}
-                label="DECLINED"
-                sublabel="Candidates who ..."
-                variant="red"
-              />
-              <RecruitmentStatCard
-                icon={FaCheckCircle}
-                value={selectedExercise.passed}
-                label="PASSED"
-                sublabel="Candidates who p..."
-                variant="green"
-              />
-              <RecruitmentStatCard
-                icon={FaTimesCircle}
-                value={selectedExercise.failed}
-                label="FAILED"
-                sublabel="Candidates who d..."
-                variant="red"
-              />
-              <RecruitmentStatCard
-                icon={FaUserCheck}
-                value={selectedExercise.hired}
-                label="HIRED"
-                sublabel="Candidates succe..."
-                variant="green"
-              />
-            </div>
+                  <div className="flex items-center gap-2.5 self-start md:self-auto shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditOpen(true)}
+                      className="inline-flex items-center gap-2 bg-[#1A3E32] hover:bg-[#132E25] active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all"
+                    >
+                      <FaPencilAlt className="w-3 h-3" />
+                      Edit Recruitment
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsCloseModalOpen(true)}
+                      className="inline-flex items-center gap-2 bg-[#FF3B30] hover:bg-[#E03126] active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all"
+                    >
+                      <FaTimes className="w-3.5 h-3.5" />
+                      Close Recruitment
+                    </button>
+                  </div>
+                </div>
 
-            {/* Pipeline Progression Flow */}
-            <PipelineFlow
-              stages={selectedExercise.pipeline}
-              onAddStage={() => setIsStageBuilderOpen(true)}
-            />
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  <RecruitmentStatCard
+                    icon={FaUsers}
+                    value={selectedExercise.invited}
+                    label="TOTAL INVITED"
+                    sublabel="Candidates who a..."
+                    variant="green"
+                  />
+                  <RecruitmentStatCard
+                    icon={FaUserCheck}
+                    value={selectedExercise.accepted}
+                    label="ACCEPTED"
+                    sublabel="Candidates who a..."
+                    variant="green"
+                  />
+                  <RecruitmentStatCard
+                    icon={FaUserTimes}
+                    value={selectedExercise.declined}
+                    label="DECLINED"
+                    sublabel="Candidates who ..."
+                    variant="red"
+                  />
+                  <RecruitmentStatCard
+                    icon={FaCheckCircle}
+                    value={selectedExercise.passed}
+                    label="PASSED"
+                    sublabel="Candidates who p..."
+                    variant="green"
+                  />
+                  <RecruitmentStatCard
+                    icon={FaTimesCircle}
+                    value={selectedExercise.failed}
+                    label="FAILED"
+                    sublabel="Candidates who d..."
+                    variant="red"
+                  />
+                  <RecruitmentStatCard
+                    icon={FaUserCheck}
+                    value={selectedExercise.hired}
+                    label="HIRED"
+                    sublabel="Candidates succe..."
+                    variant="green"
+                  />
+                </div>
 
-            {/* Navigation Tabs */}
-            <div className="border-b border-gray-200 flex items-center gap-6 text-sm font-bold pt-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab("candidates")}
-                className={`pb-2 border-b-2 transition-colors ${
-                  activeTab === "candidates"
-                    ? "border-[#16730F] text-[#16730F]"
-                    : "border-transparent text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                Candidates
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("stages")}
-                className={`pb-2 border-b-2 transition-colors ${
-                  activeTab === "stages"
-                    ? "border-[#16730F] text-[#16730F]"
-                    : "border-transparent text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                Stages
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("timeline")}
-                className={`pb-2 border-b-2 transition-colors ${
-                  activeTab === "timeline"
-                    ? "border-[#16730F] text-[#16730F]"
-                    : "border-transparent text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                Timeline / Audit Log
-              </button>
-            </div>
+                <PipelineFlow
+                  stages={selectedExercise.pipeline}
+                  onAddStage={() => setIsStageBuilderOpen(true)}
+                  onDeleteStage={handleDeletePipelineStage}
+                  onReorderStages={handleReorderPipelineStages}
+                />
 
-            {/* TAB CONTENT: Candidates */}
-            {activeTab === "candidates" && (
-              <div className="space-y-4">
-                <div>
-                  <h2 className="text-lg font-bold text-[#1A3E32]">
+                <div className="border-b border-gray-200 flex items-center gap-6 text-sm font-bold pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("candidates")}
+                    className={`pb-2 border-b-2 transition-colors ${
+                      activeTab === "candidates"
+                        ? "border-[#16730F] text-[#16730F]"
+                        : "border-transparent text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
                     Candidates
-                  </h2>
-                  <p className="text-xs text-gray-500">
-                    Manage candidates progressing through this recruitment.
-                  </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("stages")}
+                    className={`pb-2 border-b-2 transition-colors ${
+                      activeTab === "stages"
+                        ? "border-[#16730F] text-[#16730F]"
+                        : "border-transparent text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
+                    Stages
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("timeline")}
+                    className={`pb-2 border-b-2 transition-colors ${
+                      activeTab === "timeline"
+                        ? "border-[#16730F] text-[#16730F]"
+                        : "border-transparent text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
+                    Timeline / Audit Log
+                  </button>
                 </div>
 
-                {/* Candidate Filter Bar */}
-                <RecruitmentFilterBar
-                  searchQuery={candidateSearch}
-                  onSearchChange={setCandidateSearch}
-                  searchPlaceholder="Search candidate name and email..."
-                  showDateFilter={false}
-                  statusOptions={[
-                    { label: "All Pipeline Stages", value: "all" },
-                    { label: "Screening", value: "screening" },
-                    { label: "Tech Interview", value: "tech_interview" },
-                    { label: "Final Offer", value: "final_offer" },
-                  ]}
-                  positionOptions={[
-                    { label: "All Outcomes", value: "all" },
-                    { label: "Pending", value: "pending" },
-                    { label: "Passed", value: "passed" },
-                    { label: "Failed", value: "failed" },
-                  ]}
-                  stageOptions={[
-                    { label: "Sort by: Newest", value: "newest" },
-                    { label: "Sort by: Oldest", value: "oldest" },
-                  ]}
-                  onApply={() => toast.info("Candidate filters applied")}
-                  onReset={() => setCandidateSearch("")}
-                />
+                {activeTab === "candidates" && (
+                  <div className="space-y-4">
+                    <div>
+                      <h2 className="text-lg font-bold text-[#1A3E32]">
+                        Candidates
+                      </h2>
+                      <p className="text-xs text-gray-500">
+                        Manage candidates progressing through this recruitment.
+                      </p>
+                    </div>
 
-                {/* Candidates Table */}
-                <CandidateListTable
-                  candidates={filteredCandidates}
-                  onViewCandidateProfile={(cand) =>
-                    handleViewCandidateProfile(cand, "overview")
-                  }
-                  onFeedback={(cand) => setFeedbackCandidate(cand)}
-                  onMoveStage={(cand) => setMoveCandidate(cand)}
-                />
-              </div>
-            )}
+                    <RecruitmentFilterBar
+                      searchQuery={candidateSearch}
+                      onSearchChange={setCandidateSearch}
+                      searchPlaceholder="Search candidate name and email..."
+                      showDateFilter={false}
+                      statusFilter={candidateStageFilter}
+                      onStatusChange={setCandidateStageFilter}
+                      positionFilter={candidateOutcomeFilter}
+                      onPositionChange={setCandidateOutcomeFilter}
+                      stageFilter={candidateSort}
+                      onStageChange={setCandidateSort}
+                      statusOptions={[
+                        { label: "All Pipeline Stages", value: "all" },
+                        ...(selectedExercise.stagesList || []).map((stg) => ({
+                          label: stg.name,
+                          value: String(stg.name || "")
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, "_")
+                            .replace(/^_+|_+$/g, ""),
+                        })),
+                      ]}
+                      positionOptions={[
+                        { label: "All Outcomes", value: "all" },
+                        { label: "Pending", value: "pending" },
+                        { label: "Passed", value: "passed" },
+                        { label: "Failed", value: "failed" },
+                      ]}
+                      stageOptions={[
+                        { label: "Sort by: Newest", value: "newest" },
+                        { label: "Sort by: Oldest", value: "oldest" },
+                      ]}
+                      onApply={() => {
+                        toast.success("Candidate filters applied");
+                      }}
+                      onReset={() => {
+                        setCandidateSearch("");
+                        setCandidateStageFilter("all");
+                        setCandidateOutcomeFilter("all");
+                        setCandidateSort("newest");
+                      }}
+                    />
 
-            {/* TAB CONTENT: Stages (Images 2 & 3) */}
-            {activeTab === "stages" && (
-              <InterviewStagesList
-                stages={selectedExercise.stagesList || []}
-                onAddStage={() => setIsStageBuilderOpen(true)}
-                onEditStage={(stg) => setEditingPipelineStage(stg)}
-                onDeleteStage={handleDeletePipelineStage}
-                onReorderStages={handleReorderPipelineStages}
-              />
-            )}
+                    <CandidateListTable
+                      candidates={filteredCandidates}
+                      onViewCandidateProfile={(cand) =>
+                        handleViewCandidateProfile(cand, "overview")
+                      }
+                      onFeedback={(cand) => setFeedbackCandidate(cand)}
+                      onMoveStage={(cand) => setMoveCandidate(cand)}
+                    />
+                  </div>
+                )}
 
-            {/* TAB CONTENT: Timeline (Image 3) */}
-            {activeTab === "timeline" && (
-              <RecruitmentAuditLog logs={selectedExercise.auditLogs || []} />
-            )}
+                {activeTab === "stages" && (
+                  <InterviewStagesList
+                    stages={selectedExercise.stagesList || []}
+                    onAddStage={() => setIsStageBuilderOpen(true)}
+                    onEditStage={(stg) => setEditingPipelineStage(stg)}
+                    onDeleteStage={handleDeletePipelineStage}
+                    onReorderStages={handleReorderPipelineStages}
+                  />
+                )}
+
+                {activeTab === "timeline" && (
+                  <RecruitmentAuditLog logs={selectedExercise.auditLogs || []} />
+                )}
+              </>
+            ) : null}
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* MODALS */}
-        {/* ========================================================================= */}
         <CreateRecruitmentModal
           isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
+          onClose={() => !creating && setIsCreateOpen(false)}
           onCreate={handleCreateExercise}
+          submitting={creating}
         />
 
         <EditRecruitmentModal
           isOpen={isEditOpen}
-          onClose={() => setIsEditOpen(false)}
+          onClose={() => !editing && setIsEditOpen(false)}
           exercise={selectedExercise}
-          onSave={handleSaveExercise}
+          onSave={handleEditSave}
+          submitting={editing}
         />
 
         <CloseRecruitmentModal
           isOpen={isCloseModalOpen}
-          onClose={() => setIsCloseModalOpen(false)}
+          onClose={() => !closing && setIsCloseModalOpen(false)}
           exerciseTitle={selectedExercise?.title}
           onConfirmClose={handleConfirmClose}
           breakdown={{
-            hired: selectedExercise?.hired || 2,
-            failed: selectedExercise?.failed || 17,
-            withdrawn: 4,
-            pending: selectedExercise?.declined || 3,
+            hired: selectedExercise?.hired || 0,
+            failed: selectedExercise?.failed || 0,
+            withdrawn: 0,
+            pending:
+              Number(selectedExercise?.appStats?.pending) ||
+              Number(selectedExercise?.appStats?.reviewed) ||
+              0,
           }}
         />
 
@@ -693,6 +1425,7 @@ export default function RecruitmentManagement() {
           isOpen={Boolean(viewProfileCandidate)}
           onClose={() => setViewProfileCandidate(null)}
           candidate={viewProfileCandidate}
+          jobId={selectedExercise?.id}
           initialTab={profileInitialTab}
           onMoveToNextStage={(cand) => setMoveCandidate(cand)}
           onChangeOutcome={(cand) => setMoveCandidate(cand)}
@@ -701,16 +1434,18 @@ export default function RecruitmentManagement() {
 
         <CandidateFeedbackModal
           isOpen={Boolean(feedbackCandidate)}
-          onClose={() => setFeedbackCandidate(null)}
+          onClose={() => !feedbackSaving && setFeedbackCandidate(null)}
           candidate={feedbackCandidate}
+          jobTitle={selectedExercise?.title || ""}
           onSubmitFeedback={handleSaveFeedback}
+          submitting={feedbackSaving}
         />
 
         <MoveCandidateModal
           isOpen={Boolean(moveCandidate)}
-          onClose={() => setMoveCandidate(null)}
+          onClose={() => !moving && setMoveCandidate(null)}
           candidate={moveCandidate}
-          stages={selectedExercise?.pipeline || []}
+          stages={selectedExercise?.stagesList || []}
           onMoveCandidate={handleMoveCandidateStage}
         />
       </div>

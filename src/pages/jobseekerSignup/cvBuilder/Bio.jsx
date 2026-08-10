@@ -23,6 +23,10 @@ import {
   formatPhoneForStorage,
   isPhoneValid,
 } from "../../../utils/displayFormatUtils";
+import {
+  PROFILE_PHOTO_MAX_BYTES,
+  getUploadSizeError,
+} from "../../../utils/uploadLimits";
 
 const Bio = () => {
   const navigate = useNavigate();
@@ -133,6 +137,12 @@ const Bio = () => {
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      const sizeError = getUploadSizeError(file, PROFILE_PHOTO_MAX_BYTES);
+      if (sizeError) {
+        toast.error(sizeError);
+        e.target.value = "";
+        return;
+      }
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     } else {

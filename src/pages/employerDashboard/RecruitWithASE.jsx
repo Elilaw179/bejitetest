@@ -629,6 +629,7 @@ const RecruitWithASE = () => {
           isOpen={showInviteModal}
           onClose={() => setShowInviteModal(false)}
           candidates={selectedCandidateData}
+          jobId={jobId}
           jobTitle={job?.title || ""}
           onSuccess={handleInviteSuccess}
         />
