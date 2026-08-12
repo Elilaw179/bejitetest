@@ -620,7 +620,7 @@ const Profile = () => {
                         user={profileData}
                         fallback="User"
                         badgeSize="md"
-                        className="text-slate-900"
+                        className="text-[#fff]"
                       />
                     </h1>
 
@@ -653,7 +653,7 @@ const Profile = () => {
 
                   {/* Job Title / Headline */}
                   {(profileData.job_title || profileData.title) && (
-                    <p className="text-slate-600 font-medium text-sm sm:text-base mt-1 break-words">
+                    <p className="text-[#fff] font-medium text-sm sm:text-base mt-1 break-words">
                       {formatDisplayText(
                         profileData.job_title || profileData.title,
                       )}
@@ -879,9 +879,7 @@ const Profile = () => {
                       onClick={() => setIsAboutExpanded(!isAboutExpanded)}
                       className="mt-3 text-[#16730F] hover:text-[#145a0c] font-semibold text-xs sm:text-sm transition-colors inline-flex items-center gap-1 group cursor-pointer"
                     >
-                      <span>
-                        {isAboutExpanded ? "See Less" : "See More"}
-                      </span>
+                      <span>{isAboutExpanded ? "See Less" : "See More"}</span>
                       <FaChevronDown
                         className={`w-3.5 h-3.5 transition-transform duration-200 ${
                           isAboutExpanded ? "rotate-180 text-[#16730F]" : ""
