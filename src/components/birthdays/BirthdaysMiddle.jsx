@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaRegSmileBeam } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { RecruiterSelect } from "../recruiter/recruiterOnboardingUi";
 import { INITIAL_BIRTHDAY_DATA } from "../../utils/mockJobs";
 import BirthdayBanner from "./BirthdayBanner";
 import TodayBirthdaysHighlight from "./TodayBirthdaysHighlight";
@@ -18,7 +17,7 @@ export default function BirthdaysMiddle() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(6);
+  const [pageSize] = useState(6);
   const [loading, setLoading] = useState(true);
 
   // Custom Wish Modal State
@@ -116,13 +115,6 @@ export default function BirthdaysMiddle() {
     setCurrentPage(1);
   };
 
-  const handlePageSizeChange = (val) => {
-    setPageSize(Number(val));
-    setCurrentPage(1);
-    setLoading(true);
-    setTimeout(() => setLoading(false), 300);
-  };
-
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
     setLoading(true);
@@ -170,23 +162,7 @@ export default function BirthdaysMiddle() {
             <FaSearch className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#1A3E32] h-4 w-4 pointer-events-none" />
           </div>
 
-          {/* <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-            <label className="text-xs text-gray-600 font-medium whitespace-nowrap">
-              Per page
-            </label>
-            <RecruiterSelect
-              closeBtn={false}
-              name="pageSize"
-              value={String(pageSize)}
-              onChange={(e) => handlePageSizeChange(e.target.value)}
-              options={[
-                { value: "6", label: "6" },
-                { value: "12", label: "12" },
-                { value: "18", label: "18" },
-              ]}
-              placeholder="Per page"
-            />
-          </div> */}
+          {/* Page-size selector temporarily disabled; pageSize stays fixed at 6. */}
         </div>
 
         {/* Category Tabs */}

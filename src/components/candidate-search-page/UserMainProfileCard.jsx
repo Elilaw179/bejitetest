@@ -238,11 +238,14 @@ const ProfileHeaderCard = ({
   const navigate = useNavigate();
   const connectUserId =
     resolveCandidateUserId(candidate) || connectUserIdProp || null;
-  const { sendRequest, acceptRequest, connectLabel, connectDisabled, status } =
+  const { sendRequest, acceptRequest, connectLabel, connectDisabled, status, sending } =
     useCandidateConnect(connectUserId, displayName);
   const [messaging, setMessaging] = useState(false);
+  const isStatusLoading = Boolean(status.loading);
+  const showConnectSpinner = isStatusLoading || sending;
 
   const handleConnect = async () => {
+    if (isStatusLoading || sending) return;
     if (status.pendingIncoming) {
       await acceptRequest();
       return;
@@ -307,15 +310,30 @@ const ProfileHeaderCard = ({
             <button
               type="button"
               onClick={handleConnect}
-              disabled={connectDisabled}
+              disabled={connectDisabled || isStatusLoading}
+              aria-busy={showConnectSpinner}
               className={`inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white transition-colors ${
-                connectDisabled
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-[#556B1F] hover:bg-[#6B8E23]'
+                isStatusLoading
+                  ? 'bg-[#556B1F]/80 cursor-wait'
+                  : connectDisabled
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-[#556B1F] hover:bg-[#6B8E23]'
               }`}
             >
-              <img className="w-4 h-4 shrink-0" src="/assets/images/repeate-one.svg" alt="" />
-              <span>{connectLabel}</span>
+              {showConnectSpinner ? (
+                <span
+                  className="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
+                  aria-hidden="true"
+                />
+              ) : (
+                <>
+                  <img className="w-4 h-4 shrink-0" src="/assets/images/repeate-one.svg" alt="" />
+                  <span>{connectLabel}</span>
+                </>
+              )}
+              {showConnectSpinner && (
+                <span className="sr-only">Loading connection status</span>
+              )}
             </button>
             <button
               type="button"

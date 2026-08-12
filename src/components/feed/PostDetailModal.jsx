@@ -63,6 +63,8 @@ export default function PostDetailModal({
     setLikesCount(Number(post.likesCount) || 0);
     setCommentsCount(Number(post.commentsCount) || 0);
     setComments([]);
+    // Sync from selected post fields only; full `post` would reset on unrelated updates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional field-level deps
   }, [isOpen, post?.id, post?.likedByMe, post?.savedByMe, post?.likesCount, post?.commentsCount]);
 
   const loadComments = useCallback(async () => {

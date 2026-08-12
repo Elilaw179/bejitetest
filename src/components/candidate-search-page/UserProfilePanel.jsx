@@ -393,12 +393,15 @@ const ProfileStats = ({ candidate, connectUserIdProp, onViewMainProfile }) => {
   const profile = getFormattedCandidateProfileFields(candidate);
   const connectUserId =
     resolveCandidateUserId(candidate) || connectUserIdProp || null;
-  const { sendRequest, acceptRequest, connectLabel, connectDisabled, status } = useCandidateConnect(
+  const { sendRequest, acceptRequest, connectLabel, connectDisabled, status, sending } = useCandidateConnect(
     connectUserId,
     displayName,
   );
+  const isStatusLoading = Boolean(status.loading);
+  const showConnectSpinner = isStatusLoading || sending;
 
   const handleConnectClick = async () => {
+    if (isStatusLoading || sending) return;
     if (status.pendingIncoming) {
       await acceptRequest();
     } else if (!status.isConnected && !status.pendingOutgoing && !status.loading) {
@@ -452,20 +455,31 @@ const ProfileStats = ({ candidate, connectUserIdProp, onViewMainProfile }) => {
 <ActionButtons
       onViewMainProfile={onViewMainProfile}
       connectLabel={connectLabel}
-      connectDisabled={connectDisabled}
+      connectDisabled={connectDisabled || isStatusLoading}
+      loading={showConnectSpinner}
+      isStatusLoading={isStatusLoading}
       handleConnectClick={handleConnectClick}
     />
   </div>
   );
 };
 
-const ActionButtons = ({ onViewMainProfile, connectLabel, connectDisabled, handleConnectClick }) => (
+const ActionButtons = ({
+  onViewMainProfile,
+  connectLabel,
+  connectDisabled,
+  loading = false,
+  isStatusLoading = false,
+  handleConnectClick,
+}) => (
   <div className="flex flex-col sm:flex-row sm:justify-start items-center mt-6 gap-3 w-full">
     <Button
       icon="/assets/images/repeate-one.svg"
       text={connectLabel}
       onClick={handleConnectClick}
       disabled={connectDisabled}
+      loading={loading}
+      isStatusLoading={isStatusLoading}
     />
     {/* <Button icon="/assets/images/Send_Submit.svg" text="Reviews" /> */}
     <button 
@@ -477,19 +491,41 @@ const ActionButtons = ({ onViewMainProfile, connectLabel, connectDisabled, handl
   </div>
 );
 
-const Button = ({ icon, text, onClick, disabled = false }) => (
+const Button = ({
+  icon,
+  text,
+  onClick,
+  disabled = false,
+  loading = false,
+  isStatusLoading = false,
+}) => (
   <button
     type="button"
     onClick={onClick}
     disabled={disabled}
+    aria-busy={loading}
     className={`w-full sm:w-[180px] text-center text-[12px] text-[#FFFFFF] flex p-2 rounded-3xl gap-2 justify-center items-center transition-colors ${
-      disabled
-        ? "bg-[#828282] cursor-not-allowed opacity-80"
-        : "bg-[#556B1F] hover:bg-[#6B8E23]"
+      isStatusLoading
+        ? "bg-[#556B1F]/80 cursor-wait"
+        : disabled
+          ? "bg-[#828282] cursor-not-allowed opacity-80"
+          : "bg-[#556B1F] hover:bg-[#6B8E23]"
     }`}
   >
-    <img className="w-4 h-4" src={icon} alt={text} />
-    {text}
+    {loading ? (
+      <>
+        <span
+          className="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
+          aria-hidden="true"
+        />
+        <span className="sr-only">Loading connection status</span>
+      </>
+    ) : (
+      <>
+        <img className="w-4 h-4" src={icon} alt="" />
+        {text}
+      </>
+    )}
   </button>
 );
 

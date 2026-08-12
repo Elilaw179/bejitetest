@@ -1,4 +1,4 @@
-import { Navigate, Route, useLocation } from "react-router-dom";
+import { Route } from "react-router-dom";
 import {
   Recruitment,
   PostDetailPage,
@@ -17,11 +17,7 @@ import {
   BadgePaymentCallback,
   JobVacancyListing,
 } from "../lazyPages.js";
-
-function MessagesToChatsRedirect() {
-  const { search } = useLocation();
-  return <Navigate to={`/chats${search}`} replace />;
-}
+import MessagesToChatsRedirect from "./MessagesToChatsRedirect.jsx";
 
 export const socialRoutes = (
   <>

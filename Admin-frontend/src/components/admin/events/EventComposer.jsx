@@ -46,9 +46,6 @@ const TABS = [
 const inputBase =
   "w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-gray-800 focus:border-[#16730F] focus:ring-2 focus:ring-[#16730F]/10 focus:bg-white outline-none transition-all duration-200 placeholder:text-gray-400";
 
-const selectBase =
-  "w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-gray-800 focus:border-[#16730F] focus:ring-2 focus:ring-[#16730F]/10 outline-none transition-all duration-200 appearance-none cursor-pointer";
-
 const Field = ({ label, icon: Icon, required, hint, children }) => (
   <div>
     <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
