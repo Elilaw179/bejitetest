@@ -8,7 +8,7 @@ import DisplayNameWithBadge from '../DisplayNameWithBadge';
 
 const CONVERSATION_UPDATED = 'chat:conversation-updated';
 
-function ChatsLeft({ onSelectChat }) {
+function ChatsLeft({ onSelectChat, selectedChat }) {
   const [conversations, setConversations] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -117,17 +117,17 @@ function ChatsLeft({ onSelectChat }) {
       <img
         src={imageUrl}
         alt={alt}
-        className={`${sizeClass} rounded-full object-cover`}
+        className={`${sizeClass} rounded-full object-cover shrink-0`}
       />
     ) : (
-      <div className={`${sizeClass} rounded-full bg-[#556B1F] text-white font-semibold flex items-center justify-center`}>
+      <div className={`${sizeClass} rounded-full bg-[#556B1F] text-white font-semibold flex items-center justify-center shrink-0`}>
         {getInitials(firstName, lastName)}
       </div>
     )
   );
 
   return (
-    <div className="bg-[#1A3E32] h-full flex flex-col">
+    <div className="bg-[#1A3E32] h-full flex flex-col overflow-hidden">
       {/* Header */}
       {/* <div className="flex items-center gap-2 p-4 ">
         <button
@@ -142,41 +142,37 @@ function ChatsLeft({ onSelectChat }) {
       </div> */}
 
       {/* Search Bar */}
-      <div className="p-4">
-        <div className="flex items-center bg-white rounded-full px-3 py-2">
+      <div className="p-3 sm:p-4 shrink-0">
+        <div className="flex items-center bg-white rounded-full px-3 py-2 shadow-inner">
           <input
-            className="w-full outline-none bg-transparent text-sm placeholder-gray-500"
+            className="w-full outline-none bg-transparent text-sm placeholder-gray-500 text-gray-800"
             placeholder="Search users to start a conversation"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           {searchLoading ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500 ml-2"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500 ml-2 shrink-0"></div>
           ) : (
-            <FaSearch className="text-gray-500 ml-2" />
+            <FaSearch className="text-gray-500 ml-2 shrink-0" />
           )}
         </div>
       </div>
 
-    
-   
-
-
       {/* Conversations/Search Results List */}
-      <div className="flex-1 overflow-y-auto nfl-sidebar-scroll scroll-smooth border-t border-[#556B1F]">
-        <div className="px-2 mt-4">
+      <div className="flex-1 overflow-y-auto nfl-sidebar-scroll scroll-smooth border-t border-[#556B1F]/60">
+        <div className="p-2 space-y-1">
           {loading && !isSearching ? (
-            <div className="text-center text-[#556B1F] py-4">
+            <div className="text-center text-white/70 py-6 text-sm">
               Loading conversations...
             </div>
           ) : error ? (
-            <div className="text-center text-red-400 py-4">
+            <div className="text-center text-red-300 py-6 text-sm px-2">
               {error}
             </div>
           ) : isSearching ? (
             // Show search results
             searchResults.length === 0 ? (
-              <div className="text-center text-[#fff] py-4">
+              <div className="text-center text-white/70 py-6 text-sm">
                 {searchLoading ? 'Searching...' : 'No users found'}
               </div>
             ) : (
@@ -189,9 +185,9 @@ function ChatsLeft({ onSelectChat }) {
                   <div
                     key={user.id}
                     onClick={() => handleUserSelect(user)}
-                    className="flex items-center gap-3 p-3 mx-2 rounded-lg hover:bg-[#556B1F]/20 cursor-pointer transition-colors"
+                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#556B1F]/30 cursor-pointer transition-colors w-full overflow-hidden"
                   >
-                    <div className="relative">
+                    <div className="relative shrink-0">
                       <Avatar
                         imageUrl={profileImage}
                         firstName={user.firstName}
@@ -199,20 +195,20 @@ function ChatsLeft({ onSelectChat }) {
                         alt={displayName}
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1 gap-2">
-                        <div className="min-w-0 flex-1">
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex items-center justify-between mb-1 gap-2 w-full min-w-0 overflow-hidden">
+                        <div className="min-w-0 flex-1 overflow-hidden">
                           <DisplayNameWithBadge
                             user={user}
                             fallback={displayName}
                             badgeSize="xs"
                             badgePlacement="below"
-                            className="items-start"
-                            nameClassName="text-white text-sm font-medium"
+                            className="items-start w-full min-w-0 overflow-hidden"
+                            nameClassName="text-white text-sm font-medium truncate block w-full max-w-full"
                           />
                         </div>
                       </div>
-                      <p className="text-[#fff] text-xs truncate">
+                      <p className="text-white/70 text-xs truncate w-full max-w-full">
                         {user.jobTitle || 'Click to start conversation'}
                       </p>
                     </div>
@@ -223,11 +219,11 @@ function ChatsLeft({ onSelectChat }) {
           ) : (
             // Show conversations
             conversations.length === 0 ? (
-              <div className="text-center text-[#556B1F] py-4">
-                No conversations yet. Search for users to start chatting!
+              <div className="text-center text-white/70 py-6 text-xs sm:text-sm px-4">
+                No conversations yet. Search for users above to start chatting!
               </div>
             ) : (
-conversations.map((conversation) => {
+              conversations.map((conversation) => {
                 const otherUser = conversation.other_user;
                 const displayName = formatDisplayPersonName(otherUser, 'Unknown User');
                 const profileImageRaw = otherUser?.profilePictureUrl || otherUser?.profilePhoto || otherUser?.profile_photo || '';
@@ -236,14 +232,21 @@ conversations.map((conversation) => {
                   new Date(conversation.last_message_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) :
                   '';
                 const unreadCount = conversation.unread_count || 0;
+                const isSelected = selectedChat && String(selectedChat.id) === String(conversation.id);
 
                 return (
                   <div
                     key={conversation.id}
                     onClick={() => onSelectChat(conversation)}
-                    className={`flex items-center gap-3 p-3 mx-2 rounded-lg hover:bg-[#556B1F]/20 cursor-pointer transition-colors ${unreadCount > 0 ? 'bg-[#556B1F]/10' : ''}`}
+                    className={`flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all duration-150 w-full overflow-hidden ${
+                      isSelected
+                        ? 'bg-[#556B1F]/40 ring-1 ring-white/20'
+                        : unreadCount > 0
+                        ? 'bg-[#556B1F]/20 hover:bg-[#556B1F]/30'
+                        : 'hover:bg-[#556B1F]/20'
+                    }`}
                   >
-                    <div className="relative">
+                    <div className="relative shrink-0">
                       <Avatar
                         imageUrl={profileImage}
                         firstName={otherUser?.firstName}
@@ -251,26 +254,28 @@ conversations.map((conversation) => {
                         alt={displayName}
                       />
                       {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-[#fff] text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-md">
+                        <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] rounded-full h-4 font-extrabold w-4 sm:h-5 sm:w-5 flex items-center justify-center shadow-md ring-2 ring-[#1A3E32]">
                           {unreadCount > 9 ? '9+' : unreadCount}
                         </span>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <div className="min-w-0 flex-1">
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex items-center justify-between gap-2 mb-1 w-full min-w-0 overflow-hidden">
+                        <div className="min-w-0 flex-1 overflow-hidden">
                           <DisplayNameWithBadge
                             user={otherUser}
                             fallback={displayName}
                             badgeSize="xs"
                             badgePlacement="below"
-                            className="items-start"
-                            nameClassName={`text-sm truncate ${unreadCount > 0 ? 'text-white font-bold' : 'text-white font-medium'}`}
+                            className="items-start w-full min-w-0 overflow-hidden"
+                            nameClassName={`text-sm truncate block w-full max-w-full ${unreadCount > 0 ? 'text-white font-bold' : 'text-white/95 font-medium'}`}
                           />
                         </div>
-                        <span className={`text-xs flex-shrink-0 pt-0.5 ${unreadCount > 0 ? 'text-white font-semibold' : 'text-[#fff]'}`}>{lastMessageTime}</span>
+                        <span className={`text-[11px] shrink-0 whitespace-nowrap pl-1 ${unreadCount > 0 ? 'text-emerald-300 font-semibold' : 'text-white/60'}`}>
+                          {lastMessageTime}
+                        </span>
                       </div>
-                      <p className={`text-xs truncate ${unreadCount > 0 ? 'text-white/80 font-semibold' : 'text-[#fff]'}`}>
+                      <p className={`text-xs truncate w-full max-w-full ${unreadCount > 0 ? 'text-white font-medium' : 'text-white/70'}`}>
                         {formatConversationPreview(conversation)}
                       </p>
                     </div>

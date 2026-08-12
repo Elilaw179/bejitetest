@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaComment } from 'react-icons/fa';
+import { FaComment, FaChevronDown } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
 import { fetchFullUserProfile } from '../../services/fetchFullUserProfile';
@@ -25,6 +25,7 @@ const UserMainProfileCard = ({ candidateId, connectUserId: connectUserIdProp }) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
+  const [isAboutExpanded, setIsAboutExpanded] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -124,6 +125,26 @@ const UserMainProfileCard = ({ candidateId, connectUserId: connectUserIdProp }) 
   const title = profileFields.title;
   const location = profileFields.location;
 
+  const getAboutPreview = (text) => {
+    if (!text) return { text: "", needsTruncation: false };
+    const words = text.split(/\s+/).filter(Boolean);
+    if (text.length > 240 || words.length > 35) {
+      const truncatedByChar = text.slice(0, 240).trim();
+      const lastSpaceIndex = truncatedByChar.lastIndexOf(" ");
+      const cleanTruncated =
+        lastSpaceIndex > 80
+          ? truncatedByChar.slice(0, lastSpaceIndex)
+          : truncatedByChar;
+      return {
+        text: cleanTruncated + "...",
+        needsTruncation: true,
+      };
+    }
+    return { text, needsTruncation: false };
+  };
+
+  const aboutPreview = aboutText ? getAboutPreview(aboutText) : { text: "", needsTruncation: false };
+
   const salaryPreview = formatSalaryExpectation(
     candidate?.salary_expectation,
     candidate?.currency,
@@ -148,7 +169,25 @@ const UserMainProfileCard = ({ candidateId, connectUserId: connectUserIdProp }) 
       {aboutText && (
         <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-[#1A3E32] mb-4">About</h2>
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{aboutText}</p>
+          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+            {!aboutPreview.needsTruncation || isAboutExpanded
+              ? aboutText
+              : aboutPreview.text}
+          </p>
+          {aboutPreview.needsTruncation && (
+            <button
+              type="button"
+              onClick={() => setIsAboutExpanded(!isAboutExpanded)}
+              className="mt-3 text-[#16730F] hover:text-[#145a0c] font-semibold text-xs sm:text-sm transition-colors inline-flex items-center gap-1 group cursor-pointer"
+            >
+              <span>{isAboutExpanded ? "See Less" : "See More"}</span>
+              <FaChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  isAboutExpanded ? "rotate-180 text-[#16730F]" : ""
+                }`}
+              />
+            </button>
+          )}
         </section>
       )}
 
@@ -199,11 +238,19 @@ const ProfileHeaderCard = ({
   const navigate = useNavigate();
   const connectUserId =
     resolveCandidateUserId(candidate) || connectUserIdProp || null;
-  const { sendRequest, connectLabel, connectDisabled } = useCandidateConnect(
-    connectUserId,
-    displayName,
-  );
+  const { sendRequest, acceptRequest, connectLabel, connectDisabled, status } =
+    useCandidateConnect(connectUserId, displayName);
   const [messaging, setMessaging] = useState(false);
+
+  const handleConnect = async () => {
+    if (status.pendingIncoming) {
+      await acceptRequest();
+      return;
+    }
+    if (!connectDisabled) {
+      sendRequest();
+    }
+  };
 
   const handleMessage = async () => {
     if (!connectUserId || messaging) return;
@@ -259,7 +306,7 @@ const ProfileHeaderCard = ({
           <div className="mt-4 grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 sm:gap-3 w-full max-w-lg mx-auto sm:mx-0">
             <button
               type="button"
-              onClick={sendRequest}
+              onClick={handleConnect}
               disabled={connectDisabled}
               className={`inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white transition-colors ${
                 connectDisabled

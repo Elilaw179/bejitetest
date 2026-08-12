@@ -5,6 +5,7 @@ import NavigationButtons from "../../components/NavigationButtons";
 import Header from "../../components/Header";
 import { ChevronDown } from "lucide-react";
 import useRecruiterProfile from "../../services/recruiterProfile";
+import { RecruiterSelect } from "../../components/recruiter/recruiterOnboardingUi";
 
 const SelectId = () => {
   const navigate = useNavigate();
@@ -57,32 +58,20 @@ const SelectId = () => {
       <main className="flex-1 w-full flex flex-col justify-center py-6 sm:py-10">
         <div className="max-w-xl mx-auto w-full flex flex-col items-center justify-center p-4">
           <div className="w-full bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-            <label
-              className="font-bold text-[10px] text-gray-800 tracking-wider mb-3 block"
-              htmlFor="id_type"
-            >
-              SELECT ID TYPE
-            </label>
-
-            <div className="relative">
-              <select
-                id="id_type"
-                name="id_type"
-                value={formData.id_type}
-                onChange={handleChange}
-                className="w-full bg-white border border-gray-300 rounded-xl px-4 h-12 text-sm text-gray-800 outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm"
-              >
-                <option value="">Select</option>
-                <option value="NIN">National Identification Number (NIN)</option>
-                <option value="International Passport">International Passport</option>
-                <option value="Driver's License">Driver's License</option>
-                <option value="PVC">Permanent Voter's Card (PVC)</option>
-                <option value="National Identity Card">National Identity Card</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700">
-                <ChevronDown className="w-4 h-4 text-gray-800" />
-              </div>
-            </div>
+            <RecruiterSelect
+              label="SELECT ID TYPE"
+              name="id_type"
+              value={formData.id_type}
+              onChange={handleChange}
+              options={[
+                { value: "NIN", label: "National Identification Number (NIN)" },
+                { value: "International Passport", label: "International Passport" },
+                { value: "Driver's License", label: "Driver's License" },
+                { value: "PVC", label: "Permanent Voter's Card (PVC)" },
+                { value: "National Identity Card", label: "National Identity Card" },
+              ]}
+              placeholder="Select ID Type"
+            />
           </div>
         </div>
       </main>

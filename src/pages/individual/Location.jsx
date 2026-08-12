@@ -9,9 +9,7 @@ import Header from "../../components/Header";
 import useRecruiterProfile from "../../services/recruiterProfile";
 import { COUNTRY_OPTIONS } from "../../data/jobTypeData";
 import useCountryStateOptions from "../../hooks/useCountryStateOptions";
-
-const selectClassName =
-  "w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm appearance-none cursor-pointer";
+import { RecruiterSelect } from "../../components/recruiter/recruiterOnboardingUi";
 
 const Location = () => {
   const navigate = useNavigate();
@@ -28,64 +26,66 @@ const Location = () => {
   const [isManualCity, setIsManualCity] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (!isEditMode || !recruiterData) return;
-
-    setFormData({
-      address: recruiterData.address || "",
-      city: recruiterData.city || "",
-      country: recruiterData.country || "",
-    });
-  }, [isEditMode, recruiterData]);
-
   const { states: stateOptions } = useCountryStateOptions(formData.country);
 
   useEffect(() => {
-    if (!recruiterData?.city || !formData.country || stateOptions.length === 0) return;
-    setIsManualCity(!stateOptions.includes(recruiterData.city));
-  }, [recruiterData?.city, formData.country, stateOptions]);
+    if (isEditMode && recruiterData) {
+      setFormData({
+        address: recruiterData.address || "",
+        city: recruiterData.city || "",
+        country: recruiterData.country || "",
+      });
+    }
+  }, [isEditMode, recruiterData]);
+
+  useEffect(() => {
+    if (!formData.country) return;
+    if (stateOptions.length === 0) {
+      setIsManualCity(true);
+      return;
+    }
+    if (formData.city) {
+      setIsManualCity(!stateOptions.includes(formData.city));
+    }
+  }, [formData.country, formData.city, stateOptions]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "country") {
-      setFormData({ ...formData, country: value, city: "" });
+      setFormData({
+        ...formData,
+        country: value,
+        city: "",
+      });
       setIsManualCity(false);
     } else {
       setFormData({ ...formData, [name]: value });
     }
   };
 
-  const isFormComplete = Object.values(formData).every((v) => v.trim() !== "");
+  const isFormComplete =
+    formData.address.trim() !== "" &&
+    formData.city.trim() !== "" &&
+    formData.country.trim() !== "";
 
   const handleNextStep = async () => {
-    if (!isFormComplete || submitting) {
-      if (!isFormComplete) toast.error("Please complete all fields.");
+    if (!isFormComplete) {
+      toast.error("Please complete all fields.");
       return;
     }
 
-    const submitData = async () => {
-      await updateLocation({
-        address: formData.address.trim(),
-        city: formData.city.trim(),
-        country: formData.country.trim(),
-      });
-      return "Location saved successfully!";
-    };
-
     setSubmitting(true);
     try {
-      await toast.promise(submitData(), {
-        pending: "Saving location...",
-        success: "Location saved successfully!",
-        error: {
-          render({ data }) {
-            return `Save failed: ${data}`;
-          },
-        },
+      await updateLocation({
+        address: formData.address,
+        city: formData.city,
+        country: formData.country,
       });
-      navigate(getPath(4));
+      toast.success("Location saved successfully!");
+      navigate(getPath(currentStep + 1));
     } catch (error) {
       console.error(error);
+      toast.error("Failed to save location.");
     } finally {
       setSubmitting(false);
     }
@@ -112,19 +112,15 @@ const Location = () => {
     if (formData.country && stateOptions.length === 0) {
       return (
         <div className="space-y-2">
-          <div className="relative" onClick={() => setIsManualCity(true)}>
-            <select
+          <div onClick={() => setIsManualCity(true)}>
+            <RecruiterSelect
               name="city"
               value={formData.city}
               onChange={handleChange}
-              className={`${selectClassName} pointer-events-none`}
+              options={[]}
+              placeholder="Select your state"
               disabled
-            >
-              <option value="">Select your state</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
-              <ChevronDown className="w-4 h-4 text-gray-800" />
-            </div>
+            />
           </div>
           <p className="text-[11px] text-gray-500">
             No states found.{" "}
@@ -141,27 +137,14 @@ const Location = () => {
     }
 
     return (
-      <div className="relative">
-        <select
-          name="city"
-          value={formData.city}
-          onChange={handleChange}
-          disabled={!formData.country}
-          className={`${selectClassName} disabled:bg-gray-50 disabled:cursor-not-allowed`}
-        >
-          <option value="">
-            {formData.country ? "Select your state" : "Select country first"}
-          </option>
-          {stateOptions.map((state) => (
-            <option key={state} value={state}>
-              {state}
-            </option>
-          ))}
-        </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
-          <ChevronDown className="w-4 h-4 text-gray-800" />
-        </div>
-      </div>
+      <RecruiterSelect
+        name="city"
+        value={formData.city}
+        onChange={handleChange}
+        options={stateOptions}
+        placeholder={formData.country ? "Select your state" : "Select country first"}
+        disabled={!formData.country}
+      />
     );
   };
 
@@ -205,24 +188,13 @@ const Location = () => {
               <label className="font-semibold text-[12px] mb-2 block">
                 COUNTRY
               </label>
-              <div className="relative">
-                <select
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  className={selectClassName}
-                >
-                  <option value="">Select your country</option>
-                  {COUNTRY_OPTIONS.map((country) => (
-                    <option key={country} value={country}>
-                      {country}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
-                  <ChevronDown className="w-4 h-4 text-gray-800" />
-                </div>
-              </div>
+              <RecruiterSelect
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                options={COUNTRY_OPTIONS}
+                placeholder="Select your country"
+              />
             </div>
 
             <div className="w-full lg:w-1/2">

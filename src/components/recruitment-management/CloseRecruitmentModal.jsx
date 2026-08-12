@@ -46,7 +46,9 @@ export default function CloseRecruitmentModal({
         {/* Warning Alert Box */}
         <div className="bg-[#FDF2F2] border border-[#FCA5A5]/60 rounded-2xl p-4 my-4">
           <p className="text-xs sm:text-sm text-red-700 font-medium leading-relaxed">
-            This recruitment will be archived and become read-only. No further candidates can be moved, invited, or edited. This cannot be undone from this screen.
+            This recruitment will be archived and become read-only. No further
+            candidates can be moved, invited, or edited. This cannot be undone
+            from this screen.
           </p>
         </div>
 

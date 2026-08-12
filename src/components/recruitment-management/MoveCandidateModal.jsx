@@ -17,31 +17,40 @@ export default function MoveCandidateModal({
 
   useEffect(() => {
     if (candidate) {
-      setSelectedStage(defaultTargetStage);
+      const first =
+        stages?.[0]?.id != null
+          ? String(stages[0].id)
+          : stages?.[0]?.name || defaultTargetStage;
+      setSelectedStage(String(first));
     }
-  }, [candidate]);
+  }, [candidate, stages]);
 
   if (!isOpen || !candidate) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (onMoveCandidate) {
-      onMoveCandidate(candidate, selectedStage);
+      await onMoveCandidate(candidate, selectedStage);
     }
-    onClose();
   };
 
   const stageOptions =
     stages && stages.length > 0
-      ? stages.map((stg) => ({ label: stg.name, value: stg.name }))
+      ? stages.map((stg) => ({
+          label: stg.name,
+          value: String(stg.id ?? stg.name),
+        }))
       : [
-          { label: "Accepted", value: "Accepted" },
-          { label: "Screening", value: "Screening" },
-          { label: "Technical Assessment", value: "Technical Assessment" },
-          { label: "Final Offer", value: "Final Offer" },
+          { label: "Applied", value: "Applied" },
+          { label: "Under Review", value: "Under Review" },
+          { label: "Interview", value: "Interview" },
           { label: "Hired", value: "Hired" },
           { label: "Rejected", value: "Rejected" },
         ];
+
+  const selectedLabel =
+    stageOptions.find((opt) => String(opt.value) === String(selectedStage))
+      ?.label || selectedStage;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -104,7 +113,7 @@ export default function MoveCandidateModal({
               TARGET STAGE
             </div>
             <div className="text-sm font-bold text-[#1A3E32] mt-1 truncate">
-              {selectedStage}
+              {selectedLabel}
             </div>
           </div>
         </div>

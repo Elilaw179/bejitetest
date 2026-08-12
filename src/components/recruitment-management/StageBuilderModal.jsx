@@ -9,12 +9,12 @@ export default function StageBuilderModal({ isOpen, onClose, onAddStage }) {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!stageName.trim()) return;
 
     if (onAddStage) {
-      onAddStage({
+      const result = await onAddStage({
         id: Date.now(),
         name: stageName.trim(),
         description: description.trim() || "Candidate assessment stage",
@@ -23,9 +23,9 @@ export default function StageBuilderModal({ isOpen, onClose, onAddStage }) {
         count: 0,
         status: "Active",
       });
+      if (result === false) return;
     }
 
-    // Reset & close
     setStageName("");
     setDescription("");
     setInterviewer("Technical Panel");

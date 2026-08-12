@@ -16,17 +16,15 @@ export default function ProfileConnectActions({ userId, displayName }) {
     currentUser?.id != null &&
     String(currentUser.id) === normalizedUserId;
 
-  const { sendRequest, connectLabel, connectDisabled, status } = useCandidateConnect(
-    normalizedUserId,
-    displayName,
-  );
+  const { sendRequest, acceptRequest, connectLabel, connectDisabled, status } =
+    useCandidateConnect(normalizedUserId, displayName);
   const [messaging, setMessaging] = useState(false);
 
   if (!normalizedUserId || isSelf) return null;
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     if (status.pendingIncoming) {
-      navigate('/connection');
+      await acceptRequest();
       return;
     }
     if (!connectDisabled) {
@@ -54,26 +52,26 @@ export default function ProfileConnectActions({ userId, displayName }) {
   };
 
   return (
-    <div className="mt-4 grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 sm:gap-3 w-full max-w-lg mx-auto sm:mx-0">
+    <div className="mt-4 grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 sm:gap-3 w-full max-w-lg mx-auto sm:mx-0 min-w-0">
       <button
         type="button"
         onClick={handleConnect}
         disabled={connectDisabled}
-        className={`inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white transition-colors ${
+        className={`inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full text-sm font-semibold text-white transition-colors ${
           connectDisabled
             ? 'bg-gray-400 cursor-not-allowed'
             : 'bg-[#16730F] hover:bg-[#145a0c]'
         }`}
       >
         <FaUserPlus className="shrink-0" />
-        <span>{connectLabel}</span>
+        <span className="truncate">{connectLabel}</span>
       </button>
       <button
         type="button"
         onClick={handleMessage}
         disabled={messaging}
         aria-busy={messaging}
-        className="inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-[#16730F] border-2 border-[#16730F] bg-white hover:bg-[#16730F]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full text-sm font-semibold text-[#16730F] border-2 border-[#16730F] bg-white hover:bg-[#16730F]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {messaging ? (
           <span

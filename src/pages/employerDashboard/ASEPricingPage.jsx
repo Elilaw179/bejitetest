@@ -60,6 +60,7 @@ const ASEPricingPage = () => {
         features: [
           "5 ASE Searches / Month (10 results/search)",
           "5 Job Posts / Month",
+          "Recruitment Management included",
           "Applicant access included before/after expiry",
           "₦10,000 AdPro ad credit",
           "Verified Badge included",
@@ -91,6 +92,7 @@ const ASEPricingPage = () => {
         features: [
           "20 ASE Searches / Month (20 results/search)",
           "20 Job Posts / Month",
+          "Recruitment Management included",
           "Full Applicant Access (before/after expiry)",
           "₦20,000 AdPro ad credit",
           "Verified Badge included",
@@ -122,6 +124,7 @@ const ASEPricingPage = () => {
         features: [
           "60 ASE Searches / Month (30 results/search)",
           "Unlimited Job Posts (Fair Use)",
+          "Recruitment Management included",
           "Full Applicant Access (before/after expiry)",
           "₦30,000 AdPro ad credit",
           "Verified Badge included",
@@ -347,13 +350,13 @@ const ASEPricingPage = () => {
                   </h4>
                   <p className="text-sm text-gray-500 mt-0.5">
                     {eligibility.accessType === "free_trial" &&
-                      "Activate below for 7 free searches and 5 free job posts"}
+                      "Activate below for 7 free searches, 5 free job posts, and 2 recruitment exercises"}
                     {eligibility.accessType === "free_trial_upgrade" &&
                       eligibility.message}
                     {eligibility.accessType === "one_time" &&
                       "Purchase more searches or upgrade to unlimited"}
                     {eligibility.accessType === "subscription" &&
-                      "Plan limits apply to searches, job posts, and AdPro credits this billing period"}
+                      "Plan limits apply to searches, job posts, AdPro credits, and recruitment management this billing period"}
                     {eligibility.accessType === "none" &&
                       "Choose a plan below to continue"}
                   </p>
@@ -462,7 +465,7 @@ const ASEPricingPage = () => {
                   {eligibility.accessType === "free_trial_upgrade"
                     ? eligibility.message ||
                       "Receive additional trial candidate searches to evaluate match compatibility."
-                    : "Get 7 free ASE searches (20 results each) and 5 free job posts to try Bejite recruiting."}
+                    : "Get 7 free ASE searches (20 results each), 5 free job posts, and 2 recruitment exercises to try Bejite recruiting."}
                 </p>
                 <button
                   onClick={async () => {

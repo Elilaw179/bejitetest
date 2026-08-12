@@ -51,6 +51,7 @@ import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import PostMediaGallery from "../PostMediaGallery";
 import PostPoll from "../feed/PostPoll";
 import PostActions from "../feed/PostActions";
+import PostDetailModal from "../feed/PostDetailModal";
 import PostCommentsSection from "../PostCommentsSection";
 import FeedLoadMoreButton from "../FeedLoadMoreButton";
 import AdCard from "../Ads/AdCard";
@@ -548,9 +549,10 @@ const RecruitmentPostCard = ({
   }, [reduxUser, currentUserPhotoUrl]);
 
   const navigate = useNavigate();
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   const openPostDetail = () => {
-    navigate(getPostDetailPath(post.id));
+    setShowDetailModal(true);
   };
 
   const isOwner = String(post.authorId) === String(currentUserId);
@@ -875,21 +877,7 @@ const RecruitmentPostCard = ({
           </div>
         </div>
       ) : (
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={(e) => {
-            if (e.target.closest("a, button")) return;
-            openPostDetail();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              openPostDetail();
-            }
-          }}
-          className="cursor-pointer rounded-lg"
-        >
+        <div className="rounded-lg">
           <p className="text-black text-sm sm:text-base whitespace-pre-wrap break-words">
             {(() => {
               const body = post.body || "";
@@ -1031,6 +1019,16 @@ const RecruitmentPostCard = ({
         users={usersListUsers}
         loading={usersListLoading}
         type={usersListType}
+      />
+
+      <PostDetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        post={post}
+        onLike={onLike}
+        onSave={onSave}
+        onShare={onShare}
+        currentUserId={currentUserId}
       />
     </div>
   );

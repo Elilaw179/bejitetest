@@ -1,33 +1,7 @@
 import React from "react";
 
 export default function RecruitmentAuditLog({ logs = [] }) {
-  const defaultLogs = [
-    {
-      id: 1,
-      title: "Recruitment Created",
-      by: "Alex Mercer (Recruitment Owner)",
-      stage: "Stage: Invited",
-      timestamp: "2026-07-01 09:00 AM",
-    },
-    {
-      id: 2,
-      title: "Candidate Invited",
-      by: "Alex Mercer (Recruitment Owner)",
-      candidate: "Candidate: Amina Usman",
-      stage: "Stage: Offer Sent",
-      timestamp: "2026-07-01 09:00 AM",
-    },
-    {
-      id: 3,
-      title: "Submitted Feedback",
-      by: "Alex Mercer (Recruitment Owner)",
-      candidate: "Candidate: Amina Usman",
-      stage: "Stage: Final Interview",
-      timestamp: "2026-07-01 09:00 AM",
-    },
-  ];
-
-  const logItems = logs && logs.length > 0 ? logs : defaultLogs;
+  const logItems = logs || [];
 
   return (
     <div className="bg-[#F7FAF8] border border-[#D5E5DD] rounded-3xl p-5 sm:p-7 space-y-6 shadow-xs">
@@ -40,7 +14,14 @@ export default function RecruitmentAuditLog({ logs = [] }) {
         </p>
       </div>
 
-      {/* Timeline container */}
+      {logItems.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center">
+          <p className="text-sm font-semibold text-[#1A3E32]">No audit events yet</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Activity history will appear here when audit logging is available.
+          </p>
+        </div>
+      ) : (
       <div className="relative pl-7 space-y-4 before:absolute before:left-2.5 before:top-6 before:bottom-6 before:w-[2px] before:bg-[#8EB398] pt-1">
         {logItems.map((log) => (
           <div key={log.id} className="relative">
@@ -77,6 +58,7 @@ export default function RecruitmentAuditLog({ logs = [] }) {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

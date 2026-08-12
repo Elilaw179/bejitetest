@@ -295,32 +295,10 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                 {activeTab === "details" ? (
                   <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
                     <div className="lg:col-span-2 space-y-5 sm:space-y-6 order-2 lg:order-1">
-                      {job.rolesText?.trim() && (
+                      {job.responsibilities?.length > 0 ? (
                         <section>
                           <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
-                            About the Role
-                          </h2>
-                          <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
-                            {formatJobDescriptionText(job.rolesText)}
-                          </p>
-                        </section>
-                      )}
-
-                      {!job.rolesText?.trim() && job.description?.trim() && (
-                        <section>
-                          <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
-                            Job Description
-                          </h2>
-                          <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
-                            {formatJobDescriptionText(job.description)}
-                          </p>
-                        </section>
-                      )}
-
-                      {job.responsibilities?.length > 0 && (
-                        <section>
-                          <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
-                            Key Responsibilities
+                            Responsibilities
                           </h2>
                           <ul className="list-disc list-inside space-y-1.5 sm:space-y-2 text-sm sm:text-base text-gray-700">
                             {job.responsibilities.map((resp, idx) => (
@@ -328,15 +306,71 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                             ))}
                           </ul>
                         </section>
-                      )}
-
-                      {job.requirements?.length > 0 && (
+                      ) : job.responsibilitiesText?.trim() ||
+                        (job.description?.trim() &&
+                          !job.qualificationsText?.trim() &&
+                          !job.rolesText?.trim()) ? (
                         <section>
                           <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
-                            Requirements
+                            Responsibilities
+                          </h2>
+                          <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                            {formatJobDescriptionText(
+                              job.responsibilitiesText || job.description,
+                            )}
+                          </p>
+                        </section>
+                      ) : null}
+
+                      {(job.qualificationsText?.trim() ||
+                        job.rolesText?.trim() ||
+                        job.qualifications?.length > 0) && (
+                        <section>
+                          <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
+                            Qualifications
+                          </h2>
+                          {job.qualifications?.length > 0 ||
+                          job.roles?.length > 0 ? (
+                            <ul className="list-disc list-inside space-y-1.5 sm:space-y-2 text-sm sm:text-base text-gray-700">
+                              {(job.qualifications?.length
+                                ? job.qualifications
+                                : job.roles
+                              ).map((item, idx) => (
+                                <li key={idx}>{item}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                              {formatJobDescriptionText(
+                                job.qualificationsText || job.rolesText,
+                              )}
+                            </p>
+                          )}
+                        </section>
+                      )}
+
+                      {Array.isArray(job.requirements) &&
+                        job.requirements.length > 0 &&
+                        typeof job.requirements[0] === "string" && (
+                          <section>
+                            <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
+                              Requirements
+                            </h2>
+                            <ul className="list-disc list-inside space-y-1.5 sm:space-y-2 text-sm sm:text-base text-gray-700">
+                              {job.requirements.map((req, idx) => (
+                                <li key={idx}>{req}</li>
+                              ))}
+                            </ul>
+                          </section>
+                        )}
+
+                      {job.skillRequirements?.length > 0 && (
+                        <section>
+                          <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
+                            Skills
                           </h2>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-                            {job.requirements.map((req, idx) => (
+                            {job.skillRequirements.map((req, idx) => (
                               <div
                                 key={idx}
                                 className="bg-gray-50 rounded-xl p-3"
@@ -351,9 +385,11 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
-                                  {req.experience}+ years experience
-                                </p>
+                                {req.experience > 0 && (
+                                  <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
+                                    {req.experience}+ years experience
+                                  </p>
+                                )}
                               </div>
                             ))}
                           </div>

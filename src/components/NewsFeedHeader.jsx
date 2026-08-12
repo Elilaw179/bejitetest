@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   FaSearch,
   FaChevronDown,
@@ -37,12 +38,16 @@ import {
   formatDisplayRole,
 } from "../utils/personDisplayName";
 import { formatDisplayText } from "../utils/displayFormatUtils";
-import { filterAdminUsersFromSearch, filterAdminSearchResults } from "../utils/filterAdminUsers";
+import {
+  filterAdminUsersFromSearch,
+  filterAdminSearchResults,
+} from "../utils/filterAdminUsers";
 import PersonName from "./PersonName";
 import RecruitmentRightMobileMenu from "./recruitment/RecruitmentRightMobileMenu";
 import InviteFriendsModal from "./InviteFriendsModal";
 import NotificationDropdown from "./notifications/NotificationDropdown";
 import { onNotificationNew } from "../services/socketClient";
+import { Network } from "lucide-react";
 
 const NewsFeedHeader = ({ user: propUser }) => {
   useSyncProfilePhoto();
@@ -51,6 +56,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [roleMenuPos, setRoleMenuPos] = useState(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [connectionRequestCount, setConnectionRequestCount] = useState(0);
@@ -73,11 +79,12 @@ const NewsFeedHeader = ({ user: propUser }) => {
     const targets = [
       window,
       ...document.querySelectorAll(".nfl-scroll"),
-    ].filter((el) => !searchRef.current?.contains(el instanceof Element ? el : null));
+    ].filter(
+      (el) => !searchRef.current?.contains(el instanceof Element ? el : null),
+    );
 
     const lastTops = new Map();
-    const getTop = (el) =>
-      el === window ? window.scrollY : el.scrollTop;
+    const getTop = (el) => (el === window ? window.scrollY : el.scrollTop);
 
     const handlers = targets.map((el) => {
       lastTops.set(el, getTop(el));
@@ -98,6 +105,8 @@ const NewsFeedHeader = ({ user: propUser }) => {
       );
   }, [location.pathname]);
   const dropdownRef = useRef(null);
+  const roleMenuButtonRef = useRef(null);
+  const roleMenuPanelRef = useRef(null);
   const searchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
   const searchRequestIdRef = useRef(0);
@@ -174,12 +183,15 @@ const NewsFeedHeader = ({ user: propUser }) => {
         localStorage.getItem("token");
       if (!token) return;
 
-      const response = await fetch(`${API_URL}/api/notifications/unread-count`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${API_URL}/api/notifications/unread-count`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
         },
-        credentials: "include",
-      });
+      );
 
       const data = await response.json();
       if (response.ok) {
@@ -209,19 +221,21 @@ const NewsFeedHeader = ({ user: propUser }) => {
           .get(`/api/connections/search?q=${encodeURIComponent(query)}&limit=5`)
           .then((response) => ({
             type: "people",
-            results: filterAdminUsersFromSearch(response.data.users || []).map((u) => ({
-              type: "people",
-              id: u.id,
-              name: formatDisplayPersonName(u, "Unknown User"),
-              firstName: u.firstName,
-              lastName: u.lastName,
-              email: u.email,
-              username: u.username,
-              subtitle: u.jobTitle || "Professional",
-              image: pickAuthorProfilePhoto(u),
-              url: `/user-profile/${u.id}`,
-              hasVerifiedBadge: Boolean(u.hasVerifiedBadge),
-            })),
+            results: filterAdminUsersFromSearch(response.data.users || []).map(
+              (u) => ({
+                type: "people",
+                id: u.id,
+                name: formatDisplayPersonName(u, "Unknown User"),
+                firstName: u.firstName,
+                lastName: u.lastName,
+                email: u.email,
+                username: u.username,
+                subtitle: u.jobTitle || "Professional",
+                image: pickAuthorProfilePhoto(u),
+                url: `/user-profile/${u.id}`,
+                hasVerifiedBadge: Boolean(u.hasVerifiedBadge),
+              }),
+            ),
           }))
           .catch(() => ({ type: "people", results: [] })),
       );
@@ -233,24 +247,26 @@ const NewsFeedHeader = ({ user: propUser }) => {
           .then((response) => ({
             type: "people",
             results: response.data.success
-              ? filterAdminUsersFromSearch(response.data.data).map((candidate) => {
-                  const userId =
-                    candidate.user_id ?? candidate.userId ?? candidate.id;
-                  return {
-                    type: "people",
-                    id: userId,
-                    name: formatDisplayPersonName(candidate, "Unknown User"),
-                    firstName: candidate.first_name,
-                    lastName: candidate.last_name,
-                    email: candidate.email,
-                    username: candidate.username,
-                    subtitle:
-                      formatDisplayText(candidate.title) || "Professional",
-                    image: pickAuthorProfilePhoto(candidate),
-                    url: `/user-profile/${userId}`,
-                    hasVerifiedBadge: Boolean(candidate.hasVerifiedBadge),
-                  };
-                })
+              ? filterAdminUsersFromSearch(response.data.data).map(
+                  (candidate) => {
+                    const userId =
+                      candidate.user_id ?? candidate.userId ?? candidate.id;
+                    return {
+                      type: "people",
+                      id: userId,
+                      name: formatDisplayPersonName(candidate, "Unknown User"),
+                      firstName: candidate.first_name,
+                      lastName: candidate.last_name,
+                      email: candidate.email,
+                      username: candidate.username,
+                      subtitle:
+                        formatDisplayText(candidate.title) || "Professional",
+                      image: pickAuthorProfilePhoto(candidate),
+                      url: `/user-profile/${userId}`,
+                      hasVerifiedBadge: Boolean(candidate.hasVerifiedBadge),
+                    };
+                  },
+                )
               : [],
           }))
           .catch(() => ({ type: "people", results: [] })),
@@ -363,7 +379,12 @@ const NewsFeedHeader = ({ user: propUser }) => {
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      const inTrigger =
+        dropdownRef.current && dropdownRef.current.contains(event.target);
+      const inPanel =
+        roleMenuPanelRef.current &&
+        roleMenuPanelRef.current.contains(event.target);
+      if (!inTrigger && !inPanel) {
         setIsDropdownOpen(false);
       }
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -373,6 +394,31 @@ const NewsFeedHeader = ({ user: propUser }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const updateRoleMenuPos = useCallback(() => {
+    const btn = roleMenuButtonRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    setRoleMenuPos({
+      top: rect.bottom + 6,
+      right: Math.max(8, window.innerWidth - rect.right),
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isDropdownOpen) {
+      setRoleMenuPos(null);
+      return undefined;
+    }
+    updateRoleMenuPos();
+    const onReposition = () => updateRoleMenuPos();
+    window.addEventListener("resize", onReposition);
+    window.addEventListener("scroll", onReposition, true);
+    return () => {
+      window.removeEventListener("resize", onReposition);
+      window.removeEventListener("scroll", onReposition, true);
+    };
+  }, [isDropdownOpen, updateRoleMenuPos]);
 
   // Fetch notification count on mount and periodically; live updates via socket
   useEffect(() => {
@@ -503,7 +549,11 @@ const NewsFeedHeader = ({ user: propUser }) => {
     notifications: ["/notification", "/notifications"],
     connection: ["/connection"],
     "job-vacancy": ["/job-vacancy"],
-    recruitment: ["/candidate-search-page", "/subscription-pricing", "/subscription-dashboard"],
+    recruitment: [
+      "/candidate-search-page",
+      "/subscription-pricing",
+      "/subscription-dashboard",
+    ],
     adpro: ["/adpro"],
   };
 
@@ -535,6 +585,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
         clearNewJobVacancyCount();
         navigate("/job-vacancy");
         break;
+      case "catch-up":
+        navigate("/catch-up");
+        break;
       default:
         console.log("Icon not defined");
     }
@@ -553,7 +606,8 @@ const NewsFeedHeader = ({ user: propUser }) => {
 
   const getNavIconSrc = (name) => {
     if (name === "home-icon") return "/assets/images/home-nav.svg";
-    if (name === "invite-friends") return "/assets/images/invite-friends-nav.svg";
+    if (name === "invite-friends")
+      return "/assets/images/invite-friends-nav.svg";
     if (name === "adpro") return "/assets/images/adpro-nav.svg";
     if (name === "job-vacancy") return "/assets/images/job-vacancy-nav.svg";
     return `/assets/images/${name}.svg`;
@@ -664,36 +718,38 @@ const NewsFeedHeader = ({ user: propUser }) => {
             >
               <FaSearch className="h-4 w-4" />
             </button>
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
-            aria-expanded={isSidebarOpen}
-            className="lg:hidden relative inline-flex items-center justify-center p-0 text-[#1A3E32] transition-all duration-300 active:scale-95"
-          >
-            <span className="sr-only">{isSidebarOpen ? "Close menu" : "Open menu"}</span>
-            <span className="relative w-[22px] h-[15px] flex flex-col justify-between">
-              <span
-                className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
-                  isSidebarOpen
-                    ? "translate-y-[6.5px] rotate-45 w-[22px]"
-                    : "w-[22px]"
-                }`}
-              />
-              <span
-                className={`block h-[2px] rounded-full bg-current transition-all duration-200 ease-out ${
-                  isSidebarOpen ? "opacity-0 scale-x-0" : "w-[15px] ml-auto"
-                }`}
-              />
-              <span
-                className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
-                  isSidebarOpen
-                    ? "-translate-y-[6.5px] -rotate-45 w-[22px]"
-                    : "w-[18px]"
-                }`}
-              />
-            </span>
-          </button>
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isSidebarOpen}
+              className="lg:hidden relative inline-flex items-center justify-center p-0 text-[#1A3E32] transition-all duration-300 active:scale-95"
+            >
+              <span className="sr-only">
+                {isSidebarOpen ? "Close menu" : "Open menu"}
+              </span>
+              <span className="relative w-[22px] h-[15px] flex flex-col justify-between">
+                <span
+                  className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
+                    isSidebarOpen
+                      ? "translate-y-[6.5px] rotate-45 w-[22px]"
+                      : "w-[22px]"
+                  }`}
+                />
+                <span
+                  className={`block h-[2px] rounded-full bg-current transition-all duration-200 ease-out ${
+                    isSidebarOpen ? "opacity-0 scale-x-0" : "w-[15px] ml-auto"
+                  }`}
+                />
+                <span
+                  className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
+                    isSidebarOpen
+                      ? "-translate-y-[6.5px] -rotate-45 w-[22px]"
+                      : "w-[18px]"
+                  }`}
+                />
+              </span>
+            </button>
           </div>
         </div>
 
@@ -795,33 +851,59 @@ const NewsFeedHeader = ({ user: propUser }) => {
         </div>
 
         <div
-          className={`grid w-full lg:w-auto lg:block transition-[grid-template-rows,opacity,margin-top] duration-300 ease-out ${
+          className={`grid w-full lg:w-auto lg:block transition-[opacity,margin-top] duration-200 ease-out motion-reduce:transition-none ${
             isProfileRowHidden
-              ? "grid-rows-[0fr] opacity-0 -mt-3 pointer-events-none lg:opacity-100 lg:mt-0 lg:pointer-events-auto"
+              ? "grid-rows-[0fr] opacity-0 -mt-3 pointer-events-none lg:grid-rows-[1fr] lg:opacity-100 lg:mt-0 lg:pointer-events-auto"
               : "grid-rows-[1fr] opacity-100 mt-0"
           }`}
         >
-        <div className={`min-h-0 lg:min-h-full ${isProfileRowHidden ? "overflow-hidden lg:overflow-visible" : ""}`}>
-        <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto justify-between lg:justify-normal">
+        {/* Clip while closed to avoid mobile avatar scroll glitches; open overflow when the menu is open. */}
+        <div
+          className={`min-h-0 lg:min-h-full ${
+            isDropdownOpen
+              ? "overflow-visible"
+              : "overflow-hidden lg:overflow-visible"
+          }`}
+        >
+        <div className="flex items-center gap-2.5 md:gap-3 w-full lg:w-auto min-w-0 justify-between lg:justify-normal">
           <img
-            className="w-10 h-10 lg:w-14 lg:h-14 rounded-full object-cover"
+            className="w-10 h-10 lg:w-14 lg:h-14 shrink-0 rounded-full object-cover object-center bg-gray-200 ring-1 ring-black/5"
             src={avatarSrc(user.image)}
             alt={getDisplayName()}
+            decoding="async"
+            width={56}
+            height={56}
           />
 
-          <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
-            <div ref={dropdownRef} className="relative">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-1.5 lg:gap-3 min-w-0 shrink-0 lg:flex-initial text-right lg:text-left">
+            <div ref={dropdownRef} className="relative min-w-0">
               <p
-                className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32] tracking-wide"
+                className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32] tracking-wide truncate"
                 style={{ fontFamily: '"DynaPuff", cursive' }}
               >
                 Hello {getGreetingFirstName()}!
               </p>
 
               {/* Custom Dropdown for Role */}
-              <div className="relative">
+              <div className="relative self-end lg:self-auto">
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  type="button"
+                  ref={roleMenuButtonRef}
+                  onClick={() => {
+                    if (isDropdownOpen) {
+                      setIsDropdownOpen(false);
+                      return;
+                    }
+                    const btn = roleMenuButtonRef.current;
+                    if (btn) {
+                      const rect = btn.getBoundingClientRect();
+                      setRoleMenuPos({
+                        top: rect.bottom + 6,
+                        right: Math.max(8, window.innerWidth - rect.right),
+                      });
+                    }
+                    setIsDropdownOpen(true);
+                  }}
                   className="flex items-center gap-1 bg-[#16730F] text-white rounded-full px-3 py-1 mt-0.5 text-xs sm:text-sm md:text-base focus:outline-none hover:bg-[#145a0c] transition-colors"
                 >
                   <span>{getDisplayRole()}</span>
@@ -830,9 +912,19 @@ const NewsFeedHeader = ({ user: propUser }) => {
                   />
                 </button>
 
-                {/* Dropdown Menu */}
-                {isDropdownOpen && (
-                  <div className="absolute right-0 left-auto mt-1.5 sm:mt-2 w-[min(14.5rem,calc(100vw-1.25rem))] sm:w-[min(18rem,calc(100vw-1rem))] md:w-[min(20rem,calc(100vw-1rem))] bg-white rounded-lg sm:rounded-xl shadow-xl border border-gray-100 py-1 sm:py-2 z-50 overflow-hidden max-h-[min(60vh,22rem)] sm:max-h-[70vh] overflow-y-auto nfl-scroll">
+                {/* Portaled so header overflow/grid clipping cannot hide the menu */}
+                {isDropdownOpen &&
+                  roleMenuPos &&
+                  createPortal(
+                    <div
+                      ref={roleMenuPanelRef}
+                      style={{
+                        position: "fixed",
+                        top: roleMenuPos.top,
+                        right: roleMenuPos.right,
+                      }}
+                      className="w-[min(14.5rem,calc(100vw-1.25rem))] sm:w-[min(18rem,calc(100vw-1rem))] md:w-[min(20rem,calc(100vw-1rem))] bg-white rounded-lg sm:rounded-xl shadow-xl border border-gray-100 py-1 sm:py-2 z-[200] overflow-hidden max-h-[min(60vh,22rem)] sm:max-h-[70vh] overflow-y-auto nfl-scroll"
+                    >
                     {/* User Info Header */}
                     <div className="px-3 py-2 sm:px-4 sm:py-3 border-b border-gray-100 bg-gray-50">
                       <div className="flex items-start gap-2 sm:gap-3 min-w-0">
@@ -860,6 +952,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                     {/* Section 1: Profile */}
                     <div className="py-0.5 sm:py-1">
                       <button
+                        type="button"
                         onClick={() => {
                           navigate(
                             user?.role === "recruiter"
@@ -886,6 +979,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                     <div className="py-0.5 sm:py-1">
                       {user?.role !== "jobseeker" && (
                         <button
+                          type="button"
                           onClick={() => {
                             navigate("/candidate-search-page");
                             setIsDropdownOpen(false);
@@ -902,6 +996,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       )}
                       {user?.role !== "jobseeker" && (
                         <button
+                          type="button"
                           onClick={() => {
                             navigate("/subscription-dashboard");
                             setIsDropdownOpen(false);
@@ -920,12 +1015,16 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       )}
                       {user?.role !== "jobseeker" && (
                         <button
+                          type="button"
                           onClick={() => {
                             navigate("/employer/dashboard");
                             setIsDropdownOpen(false);
                           }}
                           className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
-                            location.pathname.startsWith("/employer/")
+                            location.pathname.startsWith("/employer/") &&
+                            !location.pathname.startsWith(
+                              "/employer/recruitment-management",
+                            )
                               ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
                               : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
                           }`}
@@ -936,6 +1035,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       )}
                       {isRecruiterOrEmployer && (
                         <button
+                          type="button"
                           onClick={() => {
                             navigate("/adpro");
                             setIsDropdownOpen(false);
@@ -952,8 +1052,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       )}
 
                     </div>
-                  </div>
-                )}
+                    </div>,
+                    document.body,
+                  )}
               </div>
             </div>
           </div>
@@ -973,11 +1074,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
           />
           <div className="fixed top-0 left-0 w-[min(85vw,300px)] h-full bg-white shadow-2xl z-50 flex flex-col lg:hidden">
             <div className="p-4 border-b border-gray-100 shrink-0">
-              <img
-                src="/assets/images/logo.png"
-                alt="Bejite"
-                className="h-8"
-              />
+              <img src="/assets/images/logo.png" alt="Bejite" className="h-8" />
             </div>
 
             <div className="flex-1 overflow-y-auto nfl-scroll p-4 pt-2">
@@ -1009,6 +1106,23 @@ const NewsFeedHeader = ({ user: propUser }) => {
                   {renderNavIcon("invite-friends", { compact: true })}
                   <span className="font-medium text-sm text-[#1A3E32]">
                     Invite Friends
+                  </span>
+                </div>
+                <div
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => {
+                    navigate("/catch-up");
+                  }}
+                >
+                  <div className="rounded-[30px] p-1.5 border-2 border-[#16730F]">
+                    <Network
+                      className="text-[#16730F] w-2.5 h-2.5 shrink-0 "
+                      size={16}
+                    />
+                  </div>
+                  {/* {renderNavIcon("catch-up", { compact: true })} */}
+                  <span className="font-medium text-sm text-[#1A3E32]">
+                    Catch Up
                   </span>
                 </div>
                 {isRecruiterOrEmployer && (

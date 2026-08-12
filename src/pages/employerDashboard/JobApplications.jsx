@@ -20,6 +20,7 @@ import {
   downloadJobApplicationResume,
 } from "../../services/employerApi";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
+import { RecruiterSelect } from "../../components/recruiter/recruiterOnboardingUi";
 
 const ApplicantAvatar = ({
   application,
@@ -215,8 +216,23 @@ const JobApplications = () => {
           <option value="pending">Pending</option>
           <option value="reviewed">Reviewed</option>
           <option value="shortlisted">Shortlisted</option>
+          <option value="hired">Hired</option>
           <option value="rejected">Rejected</option>
         </select>
+        <div className="flex-1">
+          <RecruiterSelect
+            name="statusDraft"
+            value={statusDraft}
+            onChange={(e) => setStatusDraft(e.target.value)}
+            options={[
+              { value: "pending", label: "Pending" },
+              { value: "reviewed", label: "Reviewed" },
+              { value: "shortlisted", label: "Shortlisted" },
+              { value: "rejected", label: "Rejected" },
+            ]}
+            placeholder="Select Status"
+          />
+        </div>
         <button
           type="button"
           onClick={handleStatusUpdate}
@@ -400,6 +416,7 @@ const JobApplications = () => {
                       "pending",
                       "reviewed",
                       "shortlisted",
+                      "hired",
                       "rejected",
                     ].map((status) => (
                       <button
@@ -502,21 +519,23 @@ const JobApplications = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="text-right flex-shrink-0">
+                        <div className="flex flex-col items-end gap-2 flex-shrink-0">
                           <div
-                            className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold ${getMatchScoreColor(app.matchScore)}`}
+                            className={`inline-flex items-center justify-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap ${getMatchScoreColor(app.matchScore)}`}
                           >
                             {app.matchScore}%
                           </div>
                           <span
-                            className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs capitalize whitespace-nowrap ${
+                            className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs capitalize whitespace-nowrap ${
                               app.status === "pending"
                                 ? "bg-yellow-100 text-yellow-700"
                                 : app.status === "reviewed"
                                   ? "bg-blue-100 text-blue-700"
                                   : app.status === "shortlisted"
                                     ? "bg-green-100 text-green-700"
-                                    : "bg-red-100 text-red-700"
+                                    : app.status === "hired"
+                                      ? "bg-emerald-100 text-emerald-800"
+                                      : "bg-red-100 text-red-700"
                             }`}
                           >
                             {app.status}

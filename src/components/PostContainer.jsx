@@ -8,6 +8,7 @@ import PostCreationModal from './PostCreationModal';
 import FeedLoadMoreButton from './FeedLoadMoreButton';
 import PostCard from './feed/PostCard';
 import { formatDisplayPersonName } from '../utils/personDisplayName';
+import { RecruiterSelect } from './recruiter/recruiterOnboardingUi';
 
 const FEED_PAGE_SIZE = 20;
 
@@ -310,16 +311,20 @@ const PostOptions = ({ visibility, setVisibility, submitting, handleMediaSelect,
     <div className="flex flex-wrap justify-between items-center mt-5 gap-3 px-2">
       <MediaOptions handleMediaSelect={handleMediaSelect} uploadingMedia={uploadingMedia} />
       <div className="flex items-center gap-3 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <img src="/assets/images/public-icon.svg" alt="Public" className="w-4 h-4" />
-          <select 
-            value={visibility} 
-            onChange={(e) => setVisibility(e.target.value)}
-            className="text-sm rounded-md border border-gray-300 px-2 py-1 text-[#1A3E32] text-[13px] bg-white"
-          >
-            <option value="public">Public</option>
-            <option value="connections">Connections Only</option>
-          </select>
+        <div className="flex items-center gap-2 min-w-[150px]">
+          <img src="/assets/images/public-icon.svg" alt="Public" className="w-4 h-4 shrink-0" />
+          <div className="flex-1">
+            <RecruiterSelect 
+              name="visibility"
+              value={visibility} 
+              onChange={(e) => setVisibility(e.target.value)}
+              options={[
+                { value: "public", label: "Public" },
+                { value: "connections", label: "Connections Only" },
+              ]}
+              placeholder="Visibility"
+            />
+          </div>
         </div>
         <button
           type="submit"

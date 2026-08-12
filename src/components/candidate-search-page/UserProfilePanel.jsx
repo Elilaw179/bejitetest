@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { pickAuthorProfilePhoto } from "../../utils/profileImageUtils";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
@@ -390,20 +389,18 @@ const ProfileHeader = ({ candidate, onOpenPhotoViewer }) => {
 };
 
 const ProfileStats = ({ candidate, connectUserIdProp, onViewMainProfile }) => {
-  const navigate = useNavigate();
   const displayName = formatDisplayPersonName(candidate, "Candidate");
   const profile = getFormattedCandidateProfileFields(candidate);
   const connectUserId =
     resolveCandidateUserId(candidate) || connectUserIdProp || null;
-  const { sendRequest, connectLabel, connectDisabled, status } = useCandidateConnect(
+  const { sendRequest, acceptRequest, connectLabel, connectDisabled, status } = useCandidateConnect(
     connectUserId,
     displayName,
   );
 
-  // Handle connect button click - navigate to Connections page if there's pending incoming request
-  const handleConnectClick = () => {
+  const handleConnectClick = async () => {
     if (status.pendingIncoming) {
-      navigate('/connection');
+      await acceptRequest();
     } else if (!status.isConnected && !status.pendingOutgoing && !status.loading) {
       sendRequest();
     }

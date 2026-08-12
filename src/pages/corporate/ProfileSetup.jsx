@@ -14,6 +14,10 @@ import OnboardingLayout from "../../components/layout/onboardingLayout";
 import RecruiterFieldGroup from "../../components/recruiter/RecruiterFieldGroup";
 import { navigateBack } from "../../utils/navigateBack";
 import { RECRUITER_ONBOARDING_STEPS } from "../../components/recruiter/recruiterOnboardingSteps";
+import {
+  PROFILE_PHOTO_MAX_BYTES,
+  getUploadSizeError,
+} from "../../utils/uploadLimits";
 
 const CoperateProfileSetup = () => {
   const navigate = useNavigate();
@@ -130,6 +134,12 @@ const CoperateProfileSetup = () => {
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      const sizeError = getUploadSizeError(file, PROFILE_PHOTO_MAX_BYTES);
+      if (sizeError) {
+        toast.error(sizeError);
+        e.target.value = "";
+        return;
+      }
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }

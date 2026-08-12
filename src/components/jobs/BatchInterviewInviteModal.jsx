@@ -2,15 +2,18 @@ import { useState, useEffect } from "react";
 import { LuSend } from "react-icons/lu";
 import { RxCross1 } from "react-icons/rx";
 import { API_URL } from "../../config";
+import { getEmployerDashboard } from "../../services/employerApi";
 
 const BatchInterviewInviteModal = ({
   isOpen,
   onClose,
   candidates = [],
+  jobId = null,
   jobTitle = "",
   onSuccess,
 }) => {
   const [formData, setFormData] = useState({
+    job_id: "",
     job_title: "",
     interview_date: "",
     interview_time: "",
@@ -19,18 +22,79 @@ const BatchInterviewInviteModal = ({
     meeting_link: "",
     message: "",
   });
+  const [jobs, setJobs] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const lockedJobId = jobId != null && jobId !== "" ? String(jobId) : "";
+
   useEffect(() => {
-    if (isOpen && jobTitle) {
-      setFormData((prev) => ({ ...prev, job_title: jobTitle }));
+    if (!isOpen) return;
+
+    if (lockedJobId) {
+      setFormData((prev) => ({
+        ...prev,
+        job_id: lockedJobId,
+        job_title: jobTitle || prev.job_title,
+      }));
+      return;
     }
-  }, [isOpen, jobTitle]);
+
+    let cancelled = false;
+    const loadJobs = async () => {
+      setJobsLoading(true);
+      try {
+        // Same source as Recruitment Management (include Closed / expired).
+        const response = await getEmployerDashboard({
+          status: "all",
+          listing_kind: "recruitment",
+        });
+        const list = response?.data?.jobs || [];
+        if (!cancelled) {
+          setJobs(list);
+          const matched = jobTitle
+            ? list.find(
+                (j) =>
+                  String(j.title || "").toLowerCase() ===
+                  String(jobTitle).toLowerCase(),
+              )
+            : null;
+          if (matched) {
+            setFormData((prev) => ({
+              ...prev,
+              job_id: String(matched.id),
+              job_title: matched.title,
+            }));
+          } else if (jobTitle) {
+            setFormData((prev) => ({ ...prev, job_title: jobTitle }));
+          }
+        }
+      } catch {
+        if (!cancelled) setJobs([]);
+      } finally {
+        if (!cancelled) setJobsLoading(false);
+      }
+    };
+    loadJobs();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, lockedJobId, jobTitle]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleJobSelect = (e) => {
+    const selectedId = e.target.value;
+    const selected = jobs.find((j) => String(j.id) === String(selectedId));
+    setFormData((prev) => ({
+      ...prev,
+      job_id: selectedId,
+      job_title: selected?.title || prev.job_title,
+    }));
   };
 
   const handleTypeChange = (type) => {
@@ -57,6 +121,10 @@ const BatchInterviewInviteModal = ({
         throw new Error("You must be logged in to send invitations");
       }
 
+      if (!formData.job_id) {
+        throw new Error("Please select a recruitment / job");
+      }
+
       if (!formData.interview_date || !formData.interview_time) {
         throw new Error("Please enter interview date and time");
       }
@@ -70,6 +138,7 @@ const BatchInterviewInviteModal = ({
       }
 
       const payload = {
+        job_id: Number(formData.job_id),
         job_title: formData.job_title,
         interview_date: formData.interview_date,
         interview_time: formData.interview_time,
@@ -117,6 +186,7 @@ const BatchInterviewInviteModal = ({
       }
 
       setFormData({
+        job_id: lockedJobId || "",
         job_title: jobTitle || "",
         interview_date: "",
         interview_time: "",
@@ -173,16 +243,50 @@ const BatchInterviewInviteModal = ({
 
           <div>
             <label className="block text-sm font-medium text-[#16730F] mb-1">
-              Job Title
+              Recruitment / Job *
             </label>
-            <input
-              type="text"
-              name="job_title"
-              value={formData.job_title}
-              onChange={handleChange}
-              placeholder="Enter job title"
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]"
-            />
+            {lockedJobId ? (
+              <input
+                type="text"
+                value={formData.job_title || jobTitle || `Job #${lockedJobId}`}
+                readOnly
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 text-gray-700"
+              />
+            ) : (
+              <>
+                <select
+                  name="job_id"
+                  value={formData.job_id}
+                  onChange={handleJobSelect}
+                  required
+                  disabled={jobsLoading}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F] bg-white"
+                >
+                  <option value="">
+                    {jobsLoading
+                      ? "Loading recruitments…"
+                      : "Select a recruitment exercise"}
+                  </option>
+                  {jobs.map((job) => {
+                    const closed =
+                      job.status !== "active" ||
+                      String(job.dbStatus || "").toLowerCase() === "closed";
+                    return (
+                      <option key={job.id} value={job.id}>
+                        {job.title}
+                        {closed ? " (Closed)" : ""}
+                      </option>
+                    );
+                  })}
+                </select>
+                {jobs.length === 0 && !jobsLoading && (
+                  <p className="text-xs text-amber-700 mt-1">
+                    No recruitments found. Create one in Recruitment Management
+                    first.
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

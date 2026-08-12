@@ -14,6 +14,8 @@ export function useCandidateConnect(userId, displayName = '') {
     isConnected: false,
     pendingOutgoing: false,
     pendingIncoming: false,
+    incomingRequestId: null,
+    outgoingRequestId: null,
     unavailable: false,
   });
   const [sending, setSending] = useState(false);
@@ -25,6 +27,8 @@ export function useCandidateConnect(userId, displayName = '') {
         isConnected: false,
         pendingOutgoing: false,
         pendingIncoming: false,
+        incomingRequestId: null,
+        outgoingRequestId: null,
         unavailable: false,
       });
       return;
@@ -42,6 +46,8 @@ export function useCandidateConnect(userId, displayName = '') {
             isConnected: Boolean(data?.isConnected),
             pendingOutgoing: Boolean(data?.pendingOutgoing),
             pendingIncoming: Boolean(data?.pendingIncoming),
+            incomingRequestId: data?.incomingRequestId || null,
+            outgoingRequestId: data?.outgoingRequestId || null,
             unavailable: false,
           });
         }
@@ -59,6 +65,8 @@ export function useCandidateConnect(userId, displayName = '') {
             isConnected: false,
             pendingOutgoing: false,
             pendingIncoming: false,
+            incomingRequestId: null,
+            outgoingRequestId: null,
             unavailable,
           });
         }
@@ -87,6 +95,8 @@ export function useCandidateConnect(userId, displayName = '') {
           isConnected: true,
           pendingOutgoing: false,
           pendingIncoming: false,
+          incomingRequestId: null,
+          outgoingRequestId: null,
           unavailable: false,
         }));
       } else {
@@ -98,6 +108,7 @@ export function useCandidateConnect(userId, displayName = '') {
         setStatus((prev) => ({
           ...prev,
           pendingOutgoing: true,
+          outgoingRequestId: result?.requestId || prev.outgoingRequestId,
           unavailable: false,
         }));
       }
@@ -117,6 +128,43 @@ export function useCandidateConnect(userId, displayName = '') {
     }
   }, [normalizedUserId, displayName, sending]);
 
+  const acceptRequest = useCallback(async () => {
+    if (!normalizedUserId || sending) return false;
+
+    setSending(true);
+    try {
+      if (status.incomingRequestId) {
+        await connectionsApi.acceptConnectionRequest(status.incomingRequestId);
+      } else {
+        await connectionsApi.acceptConnectionRequestFromUser(normalizedUserId);
+      }
+      toast.success(
+        displayName
+          ? `You are now connected with ${displayName}`
+          : 'Connection request accepted',
+      );
+      setStatus((prev) => ({
+        ...prev,
+        isConnected: true,
+        pendingOutgoing: false,
+        pendingIncoming: false,
+        incomingRequestId: null,
+        outgoingRequestId: null,
+        unavailable: false,
+      }));
+      return true;
+    } catch (error) {
+      toast.error(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          'Failed to accept connection request',
+      );
+      return false;
+    } finally {
+      setSending(false);
+    }
+  }, [normalizedUserId, status.incomingRequestId, displayName, sending]);
+
   const connectLabel = !normalizedUserId
     ? 'No account'
     : status.loading
@@ -126,7 +174,7 @@ export function useCandidateConnect(userId, displayName = '') {
         : status.pendingOutgoing
           ? 'Pending'
           : status.pendingIncoming
-            ? 'Respond in Connections'
+            ? 'Accept'
             : status.unavailable
               ? 'Unavailable'
               : 'Connect';
@@ -137,11 +185,11 @@ export function useCandidateConnect(userId, displayName = '') {
     sending ||
     status.isConnected ||
     status.pendingOutgoing ||
-    status.pendingIncoming ||
     status.unavailable;
 
   return {
     sendRequest,
+    acceptRequest,
     connectLabel,
     connectDisabled,
     sending,

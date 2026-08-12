@@ -1,4 +1,5 @@
 import { Edit3, X, Save } from "lucide-react";
+import RecruiterSelect from "../RecruiterSelect";
 
 const TemplateEditorModal = ({
   isOpen,
@@ -31,19 +32,19 @@ const TemplateEditorModal = ({
         <form onSubmit={onSubmit} className="space-y-4">
           
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-              Template Category
-            </label>
-            <select
+            <RecruiterSelect
+              label="Template Category"
+              name="category"
               value={templateForm.category}
               onChange={(e) => setTemplateForm({ ...templateForm, category: e.target.value })}
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#16730F] text-gray-800"
-            >
-              <option value="Job Alert">Job Alert</option>
-              <option value="Employer Outreach">Employer Outreach</option>
-              <option value="Newsletter">Newsletter</option>
-              <option value="Engagement">Engagement</option>
-            </select>
+              options={[
+                { value: "Job Alert", label: "Job Alert" },
+                { value: "Employer Outreach", label: "Employer Outreach" },
+                { value: "Newsletter", label: "Newsletter" },
+                { value: "Engagement", label: "Engagement" },
+              ]}
+              placeholder="Select Category"
+            />
           </div>
 
           <div>

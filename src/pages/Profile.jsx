@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   FaEdit,
   FaArrowLeft,
@@ -8,40 +8,46 @@ import {
   FaTwitter,
   FaInstagram,
   FaMapMarkerAlt,
-} from 'react-icons/fa';
-import NewsFeedLayout from '../components/layout/NewsFeedLayout';
-import ProfileCvSections from '../components/ProfileCvSections';
-import axiosInstance from '../utils/axiosInstance';
-import { fetchCurrentUserProfilePhoto } from '../services/profilePhotoService';
-import { fetchFullUserProfile } from '../services/fetchFullUserProfile';
+  FaBuilding,
+  FaUserFriends,
+  FaBriefcase,
+  FaCamera,
+  FaChevronDown,
+  FaExternalLinkAlt,
+} from "react-icons/fa";
+import NewsFeedLayout from "../components/layout/NewsFeedLayout";
+import ProfileCvSections from "../components/ProfileCvSections";
+import axiosInstance from "../utils/axiosInstance";
+import { fetchCurrentUserProfilePhoto } from "../services/profilePhotoService";
+import { fetchFullUserProfile } from "../services/fetchFullUserProfile";
 import {
   mergeCvWithCandidateSkills,
   normalizeProfileSkills,
   resolveProfileSkillSource,
-} from '../utils/profileSkills';
-import { getUser, pickProfilePhotoPath } from '../utils/tokenManager';
-import { profileAvatarSrc } from '../utils/profilePhotoUrl';
-import { pickAuthorProfilePhoto } from '../utils/profileImageUtils';
-import { getRecruiterEditProfilePath } from '../utils/recruiterProfilePaths';
+} from "../utils/profileSkills";
+import { getUser, pickProfilePhotoPath } from "../utils/tokenManager";
+import { profileAvatarSrc } from "../utils/profilePhotoUrl";
+import { pickAuthorProfilePhoto } from "../utils/profileImageUtils";
+import { getRecruiterEditProfilePath } from "../utils/recruiterProfilePaths";
 import {
   normalizeProfileData,
   unwrapAuthProfileBody,
   profilePayloadLooksUsable,
   profileFromSearchPreview,
-} from '../utils/profileUtils';
+} from "../utils/profileUtils";
 import {
   formatDisplayPersonName,
   formatDisplayRole,
   formatDisplayHandle,
-} from '../utils/personDisplayName';
-import { formatDisplayText } from '../utils/displayFormatUtils';
-import { truncateText } from '../utils/checksFormat';
-import ProfileConnectActions from '../components/ProfileConnectActions';
-import ProfilePostsSection from '../components/ProfilePostsSection';
-import DisplayNameWithBadge from '../components/DisplayNameWithBadge';
-import MutualConnectionsModal from '../components/MutualConnectionsModal';
+} from "../utils/personDisplayName";
+import { formatDisplayText } from "../utils/displayFormatUtils";
+import ProfileConnectActions from "../components/ProfileConnectActions";
+import ProfilePostsSection from "../components/ProfilePostsSection";
+import DisplayNameWithBadge from "../components/DisplayNameWithBadge";
+import MutualConnectionsModal from "../components/MutualConnectionsModal";
 
-const ABOUT_WORD_LIMIT = 100;
+const ABOUT_CHAR_LIMIT = 240;
+const ABOUT_WORD_LIMIT = 35;
 
 const formatConnectionCount = (count) => {
   const n = Number(count);
@@ -82,36 +88,50 @@ const formatMutualConnectionsLabel = (count, samples = []) => {
 };
 
 const toExternalHref = (url) => {
-  if (!url || typeof url !== 'string') return null;
+  if (!url || typeof url !== "string") return null;
   const trimmed = url.trim();
   if (!trimmed) return null;
   return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 };
 
-const ProfileDetailRow = ({ icon: Icon, label, value, href, preserveCase = false }) => {
+const ProfileDetailRow = ({
+  icon: Icon,
+  label,
+  value,
+  href,
+  preserveCase = false,
+  brandColor = "bg-emerald-50 text-[#16730F]",
+}) => {
   const displayValue = value
     ? preserveCase
       ? String(value).trim()
       : formatDisplayText(value)
-    : 'Not provided';
+    : "Not provided";
   const isLink = Boolean(href && value);
 
   return (
-    <div className="flex items-start gap-3 min-w-0 rounded-lg border border-gray-100 bg-[#F9FAF8] p-3 sm:border-0 sm:bg-transparent sm:p-0">
-      <Icon className="text-[#16730F] shrink-0 mt-0.5" />
+    <div className="group relative flex items-center gap-3.5 min-w-0 rounded-xl border border-slate-200/80 bg-gradient-to-br from-slate-50/60 via-white to-slate-50/30 p-3.5 sm:p-4 hover:border-emerald-300 hover:shadow-md transition-all duration-200">
+      <div
+        className={`p-2.5 rounded-xl ${brandColor} shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-200`}
+      >
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+      </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs sm:text-sm text-gray-500">{label}</p>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          {label}
+        </p>
         {isLink ? (
           <a
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm sm:text-base text-[#16730F] hover:underline break-all"
+            className="text-xs sm:text-sm font-semibold text-[#16730F] hover:text-[#145a0c] hover:underline break-all inline-flex items-center gap-1.5 mt-0.5"
           >
-            {displayValue}
+            <span className="truncate">{displayValue}</span>
+            <FaExternalLinkAlt className="w-2.5 h-2.5 shrink-0 opacity-70 group-hover:opacity-100" />
           </a>
         ) : (
-          <p className="text-sm sm:text-base text-[#1A3E32] break-words break-all">
+          <p className="text-xs sm:text-sm font-medium text-slate-700 break-words break-all mt-0.5">
             {displayValue}
           </p>
         )}
@@ -120,11 +140,29 @@ const ProfileDetailRow = ({ icon: Icon, label, value, href, preserveCase = false
   );
 };
 
+const ProfileSkeleton = () => (
+  <NewsFeedLayout showSidebars={false}>
+    <div className="w-full min-w-0 max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 animate-pulse">
+      <div className="h-6 w-24 bg-slate-200 rounded-lg mb-6"></div>
+      <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm mb-6">
+        <div className="h-44 sm:h-56 bg-slate-200 w-full"></div>
+        <div className="-mt-14 sm:-mt-20 px-4 sm:px-8 pb-6 flex flex-col sm:flex-row items-start gap-4">
+          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-slate-300 border-4 border-white shrink-0"></div>
+          <div className="w-full pt-4 space-y-3">
+            <div className="h-7 bg-slate-200 rounded-md w-48"></div>
+            <div className="h-4 bg-slate-200 rounded-md w-32"></div>
+            <div className="h-4 bg-slate-200 rounded-md w-64"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </NewsFeedLayout>
+);
 
 const buildAvatarCandidates = (rawPhoto) => {
   const candidates = [];
   const pushUnique = (value) => {
-    if (!value || typeof value !== 'string') return;
+    if (!value || typeof value !== "string") return;
     const trimmed = value.trim();
     if (!trimmed || candidates.includes(trimmed)) return;
     candidates.push(trimmed);
@@ -132,24 +170,28 @@ const buildAvatarCandidates = (rawPhoto) => {
 
   pushUnique(profileAvatarSrc(rawPhoto));
 
-  const raw = typeof rawPhoto === 'string' ? rawPhoto.trim() : '';
+  const raw = typeof rawPhoto === "string" ? rawPhoto.trim() : "";
   if (!raw) return candidates;
 
   pushUnique(raw);
 
   const isAbsolute =
     /^https?:\/\//i.test(raw) ||
-    raw.startsWith('blob:') ||
-    raw.startsWith('data:') ||
-    raw.startsWith('/assets/') ||
-    raw.startsWith('assets/');
+    raw.startsWith("blob:") ||
+    raw.startsWith("data:") ||
+    raw.startsWith("/assets/") ||
+    raw.startsWith("assets/");
 
   if (!isAbsolute) {
-    const relativePath = raw.startsWith('/') ? raw : `/${raw}`;
-    const baseUrl = String(import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
-    const baseApi = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
-    pushUnique(baseUrl ? `${baseUrl}${relativePath}` : '');
-    pushUnique(baseApi ? `${baseApi}${relativePath}` : '');
+    const relativePath = raw.startsWith("/") ? raw : `/${raw}`;
+    const baseUrl = String(import.meta.env.VITE_API_URL || "")
+      .trim()
+      .replace(/\/+$/, "");
+    const baseApi = String(import.meta.env.VITE_API_BASE_URL || "")
+      .trim()
+      .replace(/\/+$/, "");
+    pushUnique(baseUrl ? `${baseUrl}${relativePath}` : "");
+    pushUnique(baseApi ? `${baseApi}${relativePath}` : "");
     pushUnique(`${window.location.origin}${relativePath}`);
   }
 
@@ -181,7 +223,7 @@ const Profile = () => {
       const currentUser = getUser();
       const targetUserId = userId || currentUser?.id;
       const viewingOwn =
-        !userId || String(userId) === String(currentUser?.id ?? '');
+        !userId || String(userId) === String(currentUser?.id ?? "");
 
       let profileFound = false;
       let merged = null;
@@ -222,7 +264,8 @@ const Profile = () => {
                   education: cv?.education ?? cvRes.data.education ?? [],
                   skills: cvRes.data.skills ?? [],
                   workHistory: cv?.workHistory ?? cvRes.data.workHistory ?? [],
-                  certificates: cv?.certificates ?? cvRes.data.certificates ?? [],
+                  certificates:
+                    cv?.certificates ?? cvRes.data.certificates ?? [],
                   links: cv?.links ?? cvRes.data.links ?? null,
                 },
                 null,
@@ -260,27 +303,27 @@ const Profile = () => {
       if (viewingOwn && targetUserId) {
         if (!profileFound) {
           try {
-            const { data } = await axiosInstance.get('/auth/me');
+            const { data } = await axiosInstance.get("/auth/me");
             if (isCancelled()) return;
             const row = unwrapAuthProfileBody(data);
             merged = normalizeProfileData({ ...merged, ...row });
             profileFound = profilePayloadLooksUsable(merged);
           } catch (meError) {
-            console.warn('GET /auth/me failed:', meError?.message || meError);
+            console.warn("GET /auth/me failed:", meError?.message || meError);
           }
         }
 
         const role = merged?.role || currentUser?.role;
-        if (role === 'recruiter') {
+        if (role === "recruiter") {
           try {
-            const response = await axiosInstance.get('/auth/user/profile');
+            const response = await axiosInstance.get("/auth/user/profile");
             if (isCancelled()) return;
             const row = unwrapAuthProfileBody(response.data);
             merged = normalizeProfileData({ ...merged, ...row });
             profileFound = true;
           } catch (recruiterProfileError) {
             console.warn(
-              'GET /auth/user/profile failed:',
+              "GET /auth/user/profile failed:",
               recruiterProfileError?.message || recruiterProfileError,
             );
           }
@@ -295,12 +338,12 @@ const Profile = () => {
             merged = merged
               ? { ...merged, profile_photo: photoUrl }
               : normalizeProfileData({
-                id: currentUser?.id,
-                profile_photo: photoUrl,
-                firstName: currentUser?.firstName,
-                lastName: currentUser?.lastName,
-                email: currentUser?.email,
-              });
+                  id: currentUser?.id,
+                  profile_photo: photoUrl,
+                  firstName: currentUser?.firstName,
+                  lastName: currentUser?.lastName,
+                  email: currentUser?.email,
+                });
             profileFound = true;
           }
         } catch {
@@ -324,12 +367,12 @@ const Profile = () => {
       }
 
       if (!profileFound) {
-        setError('Profile data not found. Please complete your profile setup.');
+        setError("Profile data not found. Please complete your profile setup.");
       }
     } catch (err) {
       if (isCancelled()) return;
-      console.error('Error fetching profile:', err);
-      setError('Failed to load profile data');
+      console.error("Error fetching profile:", err);
+      setError("Failed to load profile data");
     } finally {
       if (!isCancelled()) setLoading(false);
     }
@@ -355,25 +398,22 @@ const Profile = () => {
     };
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-
   const isViewingOwnProfile =
-    !userId || String(userId) === String(user?.id ?? '');
+    !userId || String(userId) === String(user?.id ?? "");
   const profileMatchesRoute =
-    !userId ||
-    !profileData?.id ||
-    String(profileData.id) === String(userId);
-  const showProfileLoading = loading || Boolean(userId && profileData && !profileMatchesRoute);
+    !userId || !profileData?.id || String(profileData.id) === String(userId);
+  const showProfileLoading =
+    loading || Boolean(userId && profileData && !profileMatchesRoute);
 
   const profileAvatarStored = isViewingOwnProfile
     ? pickProfilePhotoPath(user) || pickAuthorProfilePhoto(profileData)
     : pickAuthorProfilePhoto(profileData);
   const activeAvatarSrc =
-    avatarCandidates[avatarIndex] ||
-    profileAvatarSrc(profileAvatarStored);
+    avatarCandidates[avatarIndex] || profileAvatarSrc(profileAvatarStored);
 
   const viewedRole = profileData?.role || user?.role;
-  const isJobseekerProfile = viewedRole === 'jobseeker';
-  const isRecruiterProfile = viewedRole === 'recruiter';
+  const isJobseekerProfile = viewedRole === "jobseeker";
+  const isRecruiterProfile = viewedRole === "recruiter";
   const displayHandle = formatDisplayHandle(profileData);
 
   useEffect(() => {
@@ -385,33 +425,51 @@ const Profile = () => {
   useEffect(() => {
     if (!isPhotoViewerOpen) return;
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setIsPhotoViewerOpen(false);
       }
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [isPhotoViewerOpen]);
 
   const handleEditProfile = () => {
-    if (user?.role === 'jobseeker') {
-      navigate('/edit-profile/bio');
+    if (user?.role === "jobseeker") {
+      navigate("/edit-profile/bio");
     } else {
       navigate(getRecruiterEditProfilePath(user));
     }
   };
 
-
   const [isAboutExpanded, setIsAboutExpanded] = useState(false);
   const aboutTextRaw =
-    (typeof profileData?.bio === 'string' && profileData.bio.trim()) ||
-    (typeof profileData?.summary === 'string' && profileData.summary.trim()) ||
-    (typeof cvData?.bio?.bio === 'string' && cvData.bio.bio.trim()) ||
-    '';
+    (typeof profileData?.bio === "string" && profileData.bio.trim()) ||
+    (typeof profileData?.summary === "string" && profileData.summary.trim()) ||
+    (typeof cvData?.bio?.bio === "string" && cvData.bio.bio.trim()) ||
+    "";
   const aboutText = aboutTextRaw || null;
+
+  const getAboutPreview = (text) => {
+    if (!text) return { text: "", needsTruncation: false };
+    const words = text.split(/\s+/).filter(Boolean);
+    if (text.length > ABOUT_CHAR_LIMIT || words.length > ABOUT_WORD_LIMIT) {
+      const truncatedByChar = text.slice(0, ABOUT_CHAR_LIMIT).trim();
+      const lastSpaceIndex = truncatedByChar.lastIndexOf(" ");
+      const cleanTruncated =
+        lastSpaceIndex > 80
+          ? truncatedByChar.slice(0, lastSpaceIndex)
+          : truncatedByChar;
+      return {
+        text: cleanTruncated + "...",
+        needsTruncation: true,
+      };
+    }
+    return { text, needsTruncation: false };
+  };
+
   const aboutPreview = aboutText
-    ? truncateText(aboutText, ABOUT_WORD_LIMIT, 'words')
-    : { text: '', needsTruncation: false };
+    ? getAboutPreview(aboutText)
+    : { text: "", needsTruncation: false };
   const needsTruncation = aboutPreview.needsTruncation;
   const recruiterLinks = profileData?.links || {};
   const linkedinUrl =
@@ -420,33 +478,30 @@ const Profile = () => {
   const instagramUrl =
     profileData?.instagram_url || recruiterLinks.instagram || null;
   const recruiterPublicLocation = [profileData?.city, profileData?.country]
-    .filter((value) => value != null && String(value).trim() !== '')
+    .filter((value) => value != null && String(value).trim() !== "")
     .map((value) => formatDisplayText(value))
-    .join(', ');
+    .join(", ");
   const viewedProfileId = userId || profileData?.id;
 
   if (showProfileLoading) {
-    return (
-      <NewsFeedLayout showSidebars={false}>
-        <div className="min-h-[60vh] flex items-center justify-center px-4">
-          <div className="text-center max-w-sm">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F] mx-auto"></div>
-            <p className="mt-4 text-[#1A3E32] text-sm sm:text-base">Loading profile...</p>
-          </div>
-        </div>
-      </NewsFeedLayout>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (error) {
     return (
       <NewsFeedLayout showSidebars={false}>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">{error}</p>
+        <div className="min-h-[60vh] flex items-center justify-center px-4">
+          <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full">
+            <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">
+              !
+            </div>
+            <p className="text-slate-800 font-semibold mb-2">{error}</p>
+            <p className="text-xs text-slate-500 mb-5">
+              Something went wrong while loading this profile.
+            </p>
             <button
               onClick={() => fetchProfileData()}
-              className="bg-[#16730F] text-white px-4 py-2 rounded-lg hover:bg-[#145a0c]"
+              className="bg-[#16730F] text-white px-5 py-2.5 rounded-xl hover:bg-[#145a0c] font-medium text-sm transition-all shadow-sm cursor-pointer"
             >
               Try Again
             </button>
@@ -459,21 +514,26 @@ const Profile = () => {
   if (!profileData && !showProfileLoading) {
     return (
       <NewsFeedLayout classes={false} scrollable={false} showSidebars={false}>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-600 mb-4">No profile data found</p>
-            <p className="text-sm text-gray-500 mb-4">
+        <div className="min-h-[60vh] flex items-center justify-center px-4">
+          <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 text-[#16730F] flex items-center justify-center mx-auto mb-4">
+              <FaBriefcase className="w-5 h-5" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">
+              No profile data found
+            </h3>
+            <p className="text-xs text-slate-500 mb-5">
               Please complete your profile setup to view your information here.
             </p>
             <button
               onClick={() =>
                 navigate(
-                  user?.role === 'jobseeker'
-                    ? '/edit-profile/bio'
+                  user?.role === "jobseeker"
+                    ? "/edit-profile/bio"
                     : getRecruiterEditProfilePath(user),
                 )
               }
-              className="bg-[#16730F] text-white px-4 py-2 rounded-lg hover:bg-[#145a0c] transition-colors"
+              className="bg-[#16730F] text-white px-5 py-2.5 rounded-xl hover:bg-[#145a0c] font-semibold text-sm transition-all shadow-sm cursor-pointer"
             >
               Complete Profile Setup
             </button>
@@ -486,225 +546,334 @@ const Profile = () => {
   return (
     <NewsFeedLayout showSidebars={false}>
       <div className="w-full min-w-0 max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
-          <button
-            type="button"
-            onClick={() => {
-              if (isViewingOwnProfile) {
-                navigate("/news-feed");
-              } else {
-                navigate(-1);
-              }
-            }}
-            className="flex items-center gap-2 text-[#16730F] hover:text-[#145a0c] transition-colors self-start text-sm sm:text-base"
-          >
-            <FaArrowLeft className="shrink-0" />
-            <span>Back</span>
-          </button>
-          {isViewingOwnProfile && (
-            <button
-              type="button"
-              onClick={handleEditProfile}
-              className="flex items-center justify-center gap-2 w-full sm:w-auto bg-[#16730F] text-white px-4 py-2.5 rounded-lg hover:bg-[#145a0c] transition-colors text-sm sm:text-base"
-            >
-              <FaEdit className="shrink-0" />
-              <span>Edit Profile</span>
-            </button>
-          )}
-        </div>
+        {/* Main Profile Header Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden mb-6 transition-all duration-300">
+          {/* Hero Cover Banner */}
+          <div className="relative h-44 sm:h-56 md:h-64 w-full bg-gradient-to-r from-[#0a3507] via-[#16730F] to-[#2aa51e] overflow-hidden">
+            {/* Ambient Background Decorative Patterns */}
+            <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            <div className="absolute -top-10 -right-10 w-60 h-60 bg-white/10 rounded-full blur-2xl"></div>
+            <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-emerald-300/10 rounded-full blur-2xl"></div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
-            <div className="flex flex-col sm:flex-row sm:items-start items-center gap-4 sm:gap-6 flex-1 min-w-0">
-              <img
-                src={activeAvatarSrc}
-                alt="Profile"
-                className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-full object-cover border-4 border-[#16730F] cursor-zoom-in"
-                onClick={() => setIsPhotoViewerOpen(true)}
-                onError={() => {
-                  setAvatarIndex((prev) =>
-                    prev < avatarCandidates.length - 1 ? prev + 1 : prev,
-                  );
+            {/* Top Navigation Bar inside Banner */}
+            <div className="relative z-10 p-4 sm:p-6 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  if (isViewingOwnProfile) {
+                    navigate("/news-feed");
+                  } else {
+                    navigate(-1);
+                  }
                 }}
-              />
-              <div className="w-full min-w-0 text-center sm:text-left">
-                <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] break-words flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
-                  <DisplayNameWithBadge user={profileData} fallback="User" badgeSize="md" />
-                </h1>
-                <p className="text-[#16730F] font-medium text-sm sm:text-base mt-0.5">
-                  {formatDisplayRole(viewedRole)}
-                </p>
-                {isRecruiterProfile && profileData.company_name && (
-                  <p className="text-gray-700 mt-1 text-sm sm:text-base break-words font-medium">
-                    {formatDisplayText(profileData.company_name)}
-                  </p>
-                )}
-                {(profileData.job_title || profileData.title) && (
-                  <p className="text-gray-600 mt-1 text-sm sm:text-base break-words">
-                    {formatDisplayText(profileData.job_title || profileData.title)}
-                  </p>
-                )}
-                {displayHandle && (
-                  <p className="text-gray-500 mt-1 text-sm break-words">
-                    {displayHandle}
-                  </p>
-                )}
-                {isRecruiterProfile && recruiterPublicLocation && (
-                  <p className="flex items-center justify-center sm:justify-start gap-1.5 text-gray-600 mt-2 text-sm sm:text-base">
-                    <FaMapMarkerAlt className="text-[#16730F] shrink-0" aria-hidden />
-                    <span className="break-words">{recruiterPublicLocation}</span>
-                  </p>
-                )}
-                {isViewingOwnProfile ? (
-                  <button
-                    type="button"
-                    onClick={() => navigate("/connection")}
-                    className="mt-2 text-[10px] sm:text-xs text-gray-600 hover:underline cursor-pointer"
-                    title="View all your connections"
-                  >
-                    <span className="font-semibold text-[#16730F]">
-                      {formatConnectionCount(profileData.connectionCount)}
-                    </span>{" "}
-                    <span className="text-[#1A3E32]">
-                      {Number(profileData.connectionCount) === 1
-                        ? "Connection"
-                        : "Connections"}
-                    </span>
-                  </button>
-                ) : (
-                  <p className="mt-2 text-[10px] sm:text-xs text-gray-600">
-                    <span className="font-semibold text-[#16730F]">
-                      {formatConnectionCount(profileData.connectionCount)}
-                    </span>{" "}
-                    <span className="text-[#1A3E32]">
-                      {Number(profileData.connectionCount) === 1
-                        ? "Connection"
-                        : "Connections"}
-                    </span>
-                  </p>
-                )}
-                {!isViewingOwnProfile && viewedProfileId && (
-                  <ProfileConnectActions
-                    userId={viewedProfileId}
-                    displayName={formatDisplayPersonName(profileData, 'User')}
-                  />
-                )}
-              </div>
-            </div>
+                className="flex items-center gap-2 bg-black/25 hover:bg-black/40 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 text-xs sm:text-sm font-medium transition-all shadow-xs cursor-pointer"
+              >
+                <FaArrowLeft className="shrink-0 text-xs" />
+                <span>Back</span>
+              </button>
 
-            {!isViewingOwnProfile &&
-              Number(profileData.mutualConnectionCount) > 0 && (
-                <div className="shrink-0 w-full sm:w-auto sm:max-w-[240px] flex flex-col items-center sm:items-end gap-2 sm:pt-1">
-                  <p className="text-[10px] sm:text-xs font-semibold text-[#1A3E32]">
-                    Mutual connections
-                  </p>
-                  <div className="flex items-center -space-x-2">
-                    {(profileData.mutualConnections || [])
-                      .slice(0, 3)
-                      .map((person) => {
-                        const name = [person?.firstName, person?.lastName]
-                          .filter(Boolean)
-                          .join(" ")
-                          .trim();
-                        return (
-                          <button
-                            key={String(person.id)}
-                            type="button"
-                            onClick={() => navigate(`/user-profile/${person.id}`)}
-                            className="relative h-9 w-9 rounded-full border-2 border-white shadow-sm overflow-hidden bg-gray-100 hover:z-10 focus:z-10 focus:outline-none focus:ring-2 focus:ring-[#16730F]/40"
-                            title={name ? `View ${name}'s profile` : "View profile"}
-                            aria-label={name ? `View ${name}'s profile` : "View mutual connection profile"}
-                          >
-                            <img
-                              src={profileAvatarSrc(person.profile_photo)}
-                              alt={name || "Mutual connection"}
-                              className="h-full w-full object-cover"
-                            />
-                          </button>
-                        );
-                      })}
-                    {Number(profileData.mutualConnectionCount) > 3 && (
-                      <button
-                        type="button"
-                        onClick={() => setShowMutualConnections(true)}
-                        className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#16730F]/10 text-[10px] font-semibold text-[#16730F] shadow-sm hover:bg-[#16730F]/20"
-                        title="See all mutual connections"
-                      >
-                        +
-                        {formatConnectionCount(
-                          Number(profileData.mutualConnectionCount) - 3,
+              {isViewingOwnProfile && (
+                <button
+                  type="button"
+                  onClick={handleEditProfile}
+                  className="flex items-center gap-2 bg-white/90 hover:bg-white text-[#16730F] backdrop-blur-md px-4 py-2 rounded-full border border-white/50 text-xs sm:text-sm font-semibold transition-all shadow-md hover:shadow-lg cursor-pointer"
+                >
+                  <FaEdit className="shrink-0" />
+                  <span>Edit Profile</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Profile Content (Overlapping Hero Cover) */}
+          <div className="relative z-10 -mt-14 sm:-mt-20 px-4 sm:px-8 pb-6 sm:pb-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-5">
+              {/* Left Column: Avatar + Basic Info */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 flex-1 min-w-0">
+                {/* Avatar with Interactive Zoom Overlay */}
+                <div
+                  className="relative group shrink-0 cursor-pointer"
+                  onClick={() => setIsPhotoViewerOpen(true)}
+                  title="Click to view full photo"
+                >
+                  <img
+                    src={activeAvatarSrc}
+                    alt="Profile"
+                    className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover border-4 sm:border-[5px] border-white shadow-xl ring-1 ring-slate-900/10 transition-transform duration-300 group-hover:scale-[1.02] bg-slate-100"
+                    onError={() => {
+                      setAvatarIndex((prev) =>
+                        prev < avatarCandidates.length - 1 ? prev + 1 : prev,
+                      );
+                    }}
+                  />
+                  <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200 text-white text-xs font-semibold gap-1.5">
+                    <FaCamera className="w-4 h-4" />
+                    <span>View</span>
+                  </div>
+                </div>
+
+                {/* Name & Title Block */}
+                <div className="w-full min-w-0 text-center sm:text-left pt-1 sm:pt-4">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 tracking-tight break-words min-w-0 max-w-full">
+                      <DisplayNameWithBadge
+                        user={profileData}
+                        fallback="User"
+                        badgeSize="md"
+                        className="text-[#fff]"
+                      />
+                    </h1>
+
+                    {/* Role Pill */}
+                    <span
+                      className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-semibold tracking-wide border shadow-2xs ${
+                        isRecruiterProfile
+                          ? "bg-purple-50 text-purple-700 border-purple-200"
+                          : "bg-emerald-50 text-[#16730F] border-emerald-200"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          isRecruiterProfile ? "bg-purple-600" : "bg-[#16730F]"
+                        }`}
+                      ></span>
+                      {formatDisplayRole(viewedRole)}
+                    </span>
+                  </div>
+
+                  {/* Company Name */}
+                  {isRecruiterProfile && profileData.company_name && (
+                    <p className="mt-2 flex items-center justify-center sm:justify-start">
+                      <span className="inline-flex items-center gap-1 max-w-full px-2 py-0.5 rounded-md bg-white/90 text-[#16730F] text-xs sm:text-sm font-semibold shadow-sm border border-[#16730F]/60 backdrop-blur-sm">
+                        <FaBuilding className="text-[#16730F] shrink-0 text-[10px]" />
+                        <span className="break-words">
+                          {formatDisplayText(profileData.company_name)}
+                        </span>
+                      </span>
+                    </p>
+                  )}
+
+                  {/* Job Title / Headline */}
+                  {(profileData.job_title || profileData.title) && (
+                    <p className="mt-1.5 flex items-center justify-center sm:justify-start">
+                      <span className="inline-flex items-center max-w-full px-2 py-0.5 rounded-md bg-[#FFF8E7] text-[#3D2E0A] text-xs sm:text-sm font-medium shadow-sm border border-[#E6D5A8] backdrop-blur-sm break-words">
+                        {formatDisplayText(
+                          profileData.job_title || profileData.title,
                         )}
-                      </button>
+                      </span>
+                    </p>
+                  )}
+
+                  {/* Handle & Location Row */}
+                  <div className="flex items-center justify-center sm:justify-start gap-3 flex-wrap text-xs sm:text-sm text-slate-500 mt-2">
+                    {displayHandle && (
+                      <span className="font-mono bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-md font-medium">
+                        {displayHandle}
+                      </span>
+                    )}
+
+                    {isRecruiterProfile && recruiterPublicLocation && (
+                      <span className="flex items-center gap-1 text-slate-600">
+                        <FaMapMarkerAlt className="text-[#16730F] shrink-0" />
+                        <span className="break-words">
+                          {recruiterPublicLocation}
+                        </span>
+                      </span>
                     )}
                   </div>
-                  <p className="text-[10px] sm:text-xs text-gray-500 text-center sm:text-right leading-snug">
-                    {formatMutualConnectionsLabel(
-                      profileData.mutualConnectionCount,
-                      profileData.mutualConnections,
+
+                  {/* Connections Stats Button / Pill */}
+                  <div className="mt-3 flex items-center justify-center sm:justify-start gap-2">
+                    {isViewingOwnProfile ? (
+                      <button
+                        type="button"
+                        onClick={() => navigate("/connection")}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-[#16730F] text-xs font-semibold border border-emerald-200/80 transition-colors cursor-pointer"
+                        title="View all your connections"
+                      >
+                        <FaUserFriends className="text-xs" />
+                        <span>
+                          {formatConnectionCount(profileData.connectionCount)}
+                        </span>
+                        <span className="text-slate-600 font-normal">
+                          {Number(profileData.connectionCount) === 1
+                            ? "Connection"
+                            : "Connections"}
+                        </span>
+                      </button>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200">
+                        <FaUserFriends className="text-xs text-[#16730F]" />
+                        <span className="text-[#16730F]">
+                          {formatConnectionCount(profileData.connectionCount)}
+                        </span>
+                        <span className="text-slate-600 font-normal">
+                          {Number(profileData.connectionCount) === 1
+                            ? "Connection"
+                            : "Connections"}
+                        </span>
+                      </span>
                     )}
-                  </p>
-                  {Number(profileData.mutualConnectionCount) > 3 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowMutualConnections(true)}
-                      className="text-[10px] sm:text-xs font-semibold text-[#16730F] hover:underline"
-                    >
-                      See all
-                    </button>
+                  </div>
+
+                  {/* Connect / Message Actions */}
+                  {!isViewingOwnProfile && viewedProfileId && (
+                    <div className="mt-4 pt-2 w-full min-w-0">
+                      <ProfileConnectActions
+                        userId={viewedProfileId}
+                        displayName={formatDisplayPersonName(
+                          profileData,
+                          "User",
+                        )}
+                      />
+                    </div>
                   )}
                 </div>
-              )}
+              </div>
+
+              {/* Right Column: Mutual Connections Box */}
+              {!isViewingOwnProfile &&
+                Number(profileData.mutualConnectionCount) > 0 && (
+                  <div className="shrink-0 w-full md:w-auto md:max-w-xs bg-slate-50/90 hover:bg-emerald-50/40 border border-slate-200/80 hover:border-emerald-200 p-3.5 sm:p-4 rounded-xl transition-all duration-200 shadow-2xs">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase tracking-wide">
+                        <FaUserFriends className="text-[#16730F]" />
+                        Mutual connections
+                      </span>
+                      <span className="text-xs font-semibold text-[#16730F] bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                        {formatConnectionCount(
+                          profileData.mutualConnectionCount,
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center -space-x-2.5 overflow-hidden py-1">
+                        {(profileData.mutualConnections || [])
+                          .slice(0, 3)
+                          .map((person) => {
+                            const name = [person?.firstName, person?.lastName]
+                              .filter(Boolean)
+                              .join(" ")
+                              .trim();
+                            return (
+                              <button
+                                key={String(person.id)}
+                                type="button"
+                                onClick={() =>
+                                  navigate(`/user-profile/${person.id}`)
+                                }
+                                className="relative h-9 w-9 rounded-full border-2 border-white shadow-sm overflow-hidden bg-slate-200 hover:z-10 focus:z-10 focus:outline-none transition-transform hover:scale-110"
+                                title={
+                                  name
+                                    ? `View ${name}'s profile`
+                                    : "View profile"
+                                }
+                              >
+                                <img
+                                  src={profileAvatarSrc(person.profile_photo)}
+                                  alt={name || "Mutual connection"}
+                                  className="h-full w-full object-cover"
+                                />
+                              </button>
+                            );
+                          })}
+                        {Number(profileData.mutualConnectionCount) > 3 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowMutualConnections(true)}
+                            className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-emerald-100 text-[11px] font-bold text-[#16730F] shadow-sm hover:bg-emerald-200 transition-colors"
+                            title="See all mutual connections"
+                          >
+                            +
+                            {formatConnectionCount(
+                              Number(profileData.mutualConnectionCount) - 3,
+                            )}
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-slate-600 leading-snug truncate">
+                          {formatMutualConnectionsLabel(
+                            profileData.mutualConnectionCount,
+                            profileData.mutualConnections,
+                          )}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowMutualConnections(true)}
+                          className="text-xs font-semibold text-[#16730F] hover:underline mt-0.5 inline-block"
+                        >
+                          See all mutuals
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+            </div>
           </div>
         </div>
 
+        {/* Online Presence Card */}
         {isRecruiterProfile && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4 flex items-center gap-2">
-                <FaGlobe className="shrink-0" />
-                Online Presence
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <ProfileDetailRow
-                  icon={FaGlobe}
-                  label="Website"
-                  value={profileData.website}
-                  href={toExternalHref(profileData.website)}
-                  preserveCase
-                />
-                <ProfileDetailRow
-                  icon={FaLinkedin}
-                  label="LinkedIn"
-                  value={linkedinUrl}
-                  href={toExternalHref(linkedinUrl)}
-                  preserveCase
-                />
-                <ProfileDetailRow
-                  icon={FaTwitter}
-                  label="X (Twitter)"
-                  value={twitterUrl}
-                  href={toExternalHref(twitterUrl)}
-                  preserveCase
-                />
-                <ProfileDetailRow
-                  icon={FaInstagram}
-                  label="Instagram"
-                  value={instagramUrl}
-                  href={toExternalHref(instagramUrl)}
-                  preserveCase
-                />
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-7 mb-6 transition-all">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 flex items-center gap-2.5 border-b border-slate-100 pb-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0">
+                <FaGlobe className="w-4 h-4" />
               </div>
+              <span>Online Presence</span>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+              <ProfileDetailRow
+                icon={FaGlobe}
+                label="Website"
+                value={profileData.website}
+                href={toExternalHref(profileData.website)}
+                preserveCase
+                brandColor="bg-emerald-50 text-[#16730F]"
+              />
+              <ProfileDetailRow
+                icon={FaLinkedin}
+                label="LinkedIn"
+                value={linkedinUrl}
+                href={toExternalHref(linkedinUrl)}
+                preserveCase
+                brandColor="bg-blue-50 text-[#0A66C2]"
+              />
+              <ProfileDetailRow
+                icon={FaTwitter}
+                label="X (Twitter)"
+                value={twitterUrl}
+                href={toExternalHref(twitterUrl)}
+                preserveCase
+                brandColor="bg-slate-100 text-slate-900"
+              />
+              <ProfileDetailRow
+                icon={FaInstagram}
+                label="Instagram"
+                value={instagramUrl}
+                href={toExternalHref(instagramUrl)}
+                preserveCase
+                brandColor="bg-pink-50 text-pink-600"
+              />
             </div>
+          </div>
         )}
 
+        {/* About Section Card */}
         {(isRecruiterProfile || isJobseekerProfile) && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-[#1A3E32] mb-3 sm:mb-4">
-              {isRecruiterProfile ? 'About Company' : 'About'}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-7 mb-6 transition-all">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 flex items-center gap-2.5 border-b border-slate-100 pb-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0">
+                <FaBriefcase className="w-4 h-4" />
+              </div>
+              <span>{isRecruiterProfile ? "About Company" : "About"}</span>
             </h2>
             <div className="relative">
               {aboutText ? (
                 <>
-                  <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+                  <p className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
                     {!needsTruncation || isAboutExpanded
                       ? aboutText
                       : aboutPreview.text}
@@ -712,30 +881,30 @@ const Profile = () => {
                   {needsTruncation && (
                     <button
                       onClick={() => setIsAboutExpanded(!isAboutExpanded)}
-                      className="mt-2 text-[#16730F] hover:text-[#145a0c] font-medium transition-colors inline-flex items-center gap-1 group"
+                      className="mt-3 text-[#16730F] hover:text-[#145a0c] font-semibold text-xs sm:text-sm transition-colors inline-flex items-center gap-1 group cursor-pointer"
                     >
-                      <span>{isAboutExpanded ? 'See less' : 'See more'}</span>
-                      <svg
-                        className={`w-4 h-4 transition-transform duration-200 ${isAboutExpanded ? 'rotate-180' : ''
-                          }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <span>{isAboutExpanded ? "See Less" : "See More"}</span>
+                      <FaChevronDown
+                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                          isAboutExpanded ? "rotate-180 text-[#16730F]" : ""
+                        }`}
+                      />
                     </button>
                   )}
                 </>
               ) : (
-                <p className="text-sm sm:text-base text-gray-500">Not provided</p>
+                <p className="text-sm text-slate-400 italic">
+                  No bio provided yet.
+                </p>
               )}
             </div>
           </div>
         )}
 
+        {/* CV Sections for Jobseeker */}
         {isJobseekerProfile && <ProfileCvSections cv={cvData} />}
 
+        {/* User Posts Section */}
         {viewedProfileId && (
           <ProfilePostsSection
             userId={String(viewedProfileId)}
@@ -744,28 +913,32 @@ const Profile = () => {
         )}
       </div>
 
+      {/* Fullscreen Photo Viewer Modal */}
       {isPhotoViewerOpen && (
         <div
-          className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setIsPhotoViewerOpen(false)}
         >
-          <img
-            src={activeAvatarSrc}
-            alt="Profile full view"
-            className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg"
-            onClick={(event) => event.stopPropagation()}
-          />
-          <button
-            type="button"
-            aria-label="Close photo viewer"
-            className="absolute top-4 right-4 text-white text-2xl bg-black/40 hover:bg-black/60 rounded-full w-10 h-10 flex items-center justify-center"
-            onClick={() => setIsPhotoViewerOpen(false)}
-          >
-            ×
-          </button>
+          <div className="relative max-w-[95vw] max-h-[90vh]">
+            <img
+              src={activeAvatarSrc}
+              alt="Profile full view"
+              className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+              onClick={(event) => event.stopPropagation()}
+            />
+            <button
+              type="button"
+              aria-label="Close photo viewer"
+              className="absolute -top-4 -right-4 text-white text-xl bg-slate-800/80 hover:bg-slate-700 rounded-full w-10 h-10 flex items-center justify-center border border-white/20 shadow-lg transition-all cursor-pointer"
+              onClick={() => setIsPhotoViewerOpen(false)}
+            >
+              ×
+            </button>
+          </div>
         </div>
       )}
 
+      {/* Mutual Connections Modal */}
       <MutualConnectionsModal
         open={showMutualConnections}
         onClose={() => setShowMutualConnections(false)}

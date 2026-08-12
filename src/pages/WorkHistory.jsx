@@ -1,12 +1,18 @@
-
 import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import StepTabs from "../components/StepTabs";
 import ProgressBar from "../components/ProgressBar";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import NavigationButtons from "../components/NavigationButtons";
-import { FaPlus, FaCheckCircle, FaChevronDown, FaTrash, FaBriefcase } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
+import {
+  FaPlus,
+  FaCheckCircle,
+  // FaChevronDown,
+  FaTrash,
+  FaBriefcase,
+} from "react-icons/fa";
+// import { FaDeleteLeft } from "react-icons/fa6";
+import { RecruiterSelect } from "../components/recruiter/recruiterOnboardingUi";
 
 const optionsJob = [
   // Tech & IT
@@ -62,30 +68,17 @@ const optionsJob = [
   "Plumber",
   "Driver",
   "Chef",
-  "Security Guard"
+  "Security Guard",
 ];
 
-
-const SelectWithIcon = ({ value, onChange, options, placeholder }) => (
-  <div className="relative w-full">
-    <select
-      value={value}
-      onChange={onChange}
-      className={`w-full h-12 border-2 rounded-[10px] px-4 pr-10 appearance-none ${
-        value ? "border-[#828282]" : "border-[#F5F5F5]"
-      }`}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>{opt}</option>
-      ))}
-    </select>
-    {value ? (
-      <FaCheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] text-lg" />
-    ) : (
-      <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
-    )}
-  </div>
+const SelectWithIcon = ({ name, value, onChange, options, placeholder }) => (
+  <RecruiterSelect
+    name={name}
+    value={value}
+    onChange={onChange}
+    options={options || []}
+    placeholder={placeholder || "Select option"}
+  />
 );
 
 const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
@@ -108,7 +101,14 @@ const InputWithIcon = ({ value, onChange, placeholder, type = "text" }) => (
 function WorkHistory() {
   const navigate = useNavigate();
   const { currentStep } = useOutletContext();
-  const steps = ["Bio", "Education", "Skills", "Work history", "Certificate", "Links"];
+  const steps = [
+    "Bio",
+    "Education",
+    "Skills",
+    "Work history",
+    "Certificate",
+    "Links",
+  ];
 
   const [jobTitle, setJobTitle] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -118,7 +118,9 @@ function WorkHistory() {
   const [allFilled, setAllFilled] = useState(false);
 
   useEffect(() => {
-    setAllFilled(jobTitle && companyName && responsibilities && startDate && endDate);
+    setAllFilled(
+      jobTitle && companyName && responsibilities && startDate && endDate,
+    );
   }, [jobTitle, companyName, responsibilities, startDate, endDate]);
 
   const clearForm = () => {
@@ -135,8 +137,12 @@ function WorkHistory() {
       <StepTabs steps={steps} currentStep={currentStep} />
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
-      <div className="max-w-3xl mx-auto mt-6 text-[#E63357] text-2xl font-semibold">Work history</div>
-      <p className="max-w-3xl mx-auto text-[#333] text-sm mb-6">Your professional experience shows your expertise.</p>
+      <div className="max-w-3xl mx-auto mt-6 text-[#E63357] text-2xl font-semibold">
+        Work history
+      </div>
+      <p className="max-w-3xl mx-auto text-[#333] text-sm mb-6">
+        Your professional experience shows your expertise.
+      </p>
 
       <div className="max-w-full md:max-w-4xl mx-auto border-2 border-[#E0E0E0] p-4 rounded-lg">
         <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-4">
@@ -161,48 +167,45 @@ function WorkHistory() {
             </div>
           </div>
 
-         
+          {/* Responsibilities & Dates */}
+          <div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <p className="font-semibold text-xs mb-1">KEY RESPONSIBILITIES</p>
+              <textarea
+                value={responsibilities}
+                onChange={(e) => setResponsibilities(e.target.value)}
+                placeholder="Tip: Use bullet points to highlight what you did and how it helped the company."
+                className="w-full bg-[#F5F5F5] rounded-[6px] p-3 h-40 text-[10px]"
+              >
+                {" "}
+              </textarea>
+            </div>
 
-
-
-{/* Responsibilities & Dates */}
-<div className="bg-[#82828280] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
-  <div className="flex-1">
-    <p className="font-semibold text-xs mb-1">KEY RESPONSIBILITIES</p>
-    <textarea
-      value={responsibilities}
-      onChange={(e) => setResponsibilities(e.target.value)}
-      placeholder="Tip: Use bullet points to highlight what you did and how it helped the company."
-      className="w-full bg-[#F5F5F5] rounded-[6px] p-3 h-40 text-[10px]"
-    > </textarea>
-  </div>
-
-  <div className="w-full sm:w-56 p-2 rounded-lg">
-    <p className="font-semibold text-xs mb-1">START DATE</p>
-    <InputWithIcon
-      type="date"
-      value={startDate}
-      onChange={(e) => setStartDate(e.target.value)}
-    /> <br />
-    <p className="font-semibold text-xs mb-1 mt-2">END DATE</p>
-    <InputWithIcon
-      type="date"
-      value={endDate}
-      onChange={(e) => setEndDate(e.target.value)}
-    />
-  </div>
-</div>
-
-
-
-
+            <div className="w-full sm:w-56 p-2 rounded-lg">
+              <p className="font-semibold text-xs mb-1">START DATE</p>
+              <InputWithIcon
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />{" "}
+              <br />
+              <p className="font-semibold text-xs mb-1 mt-2">END DATE</p>
+              <InputWithIcon
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+          </div>
 
           {/* Add More Button */}
           <div className="max-w-2xs mx-auto bg-[#00000040] mt-3 rounded-2xl flex">
             <button
               onClick={clearForm}
               className={`flex-1 h-16 flex items-center justify-center gap-2 text-white border-2 rounded-lg text-sm ${
-                allFilled ? "bg-black border-black" : "bg-transparent border-[#F5F5F5]"
+                allFilled
+                  ? "bg-black border-black"
+                  : "bg-transparent border-[#F5F5F5]"
               }`}
             >
               ADD MORE <FaPlus />
@@ -210,7 +213,6 @@ function WorkHistory() {
           </div>
         </div>
       </div>
-
 
       {allFilled && (
         <div className="w-full max-w-4xl mx-auto mt-6 px-1">

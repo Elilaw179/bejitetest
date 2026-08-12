@@ -13,6 +13,10 @@ import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { fetchCurrentUserProfilePhoto } from "../../services/profilePhotoService";
 import { getUser, pickProfilePhotoPath } from "../../utils/tokenManager";
 import useAuth from "../../hooks/useAuth";
+import {
+  PROFILE_PHOTO_MAX_BYTES,
+  getUploadSizeError,
+} from "../../utils/uploadLimits";
 
 const ProfileSetup = () => {
   const navigate = useNavigate();
@@ -77,6 +81,12 @@ const ProfileSetup = () => {
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      const sizeError = getUploadSizeError(file, PROFILE_PHOTO_MAX_BYTES);
+      if (sizeError) {
+        toast.error(sizeError);
+        e.target.value = "";
+        return;
+      }
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }

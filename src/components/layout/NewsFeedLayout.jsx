@@ -37,13 +37,14 @@ export default function NewsFeedLayout({
   rightSidebar,
   scrollable = true,
   classes = DEFAULT_SCROLL_CLASSES,
+  NewsFeedshead = true,
 }) {
   const noSidebarClasses = resolveNoSidebarClasses(scrollable, classes);
 
   return (
     <div className="flex flex-col bg-[#F5F5F5] h-[100dvh] max-h-[100dvh] overflow-hidden w-full">
-      {/* Sticky Header */}
-      <div className="shrink-0 z-50 bg-[#F5F5F5] border-b border-[#A9A9A9] w-full">
+      {/* Sticky Header — overflow-visible so the role menu can paint over the feed */}
+      <div className="shrink-0 z-50 bg-[#F5F5F5] border-b border-[#A9A9A9] w-full overflow-visible relative">
         <NewsFeedHeader />
       </div>
 

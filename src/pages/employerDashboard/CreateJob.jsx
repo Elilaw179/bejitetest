@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
-import { createEmployerJob } from "../../services/employerApi";
+import {
+  createEmployerJob,
+  getEmployerDashboard,
+} from "../../services/employerApi";
 import useCountryStateOptions from "../../hooks/useCountryStateOptions";
 import { AutocompleteInput } from "../../components/forms/AutocompleteInput";
 import {
@@ -13,13 +16,10 @@ import { formatSalaryExpectation } from "../../utils/formatSalary";
 import {
   FaBriefcase,
   FaBuilding,
-  FaTools,
   FaClock,
   FaGlobe,
   FaCheckCircle,
   FaRobot,
-  FaPlus,
-  FaTrash,
   FaArrowLeft,
   FaEye,
   FaExternalLinkAlt,
@@ -29,17 +29,10 @@ const INDUSTRY_SUGGESTIONS = INDUSTRY_OPTIONS.filter(
   (option) => option && option !== "Not Available",
 );
 
-const formatSalaryRangePreview = (salaryMin, salaryMax, currencyLabel) => {
+const formatSalaryPreview = (salary, currencyLabel) => {
+  if (!salary) return null;
   const code = currencyCodeFromLabel(currencyLabel) || "NGN";
-  const min = salaryMin ? Number(salaryMin) : null;
-  const max = salaryMax ? Number(salaryMax) : null;
-
-  if (min && max) {
-    return `${formatSalaryExpectation(min, code)} - ${formatSalaryExpectation(max, code)}`;
-  }
-  if (min) return `From ${formatSalaryExpectation(min, code)}`;
-  if (max) return `Up to ${formatSalaryExpectation(max, code)}`;
-  return null;
+  return formatSalaryExpectation(Number(salary), code);
 };
 
 const normalizeApplicationUrl = (value) => {
@@ -60,71 +53,65 @@ const normalizeApplicationUrl = (value) => {
 
 const CreateJob = () => {
   const navigate = useNavigate();
-  const [skills, setSkills] = useState([{ skill: "", experience: "" }]);
   const [formData, setFormData] = useState({
     title: "",
     industry: "",
-    roles: "",
+    qualifications: "",
     responsibilities: "",
+    requirements: "",
     workMode: "Remote",
     country: "",
     state: "",
-    salaryMin: "",
-    salaryMax: "",
+    salary: "",
     currency: "",
     applicationMethod: "bejite",
     applicationUrl: "",
+    recruitmentJobId: "",
   });
   const { countries, states } = useCountryStateOptions(formData.country);
   const [showPreview, setShowPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const [recruitmentExercises, setRecruitmentExercises] = useState([]);
+  const [recruitmentsLoading, setRecruitmentsLoading] = useState(false);
 
-  const addSkill = () => {
-    setSkills([...skills, { skill: "", experience: "" }]);
-  };
-
-  const removeSkill = (index) => {
-    const updated = [...skills];
-    updated.splice(index, 1);
-    setSkills(updated);
-  };
-
-  const updateSkill = (index, field, value) => {
-    const updated = [...skills];
-    updated[index][field] = value;
-    setSkills(updated);
-  };
+  useEffect(() => {
+    let cancelled = false;
+    const loadRecruitments = async () => {
+      setRecruitmentsLoading(true);
+      try {
+        const response = await getEmployerDashboard({
+          status: "all",
+          listing_kind: "recruitment",
+        });
+        const list = response?.data?.jobs || [];
+        if (!cancelled) setRecruitmentExercises(list);
+      } catch {
+        if (!cancelled) setRecruitmentExercises([]);
+      } finally {
+        if (!cancelled) setRecruitmentsLoading(false);
+      }
+    };
+    loadRecruitments();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const validateForm = () => {
     if (!formData.title.trim()) return "Job title is required";
     if (!formData.industry) return "Industry is required";
     if (!formData.country.trim()) return "Country is required";
-    if (!formData.roles.trim()) return "Roles are required";
+    if (!formData.qualifications.trim()) return "Qualifications are required";
     if (!formData.responsibilities.trim()) {
       return "Responsibilities are required";
     }
-    const hasSkill = skills.some((item) => item.skill.trim());
-    if (!hasSkill) return "At least one skill is needed";
-    if (formData.salaryMin && Number(formData.salaryMin) < 0) {
-      return "Minimum salary must be zero or greater";
+    if (formData.salary && Number(formData.salary) < 0) {
+      return "Salary must be zero or greater";
     }
-    if (formData.salaryMax && Number(formData.salaryMax) < 0) {
-      return "Maximum salary must be zero or greater";
-    }
-    if (
-      formData.salaryMin &&
-      formData.salaryMax &&
-      Number(formData.salaryMin) > Number(formData.salaryMax)
-    ) {
-      return "Minimum salary cannot be greater than maximum salary";
-    }
-    if (
-      (formData.salaryMin || formData.salaryMax) &&
-      !formData.currency.trim()
-    ) {
-      return "Currency is required when specifying a salary range";
+    if (formData.salary && !formData.currency.trim()) {
+      return "Currency is required when specifying a salary";
     }
     if (formData.applicationMethod === "external") {
       if (!formData.applicationUrl.trim()) {
@@ -168,26 +155,17 @@ const CreateJob = () => {
     setError(null);
 
     try {
+      const salaryValue = formData.salary ? Number(formData.salary) : undefined;
       const response = await createEmployerJob({
         title: formData.title.trim(),
         industry: formData.industry,
-        roles: formData.roles.trim(),
+        qualifications: formData.qualifications.trim(),
         responsibilities: formData.responsibilities.trim(),
+        requirements: formData.requirements.trim() || undefined,
         workMode: formData.workMode,
         country: formData.country.trim(),
         state: formData.state.trim() || undefined,
-        skills: skills
-          .filter((item) => item.skill.trim())
-          .map((item) => ({
-            skill: item.skill.trim(),
-            experience: item.experience || 0,
-          })),
-        salaryMin: formData.salaryMin
-          ? Number(formData.salaryMin)
-          : undefined,
-        salaryMax: formData.salaryMax
-          ? Number(formData.salaryMax)
-          : undefined,
+        salary: salaryValue,
         currency: formData.currency.trim()
           ? currencyCodeFromLabel(formData.currency.trim())
           : undefined,
@@ -195,6 +173,9 @@ const CreateJob = () => {
           formData.applicationMethod === "external"
             ? normalizeApplicationUrl(formData.applicationUrl)
             : undefined,
+        recruitment_job_id: formData.recruitmentJobId
+          ? Number(formData.recruitmentJobId)
+          : null,
       });
 
       if (!response?.success) {
@@ -243,9 +224,8 @@ const CreateJob = () => {
     );
   }
 
-  const salaryPreview = formatSalaryRangePreview(
-    formData.salaryMin,
-    formData.salaryMax,
+  const salaryPreview = formatSalaryPreview(
+    formData.salary,
     formData.currency,
   );
 
@@ -287,29 +267,6 @@ const CreateJob = () => {
 
             <div className="p-6">
               <div className="mb-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">Skills</h3>
-                <div className="flex flex-wrap gap-2">
-                  {skills
-                    .filter((s) => s.skill)
-                    .map((skill, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1 bg-gray-100 rounded-full text-sm"
-                      >
-                        {skill.skill} ({skill.experience} yrs)
-                      </span>
-                    ))}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">Roles</h3>
-                <p className="text-gray-600 whitespace-pre-wrap">
-                  {formData.roles || "No roles provided"}
-                </p>
-              </div>
-
-              <div className="mb-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-3">
                   Responsibilities
                 </h3>
@@ -317,6 +274,26 @@ const CreateJob = () => {
                   {formData.responsibilities || "No responsibilities provided"}
                 </p>
               </div>
+
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                  Qualifications
+                </h3>
+                <p className="text-gray-600 whitespace-pre-wrap">
+                  {formData.qualifications || "No qualifications provided"}
+                </p>
+              </div>
+
+              {formData.requirements.trim() && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">
+                    Requirements
+                  </h3>
+                  <p className="text-gray-600 whitespace-pre-wrap">
+                    {formData.requirements}
+                  </p>
+                </div>
+              )}
 
               <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
                 <h3 className="text-sm font-bold text-gray-900 mb-1">
@@ -476,73 +453,6 @@ const CreateJob = () => {
                 />
               </div>
 
-              {/* Skills */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <label className="font-semibold text-[#1A3E32]">
-                    Skills <span className="text-red-500">*</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={addSkill}
-                    className="flex items-center gap-2 bg-[#16730F] text-white px-4 py-2 rounded-lg hover:bg-[#145A0C] transition-colors"
-                  >
-                    <FaPlus size={12} />
-                    Add Skill
-                  </button>
-                </div>
-
-                {skills.map((item, index) => (
-                  <div key={index} className="grid md:grid-cols-2 gap-3 mb-3">
-                    <input
-                      type="text"
-                      placeholder="Skill (e.g., React)"
-                      className="border rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#16730F] outline-none"
-                      value={item.skill}
-                      onChange={(e) =>
-                        updateSkill(index, "skill", e.target.value)
-                      }
-                    />
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        placeholder="Years of Experience"
-                        className="border rounded-xl px-4 py-3 flex-1 focus:ring-2 focus:ring-[#16730F] outline-none"
-                        value={item.experience}
-                        onChange={(e) =>
-                          updateSkill(index, "experience", e.target.value)
-                        }
-                      />
-                      {skills.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeSkill(index)}
-                          className="px-4 rounded-xl bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
-                        >
-                          <FaTrash />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Roles */}
-              <div>
-                <label className="block mb-2 font-semibold text-[#1A3E32]">
-                  Roles <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  rows={4}
-                  placeholder="Describe the role, purpose of the position, and key expectations..."
-                  className="w-full border rounded-xl px-4 py-3 resize-none focus:ring-2 focus:ring-[#16730F] outline-none"
-                  value={formData.roles}
-                  onChange={(e) =>
-                    setFormData({ ...formData, roles: e.target.value })
-                  }
-                />
-              </div>
-
               {/* Responsibilities */}
               <div>
                 <label className="block mb-2 font-semibold text-[#1A3E32]">
@@ -557,6 +467,45 @@ const CreateJob = () => {
                     setFormData({
                       ...formData,
                       responsibilities: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              {/* Qualifications */}
+              <div>
+                <label className="block mb-2 font-semibold text-[#1A3E32]">
+                  Qualifications <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  rows={4}
+                  placeholder="Describe the qualifications and experience needed for this position..."
+                  className="w-full border rounded-xl px-4 py-3 resize-none focus:ring-2 focus:ring-[#16730F] outline-none"
+                  value={formData.qualifications}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      qualifications: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              {/* Requirements (optional) */}
+              <div>
+                <label className="block mb-2 font-semibold text-[#1A3E32]">
+                  Requirements{" "}
+                  <span className="font-normal text-gray-500">(optional)</span>
+                </label>
+                <textarea
+                  rows={4}
+                  placeholder="Any additional requirements (one per line)..."
+                  className="w-full border rounded-xl px-4 py-3 resize-none focus:ring-2 focus:ring-[#16730F] outline-none"
+                  value={formData.requirements}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      requirements: e.target.value,
                     })
                   }
                 />
@@ -661,51 +610,82 @@ const CreateJob = () => {
                 )}
               </fieldset>
 
-              {/* Salary Range */}
+              {/* Link to recruitment exercise */}
+              <div>
+                <label
+                  htmlFor="job-recruitment-exercise"
+                  className="block mb-2 font-semibold text-[#1A3E32]"
+                >
+                  Recruitment exercise{" "}
+                  <span className="font-normal text-gray-500">(optional)</span>
+                </label>
+                <p className="text-sm text-gray-500 mb-3">
+                  Applicants to this job post will also appear in the selected
+                  recruitment pipeline.
+                </p>
+                <select
+                  id="job-recruitment-exercise"
+                  value={formData.recruitmentJobId}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      recruitmentJobId: e.target.value,
+                    })
+                  }
+                  disabled={recruitmentsLoading}
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#16730F] bg-white"
+                >
+                  <option value="">
+                    {recruitmentsLoading
+                      ? "Loading recruitments…"
+                      : "Select a recruitment exercise (optional)"}
+                  </option>
+                  {recruitmentExercises.map((job) => {
+                    const closed =
+                      job.status !== "active" ||
+                      String(job.dbStatus || "").toLowerCase() === "closed";
+                    return (
+                      <option key={job.id} value={job.id}>
+                        {job.title}
+                        {closed ? " (Closed)" : ""}
+                      </option>
+                    );
+                  })}
+                </select>
+                {recruitmentExercises.length === 0 && !recruitmentsLoading && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    No recruitment exercises yet. Create one in Recruitment
+                    Management if you want applicants tracked there.
+                  </p>
+                )}
+              </div>
+
+              {/* Salary */}
               <div>
                 <label className="block mb-2 font-semibold text-[#1A3E32]">
-                  Salary Range
+                  Salary
                 </label>
                 <p className="text-sm text-gray-500 mb-3">
                   Optional. Helps candidates understand the compensation for this
                   role.
                 </p>
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <label
-                      htmlFor="job-salary-min"
+                      htmlFor="job-salary"
                       className="block mb-2 text-sm font-medium text-gray-600"
                     >
-                      Minimum
+                      Amount
                     </label>
                     <input
-                      id="job-salary-min"
+                      id="job-salary"
                       type="number"
                       min="0"
                       placeholder="e.g., 500000"
                       className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#16730F]"
-                      value={formData.salaryMin}
+                      value={formData.salary}
                       onChange={(e) =>
-                        setFormData({ ...formData, salaryMin: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="job-salary-max"
-                      className="block mb-2 text-sm font-medium text-gray-600"
-                    >
-                      Maximum
-                    </label>
-                    <input
-                      id="job-salary-max"
-                      type="number"
-                      min="0"
-                      placeholder="e.g., 800000"
-                      className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#16730F]"
-                      value={formData.salaryMax}
-                      onChange={(e) =>
-                        setFormData({ ...formData, salaryMax: e.target.value })
+                        setFormData({ ...formData, salary: e.target.value })
                       }
                     />
                   </div>
@@ -861,7 +841,7 @@ const CreateJob = () => {
                   No image or video uploads allowed.
                 </li>
                 <li className="flex gap-3">
-                  <FaTools className="text-[#16730F] mt-1" />
+                  <FaBriefcase className="text-[#16730F] mt-1" />
                   Extensions cost $10 / NGN10,000.
                 </li>
               </ul>
