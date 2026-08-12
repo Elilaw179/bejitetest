@@ -16,13 +16,17 @@ export default function ProfileConnectActions({ userId, displayName }) {
     currentUser?.id != null &&
     String(currentUser.id) === normalizedUserId;
 
-  const { sendRequest, acceptRequest, connectLabel, connectDisabled, status } =
+  const { sendRequest, acceptRequest, connectLabel, connectDisabled, status, sending } =
     useCandidateConnect(normalizedUserId, displayName);
   const [messaging, setMessaging] = useState(false);
 
   if (!normalizedUserId || isSelf) return null;
 
+  const isStatusLoading = Boolean(status.loading);
+  const showConnectSpinner = isStatusLoading || sending;
+
   const handleConnect = async () => {
+    if (isStatusLoading || sending) return;
     if (status.pendingIncoming) {
       await acceptRequest();
       return;
@@ -51,20 +55,35 @@ export default function ProfileConnectActions({ userId, displayName }) {
     }
   };
 
+  const connectButtonClass = isStatusLoading
+    ? 'bg-[#16730F]/80 cursor-wait'
+    : connectDisabled
+      ? 'bg-gray-400 cursor-not-allowed'
+      : 'bg-[#16730F] hover:bg-[#145a0c]';
+
   return (
     <div className="mt-4 grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 sm:gap-3 w-full max-w-lg mx-auto sm:mx-0 min-w-0">
       <button
         type="button"
         onClick={handleConnect}
-        disabled={connectDisabled}
-        className={`inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full text-sm font-semibold text-white transition-colors ${
-          connectDisabled
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-[#16730F] hover:bg-[#145a0c]'
-        }`}
+        disabled={connectDisabled || isStatusLoading}
+        aria-busy={showConnectSpinner}
+        className={`inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-full text-sm font-semibold text-white transition-colors ${connectButtonClass}`}
       >
-        <FaUserPlus className="shrink-0" />
-        <span className="truncate">{connectLabel}</span>
+        {showConnectSpinner ? (
+          <span
+            className="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
+            aria-hidden="true"
+          />
+        ) : (
+          <>
+            <FaUserPlus className="shrink-0" />
+            <span className="truncate">{connectLabel}</span>
+          </>
+        )}
+        {showConnectSpinner && (
+          <span className="sr-only">Loading connection status</span>
+        )}
       </button>
       <button
         type="button"

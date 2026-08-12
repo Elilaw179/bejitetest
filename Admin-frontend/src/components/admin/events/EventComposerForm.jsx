@@ -37,9 +37,6 @@ const Field = ({ label, icon: Icon, required, children }) => (
 const inputClass =
   "w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:border-[#16730F] focus:ring-2 focus:ring-[#16730F]/10 outline-none transition-all placeholder:text-gray-400";
 
-const selectClass =
-  "w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:border-[#16730F] focus:ring-2 focus:ring-[#16730F]/10 outline-none transition-all appearance-none cursor-pointer";
-
 export default function EventComposerForm({ initialData, onSubmit, onCancel, isSubmitting }) {
   const isEditing = !!initialData?.id;
 
