@@ -47,6 +47,7 @@ const Bio = () => {
     gender: "",
     maritalStatus: "",
     age: "",
+    dob: "",
     country: "",
     street: "",
     city: "",
@@ -100,6 +101,7 @@ const Bio = () => {
           gender: toString(bio.gender),
           maritalStatus: toString(bio.marital_status),
           age: toString(bio.age),
+          dob: toString(bio.dob || bio.date_of_birth),
           country: toString(bio.country),
           street: toString(bio.street),
           city: toString(bio.city),
@@ -132,7 +134,7 @@ const Bio = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     // Ensure all form values are strings
-    setFormData({ ...formData, [name]: String(value) });
+    setFormData((prev) => ({ ...prev, [name]: String(value) }));
   };
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -199,6 +201,7 @@ const Bio = () => {
       gender: normalizeText(formData.gender),
       maritalStatus: normalizeText(formData.maritalStatus),
       age: formData.age ? Number(formData.age) : null,
+      dob: formData.dob || null,
       country: normalizeText(formData.country),
       street: normalizeText(formData.street),
       city: normalizeText(formData.city),
