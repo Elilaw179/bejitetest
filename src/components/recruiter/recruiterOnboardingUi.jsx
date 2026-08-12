@@ -244,10 +244,16 @@ export function RecruiterSelect({
       >
         <span
           className={`text-sm truncate select-none ${
-            selectedOption ? "text-gray-900 font-medium" : "text-gray-400"
+            selectedOption || (value !== null && value !== undefined && String(value).trim() !== "")
+              ? "text-gray-900 font-medium"
+              : "text-gray-400"
           }`}
         >
-          {selectedOption ? selectedOption.label : placeholder}
+          {selectedOption
+            ? selectedOption.label
+            : (value !== null && value !== undefined && String(value).trim() !== "")
+              ? String(value)
+              : placeholder}
         </span>
 
         <div className="flex items-center gap-1.5 shrink-0 ml-2">

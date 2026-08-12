@@ -12,6 +12,7 @@ import {
   FaUserFriends,
   FaBriefcase,
   FaCamera,
+  FaChevronDown,
   FaExternalLinkAlt,
 } from "react-icons/fa";
 import NewsFeedLayout from "../components/layout/NewsFeedLayout";
@@ -40,13 +41,13 @@ import {
   formatDisplayHandle,
 } from "../utils/personDisplayName";
 import { formatDisplayText } from "../utils/displayFormatUtils";
-import { truncateText } from "../utils/checksFormat";
 import ProfileConnectActions from "../components/ProfileConnectActions";
 import ProfilePostsSection from "../components/ProfilePostsSection";
 import DisplayNameWithBadge from "../components/DisplayNameWithBadge";
 import MutualConnectionsModal from "../components/MutualConnectionsModal";
 
-const ABOUT_WORD_LIMIT = 100;
+const ABOUT_CHAR_LIMIT = 240;
+const ABOUT_WORD_LIMIT = 35;
 
 const formatConnectionCount = (count) => {
   const n = Number(count);
@@ -447,8 +448,27 @@ const Profile = () => {
     (typeof cvData?.bio?.bio === "string" && cvData.bio.bio.trim()) ||
     "";
   const aboutText = aboutTextRaw || null;
+
+  const getAboutPreview = (text) => {
+    if (!text) return { text: "", needsTruncation: false };
+    const words = text.split(/\s+/).filter(Boolean);
+    if (text.length > ABOUT_CHAR_LIMIT || words.length > ABOUT_WORD_LIMIT) {
+      const truncatedByChar = text.slice(0, ABOUT_CHAR_LIMIT).trim();
+      const lastSpaceIndex = truncatedByChar.lastIndexOf(" ");
+      const cleanTruncated =
+        lastSpaceIndex > 80
+          ? truncatedByChar.slice(0, lastSpaceIndex)
+          : truncatedByChar;
+      return {
+        text: cleanTruncated + "...",
+        needsTruncation: true,
+      };
+    }
+    return { text, needsTruncation: false };
+  };
+
   const aboutPreview = aboutText
-    ? truncateText(aboutText, ABOUT_WORD_LIMIT, "words")
+    ? getAboutPreview(aboutText)
     : { text: "", needsTruncation: false };
   const needsTruncation = aboutPreview.needsTruncation;
   const recruiterLinks = profileData?.links || {};
@@ -860,23 +880,13 @@ const Profile = () => {
                       className="mt-3 text-[#16730F] hover:text-[#145a0c] font-semibold text-xs sm:text-sm transition-colors inline-flex items-center gap-1 group cursor-pointer"
                     >
                       <span>
-                        {isAboutExpanded ? "Show less" : "Read full bio"}
+                        {isAboutExpanded ? "See Less" : "See More"}
                       </span>
-                      <svg
-                        className={`w-4 h-4 transition-transform duration-200 ${
-                          isAboutExpanded ? "rotate-180" : ""
+                      <FaChevronDown
+                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                          isAboutExpanded ? "rotate-180 text-[#16730F]" : ""
                         }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      />
                     </button>
                   )}
                 </>

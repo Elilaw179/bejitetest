@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getUser } from "../../utils/tokenManager";
 import InviteFriendsModal from "../InviteFriendsModal";
+import { Network } from "lucide-react";
 
 const navItems = [
   { icon: FaHome, label: "News Feed" },
@@ -11,6 +12,7 @@ const navItems = [
   { icon: "/assets/images/messages-2.svg", label: "Chats" },
   { icon: "/assets/images/user-search.svg", label: "Recruitment" },
   { icon: "/assets/images/notification.svg", label: "Notifications" },
+  { icon: Network, label: "Catch Ups" },
 ];
 
 export default function RecruitmentLeft() {
@@ -47,6 +49,9 @@ export default function RecruitmentLeft() {
       case "Notifications":
         navigate("/notification");
         break;
+      case "Catch Ups":
+        navigate("/catch-up");
+        break;
       default:
         console.log("Navigation not defined for:", label);
     }
@@ -67,9 +72,13 @@ export default function RecruitmentLeft() {
               onClick={() => handleNavClick(label)}
             >
               {typeof Icon === "string" ? (
-                <img src={Icon} alt={label} />
+                <img
+                  src={Icon}
+                  alt={label}
+                  className="w-5 h-5 shrink-0 object-contain"
+                />
               ) : (
-                <Icon className="text-[#F5F5F5]" />
+                <Icon className="text-[#F5F5F5] w-5 h-5 shrink-0" size={16} />
               )}
               <span className="text-[#F5F5F5] font-bold">{label}</span>
             </div>

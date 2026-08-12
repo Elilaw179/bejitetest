@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import NavigationButtons from "../../components/NavigationButtons";
 import { useNavigate, useLocation, useOutletContext } from "react-router-dom";
-import { FaCheck, FaBriefcase } from "react-icons/fa";
+import { FaBriefcase } from "react-icons/fa";
 import useAuth from "../../hooks/useAuth";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import axiosInstance from "../../utils/axiosInstance";
@@ -22,47 +22,18 @@ import {
   currencyCodeFromLabel,
 } from "../../data/jobTypeData";
 import useCountryStateOptions from "../../hooks/useCountryStateOptions";
+import RecruiterSelect from "../../components/recruiter/RecruiterSelect";
 
-const SelectField = ({ label, value, onChange, options, placeholder = "Select" }) => {
-  const [inputValue, setInputValue] = useState(value);
+const RECRUITER_TYPE_OPTIONS = ["Individual", "Corporate"];
 
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
-
-  const listId = `list-${label.replace(/\s+/g, "-")}`;
-
-  return (
-    <div className="flex-1 min-w-[220px]">
-      <FormLabel label={label} />
-      <div className="relative w-full">
-        <input
-          type="text"
-          className={`w-full h-11 bg-white border rounded-xl px-3 pr-10 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all ${
-            value ? "border-gray-300" : "border-gray-200"
-          }`}
-          value={inputValue}
-          onChange={(e) => {
-            setInputValue(e.target.value);
-            onChange(e);
-          }}
-          placeholder={placeholder}
-          list={listId}
-        />
-        <datalist id={listId}>
-          {options.map((opt) => (
-            <option key={opt} value={opt} />
-          ))}
-        </datalist>
-        {(value || inputValue) && (
-          <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] pointer-events-none" />
-        )}
-      </div>
-    </div>
-  );
-};
+const JOBSEEKER_STATUS_OPTIONS = [
+  "ACTIVE JOBSEEKER",
+  "FREELANCER",
+  "INACTIVE JOBSEEKER",
+];
 
 const EMPTY_FORM = {
+  jobseekerStatus: "",
   jobTitle: "",
   industry: "",
   country: "",
@@ -100,8 +71,28 @@ function JobType() {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { email, firstName, lastName, role, mode, followings, profileUpdateComplete } =
-    location.state || {};
+  const {
+    email,
+    firstName,
+    lastName,
+    role,
+    mode,
+    followings,
+    profileUpdateComplete,
+  } = location.state || {};
+
+  const userRole = (user?.role || role || "").toLowerCase();
+  const isRecruiter =
+    userRole === "recruiter" ||
+    userRole === "employer" ||
+    userRole === "corporate" ||
+    userRole === "individual";
+
+  const statusLabel = isRecruiter ? "RECRUITER TYPE" : "JOBSEEKER STATUS";
+  const statusOptions = isRecruiter
+    ? RECRUITER_TYPE_OPTIONS
+    : JOBSEEKER_STATUS_OPTIONS;
+  const defaultStatus = isRecruiter ? "Individual" : "ACTIVE JOBSEEKER";
 
   useEffect(() => {
     if (!userId) {
@@ -112,10 +103,18 @@ function JobType() {
 
     const fetchJobType = async () => {
       try {
-        const res = await axiosInstance.get(`/api/cv-builder/job-type/${userId}`);
+        const res = await axiosInstance.get(
+          `/api/cv-builder/job-type/${userId}`,
+        );
         if (res.data?.success && res.data?.data) {
           const data = res.data.data;
           setForm({
+            jobseekerStatus:
+              data.jobseeker_status ||
+              data.jobseekerStatus ||
+              data.recruiter_type ||
+              data.recruiterType ||
+              defaultStatus,
             jobTitle: data.job_title || "",
             industry: data.industry_sector || data.industry || "",
             country: data.preferred_country || "",
@@ -127,16 +126,25 @@ function JobType() {
             availability: data.availability || "",
             rate: data.rate || "",
           });
+        } else {
+          setForm((prev) => ({
+            ...prev,
+            jobseekerStatus: prev.jobseekerStatus || defaultStatus,
+          }));
         }
       } catch (err) {
         console.error("Error fetching job type:", err);
+        setForm((prev) => ({
+          ...prev,
+          jobseekerStatus: prev.jobseekerStatus || defaultStatus,
+        }));
       } finally {
         setDataLoaded(true);
       }
     };
 
     fetchJobType();
-  }, [userId, dataLoaded]);
+  }, [userId, dataLoaded, defaultStatus]);
 
   const { states } = useCountryStateOptions(form.country);
 
@@ -148,7 +156,7 @@ function JobType() {
   });
 
   const updateField = (field) => (e) => {
-    const value = e.target.value;
+    const value = e?.target ? e.target.value : e;
     setForm((prev) => {
       const next = { ...prev, [field]: value };
       if (field === "country" && value !== prev.country) {
@@ -170,8 +178,14 @@ function JobType() {
 
     setIsSubmitting(true);
 
+    const activeStatus = String(
+      form.jobseekerStatus || defaultStatus,
+    ).trim();
+
     const payload = {
       userId,
+      jobseeker_status: activeStatus,
+      recruiter_type: isRecruiter ? activeStatus : undefined,
       job_title: String(form.jobTitle).trim(),
       industry_sector: String(form.industry).trim(),
       preferred_country: String(form.country).trim(),
@@ -237,8 +251,8 @@ function JobType() {
               What type of job do you want?
             </h1>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Tell employers your ideal role, location, and compensation so they can
-              match you to the right opportunities.
+              Tell employers your ideal role, location, and compensation so they
+              can match you to the right opportunities.
             </p>
             {(isEditMode || profileUpdateComplete) && (
               <p className="text-sm text-[#16730F] mt-3 font-medium">
@@ -259,63 +273,88 @@ function JobType() {
             </div>
 
             <div className="p-6 space-y-8">
+              {/* Role & Industry */}
               <section>
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-4">
                   Role & industry
                 </h3>
                 <div className="flex flex-wrap gap-4">
-                  <SelectField
-                    label="JOB TITLE"
-                    value={form.jobTitle}
-                    onChange={updateField("jobTitle")}
-                    options={JOB_TITLE_OPTIONS}
-                    placeholder="Enter or select job title"
-                  />
-                  <SelectField
-                    label="INDUSTRY / SECTOR"
-                    value={form.industry}
-                    onChange={updateField("industry")}
-                    options={INDUSTRY_OPTIONS}
-                    placeholder="Enter or select industry"
-                  />
+                  <div className="flex-1 min-w-[220px]">
+                    <RecruiterSelect
+                      label={statusLabel}
+                      value={form.jobseekerStatus || defaultStatus}
+                      onChange={updateField("jobseekerStatus")}
+                      options={statusOptions}
+                      placeholder={`Select ${
+                        isRecruiter ? "recruiter type" : "jobseeker status"
+                      }`}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[220px]">
+                    <RecruiterSelect
+                      label="JOB TITLE"
+                      value={form.jobTitle}
+                      onChange={updateField("jobTitle")}
+                      options={JOB_TITLE_OPTIONS}
+                      placeholder="Select job title"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[220px]">
+                    <RecruiterSelect
+                      label="INDUSTRY / SECTOR"
+                      value={form.industry}
+                      onChange={updateField("industry")}
+                      options={INDUSTRY_OPTIONS}
+                      placeholder="Select industry"
+                    />
+                  </div>
                 </div>
               </section>
 
+              {/* Location */}
               <section>
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-4">
                   Location
                 </h3>
                 <div className="flex flex-wrap gap-4">
-                  <SelectField
-                    label="PREFERRED COUNTRY"
-                    value={form.country}
-                    onChange={updateField("country")}
-                    options={COUNTRY_OPTIONS}
-                    placeholder="Select country"
-                  />
-                  <SelectField
-                    label="PREFERRED STATE"
-                    value={form.statePref}
-                    onChange={updateField("statePref")}
-                    options={states}
-                    placeholder={
-                      !form.country
-                        ? "Select country first"
-                        : states.length > 0
-                          ? "Select state"
-                          : "Enter region (optional)"
-                    }
-                  />
-                  <SelectField
-                    label="WORK TYPE"
-                    value={form.workType}
-                    onChange={updateField("workType")}
-                    options={WORK_TYPE_OPTIONS}
-                    placeholder="Select work type"
-                  />
+                  <div className="flex-1 min-w-[220px]">
+                    <RecruiterSelect
+                      label="PREFERRED COUNTRY"
+                      value={form.country}
+                      onChange={updateField("country")}
+                      options={COUNTRY_OPTIONS}
+                      placeholder="Select country"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[220px]">
+                    <RecruiterSelect
+                      label="PREFERRED STATE"
+                      value={form.statePref}
+                      onChange={updateField("statePref")}
+                      options={states}
+                      placeholder={
+                        !form.country
+                          ? "Select country first"
+                          : states.length > 0
+                            ? "Select state"
+                            : "Enter region (optional)"
+                      }
+                      disabled={!form.country}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[220px]">
+                    <RecruiterSelect
+                      label="WORK TYPE"
+                      value={form.workType}
+                      onChange={updateField("workType")}
+                      options={WORK_TYPE_OPTIONS}
+                      placeholder="Select work type"
+                    />
+                  </div>
                 </div>
               </section>
 
+              {/* Compensation & Availability */}
               <section>
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-4">
                   Compensation & availability
@@ -332,31 +371,42 @@ function JobType() {
                       placeholder="e.g. 500000 or 500-800"
                     />
                   </div>
-                  <SelectField
-                    label="CURRENCY"
-                    value={form.currency}
-                    onChange={updateField("currency")}
-                    options={CURRENCY_OPTIONS}
-                    placeholder="Select currency"
-                  />
-                  <SelectField
-                    label="REMOTE PREFERENCE"
-                    value={form.remotePref}
-                    onChange={updateField("remotePref")}
-                    options={REMOTE_PREFERENCE_OPTIONS}
-                  />
-                  <SelectField
-                    label="AVAILABILITY"
-                    value={form.availability}
-                    onChange={updateField("availability")}
-                    options={AVAILABILITY_OPTIONS}
-                  />
-                  <SelectField
-                    label="RATE"
-                    value={form.rate}
-                    onChange={updateField("rate")}
-                    options={RATE_OPTIONS}
-                  />
+                  <div className="flex-1 min-w-[220px]">
+                    <RecruiterSelect
+                      label="CURRENCY"
+                      value={form.currency}
+                      onChange={updateField("currency")}
+                      options={CURRENCY_OPTIONS}
+                      placeholder="Select currency"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[220px]">
+                    <RecruiterSelect
+                      label="REMOTE PREFERENCE"
+                      value={form.remotePref}
+                      onChange={updateField("remotePref")}
+                      options={REMOTE_PREFERENCE_OPTIONS}
+                      placeholder="Select remote preference"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[220px]">
+                    <RecruiterSelect
+                      label="AVAILABILITY"
+                      value={form.availability}
+                      onChange={updateField("availability")}
+                      options={AVAILABILITY_OPTIONS}
+                      placeholder="Select availability"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[220px]">
+                    <RecruiterSelect
+                      label="RATE"
+                      value={form.rate}
+                      onChange={updateField("rate")}
+                      options={RATE_OPTIONS}
+                      placeholder="Select rate"
+                    />
+                  </div>
                 </div>
               </section>
             </div>
@@ -364,9 +414,9 @@ function JobType() {
 
           <div className="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-4">
             <p className="text-sm text-blue-800">
-              <span className="font-semibold">Tip:</span> These preferences appear on
-              your profile when employers search for candidates and help power better
-              job matches.
+              <span className="font-semibold">Tip:</span> These preferences
+              appear on your profile when employers search for candidates and
+              help power better job matches.
             </p>
           </div>
         </div>

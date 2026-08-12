@@ -38,12 +38,16 @@ import {
   formatDisplayRole,
 } from "../utils/personDisplayName";
 import { formatDisplayText } from "../utils/displayFormatUtils";
-import { filterAdminUsersFromSearch, filterAdminSearchResults } from "../utils/filterAdminUsers";
+import {
+  filterAdminUsersFromSearch,
+  filterAdminSearchResults,
+} from "../utils/filterAdminUsers";
 import PersonName from "./PersonName";
 import RecruitmentRightMobileMenu from "./recruitment/RecruitmentRightMobileMenu";
 import InviteFriendsModal from "./InviteFriendsModal";
 import NotificationDropdown from "./notifications/NotificationDropdown";
 import { onNotificationNew } from "../services/socketClient";
+import { Network } from "lucide-react";
 
 const NewsFeedHeader = ({ user: propUser }) => {
   useSyncProfilePhoto();
@@ -75,11 +79,12 @@ const NewsFeedHeader = ({ user: propUser }) => {
     const targets = [
       window,
       ...document.querySelectorAll(".nfl-scroll"),
-    ].filter((el) => !searchRef.current?.contains(el instanceof Element ? el : null));
+    ].filter(
+      (el) => !searchRef.current?.contains(el instanceof Element ? el : null),
+    );
 
     const lastTops = new Map();
-    const getTop = (el) =>
-      el === window ? window.scrollY : el.scrollTop;
+    const getTop = (el) => (el === window ? window.scrollY : el.scrollTop);
 
     const handlers = targets.map((el) => {
       lastTops.set(el, getTop(el));
@@ -178,12 +183,15 @@ const NewsFeedHeader = ({ user: propUser }) => {
         localStorage.getItem("token");
       if (!token) return;
 
-      const response = await fetch(`${API_URL}/api/notifications/unread-count`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${API_URL}/api/notifications/unread-count`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
         },
-        credentials: "include",
-      });
+      );
 
       const data = await response.json();
       if (response.ok) {
@@ -213,19 +221,21 @@ const NewsFeedHeader = ({ user: propUser }) => {
           .get(`/api/connections/search?q=${encodeURIComponent(query)}&limit=5`)
           .then((response) => ({
             type: "people",
-            results: filterAdminUsersFromSearch(response.data.users || []).map((u) => ({
-              type: "people",
-              id: u.id,
-              name: formatDisplayPersonName(u, "Unknown User"),
-              firstName: u.firstName,
-              lastName: u.lastName,
-              email: u.email,
-              username: u.username,
-              subtitle: u.jobTitle || "Professional",
-              image: pickAuthorProfilePhoto(u),
-              url: `/user-profile/${u.id}`,
-              hasVerifiedBadge: Boolean(u.hasVerifiedBadge),
-            })),
+            results: filterAdminUsersFromSearch(response.data.users || []).map(
+              (u) => ({
+                type: "people",
+                id: u.id,
+                name: formatDisplayPersonName(u, "Unknown User"),
+                firstName: u.firstName,
+                lastName: u.lastName,
+                email: u.email,
+                username: u.username,
+                subtitle: u.jobTitle || "Professional",
+                image: pickAuthorProfilePhoto(u),
+                url: `/user-profile/${u.id}`,
+                hasVerifiedBadge: Boolean(u.hasVerifiedBadge),
+              }),
+            ),
           }))
           .catch(() => ({ type: "people", results: [] })),
       );
@@ -237,24 +247,26 @@ const NewsFeedHeader = ({ user: propUser }) => {
           .then((response) => ({
             type: "people",
             results: response.data.success
-              ? filterAdminUsersFromSearch(response.data.data).map((candidate) => {
-                  const userId =
-                    candidate.user_id ?? candidate.userId ?? candidate.id;
-                  return {
-                    type: "people",
-                    id: userId,
-                    name: formatDisplayPersonName(candidate, "Unknown User"),
-                    firstName: candidate.first_name,
-                    lastName: candidate.last_name,
-                    email: candidate.email,
-                    username: candidate.username,
-                    subtitle:
-                      formatDisplayText(candidate.title) || "Professional",
-                    image: pickAuthorProfilePhoto(candidate),
-                    url: `/user-profile/${userId}`,
-                    hasVerifiedBadge: Boolean(candidate.hasVerifiedBadge),
-                  };
-                })
+              ? filterAdminUsersFromSearch(response.data.data).map(
+                  (candidate) => {
+                    const userId =
+                      candidate.user_id ?? candidate.userId ?? candidate.id;
+                    return {
+                      type: "people",
+                      id: userId,
+                      name: formatDisplayPersonName(candidate, "Unknown User"),
+                      firstName: candidate.first_name,
+                      lastName: candidate.last_name,
+                      email: candidate.email,
+                      username: candidate.username,
+                      subtitle:
+                        formatDisplayText(candidate.title) || "Professional",
+                      image: pickAuthorProfilePhoto(candidate),
+                      url: `/user-profile/${userId}`,
+                      hasVerifiedBadge: Boolean(candidate.hasVerifiedBadge),
+                    };
+                  },
+                )
               : [],
           }))
           .catch(() => ({ type: "people", results: [] })),
@@ -537,7 +549,11 @@ const NewsFeedHeader = ({ user: propUser }) => {
     notifications: ["/notification", "/notifications"],
     connection: ["/connection"],
     "job-vacancy": ["/job-vacancy"],
-    recruitment: ["/candidate-search-page", "/subscription-pricing", "/subscription-dashboard"],
+    recruitment: [
+      "/candidate-search-page",
+      "/subscription-pricing",
+      "/subscription-dashboard",
+    ],
     adpro: ["/adpro"],
   };
 
@@ -569,6 +585,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
         clearNewJobVacancyCount();
         navigate("/job-vacancy");
         break;
+      case "catch-up":
+        navigate("/catch-up");
+        break;
       default:
         console.log("Icon not defined");
     }
@@ -587,7 +606,8 @@ const NewsFeedHeader = ({ user: propUser }) => {
 
   const getNavIconSrc = (name) => {
     if (name === "home-icon") return "/assets/images/home-nav.svg";
-    if (name === "invite-friends") return "/assets/images/invite-friends-nav.svg";
+    if (name === "invite-friends")
+      return "/assets/images/invite-friends-nav.svg";
     if (name === "adpro") return "/assets/images/adpro-nav.svg";
     if (name === "job-vacancy") return "/assets/images/job-vacancy-nav.svg";
     return `/assets/images/${name}.svg`;
@@ -698,36 +718,38 @@ const NewsFeedHeader = ({ user: propUser }) => {
             >
               <FaSearch className="h-4 w-4" />
             </button>
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
-            aria-expanded={isSidebarOpen}
-            className="lg:hidden relative inline-flex items-center justify-center p-0 text-[#1A3E32] transition-all duration-300 active:scale-95"
-          >
-            <span className="sr-only">{isSidebarOpen ? "Close menu" : "Open menu"}</span>
-            <span className="relative w-[22px] h-[15px] flex flex-col justify-between">
-              <span
-                className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
-                  isSidebarOpen
-                    ? "translate-y-[6.5px] rotate-45 w-[22px]"
-                    : "w-[22px]"
-                }`}
-              />
-              <span
-                className={`block h-[2px] rounded-full bg-current transition-all duration-200 ease-out ${
-                  isSidebarOpen ? "opacity-0 scale-x-0" : "w-[15px] ml-auto"
-                }`}
-              />
-              <span
-                className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
-                  isSidebarOpen
-                    ? "-translate-y-[6.5px] -rotate-45 w-[22px]"
-                    : "w-[18px]"
-                }`}
-              />
-            </span>
-          </button>
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isSidebarOpen}
+              className="lg:hidden relative inline-flex items-center justify-center p-0 text-[#1A3E32] transition-all duration-300 active:scale-95"
+            >
+              <span className="sr-only">
+                {isSidebarOpen ? "Close menu" : "Open menu"}
+              </span>
+              <span className="relative w-[22px] h-[15px] flex flex-col justify-between">
+                <span
+                  className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
+                    isSidebarOpen
+                      ? "translate-y-[6.5px] rotate-45 w-[22px]"
+                      : "w-[22px]"
+                  }`}
+                />
+                <span
+                  className={`block h-[2px] rounded-full bg-current transition-all duration-200 ease-out ${
+                    isSidebarOpen ? "opacity-0 scale-x-0" : "w-[15px] ml-auto"
+                  }`}
+                />
+                <span
+                  className={`block h-[2px] rounded-full bg-current origin-center transition-all duration-300 ease-out ${
+                    isSidebarOpen
+                      ? "-translate-y-[6.5px] -rotate-45 w-[22px]"
+                      : "w-[18px]"
+                  }`}
+                />
+              </span>
+            </button>
           </div>
         </div>
 
@@ -1052,11 +1074,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
           />
           <div className="fixed top-0 left-0 w-[min(85vw,300px)] h-full bg-white shadow-2xl z-50 flex flex-col lg:hidden">
             <div className="p-4 border-b border-gray-100 shrink-0">
-              <img
-                src="/assets/images/logo.png"
-                alt="Bejite"
-                className="h-8"
-              />
+              <img src="/assets/images/logo.png" alt="Bejite" className="h-8" />
             </div>
 
             <div className="flex-1 overflow-y-auto nfl-scroll p-4 pt-2">
@@ -1088,6 +1106,23 @@ const NewsFeedHeader = ({ user: propUser }) => {
                   {renderNavIcon("invite-friends", { compact: true })}
                   <span className="font-medium text-sm text-[#1A3E32]">
                     Invite Friends
+                  </span>
+                </div>
+                <div
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => {
+                    navigate("/catch-up");
+                  }}
+                >
+                  <div className="rounded-[30px] p-1.5 border-2 border-[#16730F]">
+                    <Network
+                      className="text-[#16730F] w-2.5 h-2.5 shrink-0 "
+                      size={16}
+                    />
+                  </div>
+                  {/* {renderNavIcon("catch-up", { compact: true })} */}
+                  <span className="font-medium text-sm text-[#1A3E32]">
+                    Catch Up
                   </span>
                 </div>
                 {isRecruiterOrEmployer && (

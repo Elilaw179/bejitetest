@@ -108,12 +108,6 @@ const InterviewInviteModal = ({ isOpen, onClose, candidate, onSuccess }) => {
         return;
       }
 
-      if (!formData.job_id) {
-        setError("Please select a recruitment / job");
-        setLoading(false);
-        return;
-      }
-
       if (!formData.interview_date || !formData.interview_time) {
         setError("Please enter interview date and time");
         setLoading(false);
@@ -141,8 +135,8 @@ const InterviewInviteModal = ({ isOpen, onClose, candidate, onSuccess }) => {
         credentials: "include",
         body: JSON.stringify({
           candidate_id: candidate.id,
-          job_id: Number(formData.job_id),
-          job_title: formData.job_title,
+          job_id: formData.job_id ? Number(formData.job_id) : null,
+          job_title: formData.job_title || null,
           interview_date: formData.interview_date,
           interview_time: formData.interview_time,
           interview_type: formData.interview_type,
@@ -222,20 +216,20 @@ const InterviewInviteModal = ({ isOpen, onClose, candidate, onSuccess }) => {
 
           <div>
             <label className="block text-sm font-medium text-[#16730F] mb-1">
-              Recruitment / Job *
+              Recruitment / Job{" "}
+              <span className="font-normal text-gray-500">(optional)</span>
             </label>
             <select
               name="job_id"
               value={formData.job_id}
               onChange={handleJobSelect}
-              required
               disabled={jobsLoading}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F] bg-white"
             >
               <option value="">
                 {jobsLoading
                   ? "Loading recruitments…"
-                  : "Select a recruitment exercise"}
+                  : "Select a recruitment exercise (optional)"}
               </option>
               {jobs.map((job) => {
                 const closed =
@@ -250,9 +244,9 @@ const InterviewInviteModal = ({ isOpen, onClose, candidate, onSuccess }) => {
               })}
             </select>
             {jobs.length === 0 && !jobsLoading && (
-              <p className="text-xs text-amber-700 mt-1">
-                No recruitments found. Create one in Recruitment Management
-                first.
+              <p className="text-xs text-gray-500 mt-1">
+                No recruitments found. You can still send the invite without
+                linking one.
               </p>
             )}
           </div>

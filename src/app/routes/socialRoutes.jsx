@@ -8,6 +8,7 @@ import {
   PostPage,
   Chat,
   Connections,
+  Birthdays,
   Notifications,
   ActivityLog,
   AccountSettings,
@@ -24,22 +25,23 @@ function MessagesToChatsRedirect() {
 
 export const socialRoutes = (
   <>
-      <Route path="/post-page" element={<PostPage />} />
-      <Route path="/post/:postId" element={<PostDetailPage />} />
-      <Route path="/p/:postId" element={<SharedPostRedirect />} />
-      <Route path="/j/:jobId" element={<SharedJobRedirect />} />
-      <Route path="/a/:campaignId" element={<SharedAdRedirect />} />
-      <Route path="/news-feed" element={<Recruitment />} />
-      <Route path="/badge" element={<BadgeStatus />} />
-      <Route path="/badge/payment-callback" element={<BadgePaymentCallback />} />
-      <Route path="/activity-logs" element={<ActivityLog />} />
-      <Route path="/account-settings" element={<AccountSettings />} />
-      <Route path="/badge-holder" element={<BadgeHolder />} />
-      <Route path="/job-vacancy" element={<JobVacancyListing />} />
-      <Route path="/chats" element={<Chat />} />
-      <Route path="/messages" element={<MessagesToChatsRedirect />} />
-      <Route path="/connection" element={<Connections />} />
-      <Route path="/notification" element={<Notifications />} />
-      <Route path="/notifications" element={<Notifications />} />
+    <Route path="/post-page" element={<PostPage />} />
+    <Route path="/post/:postId" element={<PostDetailPage />} />
+    <Route path="/p/:postId" element={<SharedPostRedirect />} />
+    <Route path="/j/:jobId" element={<SharedJobRedirect />} />
+    <Route path="/a/:campaignId" element={<SharedAdRedirect />} />
+    <Route path="/news-feed" element={<Recruitment />} />
+    <Route path="/badge" element={<BadgeStatus />} />
+    <Route path="/badge/payment-callback" element={<BadgePaymentCallback />} />
+    <Route path="/activity-logs" element={<ActivityLog />} />
+    <Route path="/account-settings" element={<AccountSettings />} />
+    <Route path="/badge-holder" element={<BadgeHolder />} />
+    <Route path="/job-vacancy" element={<JobVacancyListing />} />
+    <Route path="/chats" element={<Chat />} />
+    <Route path="/messages" element={<MessagesToChatsRedirect />} />
+    <Route path="/connection" element={<Connections />} />
+    <Route path="/catch-up" element={<Birthdays />} />
+    <Route path="/notification" element={<Notifications />} />
+    <Route path="/notifications" element={<Notifications />} />
   </>
 );

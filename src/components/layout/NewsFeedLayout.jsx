@@ -37,6 +37,7 @@ export default function NewsFeedLayout({
   rightSidebar,
   scrollable = true,
   classes = DEFAULT_SCROLL_CLASSES,
+  NewsFeedshead = true,
 }) {
   const noSidebarClasses = resolveNoSidebarClasses(scrollable, classes);
 

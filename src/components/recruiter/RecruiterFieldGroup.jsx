@@ -1,6 +1,7 @@
 import React from "react";
 import FormLabel from "../forms/FormLabel";
-import { RecruiterSelect } from "./recruiterOnboardingUi";
+import RecruiterSelect from "./RecruiterSelect";
+// import { RecruiterSelect } from "./recruiterOnboardingUi";
 
 const countWords = (text) => {
   const trimmed = String(text ?? "").trim();
@@ -9,7 +10,10 @@ const countWords = (text) => {
 };
 
 const truncateToWordLimit = (text, limit) => {
-  const words = String(text ?? "").trim().split(/\s+/).filter(Boolean);
+  const words = String(text ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
   if (words.length <= limit) return text;
   return words.slice(0, limit).join(" ");
 };
@@ -76,9 +80,7 @@ const RecruiterFieldGroup = ({ formData, handleChange, fieldGroups }) => (
                 className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm placeholder-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
               />
             )}
-            {f.hint && (
-              <p className="text-xs text-gray-500 mt-1.5">{f.hint}</p>
-            )}
+            {f.hint && <p className="text-xs text-gray-500 mt-1.5">{f.hint}</p>}
           </div>
         ))}
       </div>

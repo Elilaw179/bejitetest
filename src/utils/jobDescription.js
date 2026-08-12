@@ -33,7 +33,7 @@ export const formatJobDescriptionText = (text) => {
     .trim();
 };
 
-/** Short teaser for listing cards — never the full roles blob. */
+/** Short teaser for listing cards — prefer responsibilities, then qualifications. */
 export const getJobCardExcerpt = (job) => {
   if (!job) return "";
 
@@ -45,7 +45,12 @@ export const getJobCardExcerpt = (job) => {
     return truncateJobExcerpt(job.responsibilities[0]);
   }
 
-  const source = job.rolesText?.trim() || job.description?.trim() || "";
+  const source =
+    job.responsibilitiesText?.trim() ||
+    job.qualificationsText?.trim() ||
+    job.rolesText?.trim() ||
+    job.description?.trim() ||
+    "";
   const [firstLine] = parseDescriptionLines(source);
 
   return truncateJobExcerpt(firstLine || source);

@@ -42,6 +42,7 @@ export const SharedAdRedirect = lazy(() => import("../pages/SharedAdRedirect.jsx
 export const CandidateSearchPage = lazy(() => import("../pages/employerDashboard/CandidateSearchPage.jsx"));
 export const Chat = lazy(() => import("../pages/employerDashboard/Chat.jsx"));
 export const Connections = lazy(() => import("../pages/Connections.jsx"));
+export const Birthdays = lazy(() => import("../pages/Birthdays.jsx"));
 export const PostPage = lazy(() => import("../pages/employerDashboard/PostPage.jsx"));
 export const Notifications = lazy(() => import("../pages/employerDashboard/Notifications.jsx"));
 export const PaymentPage = lazy(() => import("../pages/paymentMethod/PaymentPage"));
@@ -60,6 +61,7 @@ export const SecurityAdvice = lazy(() => import("../pages/misc/SecurityAdvice.js
 export const PrivacyPolicy = lazy(() => import("../pages/misc/PrivacyPolicy.jsx"));
 export const Contact = lazy(() => import("../pages/misc/Contact.jsx"));
 export const Help = lazy(() => import("../pages/misc/Help.jsx"));
+export const NotFound = lazy(() => import("../pages/NotFound.jsx"));
 export const AuthSuccess = lazy(() => import("../pages/auth/AuthSuccess.jsx"));
 export const AuthFailure = lazy(() => import("../pages/auth/AuthFailure.jsx"));
 export const CompleteSignup = lazy(() => import("../pages/CompleteSignup.jsx"));
