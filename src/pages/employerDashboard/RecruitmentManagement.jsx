@@ -45,6 +45,7 @@ import {
   getJobAuditLogs,
 } from "../../services/employerApi";
 import messagingService from "../../services/messagingService";
+import { checkASEEligibility } from "../../services/paymentApi";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 
 const STATUS_META = {
@@ -282,6 +283,53 @@ export default function RecruitmentManagement() {
   const [moveCandidate, setMoveCandidate] = useState(null);
   const [viewProfileCandidate, setViewProfileCandidate] = useState(null);
   const [profileInitialTab, setProfileInitialTab] = useState("overview");
+  const [recruitmentAccess, setRecruitmentAccess] = useState(null);
+  const [accessLoading, setAccessLoading] = useState(true);
+
+  const loadRecruitmentAccess = useCallback(async () => {
+    setAccessLoading(true);
+    try {
+      const eligibility = await checkASEEligibility();
+      setRecruitmentAccess({
+        allowed: eligibility?.recruitmentAllowed !== false,
+        canCreate: eligibility?.canCreateRecruitmentExercise !== false,
+        remaining:
+          eligibility?.remainingRecruitmentExercises != null
+            ? Number(eligibility.remainingRecruitmentExercises)
+            : null,
+        limit:
+          eligibility?.recruitmentExerciseLimit != null
+            ? Number(eligibility.recruitmentExerciseLimit)
+            : 2,
+        used:
+          eligibility?.usedRecruitmentExercises != null
+            ? Number(eligibility.usedRecruitmentExercises)
+            : null,
+        accessType:
+          eligibility?.recruitmentAccessType ||
+          eligibility?.accessType ||
+          "none",
+        message: eligibility?.recruitmentMessage || eligibility?.message,
+        code: eligibility?.recruitmentCode,
+      });
+    } catch (err) {
+      console.error("Recruitment access check failed:", err);
+      // Fail closed for create; still allow UI to show upgrade path
+      setRecruitmentAccess({
+        allowed: false,
+        canCreate: false,
+        remaining: 0,
+        limit: 2,
+        used: null,
+        accessType: "none",
+        message:
+          "Unable to verify subscription. Subscribe to access Recruitment Management.",
+        code: "PAYMENT_REQUIRED",
+      });
+    } finally {
+      setAccessLoading(false);
+    }
+  }, []);
 
   const loadList = useCallback(async () => {
     setListLoading(true);
@@ -307,6 +355,23 @@ export default function RecruitmentManagement() {
       setInviteStats(aggregateInviteStats(invitations));
     } catch (err) {
       console.error("Recruitment list load error:", err);
+      const code = err.response?.data?.code;
+      if (code === "PAYMENT_REQUIRED" || err.response?.status === 403) {
+        setRecruitmentAccess((prev) => ({
+          ...(prev || {}),
+          allowed: false,
+          canCreate: false,
+          remaining: 0,
+          accessType: "none",
+          message:
+            err.response?.data?.message ||
+            "Subscribe to access Recruitment Management.",
+          code: code || "PAYMENT_REQUIRED",
+        }));
+        setExercises([]);
+        setListError(null);
+        return;
+      }
       setListError(
         err.response?.data?.message ||
           err.message ||
@@ -407,8 +472,18 @@ export default function RecruitmentManagement() {
   }, []);
 
   useEffect(() => {
+    loadRecruitmentAccess();
+  }, [loadRecruitmentAccess]);
+
+  useEffect(() => {
+    if (accessLoading) return;
+    if (recruitmentAccess?.allowed === false) {
+      setListLoading(false);
+      setExercises([]);
+      return;
+    }
     loadList();
-  }, [loadList]);
+  }, [loadList, accessLoading, recruitmentAccess?.allowed]);
 
   useEffect(() => {
     const targetId = routeJobId || location.state?.exerciseId || null;
@@ -462,10 +537,27 @@ export default function RecruitmentManagement() {
   };
 
   const handleCreateClick = () => {
+    if (!recruitmentAccess?.canCreate) {
+      toast.info(
+        recruitmentAccess?.message ||
+          "Subscribe to create more recruitment exercises.",
+      );
+      navigate("/subscription-pricing");
+      return;
+    }
     setIsCreateOpen(true);
   };
 
   const handleCreateExercise = async (formData) => {
+    if (!recruitmentAccess?.canCreate) {
+      toast.info(
+        recruitmentAccess?.message ||
+          "Free trial includes 2 recruitment exercises. Subscribe to create more.",
+      );
+      navigate("/subscription-pricing");
+      return false;
+    }
+
     setCreating(true);
     try {
       const title = String(formData.title || "").trim();
@@ -492,9 +584,19 @@ export default function RecruitmentManagement() {
       }
 
       toast.success("Recruitment exercise created successfully!");
-      await loadList();
+      await Promise.all([loadList(), loadRecruitmentAccess()]);
       return true;
     } catch (err) {
+      const code = err.response?.data?.code;
+      if (code === "PAYMENT_REQUIRED" || code === "RECRUITMENT_LIMIT_REACHED") {
+        await loadRecruitmentAccess();
+        toast.error(
+          err.response?.data?.message ||
+            "Subscribe to create more recruitment exercises.",
+        );
+        navigate("/subscription-pricing");
+        return false;
+      }
       toast.error(
         err.response?.data?.message ||
           err.message ||
@@ -994,6 +1096,19 @@ export default function RecruitmentManagement() {
   ]);
 
   const openCount = exercises.filter((ex) => ex.status === "Open").length;
+  const showPaywall = !accessLoading && recruitmentAccess?.allowed === false;
+  const isFreeTrialAccess =
+    recruitmentAccess?.accessType === "free_trial" &&
+    recruitmentAccess?.remaining != null &&
+    recruitmentAccess.remaining >= 0;
+  const freeTrialLabel =
+    isFreeTrialAccess && recruitmentAccess.canCreate
+      ? `${recruitmentAccess.remaining} of ${recruitmentAccess.limit || 2} free exercise${
+          recruitmentAccess.remaining === 1 ? "" : "s"
+        } left`
+      : isFreeTrialAccess && !recruitmentAccess.canCreate
+        ? "Free trial exercises used — subscribe to create more"
+        : null;
 
   return (
     <NewsFeedLayout showSidebars={false}>
@@ -1040,22 +1155,61 @@ export default function RecruitmentManagement() {
                   Monitor recruitment progress, manage interview pipelines, and
                   track candidate outcomes across all hiring exercises.
                 </p>
+                {freeTrialLabel && !showPaywall && (
+                  <p className="text-xs sm:text-sm text-[#16730F] font-semibold mt-1.5">
+                    {freeTrialLabel}
+                  </p>
+                )}
               </div>
             )}
           </div>
 
-          {!routeJobId && !selectedExercise && (
+          {!routeJobId && !selectedExercise && !showPaywall && !accessLoading && (
             <button
               type="button"
               onClick={handleCreateClick}
               className="inline-flex items-center gap-2 bg-[#16730F] hover:bg-[#125B0C] active:scale-95 text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-2xl shadow-md transition-all shrink-0 self-start sm:self-auto"
             >
               <FaPlus className="w-3.5 h-3.5" />
-              New Recruitment Exercise
+              {recruitmentAccess?.canCreate
+                ? "New Recruitment Exercise"
+                : "Upgrade to Create More"}
             </button>
           )}
         </div>
 
+        {accessLoading ? (
+          <div className="bg-white border border-gray-200 rounded-3xl p-12 text-center text-sm text-gray-500 font-medium">
+            Checking recruitment access…
+          </div>
+        ) : showPaywall ? (
+          <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-12 text-center shadow-sm">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#1A3E32]">
+              Subscription required
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-gray-600 max-w-lg mx-auto leading-relaxed">
+              {recruitmentAccess?.message ||
+                "Recruitment Management is available to subscribed recruiters. Free trial includes 2 recruitment exercises."}
+            </p>
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/subscription-pricing")}
+                className="inline-flex items-center justify-center bg-[#16730F] hover:bg-[#125B0C] text-white font-bold text-sm px-6 py-3 rounded-2xl shadow-md transition-colors"
+              >
+                View ASE plans
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/candidate-search-page")}
+                className="inline-flex items-center justify-center bg-[#EAEAEA] hover:bg-gray-300 text-[#1A3E32] font-bold text-sm px-6 py-3 rounded-2xl transition-colors"
+              >
+                Back to search
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
         {!routeJobId && !selectedExercise && (
           <>
             {listError && (
@@ -1063,6 +1217,23 @@ export default function RecruitmentManagement() {
                 {listError}
               </div>
             )}
+
+            {!recruitmentAccess?.canCreate &&
+              recruitmentAccess?.accessType === "free_trial" && (
+                <div className="bg-[#F3F8F2] border border-[#C8E0C4] text-[#1A3E32] text-sm font-medium rounded-2xl px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <span>
+                    You’ve used your 2 free recruitment exercises. Subscribe to
+                    create more while keeping access to your existing pipelines.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/subscription-pricing")}
+                    className="shrink-0 inline-flex items-center justify-center bg-[#16730F] hover:bg-[#125B0C] text-white font-bold text-xs px-4 py-2 rounded-xl transition-colors"
+                  >
+                    View plans
+                  </button>
+                </div>
+              )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
               <RecruitmentStatCard
@@ -1375,6 +1546,8 @@ export default function RecruitmentManagement() {
               </>
             ) : null}
           </div>
+        )}
+          </>
         )}
 
         <CreateRecruitmentModal
