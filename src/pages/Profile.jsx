@@ -643,20 +643,24 @@ const Profile = () => {
 
                   {/* Company Name */}
                   {isRecruiterProfile && profileData.company_name && (
-                    <p className="text-slate-700 font-semibold text-sm sm:text-base mt-1 flex items-center justify-center sm:justify-start gap-1.5">
-                      <FaBuilding className="text-[#16730F] shrink-0 text-xs" />
-                      <span className="break-words">
-                        {formatDisplayText(profileData.company_name)}
+                    <p className="mt-2 flex items-center justify-center sm:justify-start">
+                      <span className="inline-flex items-center gap-1 max-w-full px-2 py-0.5 rounded-md bg-white/90 text-[#16730F] text-xs sm:text-sm font-semibold shadow-sm border border-[#16730F]/60 backdrop-blur-sm">
+                        <FaBuilding className="text-[#16730F] shrink-0 text-[10px]" />
+                        <span className="break-words">
+                          {formatDisplayText(profileData.company_name)}
+                        </span>
                       </span>
                     </p>
                   )}
 
                   {/* Job Title / Headline */}
                   {(profileData.job_title || profileData.title) && (
-                    <p className="text-[#fff] font-medium text-sm sm:text-base mt-1 break-words">
-                      {formatDisplayText(
-                        profileData.job_title || profileData.title,
-                      )}
+                    <p className="mt-1.5 flex items-center justify-center sm:justify-start">
+                      <span className="inline-flex items-center max-w-full px-2 py-0.5 rounded-md bg-[#FFF8E7] text-[#3D2E0A] text-xs sm:text-sm font-medium shadow-sm border border-[#E6D5A8] backdrop-blur-sm break-words">
+                        {formatDisplayText(
+                          profileData.job_title || profileData.title,
+                        )}
+                      </span>
                     </p>
                   )}
 
