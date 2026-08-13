@@ -198,10 +198,16 @@ function SignIn() {
               Sign in to continue
             </p>
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form
+              onSubmit={handleLogin}
+              className="space-y-4"
+              data-testid="signin-form"
+            >
               <input
                 type="email"
+                data-testid="signin-email"
                 placeholder="Email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-[#d3d3d3] rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-[#16730F] focus:border-[#16730F]"
@@ -209,7 +215,9 @@ function SignIn() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
+                  data-testid="signin-password"
                   placeholder="Password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-3 border border-[#d3d3d3] rounded-xl outline-none shadow-sm focus:ring-2 focus:ring-[#16730F] focus:border-[#16730F]"
@@ -227,7 +235,13 @@ function SignIn() {
               </div>
 
               {errors?.error && (
-                <p className="text-sm text-red-500">{errors.error}</p>
+                <p
+                  data-testid="signin-error"
+                  role="alert"
+                  className="text-sm text-red-500"
+                >
+                  {errors.error}
+                </p>
               )}
 
               <div className="text-right">
@@ -244,6 +258,7 @@ function SignIn() {
 
               <button
                 type="submit"
+                data-testid="signin-submit"
                 disabled={isDisabled}
                 className={`w-full py-4 rounded-full text-white font-semibold shadow-md transition ${
                   isDisabled

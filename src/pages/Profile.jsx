@@ -411,7 +411,11 @@ const Profile = () => {
   const activeAvatarSrc =
     avatarCandidates[avatarIndex] || profileAvatarSrc(profileAvatarStored);
 
-  const viewedRole = profileData?.role || user?.role;
+  // Only use the profile subject's role. Never fall back to the viewer's role
+  // when opening someone else's profile (that made Unassigned users look like Recruiters).
+  const viewedRole = isViewingOwnProfile
+    ? profileData?.role || user?.role || null
+    : profileData?.role || null;
   const isJobseekerProfile = viewedRole === "jobseeker";
   const isRecruiterProfile = viewedRole === "recruiter";
   const displayHandle = formatDisplayHandle(profileData);
@@ -620,7 +624,7 @@ const Profile = () => {
                         user={profileData}
                         fallback="User"
                         badgeSize="md"
-                        className="text-[#fff]"
+                        className="text-slate-900 sm:text-white"
                       />
                     </h1>
 

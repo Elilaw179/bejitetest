@@ -12,6 +12,25 @@ export default [
     },
   },
   {
+    files: [
+      'e2e/**/*.{js,jsx}',
+      'playwright.config.js',
+      'Admin-frontend/e2e/**/*.{js,jsx}',
+      'Admin-frontend/playwright.config.js',
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.node,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+    },
+  },
+  {
     files: ['api/**/*.js'],
     languageOptions: {
       ecmaVersion: 2020,

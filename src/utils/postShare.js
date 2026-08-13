@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify';
-import { sharePost } from '../services/postsApi';
+import { sharePost, unsharePost } from '../services/postsApi';
 
 export function getPostShareUrl(postId) {
   return `${window.location.origin}/p/${encodeURIComponent(postId)}`;
@@ -29,7 +29,7 @@ export function buildPostShareText(post) {
 }
 
 /**
- * Record a share on the server.
+ * Record a share on the server (used by external share).
  */
 export async function recordPostShare(postId) {
   try {
@@ -43,6 +43,29 @@ export async function recordPostShare(postId) {
       throw err;
     }
     return true;
+  }
+}
+
+/**
+ * Toggle an in-app repost. Returns the next sharedByMe state.
+ * @param {string} postId
+ * @param {boolean} currentlyShared
+ * @param {string|null} [quote] - optional thoughts when creating a repost
+ */
+export async function togglePostRepost(postId, currentlyShared, quote = null) {
+  try {
+    if (currentlyShared) {
+      await unsharePost(postId);
+      toast.success('Repost removed');
+      return false;
+    }
+    await sharePost(postId, quote);
+    toast.success('Post reposted to your network');
+    return true;
+  } catch (err) {
+    const message = err.response?.data?.error || err.response?.data?.message;
+    toast.error(message || (currentlyShared ? 'Failed to undo repost' : 'Failed to repost'));
+    throw err;
   }
 }
 

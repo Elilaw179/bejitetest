@@ -5,6 +5,7 @@ import {
   FaComments,
   FaExchangeAlt,
 } from "react-icons/fa";
+import { RecruiterSelect } from "../recruiter/RecruiterSelect";
 
 export function AddStageModal({ isOpen, onClose, onAdd }) {
   const [stageName, setStageName] = useState("");
