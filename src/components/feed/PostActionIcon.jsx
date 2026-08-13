@@ -9,6 +9,10 @@ const POST_ACTION_ICONS = {
   share: {
     default: "/assets/images/share-nav.svg",
   },
+  repost: {
+    default: "/assets/images/repost-nav.svg",
+    active: "/assets/images/repost-active-nav.svg",
+  },
   save: {
     default: "/assets/images/save-nav.svg",
     active: "/assets/images/save-active-nav.svg",

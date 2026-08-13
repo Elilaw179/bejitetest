@@ -1,10 +1,10 @@
-import { FaRetweet } from "react-icons/fa";
 import PostActionIcon from "./PostActionIcon";
 
 export default function PostActions({
   liked,
   saved,
   sharedByMe = false,
+  repostScheduled = false,
   likesCount,
   commentsCount,
   sharesCount,
@@ -14,6 +14,17 @@ export default function PostActions({
   onShare,
   onSave,
 }) {
+  const repostLabel = sharedByMe
+    ? repostScheduled
+      ? "Scheduled"
+      : "Reposted"
+    : "Repost";
+  const repostAria = sharedByMe
+    ? repostScheduled
+      ? "Edit scheduled repost"
+      : "Undo repost"
+    : "Repost";
+
   return (
     <div className="flex flex-row justify-start items-center gap-2.5 sm:gap-5 border-t border-[#D3D3D3] pt-4 flex-wrap">
       <button
@@ -48,18 +59,12 @@ export default function PostActions({
             ? "text-[#16730F]"
             : "text-gray-600 hover:text-[#16730F]"
         }`}
-        aria-label={sharedByMe ? "Undo repost" : "Repost"}
+        aria-label={repostAria}
         aria-pressed={sharedByMe}
       >
-        <FaRetweet
-          className={`h-6 w-6 sm:h-7 sm:w-7 shrink-0 ${
-            sharedByMe ? "text-[#16730F]" : ""
-          }`}
-        />
+        <PostActionIcon type="repost" active={sharedByMe} />
         <span className="text-xs tabular-nums sm:hidden">{sharesCount}</span>
-        <span className="hidden sm:inline text-xs sm:text-sm">
-          {sharedByMe ? "Reposted" : "Repost"}
-        </span>
+        <span className="hidden sm:inline text-xs sm:text-sm">{repostLabel}</span>
       </button>
       <button
         type="button"

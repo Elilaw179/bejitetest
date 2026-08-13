@@ -50,18 +50,30 @@ export async function recordPostShare(postId) {
  * Toggle an in-app repost. Returns the next sharedByMe state.
  * @param {string} postId
  * @param {boolean} currentlyShared
- * @param {string|null} [quote] - optional thoughts when creating a repost
+ * @param {string|null} [quote]
+ * @param {string|null} [scheduledAt] - ISO timestamp for scheduled repost
+ * @returns {Promise<{ shared: boolean, scheduled: boolean }>}
  */
-export async function togglePostRepost(postId, currentlyShared, quote = null) {
+export async function togglePostRepost(
+  postId,
+  currentlyShared,
+  quote = null,
+  scheduledAt = null,
+) {
   try {
     if (currentlyShared) {
       await unsharePost(postId);
       toast.success('Repost removed');
-      return false;
+      return { shared: false, scheduled: false };
     }
-    await sharePost(postId, quote);
-    toast.success('Post reposted to your network');
-    return true;
+    const data = await sharePost(postId, quote, scheduledAt);
+    const scheduled = Boolean(scheduledAt) || Boolean(data?.share?.scheduledAt && !data?.share?.liveAt);
+    toast.success(
+      scheduled
+        ? 'Repost scheduled'
+        : 'Post reposted to your network',
+    );
+    return { shared: true, scheduled };
   } catch (err) {
     const message = err.response?.data?.error || err.response?.data?.message;
     toast.error(message || (currentlyShared ? 'Failed to undo repost' : 'Failed to repost'));
