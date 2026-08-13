@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import FormLabel from "./forms/FormLabel";
 import PhoneInput from "./forms/PhoneInput";
+import DobCalendarPicker from "./forms/DobCalendarPicker";
 import { RecruiterSelect } from "./recruiter/recruiterOnboardingUi";
 
 const FieldGroup = ({ formData, handleChange, countries }) => {
@@ -36,7 +37,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         optional: false,
         type: "select",
         options: ["Male", "Female"],
-        width: "w-full sm:w-[calc(33.33%-0.67rem)]",
+        width: "w-full sm:w-[calc(50%-0.5rem)]",
       },
       {
         name: "maritalStatus",
@@ -44,7 +45,16 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         optional: false,
         type: "select",
         options: ["Single", "Married", "Divorced", "Widowed"],
-        width: "w-full sm:w-[calc(33.33%-0.67rem)]",
+        width: "w-full sm:w-[calc(50%-0.5rem)]",
+      },
+    ],
+    [
+      {
+        name: "dob",
+        label: "DATE OF BIRTH",
+        optional: true,
+        type: "dob",
+        width: "w-full sm:w-[calc(65%-0.5rem)]",
       },
       {
         name: "age",
@@ -52,7 +62,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         optional: true,
         type: "select",
         options: bioAges,
-        width: "w-full sm:w-[calc(33.33%-0.67rem)]",
+        width: "w-full sm:w-[calc(35%-0.5rem)]",
       },
     ],
     [
@@ -110,7 +120,6 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
                 optional={f.optional}
                 required={!f.optional}
               />
-              {/* <label className="block mb-1.5 text-[11px] font-bold text-gray-600 tracking-wide">{f.label}</label> */}
               {f.type === "select" ? (
                 <RecruiterSelect
                   name={f.name}
@@ -118,6 +127,15 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
                   onChange={handleChange}
                   options={f.options || []}
                   placeholder={f.placeholder || "Select"}
+                />
+              ) : f.type === "dob" ? (
+                <DobCalendarPicker
+                  name={f.name}
+                  value={formData[f.name] || ""}
+                  onChange={handleChange}
+                  onAgeChange={(calculatedAge) => {
+                    handleChange({ target: { name: "age", value: calculatedAge } });
+                  }}
                 />
               ) : f.type === "datalist" ? (
                 <div className="relative">

@@ -17,12 +17,14 @@ import {
 import { getUserProfileImage, getProfileImageUrl } from "../../utils/profileImageUtils";
 import ConfirmModal from "../ConfirmModal";
 import SharePostModal from "../SharePostModal";
+import RepostModal from "../RepostModal";
 import PostMediaGallery from "../PostMediaGallery";
 import PostPoll from "./PostPoll";
 import PostCommentsSection from "../PostCommentsSection";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
+import { OriginalPostNest, RepostIntro } from "./RepostChrome";
 
 const PostDetailModal = React.lazy(() => import("./PostDetailModal"));
 
@@ -286,6 +288,7 @@ const PostCard = ({
   onLike,
   onSave,
   onShare,
+  onRepost,
   onUpdate,
   onDelete,
   onVotePoll,
@@ -299,12 +302,17 @@ const PostCard = ({
   const [loadingComments, setLoadingComments] = useState(false);
   const [liked, setLiked] = useState(post.likedByMe === true);
   const [saved, setSaved] = useState(post.savedByMe === true);
+  const [sharedByMe, setSharedByMe] = useState(post.sharedByMe === true);
+  const [sharesCount, setSharesCount] = useState(post.sharesCount || 0);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [reposting, setReposting] = useState(false);
 
   useEffect(() => {
     setLiked(post.likedByMe === true);
     setSaved(post.savedByMe === true);
-  }, [post.id, post.likedByMe, post.savedByMe]);
+    setSharedByMe(post.sharedByMe === true);
+    setSharesCount(post.sharesCount || 0);
+  }, [post.id, post.likedByMe, post.savedByMe, post.sharedByMe, post.sharesCount, post.feedItemKey]);
 
   const openPostDetail = () => {
     if (!isDetailView) {
@@ -317,6 +325,7 @@ const PostCard = ({
   const [editBody, setEditBody] = useState(post.body || "");
   const [savingEdit, setSavingEdit] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showRepostModal, setShowRepostModal] = useState(false);
   const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
 
   useEffect(() => {
@@ -383,6 +392,43 @@ const PostCard = ({
     onSave(post.id, saved);
   };
 
+  const handleRepostClick = async () => {
+    if (!onRepost || reposting) return;
+    if (sharedByMe) {
+      const previousCount = sharesCount;
+      setSharedByMe(false);
+      setSharesCount(Math.max(0, previousCount - 1));
+      setReposting(true);
+      try {
+        await onRepost(post.id, true);
+      } catch {
+        setSharedByMe(true);
+        setSharesCount(previousCount);
+      } finally {
+        setReposting(false);
+      }
+      return;
+    }
+    setShowRepostModal(true);
+  };
+
+  const handleRepostConfirm = async (quote) => {
+    if (!onRepost || reposting) return;
+    const previousCount = sharesCount;
+    setSharedByMe(true);
+    setSharesCount(previousCount + 1);
+    setReposting(true);
+    try {
+      await onRepost(post.id, false, quote);
+      setShowRepostModal(false);
+    } catch {
+      setSharedByMe(false);
+      setSharesCount(previousCount);
+    } finally {
+      setReposting(false);
+    }
+  };
+
   const handleShareClick = () => {
     setShowShareModal(true);
   };
@@ -442,99 +488,111 @@ const PostCard = ({
     setEditBody(post.body || "");
   };
 
+  const isRepost = Boolean(post.repostedBy);
+
   return (
     <div
-      id={isDetailView ? undefined : `post-${post.id}`}
+      id={isDetailView ? undefined : `post-${post.feedItemKey || post.id}`}
       className={
         isDetailView
           ? "space-y-4 sm:space-y-6"
           : "bg-white p-4 sm:p-6 max-w-3xl mx-auto rounded-2xl space-y-4 sm:space-y-6 mb-6"
       }
     >
-      <PostHeader
-        author={post.author}
-        authorId={post.authorId}
-        createdAt={post.publishedAt}
-        showMenu={showMenu}
-        setShowMenu={setShowMenu}
-        onEdit={handleEditClick}
-        onDelete={handleDeleteClick}
-        isOwner={isOwner}
+      <RepostIntro
+        repostedBy={post.repostedBy}
+        quote={post.repostQuote}
+        repostedAt={post.repostedAt}
+        currentUserId={currentUserId}
       />
-      {isEditing ? (
-        <div className="space-y-3">
-          <textarea
-            value={editBody}
-            onChange={(e) => setEditBody(e.target.value)}
-            className="w-full p-3 border-2 border-[#16730F] rounded-xl focus:outline-none"
-            rows={4}
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={handleEditSave}
-              disabled={savingEdit}
-              className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c] disabled:opacity-50"
-            >
-              {savingEdit ? "Saving..." : "Save"}
-            </button>
-            <button
-              onClick={handleCancelEdit}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-full text-sm hover:bg-gray-400"
-            >
-              Cancel
-            </button>
+      <OriginalPostNest active={isRepost}>
+        <PostHeader
+          author={post.author}
+          authorId={post.authorId}
+          createdAt={post.publishedAt}
+          showMenu={showMenu}
+          setShowMenu={setShowMenu}
+          onEdit={handleEditClick}
+          onDelete={handleDeleteClick}
+          isOwner={isOwner}
+        />
+        {isEditing ? (
+          <div className="space-y-3">
+            <textarea
+              value={editBody}
+              onChange={(e) => setEditBody(e.target.value)}
+              className="w-full p-3 border-2 border-[#16730F] rounded-xl focus:outline-none"
+              rows={4}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleEditSave}
+                disabled={savingEdit}
+                className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c] disabled:opacity-50"
+              >
+                {savingEdit ? "Saving..." : "Save"}
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-full text-sm hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <PostContent
-          body={post.body}
-          onOpenDetail={undefined}
-          isDetailView={isDetailView}
-        />
-      )}
-      {post.media && post.media.length > 0 && (
-        <div
-          role={!isDetailView ? "button" : undefined}
-          tabIndex={!isDetailView ? 0 : undefined}
-          onClick={() => {
-            if (!isDetailView) openPostDetail();
-          }}
-          onKeyDown={(e) => {
-            if (isDetailView) return;
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              openPostDetail();
-            }
-          }}
-          className={!isDetailView ? "cursor-pointer" : undefined}
-        >
-          <PostMediaGallery media={post.media} showFullMedia={isDetailView} />
-        </div>
-      )}
-      {post.poll && (
-        <PostPoll
-          poll={post.poll}
-          onVote={async (optionId) => {
-            if (!onVotePoll) return;
-            await onVotePoll(post.id, optionId);
-          }}
-        />
-      )}
+        ) : (
+          <PostContent
+            body={post.body}
+            onOpenDetail={undefined}
+            isDetailView={isDetailView}
+          />
+        )}
+        {post.media && post.media.length > 0 && (
+          <div
+            role={!isDetailView ? "button" : undefined}
+            tabIndex={!isDetailView ? 0 : undefined}
+            onClick={() => {
+              if (!isDetailView) openPostDetail();
+            }}
+            onKeyDown={(e) => {
+              if (isDetailView) return;
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openPostDetail();
+              }
+            }}
+            className={!isDetailView ? "cursor-pointer" : undefined}
+          >
+            <PostMediaGallery media={post.media} showFullMedia={isDetailView} />
+          </div>
+        )}
+        {post.poll && (
+          <PostPoll
+            poll={post.poll}
+            onVote={async (optionId) => {
+              if (!onVotePoll) return;
+              await onVotePoll(post.id, optionId);
+            }}
+          />
+        )}
+      </OriginalPostNest>
       <PostStats
         likesCount={post.likesCount || 0}
         commentsCount={commentsCount}
-        sharesCount={post.sharesCount || 0}
+        sharesCount={sharesCount}
         onCommentsClick={handleCommentAction}
         isDetailView={isDetailView}
       />
       <PostActions
         liked={liked}
         saved={saved}
+        sharedByMe={sharedByMe}
         likesCount={post.likesCount || 0}
         commentsCount={commentsCount}
-        sharesCount={post.sharesCount || 0}
+        sharesCount={sharesCount}
         onLike={handleLikeClick}
         onComment={handleCommentAction}
+        onRepost={handleRepostClick}
         onShare={handleShareClick}
         onSave={handleSaveClick}
       />
@@ -542,6 +600,13 @@ const PostCard = ({
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         onShare={handleShareOption}
+      />
+      <RepostModal
+        isOpen={showRepostModal}
+        onClose={() => setShowRepostModal(false)}
+        post={post}
+        onConfirm={handleRepostConfirm}
+        submitting={reposting}
       />
 
       {showComments && (
@@ -568,6 +633,7 @@ const PostCard = ({
             onLike={onLike}
             onSave={onSave}
             onShare={onShare}
+            onRepost={onRepost}
             currentUserId={currentUserId}
           />
         </React.Suspense>

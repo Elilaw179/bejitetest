@@ -261,7 +261,7 @@ function JobType() {
             )}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-visible relative z-20">
             <div className="bg-gradient-to-r from-[#16730F] to-[#145a0c] px-6 py-4">
               <h2 className="text-white text-lg font-semibold flex items-center gap-2">
                 <FaBriefcase className="text-white/80" />
@@ -272,13 +272,13 @@ function JobType() {
               </p>
             </div>
 
-            <div className="p-6 space-y-8">
+            <div className="p-6 space-y-8 relative z-30">
               {/* Role & Industry */}
-              <section>
+              <section className="relative z-40">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-4">
                   Role & industry
                 </h3>
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-4 relative z-40">
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
                       label={statusLabel}
@@ -312,11 +312,11 @@ function JobType() {
               </section>
 
               {/* Location */}
-              <section>
+              <section className="relative z-30">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-4">
                   Location
                 </h3>
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-4 relative z-30">
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
                       label="PREFERRED COUNTRY"
@@ -355,11 +355,11 @@ function JobType() {
               </section>
 
               {/* Compensation & Availability */}
-              <section>
+              <section className="relative z-20">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-4">
                   Compensation & availability
                 </h3>
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-4 relative z-20">
                   <div className="flex-1 min-w-[220px]">
                     <FormLabel label="EXPECTED SALARY" />
                     <input

@@ -84,13 +84,22 @@ function AdminLogin() {
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form
+            onSubmit={handleLogin}
+            className="space-y-5"
+            data-testid="admin-login-form"
+          >
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="admin-username"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Username
               </label>
               <input
+                id="admin-username"
                 type="text"
+                data-testid="admin-login-username"
                 autoComplete="username"
                 placeholder="Your admin username"
                 value={username}
@@ -100,11 +109,16 @@ function AdminLogin() {
             </div>
 
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="admin-password"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Password
               </label>
               <input
+                id="admin-password"
                 type={showPassword ? "text" : "password"}
+                data-testid="admin-login-password"
                 autoComplete="current-password"
                 placeholder="••••••••"
                 value={password}
@@ -121,13 +135,18 @@ function AdminLogin() {
             </div>
 
             {formError && (
-              <p className="text-sm text-red-500 text-center bg-red-50 py-2 rounded-lg">
+              <p
+                data-testid="admin-login-error"
+                role="alert"
+                className="text-sm text-red-500 text-center bg-red-50 py-2 rounded-lg"
+              >
                 {formError}
               </p>
             )}
 
             <button
               type="submit"
+              data-testid="admin-login-submit"
               disabled={isDisabled}
               className={`w-full py-3.5 rounded-xl text-white font-semibold shadow-md transition ${
                 isDisabled

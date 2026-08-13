@@ -28,10 +28,10 @@ const countries = [
   const [imagePreview, setImagePreview] = useState(null);
   const [formData, setFormData] = useState({
     nickname: "", phone: "", gender: "", maritalStatus: "",
-    age: "", country: "", street: "", city: "", tribe: "", zip: "", bio: "",
+    age: "", dob: "", country: "", street: "", city: "", tribe: "", zip: "", bio: "",
   });
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) setImagePreview(URL.createObjectURL(file));

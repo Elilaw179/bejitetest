@@ -14,7 +14,7 @@ import {
   updatePost,
   voteOnPoll,
 } from "../services/postsApi";
-import { recordPostShare } from "../utils/postShare";
+import { recordPostShare, togglePostRepost } from "../utils/postShare";
 import { getUser, mergeAuthUsers } from "../utils/tokenManager";
 
 export default function PostDetailPage() {
@@ -81,9 +81,17 @@ export default function PostDetailPage() {
 
   const handleShare = async (id) => {
     await recordPostShare(id);
-    patchPost({
-      sharesCount: (post?.sharesCount || 0) + 1,
-    });
+    if (!post?.sharedByMe) {
+      patchPost({
+        sharesCount: (post?.sharesCount || 0) + 1,
+        sharedByMe: true,
+      });
+    }
+  };
+
+  const handleRepost = async (id, currentlyShared, quote = null) => {
+    await togglePostRepost(id, currentlyShared, quote);
+    await loadPost();
   };
 
   const handleUpdate = async (id, postData) => {
@@ -143,6 +151,7 @@ export default function PostDetailPage() {
               onLike={handleLike}
               onSave={handleSave}
               onShare={handleShare}
+              onRepost={handleRepost}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
               onVotePoll={handleVotePoll}

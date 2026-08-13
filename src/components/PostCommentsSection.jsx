@@ -80,36 +80,38 @@ function CommentItem({
 
   return (
     <div>
-      <div className="flex gap-2.5">
-        <button
-          type="button"
-          onClick={goToAuthorProfile}
-          disabled={!comment.authorId}
-          className="rounded-full shrink-0 disabled:cursor-default"
-          aria-label={`View ${getDisplayName(comment.author)}'s profile`}
+      <div className="flex-1 min-w-0">
+        <div
+          className={`rounded-2xl px-3 py-2 ${
+            isReply
+              ? "bg-white border border-gray-100 shadow-sm"
+              : "bg-gray-50"
+          }`}
         >
-          <img
-            src={authorImage}
-            alt=""
-            className={`rounded-full object-cover ${
-              isReply ? "w-6 h-6 sm:w-7 sm:h-7 mt-0.5" : "w-7 h-7 sm:w-8 sm:h-8"
-            } ${comment.authorId ? "cursor-pointer hover:opacity-90" : ""}`}
-          />
-        </button>
-        <div className="flex-1 min-w-0">
-          <div
-            className={`rounded-2xl px-3 py-2 ${
-              isReply
-                ? "bg-white border border-gray-100 shadow-sm"
-                : "bg-gray-50"
-            }`}
-          >
-            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          {/* Avatar + name inside the card, above the comment */}
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={goToAuthorProfile}
+              disabled={!comment.authorId}
+              className="rounded-full shrink-0 disabled:cursor-default self-center"
+              aria-label={`View ${getDisplayName(comment.author)}'s profile`}
+            >
+              <img
+                src={authorImage}
+                alt=""
+                className={`rounded-full object-cover ${
+                  isReply ? "w-6 h-6 sm:w-7 sm:h-7" : "w-7 h-7 sm:w-8 sm:h-8"
+                } ${comment.authorId ? "cursor-pointer hover:opacity-90" : ""}`}
+              />
+            </button>
+
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0 flex-1">
               <button
                 type="button"
                 onClick={goToAuthorProfile}
                 disabled={!comment.authorId}
-                className="font-semibold text-sm text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline"
+                className="font-semibold text-sm text-[#16730F] hover:underline text-left disabled:cursor-default disabled:no-underline min-w-0 max-w-full"
               >
                 <DisplayNameWithBadge user={comment.author} badgeSize="xs" />
               </button>
@@ -122,156 +124,160 @@ function CommentItem({
                     disabled={!parentComment.authorId}
                     className="font-medium text-[#16730F] hover:underline disabled:cursor-default disabled:no-underline inline-flex items-center gap-1"
                   >
-                    <DisplayNameWithBadge user={parentComment.author} badgeSize="xs" />
+                    <DisplayNameWithBadge
+                      user={parentComment.author}
+                      badgeSize="xs"
+                    />
                   </button>
                 </p>
               )}
             </div>
-            <p className="text-sm break-words text-gray-800 mt-0.5">
-              {isEditing ? (
-                <form
-                  onSubmit={(e) => onSaveEdit(e, comment)}
-                  className="space-y-2"
-                >
-                  <textarea
-                    value={editDraft}
-                    onChange={(e) => onEditDraftChange(e.target.value)}
-                    rows={2}
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#16730F] resize-none"
-                    autoFocus
-                  />
-                  <div className="flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={onCancelEdit}
-                      disabled={savingCommentId === comment.id}
-                      className="px-3 py-1 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={
-                        savingCommentId === comment.id || !editDraft.trim()
-                      }
-                      className="px-3 py-1 rounded-full text-xs font-medium bg-[#16730F] text-white hover:bg-[#145a0c] disabled:opacity-50"
-                    >
-                      {savingCommentId === comment.id ? "Saving..." : "Save"}
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                comment.body
-              )}
-            </p>
           </div>
 
-          <div className="flex flex-row justify-start items-center gap-3 sm:gap-3 mt-1 px-1">
-            <button
-              type="button"
-              onClick={() => onLike(comment)}
-              className={`flex items-center gap-1 sm:gap-1.5 text-xs font-medium transition-colors ${
-                comment.likedByMe
-                  ? "text-red-500"
-                  : "text-gray-500 hover:text-red-500"
-              }`}
-              aria-label={comment.likedByMe ? "Unlike comment" : "Like comment"}
-            >
-              <PostActionIcon
-                type="like"
-                active={comment.likedByMe}
-                compact
-              />
-              <span className="text-xs tabular-nums sm:hidden">
-                {comment.likesCount || 0}
-              </span>
-              <span className="hidden sm:inline">
-                {comment.likesCount > 0 && (
-                  <span className="tabular-nums mr-1">{comment.likesCount}</span>
-                )}
-                {comment.likedByMe ? "Liked" : "Like"}
-              </span>
-            </button>
-            {!isEditing && (
-              <button
-                type="button"
-                onClick={() =>
-                  isReplying ? onCancelReply() : onStartReply(comment.id)
-                }
-                className="text-xs font-medium text-gray-500 hover:text-[#16730F] transition-colors"
-                aria-label={isReplying ? "Cancel reply" : "Reply to comment"}
+          <p className="text-sm break-words text-gray-800 mt-1.5">
+            {isEditing ? (
+              <form
+                onSubmit={(e) => onSaveEdit(e, comment)}
+                className="space-y-2"
               >
-                Reply
-              </button>
-            )}
-            {isOwner && !isEditing && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onEdit(comment)}
-                  className="text-xs font-medium text-gray-500 hover:text-[#16730F] transition-colors"
-                  aria-label="Edit comment"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDelete(comment)}
-                  disabled={deletingCommentId === comment.id}
-                  className="flex items-center gap-1 sm:gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
-                  aria-label={
-                    deletingCommentId === comment.id
-                      ? "Deleting comment"
-                      : "Delete comment"
-                  }
-                >
-                  <PostActionIcon
-                    type="delete"
-                    compact
-                    active={deletingCommentId === comment.id}
-                  />
-                  <span className="hidden sm:inline">
-                    {deletingCommentId === comment.id ? "Deleting..." : "Delete"}
-                  </span>
-                </button>
-              </>
-            )}
-          </div>
-
-          {isReplying && (
-            <form
-              onSubmit={(e) => onSubmitReply(e, comment.id)}
-              className="flex flex-wrap sm:flex-nowrap gap-2 mt-2 items-center"
-            >
-              <img
-                src={currentUserPhotoUrl}
-                alt=""
-                className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover shrink-0"
-              />
-              <div className="flex-1 min-w-[120px] sm:min-w-[140px] flex items-center gap-1 border border-[#D3D3D3] rounded-full px-2 py-1 focus-within:border-[#16730F]">
-                <input
-                  type="text"
-                  placeholder={`Reply to ${getDisplayName(comment.author)}...`}
-                  value={replyText}
-                  onChange={(e) => onReplyTextChange(e.target.value)}
-                  className="flex-1 min-w-0 border-0 bg-transparent px-2 py-0.5 text-xs sm:text-sm outline-none"
+                <textarea
+                  value={editDraft}
+                  onChange={(e) => onEditDraftChange(e.target.value)}
+                  rows={2}
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#16730F] resize-none"
                   autoFocus
                 />
-                <EmojiPickerButton
-                  onEmojiSelect={(emoji) => onReplyTextChange(`${replyText}${emoji}`)}
-                  buttonClassName="p-0.5"
-                />
-              </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={onCancelEdit}
+                    disabled={savingCommentId === comment.id}
+                    className="px-3 py-1 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={
+                      savingCommentId === comment.id || !editDraft.trim()
+                    }
+                    className="px-3 py-1 rounded-full text-xs font-medium bg-[#16730F] text-white hover:bg-[#145a0c] disabled:opacity-50"
+                  >
+                    {savingCommentId === comment.id ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              comment.body
+            )}
+          </p>
+        </div>
+
+        <div className="flex flex-row justify-start items-center gap-3 sm:gap-3 mt-1 px-1">
+          <button
+            type="button"
+            onClick={() => onLike(comment)}
+            className={`flex items-center gap-1 sm:gap-1.5 text-xs font-medium transition-colors ${
+              comment.likedByMe
+                ? "text-red-500"
+                : "text-gray-500 hover:text-red-500"
+            }`}
+            aria-label={comment.likedByMe ? "Unlike comment" : "Like comment"}
+          >
+            <PostActionIcon
+              type="like"
+              active={comment.likedByMe}
+              compact
+            />
+            <span className="text-xs tabular-nums sm:hidden">
+              {comment.likesCount || 0}
+            </span>
+            <span className="hidden sm:inline">
+              {comment.likesCount > 0 && (
+                <span className="tabular-nums mr-1">{comment.likesCount}</span>
+              )}
+              {comment.likedByMe ? "Liked" : "Like"}
+            </span>
+          </button>
+          {!isEditing && (
+            <button
+              type="button"
+              onClick={() =>
+                isReplying ? onCancelReply() : onStartReply(comment.id)
+              }
+              className="text-xs font-medium text-gray-500 hover:text-[#16730F] transition-colors"
+              aria-label={isReplying ? "Cancel reply" : "Reply to comment"}
+            >
+              Reply
+            </button>
+          )}
+          {isOwner && !isEditing && (
+            <>
               <button
-                type="submit"
-                disabled={!replyText.trim()}
-                className="bg-[#16730F] text-white px-3 py-1.5 rounded-full text-xs hover:bg-[#145a0c] disabled:opacity-50"
+                type="button"
+                onClick={() => onEdit(comment)}
+                className="text-xs font-medium text-gray-500 hover:text-[#16730F] transition-colors"
+                aria-label="Edit comment"
               >
-                Reply
+                Edit
               </button>
-            </form>
+              <button
+                type="button"
+                onClick={() => onDelete(comment)}
+                disabled={deletingCommentId === comment.id}
+                className="flex items-center gap-1 sm:gap-1.5 text-xs font-medium text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
+                aria-label={
+                  deletingCommentId === comment.id
+                    ? "Deleting comment"
+                    : "Delete comment"
+                }
+              >
+                <PostActionIcon
+                  type="delete"
+                  compact
+                  active={deletingCommentId === comment.id}
+                />
+                <span className="hidden sm:inline">
+                  {deletingCommentId === comment.id ? "Deleting..." : "Delete"}
+                </span>
+              </button>
+            </>
           )}
         </div>
+
+        {isReplying && (
+          <form
+            onSubmit={(e) => onSubmitReply(e, comment.id)}
+            className="flex flex-wrap sm:flex-nowrap gap-2 mt-2 items-center"
+          >
+            <img
+              src={currentUserPhotoUrl}
+              alt=""
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover shrink-0"
+            />
+            <div className="flex-1 min-w-[120px] sm:min-w-[140px] flex items-center gap-1 border border-[#D3D3D3] rounded-full px-2 py-1 focus-within:border-[#16730F]">
+              <input
+                type="text"
+                placeholder={`Reply to ${getDisplayName(comment.author)}...`}
+                value={replyText}
+                onChange={(e) => onReplyTextChange(e.target.value)}
+                className="flex-1 min-w-0 border-0 bg-transparent px-2 py-0.5 text-xs sm:text-sm outline-none"
+                autoFocus
+              />
+              <EmojiPickerButton
+                onEmojiSelect={(emoji) => onReplyTextChange(`${replyText}${emoji}`)}
+                buttonClassName="p-0.5"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!replyText.trim()}
+              className="bg-[#16730F] text-white px-3 py-1.5 rounded-full text-xs hover:bg-[#145a0c] disabled:opacity-50"
+            >
+              Reply
+            </button>
+          </form>
+        )}
       </div>
 
       {replies.length > 0 && (

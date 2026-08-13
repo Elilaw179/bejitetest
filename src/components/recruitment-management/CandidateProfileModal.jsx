@@ -20,6 +20,7 @@ import {
   createApplicationFeedback,
   downloadJobApplicationResume,
 } from "../../services/employerApi";
+import { formatDisplayText } from "../../utils/displayFormatUtils";
 
 const mapRecommendationToOutcome = (rec = "") => {
   const value = String(rec).toLowerCase();
@@ -374,7 +375,7 @@ export default function CandidateProfileModal({
                     <div>
                       <div className="text-gray-500 font-medium">Location</div>
                       <div className="font-bold text-gray-900 mt-0.5">
-                        {display.location || "—"}
+                        {formatDisplayText(display.location) || "—"}
                       </div>
                     </div>
                     <div>

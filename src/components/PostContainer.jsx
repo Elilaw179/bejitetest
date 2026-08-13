@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaImage, FaVideo, FaPoll } from 'react-icons/fa';
 import { getFeed, createPost, updatePost, deletePost, likePost, unlikePost, savePost, unsavePost, voteOnPoll } from '../services/postsApi';
-import { recordPostShare } from '../utils/postShare';
+import { recordPostShare, togglePostRepost } from '../utils/postShare';
 import { getUser } from '../utils/tokenManager';
 import { getUserProfileImage, getProfileImageUrl } from '../utils/profileImageUtils';
 import PostCreationModal from './PostCreationModal';
@@ -13,11 +13,13 @@ import { RecruiterSelect } from './recruiter/recruiterOnboardingUi';
 const FEED_PAGE_SIZE = 20;
 
 const mergeFeedPosts = (existing, incoming) => {
-  const seen = new Set(existing.map((p) => p.id));
+  const keyOf = (p) => p.feedItemKey || p.id;
+  const seen = new Set(existing.map(keyOf));
   const merged = [...existing];
   for (const post of incoming) {
-    if (!seen.has(post.id)) {
-      seen.add(post.id);
+    const key = keyOf(post);
+    if (!seen.has(key)) {
+      seen.add(key);
       merged.push(post);
     }
   }
@@ -117,12 +119,20 @@ const PostContainer = () => {
     try {
       await recordPostShare(postId);
       const current = posts.find((p) => p.id === postId);
-      patchPost(postId, {
-        sharesCount: (current?.sharesCount || 0) + 1,
-      });
+      if (!current?.sharedByMe) {
+        patchPost(postId, {
+          sharesCount: (current?.sharesCount || 0) + 1,
+          sharedByMe: true,
+        });
+      }
     } catch (err) {
       console.error('Error sharing post:', err);
     }
+  };
+
+  const handleRepost = async (postId, currentlyShared, quote = null) => {
+    await togglePostRepost(postId, currentlyShared, quote);
+    fetchFeed(true);
   };
 
   const handleUpdatePost = async (postId, postData) => {
@@ -208,12 +218,13 @@ const PostContainer = () => {
         <>
           {posts.map(post => (
             <PostCard 
-              key={post.id} 
+              key={post.feedItemKey || post.id} 
               post={post} 
               currentUserId={user?.id}
               onLike={handleLike}
               onSave={handleSave}
               onShare={handleShare}
+              onRepost={handleRepost}
               onUpdate={handleUpdatePost}
               onDelete={handleDeletePost}
               onVotePoll={handleVotePoll}
