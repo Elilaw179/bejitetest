@@ -165,8 +165,17 @@ export default function PostDetailModal({
     onSave?.(post.id, saved);
   };
 
+  const isMyScheduledRepost =
+    post.myRepostIsScheduled === true ||
+    (post.repostIsScheduled === true &&
+      String(post.repostedBy?.id) === String(currentUserId));
+
   const handleRepost = async () => {
     if (!onRepost || reposting) return;
+    if (sharedByMe && isMyScheduledRepost) {
+      setShowRepostModal(true);
+      return;
+    }
     if (sharedByMe) {
       const previousCount = sharesCount;
       setSharedByMe(false);
@@ -185,17 +194,42 @@ export default function PostDetailModal({
     setShowRepostModal(true);
   };
 
-  const handleRepostConfirm = async (quote) => {
+  const handleRepostConfirm = async (quote, scheduledAt = null) => {
     if (!onRepost || reposting) return;
+    const alreadyShared = sharedByMe;
+    const wasScheduled = isMyScheduledRepost;
+    const willBeScheduled = Boolean(scheduledAt);
     const previousCount = sharesCount;
+    const wasLive = alreadyShared && !wasScheduled;
+    const willBeLive = !willBeScheduled;
+
     setSharedByMe(true);
-    setSharesCount(previousCount + 1);
+    if (!wasLive && willBeLive) setSharesCount(previousCount + 1);
+    if (wasLive && !willBeLive) setSharesCount(Math.max(0, previousCount - 1));
     setReposting(true);
     try {
-      await onRepost(post.id, false, quote);
+      await onRepost(post.id, false, quote, scheduledAt);
       setShowRepostModal(false);
     } catch {
-      setSharedByMe(false);
+      setSharedByMe(alreadyShared);
+      setSharesCount(previousCount);
+    } finally {
+      setReposting(false);
+    }
+  };
+
+  const handleRepostRemove = async () => {
+    if (!onRepost || reposting) return;
+    const previousCount = sharesCount;
+    const wasLive = sharedByMe && !isMyScheduledRepost;
+    setSharedByMe(false);
+    if (wasLive) setSharesCount(Math.max(0, previousCount - 1));
+    setReposting(true);
+    try {
+      await onRepost(post.id, true);
+      setShowRepostModal(false);
+    } catch {
+      setSharedByMe(true);
       setSharesCount(previousCount);
     } finally {
       setReposting(false);
@@ -244,7 +278,8 @@ export default function PostDetailModal({
           <RepostIntro
             repostedBy={post.repostedBy}
             quote={post.repostQuote}
-            repostedAt={post.repostedAt}
+            repostedAt={post.repostScheduledAt || post.repostedAt}
+            repostIsScheduled={post.repostIsScheduled}
             currentUserId={currentUserId}
           />
         ) : null}
@@ -305,6 +340,7 @@ export default function PostDetailModal({
           liked={liked}
           saved={saved}
           sharedByMe={sharedByMe}
+          repostScheduled={isMyScheduledRepost}
           likesCount={likesCount}
           commentsCount={commentsCount}
           sharesCount={sharesCount}
@@ -438,7 +474,18 @@ export default function PostDetailModal({
         onClose={() => setShowRepostModal(false)}
         post={post}
         onConfirm={handleRepostConfirm}
+        onRemove={handleRepostRemove}
         submitting={reposting}
+        isEditing={sharedByMe && isMyScheduledRepost}
+        initialQuote={
+          post.myRepostQuote ||
+          (isMyScheduledRepost ? post.repostQuote : "") ||
+          ""
+        }
+        initialScheduledAt={
+          post.myRepostScheduledAt ||
+          (isMyScheduledRepost ? post.repostScheduledAt : null)
+        }
       />
     </div>
   );

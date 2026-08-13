@@ -158,8 +158,8 @@ const UserPostsFeed = ({
     }
   };
 
-  const handleRepost = async (postId, currentlyShared, quote = null) => {
-    await togglePostRepost(postId, currentlyShared, quote);
+  const handleRepost = async (postId, currentlyShared, quote = null, scheduledAt = null) => {
+    await togglePostRepost(postId, currentlyShared, quote, scheduledAt);
     await fetchPosts(true);
   };
 

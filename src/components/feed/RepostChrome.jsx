@@ -12,22 +12,36 @@ function formatRelativeTime(dateString) {
   if (isNaN(date.getTime())) return "Just now";
 
   const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+  const diffMs = date - now;
+  const absMs = Math.abs(diffMs);
+  const diffMins = Math.floor(absMs / 60000);
+  const diffHours = Math.floor(absMs / 3600000);
+  const diffDays = Math.floor(absMs / 86400000);
+  const isFuture = diffMs > 0;
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 2) return "Yesterday";
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return isFuture ? "soon" : "Just now";
+  if (diffMins < 60) {
+    return isFuture ? `in ${diffMins}m` : `${diffMins}m ago`;
+  }
+  if (diffHours < 24) {
+    return isFuture ? `in ${diffHours}h` : `${diffHours}h ago`;
+  }
+  if (diffDays < 2) return isFuture ? "tomorrow" : "Yesterday";
+  if (diffDays < 7) {
+    return isFuture ? `in ${diffDays}d` : `${diffDays}d ago`;
+  }
 
   const isThisYear = date.getFullYear() === now.getFullYear();
   const options = isThisYear
-    ? { month: "short", day: "numeric" }
-    : { month: "short", day: "numeric", year: "numeric" };
-  return date.toLocaleDateString("en-US", options);
+    ? { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }
+    : {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      };
+  return date.toLocaleString("en-US", options);
 }
 
 /** Full reposter header + optional quote above the nested original. */
@@ -35,6 +49,7 @@ export function RepostIntro({
   repostedBy,
   quote,
   repostedAt,
+  repostIsScheduled = false,
   currentUserId,
 }) {
   const navigate = useNavigate();
@@ -89,7 +104,11 @@ export function RepostIntro({
           <p className="text-[#1A3E32] text-xs sm:text-sm truncate">{subtitle}</p>
           <p className="flex items-center gap-1.5 text-[#1A3E32] text-xs sm:text-sm">
             <FaRetweet className="text-[#16730F] w-3 h-3 shrink-0" aria-hidden />
-            <span>Reposted · {formatRelativeTime(repostedAt)}</span>
+            <span>
+              {repostIsScheduled
+                ? `Scheduled for ${formatRelativeTime(repostedAt)}`
+                : `Reposted · ${formatRelativeTime(repostedAt)}`}
+            </span>
           </p>
         </div>
       </div>

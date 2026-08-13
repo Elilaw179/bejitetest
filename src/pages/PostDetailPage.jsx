@@ -89,8 +89,8 @@ export default function PostDetailPage() {
     }
   };
 
-  const handleRepost = async (id, currentlyShared, quote = null) => {
-    await togglePostRepost(id, currentlyShared, quote);
+  const handleRepost = async (id, currentlyShared, quote = null, scheduledAt = null) => {
+    await togglePostRepost(id, currentlyShared, quote, scheduledAt);
     await loadPost();
   };
 
