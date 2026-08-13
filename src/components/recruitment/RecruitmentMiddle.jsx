@@ -32,6 +32,7 @@ import {
   isPublicShareablePost,
   openShareWindow,
   recordPostShare,
+  togglePostRepost,
 } from "../../utils/postShare";
 import {
   getUser,
@@ -44,6 +45,7 @@ import PostCreationModal from "../PostCreationModal";
 import ConfirmModal from "../ConfirmModal";
 import useSyncProfilePhoto from "../../hooks/useSyncProfilePhoto";
 import SharePostModal from "../SharePostModal";
+import RepostModal from "../RepostModal";
 import UsersListModal from "../UsersListModal";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
@@ -52,6 +54,7 @@ import PostMediaGallery from "../PostMediaGallery";
 import PostPoll from "../feed/PostPoll";
 import PostActions from "../feed/PostActions";
 import PostDetailModal from "../feed/PostDetailModal";
+import { OriginalPostNest, RepostIntro } from "../feed/RepostChrome";
 import PostCommentsSection from "../PostCommentsSection";
 import FeedLoadMoreButton from "../FeedLoadMoreButton";
 import AdCard from "../Ads/AdCard";
@@ -60,11 +63,13 @@ import { getAdProFeedAds, trackAdCampaignEvent, likeAdCampaign, unlikeAdCampaign
 const FEED_PAGE_SIZE = 20;
 
 const mergeFeedPosts = (existing, incoming) => {
-  const seen = new Set(existing.map((p) => p.id));
+  const keyOf = (p) => p.feedItemKey || p.id;
+  const seen = new Set(existing.map(keyOf));
   const merged = [...existing];
   for (const post of incoming) {
-    if (!seen.has(post.id)) {
-      seen.add(post.id);
+    const key = keyOf(post);
+    if (!seen.has(key)) {
+      seen.add(key);
       merged.push(post);
     }
   }
@@ -333,12 +338,20 @@ export default function RecruitmentMiddle() {
     try {
       await recordPostShare(postId);
       const current = posts.find((p) => p.id === postId);
-      patchPost(postId, {
-        sharesCount: (current?.sharesCount || 0) + 1,
-      });
+      if (!current?.sharedByMe) {
+        patchPost(postId, {
+          sharesCount: (current?.sharesCount || 0) + 1,
+          sharedByMe: true,
+        });
+      }
     } catch (err) {
       console.error("Error sharing post:", err);
     }
+  };
+
+  const handleRepost = async (postId, currentlyShared, quote = null, scheduledAt = null) => {
+    await togglePostRepost(postId, currentlyShared, quote, scheduledAt);
+    refreshPosts();
   };
 
   const handleSave = async (postId, isSaved) => {
@@ -464,16 +477,17 @@ export default function RecruitmentMiddle() {
       ) : (
         <>
           {posts.map((post, index) => (
-            <React.Fragment key={post.id}>
-              <div id={`post-${post.id}`}>
+            <React.Fragment key={post.feedItemKey || post.id}>
+              <div id={`post-${post.feedItemKey || post.id}`}>
                 <RecruitmentPostCard
-                  key={post.id}
+                  key={post.feedItemKey || post.id}
                   post={post}
                 currentUserId={mergedUser?.id}
                 currentUserPhotoUrl={currentUserImage}
                 onLike={handleLike}
                 onSave={handleSave}
                 onShare={handleShare}
+                onRepost={handleRepost}
                 onUpdate={handleUpdatePost}
                 onDelete={handleDeletePost}
                 onVotePoll={handleVotePoll}
@@ -531,6 +545,7 @@ const RecruitmentPostCard = ({
   onLike,
   onSave,
   onShare,
+  onRepost,
   onUpdate,
   onDelete,
   onVotePoll,
@@ -558,11 +573,16 @@ const RecruitmentPostCard = ({
   const isOwner = String(post.authorId) === String(currentUserId);
   const [liked, setLiked] = useState(post.likedByMe === true);
   const [saved, setSaved] = useState(post.savedByMe === true);
+  const [sharedByMe, setSharedByMe] = useState(post.sharedByMe === true);
+  const [sharesCount, setSharesCount] = useState(post.sharesCount || 0);
+  const [reposting, setReposting] = useState(false);
 
   useEffect(() => {
     setLiked(post.likedByMe === true);
     setSaved(post.savedByMe === true);
-  }, [post.id, post.likedByMe, post.savedByMe]);
+    setSharedByMe(post.sharedByMe === true);
+    setSharesCount(post.sharesCount || 0);
+  }, [post.id, post.likedByMe, post.savedByMe, post.sharedByMe, post.sharesCount, post.feedItemKey]);
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(post.body || "");
@@ -571,6 +591,7 @@ const RecruitmentPostCard = ({
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState("");
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showRepostModal, setShowRepostModal] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -630,6 +651,77 @@ const RecruitmentPostCard = ({
   const handleSaveClick = () => {
     setSaved(!saved);
     onSave(post.id, saved);
+  };
+
+  const isMyScheduledRepost =
+    post.myRepostIsScheduled === true ||
+    (post.repostIsScheduled === true &&
+      String(post.repostedBy?.id) === String(currentUserId));
+
+  const handleRepostClick = async () => {
+    if (!onRepost || reposting) return;
+    if (sharedByMe && isMyScheduledRepost) {
+      setShowRepostModal(true);
+      return;
+    }
+    if (sharedByMe) {
+      const previousCount = sharesCount;
+      setSharedByMe(false);
+      setSharesCount(Math.max(0, previousCount - 1));
+      setReposting(true);
+      try {
+        await onRepost(post.id, true);
+      } catch {
+        setSharedByMe(true);
+        setSharesCount(previousCount);
+      } finally {
+        setReposting(false);
+      }
+      return;
+    }
+    setShowRepostModal(true);
+  };
+
+  const handleRepostConfirm = async (quote, scheduledAt = null) => {
+    if (!onRepost || reposting) return;
+    const alreadyShared = sharedByMe;
+    const wasScheduled = isMyScheduledRepost;
+    const willBeScheduled = Boolean(scheduledAt);
+    const previousCount = sharesCount;
+    const wasLive = alreadyShared && !wasScheduled;
+    const willBeLive = !willBeScheduled;
+
+    setSharedByMe(true);
+    if (!wasLive && willBeLive) setSharesCount(previousCount + 1);
+    if (wasLive && !willBeLive) setSharesCount(Math.max(0, previousCount - 1));
+    setReposting(true);
+    try {
+      await onRepost(post.id, false, quote, scheduledAt);
+      setShowRepostModal(false);
+    } catch {
+      setSharedByMe(alreadyShared);
+      setSharesCount(previousCount);
+    } finally {
+      setReposting(false);
+    }
+  };
+
+  const handleRepostRemove = async () => {
+    if (!onRepost || reposting) return;
+    const previousCount = sharesCount;
+    const wasLive = sharedByMe && !isMyScheduledRepost;
+    setSharedByMe(false);
+    if (wasLive) setSharesCount(Math.max(0, previousCount - 1));
+    setReposting(true);
+    try {
+      await onRepost(post.id, true);
+      setShowRepostModal(false);
+    } catch {
+      setSharedByMe(true);
+      setSharesCount(previousCount);
+    } finally {
+      setReposting(false);
+    }
   };
 
   const handleShareClick = () => {
@@ -776,6 +868,14 @@ const RecruitmentPostCard = ({
 
   return (
     <div className="max-w-3xl p-4 sm:p-6 mx-auto space-y-4 sm:space-y-6 bg-white shadow rounded-2xl">
+      <RepostIntro
+        repostedBy={post.repostedBy}
+        quote={post.repostQuote}
+        repostedAt={post.repostScheduledAt || post.repostedAt}
+        repostIsScheduled={post.repostIsScheduled}
+        currentUserId={currentUserId}
+      />
+      <OriginalPostNest active={Boolean(post.repostedBy)}>
       {/* Post Header */}
       <div className="flex flex-row items-start justify-between gap-3 w-full">
         <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -948,6 +1048,7 @@ const RecruitmentPostCard = ({
           }}
         />
       )}
+      </OriginalPostNest>
 
       {/* Post Stats — numbers with labels on desktop/tablet only */}
       <div className="hidden sm:flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
@@ -973,7 +1074,7 @@ const RecruitmentPostCard = ({
             onClick={handleShowSharers}
             className="hover:underline font-medium"
           >
-            {post.sharesCount} share{post.sharesCount > 1 ? "s" : ""}
+            {sharesCount} repost{sharesCount > 1 ? "s" : ""}
           </button>
         )}
       </div>
@@ -981,11 +1082,14 @@ const RecruitmentPostCard = ({
       <PostActions
         liked={liked}
         saved={saved}
+        sharedByMe={sharedByMe}
+        repostScheduled={isMyScheduledRepost}
         likesCount={post.likesCount || 0}
         commentsCount={commentsCount}
-        sharesCount={post.sharesCount || 0}
+        sharesCount={sharesCount}
         onLike={handleLikeClick}
         onComment={handleCommentAction}
+        onRepost={handleRepostClick}
         onShare={handleShareClick}
         onSave={handleSaveClick}
       />
@@ -1010,6 +1114,24 @@ const RecruitmentPostCard = ({
         onClose={() => setShowShareModal(false)}
         onShare={handleShareOption}
       />
+      <RepostModal
+        isOpen={showRepostModal}
+        onClose={() => setShowRepostModal(false)}
+        post={post}
+        onConfirm={handleRepostConfirm}
+        onRemove={handleRepostRemove}
+        submitting={reposting}
+        isEditing={sharedByMe && isMyScheduledRepost}
+        initialQuote={
+          post.myRepostQuote ||
+          (isMyScheduledRepost ? post.repostQuote : "") ||
+          ""
+        }
+        initialScheduledAt={
+          post.myRepostScheduledAt ||
+          (isMyScheduledRepost ? post.repostScheduledAt : null)
+        }
+      />
 
       {/* Users List Modal */}
       <UsersListModal
@@ -1028,6 +1150,7 @@ const RecruitmentPostCard = ({
         onLike={onLike}
         onSave={onSave}
         onShare={onShare}
+        onRepost={onRepost}
         currentUserId={currentUserId}
       />
     </div>

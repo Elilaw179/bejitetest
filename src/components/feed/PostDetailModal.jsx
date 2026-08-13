@@ -5,6 +5,8 @@ import { toast } from "react-toastify";
 import PostActions from "./PostActions";
 import PostCommentsSection from "../PostCommentsSection";
 import SharePostModal from "../SharePostModal";
+import RepostModal from "../RepostModal";
+import { OriginalPostNest, RepostIntro } from "./RepostChrome";
 import { getComments } from "../../services/postsApi";
 import {
   buildPostShareText,
@@ -37,6 +39,7 @@ export default function PostDetailModal({
   onLike,
   onSave,
   onShare,
+  onRepost,
   currentUserId,
 }) {
   const navigate = useNavigate();
@@ -49,23 +52,38 @@ export default function PostDetailModal({
   const [activeIndex, setActiveIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [sharedByMe, setSharedByMe] = useState(false);
+  const [sharesCount, setSharesCount] = useState(0);
   const [likesCount, setLikesCount] = useState(0);
   const [commentsCount, setCommentsCount] = useState(0);
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showRepostModal, setShowRepostModal] = useState(false);
+  const [reposting, setReposting] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !post) return;
     setActiveIndex(0);
     setLiked(post.likedByMe === true);
     setSaved(post.savedByMe === true);
+    setSharedByMe(post.sharedByMe === true);
+    setSharesCount(Number(post.sharesCount) || 0);
     setLikesCount(Number(post.likesCount) || 0);
     setCommentsCount(Number(post.commentsCount) || 0);
     setComments([]);
     // Sync from selected post fields only; full `post` would reset on unrelated updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional field-level deps
-  }, [isOpen, post?.id, post?.likedByMe, post?.savedByMe, post?.likesCount, post?.commentsCount]);
+  }, [
+    isOpen,
+    post?.id,
+    post?.likedByMe,
+    post?.savedByMe,
+    post?.sharedByMe,
+    post?.likesCount,
+    post?.commentsCount,
+    post?.sharesCount,
+  ]);
 
   const loadComments = useCallback(async () => {
     if (!post?.id) return;
@@ -147,6 +165,77 @@ export default function PostDetailModal({
     onSave?.(post.id, saved);
   };
 
+  const isMyScheduledRepost =
+    post.myRepostIsScheduled === true ||
+    (post.repostIsScheduled === true &&
+      String(post.repostedBy?.id) === String(currentUserId));
+
+  const handleRepost = async () => {
+    if (!onRepost || reposting) return;
+    if (sharedByMe && isMyScheduledRepost) {
+      setShowRepostModal(true);
+      return;
+    }
+    if (sharedByMe) {
+      const previousCount = sharesCount;
+      setSharedByMe(false);
+      setSharesCount(Math.max(0, previousCount - 1));
+      setReposting(true);
+      try {
+        await onRepost(post.id, true);
+      } catch {
+        setSharedByMe(true);
+        setSharesCount(previousCount);
+      } finally {
+        setReposting(false);
+      }
+      return;
+    }
+    setShowRepostModal(true);
+  };
+
+  const handleRepostConfirm = async (quote, scheduledAt = null) => {
+    if (!onRepost || reposting) return;
+    const alreadyShared = sharedByMe;
+    const wasScheduled = isMyScheduledRepost;
+    const willBeScheduled = Boolean(scheduledAt);
+    const previousCount = sharesCount;
+    const wasLive = alreadyShared && !wasScheduled;
+    const willBeLive = !willBeScheduled;
+
+    setSharedByMe(true);
+    if (!wasLive && willBeLive) setSharesCount(previousCount + 1);
+    if (wasLive && !willBeLive) setSharesCount(Math.max(0, previousCount - 1));
+    setReposting(true);
+    try {
+      await onRepost(post.id, false, quote, scheduledAt);
+      setShowRepostModal(false);
+    } catch {
+      setSharedByMe(alreadyShared);
+      setSharesCount(previousCount);
+    } finally {
+      setReposting(false);
+    }
+  };
+
+  const handleRepostRemove = async () => {
+    if (!onRepost || reposting) return;
+    const previousCount = sharesCount;
+    const wasLive = sharedByMe && !isMyScheduledRepost;
+    setSharedByMe(false);
+    if (wasLive) setSharesCount(Math.max(0, previousCount - 1));
+    setReposting(true);
+    try {
+      await onRepost(post.id, true);
+      setShowRepostModal(false);
+    } catch {
+      setSharedByMe(true);
+      setSharesCount(previousCount);
+    } finally {
+      setReposting(false);
+    }
+  };
+
   const handleShareOption = async (platform) => {
     try {
       if (!isPublicShareablePost(post)) {
@@ -185,6 +274,16 @@ export default function PostDetailModal({
         ref={sidebarScrollRef}
         className="flex-1 min-h-0 overflow-y-auto nfl-scroll overscroll-contain px-4 py-3 pr-12 md:pr-4 space-y-4"
       >
+        {post.repostedBy ? (
+          <RepostIntro
+            repostedBy={post.repostedBy}
+            quote={post.repostQuote}
+            repostedAt={post.repostScheduledAt || post.repostedAt}
+            repostIsScheduled={post.repostIsScheduled}
+            currentUserId={currentUserId}
+          />
+        ) : null}
+        <OriginalPostNest active={Boolean(post.repostedBy)}>
         {post.body ? (
           <div className="space-y-1.5">
             <div className="flex items-center gap-3">
@@ -217,6 +316,7 @@ export default function PostDetailModal({
             </p>
           </div>
         ) : null}
+        </OriginalPostNest>
 
         <PostCommentsSection
           postId={post.id}
@@ -239,11 +339,14 @@ export default function PostDetailModal({
         <PostActions
           liked={liked}
           saved={saved}
+          sharedByMe={sharedByMe}
+          repostScheduled={isMyScheduledRepost}
           likesCount={likesCount}
           commentsCount={commentsCount}
-          sharesCount={post.sharesCount || 0}
+          sharesCount={sharesCount}
           onLike={handleLike}
           onComment={focusComments}
+          onRepost={handleRepost}
           onShare={() => setShowShareModal(true)}
           onSave={handleSave}
         />
@@ -365,6 +468,24 @@ export default function PostDetailModal({
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         onShare={handleShareOption}
+      />
+      <RepostModal
+        isOpen={showRepostModal}
+        onClose={() => setShowRepostModal(false)}
+        post={post}
+        onConfirm={handleRepostConfirm}
+        onRemove={handleRepostRemove}
+        submitting={reposting}
+        isEditing={sharedByMe && isMyScheduledRepost}
+        initialQuote={
+          post.myRepostQuote ||
+          (isMyScheduledRepost ? post.repostQuote : "") ||
+          ""
+        }
+        initialScheduledAt={
+          post.myRepostScheduledAt ||
+          (isMyScheduledRepost ? post.repostScheduledAt : null)
+        }
       />
     </div>
   );

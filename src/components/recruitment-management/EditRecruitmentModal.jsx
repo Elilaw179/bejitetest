@@ -147,11 +147,9 @@ export default function EditRecruitmentModal({
               value={status}
               disabled={submitting}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full bg-white border border-gray-300 text-gray-800 text-sm px-3.5 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/40 font-medium cursor-pointer disabled:opacity-60"
-            >
-              <option value="Open">Open</option>
-              <option value="Closed">Closed</option>
-            </RecruiterSelect>
+              options={["Open", "Closed"]}
+              placeholder="Select status"
+            />
           </div>
 
           <div>

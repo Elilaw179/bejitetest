@@ -20,6 +20,7 @@ import {
   downloadJobApplicationResume,
 } from "../../services/employerApi";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
+import { formatDisplayText } from "../../utils/displayFormatUtils";
 import { RecruiterSelect } from "../../components/recruiter/recruiterOnboardingUi";
 
 const ApplicantAvatar = ({
@@ -208,18 +209,7 @@ const JobApplications = () => {
         Update Status
       </label>
       <div className="flex gap-2">
-        <select
-          value={statusDraft}
-          onChange={(e) => setStatusDraft(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#16730F]"
-        >
-          <option value="pending">Pending</option>
-          <option value="reviewed">Reviewed</option>
-          <option value="shortlisted">Shortlisted</option>
-          <option value="hired">Hired</option>
-          <option value="rejected">Rejected</option>
-        </select>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <RecruiterSelect
             name="statusDraft"
             value={statusDraft}
@@ -228,6 +218,7 @@ const JobApplications = () => {
               { value: "pending", label: "Pending" },
               { value: "reviewed", label: "Reviewed" },
               { value: "shortlisted", label: "Shortlisted" },
+              { value: "hired", label: "Hired" },
               { value: "rejected", label: "Rejected" },
             ]}
             placeholder="Select Status"
@@ -237,7 +228,7 @@ const JobApplications = () => {
           type="button"
           onClick={handleStatusUpdate}
           disabled={updatingStatus || !hasStatusChange}
-          className={`px-4 py-2 rounded-xl font-medium transition-colors disabled:opacity-60 ${
+          className={`px-4 py-2 rounded-xl font-medium transition-colors disabled:opacity-60 shrink-0 ${
             hasStatusChange
               ? "bg-[#16730F] text-white hover:bg-[#145A0C]"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -271,7 +262,9 @@ const JobApplications = () => {
           </div>
           <div className="flex items-center gap-3 text-gray-600">
             <FaMapMarkerAlt className="flex-shrink-0" />
-            <span className="text-sm">{selectedApplication.location}</span>
+            <span className="text-sm">
+              {formatDisplayText(selectedApplication.location) || "—"}
+            </span>
           </div>
           <div className="flex items-center gap-3 text-gray-600">
             <FaBriefcase className="flex-shrink-0" />
@@ -492,7 +485,9 @@ const JobApplications = () => {
                               <span className="text-xs text-gray-500 flex items-center gap-1">
                                 <FaMapMarkerAlt className="text-[10px] flex-shrink-0" />
                                 <span className="truncate">
-                                  {app.location.split(",")[0]}
+                                  {formatDisplayText(
+                                    app.location?.split(",")[0],
+                                  ) || "—"}
                                 </span>
                               </span>
                               <span className="text-xs text-gray-500">

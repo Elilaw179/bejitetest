@@ -269,9 +269,11 @@ export const getPostShares = async (postId) => {
  * @param {string} postId - Post UUID
  * @param {string} quote - Optional quote for the share
  */
-export const sharePost = async (postId, quote = null) => {
+export const sharePost = async (postId, quote = null, scheduledAt = null) => {
   try {
-    const response = await axiosInstance.post(`${POSTS_API_URL}/${postId}/share`, { quote });
+    const body = { quote };
+    if (scheduledAt) body.scheduledAt = scheduledAt;
+    const response = await axiosInstance.post(`${POSTS_API_URL}/${postId}/share`, body);
     return response.data;
   } catch (error) {
     console.error('Error sharing post:', error);
