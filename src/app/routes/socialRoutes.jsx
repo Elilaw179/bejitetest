@@ -36,7 +36,7 @@ export const socialRoutes = (
     <Route path="/chats" element={<Chat />} />
     <Route path="/messages" element={<MessagesToChatsRedirect />} />
     <Route path="/connection" element={<Connections />} />
-    <Route path="/catch-up" element={<Birthdays />} />
+    <Route path="/milestones" element={<Birthdays />} />
     <Route path="/notification" element={<Notifications />} />
     <Route path="/notifications" element={<Notifications />} />
   </>

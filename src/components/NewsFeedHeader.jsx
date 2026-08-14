@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { createPortal } from "react-dom";
 import {
   FaSearch,
@@ -585,8 +591,8 @@ const NewsFeedHeader = ({ user: propUser }) => {
         clearNewJobVacancyCount();
         navigate("/job-vacancy");
         break;
-      case "catch-up":
-        navigate("/catch-up");
+      case "milestones":
+        navigate("/milestones");
         break;
       default:
         console.log("Icon not defined");
@@ -857,209 +863,209 @@ const NewsFeedHeader = ({ user: propUser }) => {
               : "grid-rows-[1fr] opacity-100 mt-0"
           }`}
         >
-        {/* Clip while closed to avoid mobile avatar scroll glitches; open overflow when the menu is open. */}
-        <div
-          className={`min-h-0 lg:min-h-full ${
-            isDropdownOpen
-              ? "overflow-visible"
-              : "overflow-hidden lg:overflow-visible"
-          }`}
-        >
-        <div className="flex items-center gap-2.5 md:gap-3 w-full lg:w-auto min-w-0 justify-between lg:justify-normal">
-          <img
-            className="w-10 h-10 lg:w-14 lg:h-14 shrink-0 rounded-full object-cover object-center bg-gray-200 ring-1 ring-black/5"
-            src={avatarSrc(user.image)}
-            alt={getDisplayName()}
-            decoding="async"
-            width={56}
-            height={56}
-          />
+          {/* Clip while closed to avoid mobile avatar scroll glitches; open overflow when the menu is open. */}
+          <div
+            className={`min-h-0 lg:min-h-full ${
+              isDropdownOpen
+                ? "overflow-visible"
+                : "overflow-hidden lg:overflow-visible"
+            }`}
+          >
+            <div className="flex items-center gap-2.5 md:gap-3 w-full lg:w-auto min-w-0 justify-between lg:justify-normal">
+              <img
+                className="w-10 h-10 lg:w-14 lg:h-14 shrink-0 rounded-full object-cover object-center bg-gray-200 ring-1 ring-black/5"
+                src={avatarSrc(user.image)}
+                alt={getDisplayName()}
+                decoding="async"
+                width={56}
+                height={56}
+              />
 
-          <div className="flex flex-col lg:flex-row lg:items-center gap-1.5 lg:gap-3 min-w-0 shrink-0 lg:flex-initial text-right lg:text-left">
-            <div ref={dropdownRef} className="relative min-w-0">
-              <p
-                className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32] tracking-wide truncate"
-                style={{ fontFamily: '"DynaPuff", cursive' }}
-              >
-                Hello {getGreetingFirstName()}!
-              </p>
+              <div className="flex flex-col lg:flex-row lg:items-center gap-1.5 lg:gap-3 min-w-0 shrink-0 lg:flex-initial text-right lg:text-left">
+                <div ref={dropdownRef} className="relative min-w-0">
+                  <p
+                    className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg text-[#1A3E32] tracking-wide truncate"
+                    style={{ fontFamily: '"DynaPuff", cursive' }}
+                  >
+                    Hello {getGreetingFirstName()}!
+                  </p>
 
-              {/* Custom Dropdown for Role */}
-              <div className="relative self-end lg:self-auto">
-                <button
-                  type="button"
-                  ref={roleMenuButtonRef}
-                  onClick={() => {
-                    if (isDropdownOpen) {
-                      setIsDropdownOpen(false);
-                      return;
-                    }
-                    const btn = roleMenuButtonRef.current;
-                    if (btn) {
-                      const rect = btn.getBoundingClientRect();
-                      setRoleMenuPos({
-                        top: rect.bottom + 6,
-                        right: Math.max(8, window.innerWidth - rect.right),
-                      });
-                    }
-                    setIsDropdownOpen(true);
-                  }}
-                  className="flex items-center gap-1 bg-[#16730F] text-white rounded-full px-3 py-1 mt-0.5 text-xs sm:text-sm md:text-base focus:outline-none hover:bg-[#145a0c] transition-colors"
-                >
-                  <span>{getDisplayRole()}</span>
-                  <FaChevronDown
-                    className={`text-xs transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {/* Portaled so header overflow/grid clipping cannot hide the menu */}
-                {isDropdownOpen &&
-                  roleMenuPos &&
-                  createPortal(
-                    <div
-                      ref={roleMenuPanelRef}
-                      style={{
-                        position: "fixed",
-                        top: roleMenuPos.top,
-                        right: roleMenuPos.right,
-                      }}
-                      className="w-[min(14.5rem,calc(100vw-1.25rem))] sm:w-[min(18rem,calc(100vw-1rem))] md:w-[min(20rem,calc(100vw-1rem))] bg-white rounded-lg sm:rounded-xl shadow-xl border border-gray-100 py-1 sm:py-2 z-[200] overflow-hidden max-h-[min(60vh,22rem)] sm:max-h-[70vh] overflow-y-auto nfl-scroll"
-                    >
-                    {/* User Info Header */}
-                    <div className="px-3 py-2 sm:px-4 sm:py-3 border-b border-gray-100 bg-gray-50">
-                      <div className="flex items-start gap-2 sm:gap-3 min-w-0">
-                        <img
-                          src={avatarSrc(user.image)}
-                          alt={getDisplayName()}
-                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-[#16730F] shrink-0"
-                        />
-                        <div className="flex flex-col gap-1 sm:gap-1.5 min-w-0 flex-1 overflow-visible">
-                          <PersonName
-                            user={user}
-                            badgeSize="xs"
-                            badgePlacement="below"
-                            responsiveBadge={false}
-                            className="font-semibold text-xs sm:text-sm text-[#1A3E32] w-full"
-                            nameClassName="leading-snug"
-                          />
-                          <span className="text-[10px] sm:text-xs text-gray-500 truncate">
-                            {getDisplayRole()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Section 1: Profile */}
-                    <div className="py-0.5 sm:py-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigate(
-                            user?.role === "recruiter"
-                              ? getRecruiterEditProfilePath(user)
-                              : "/edit-profile/bio",
-                          );
+                  {/* Custom Dropdown for Role */}
+                  <div className="relative self-end lg:self-auto">
+                    <button
+                      type="button"
+                      ref={roleMenuButtonRef}
+                      onClick={() => {
+                        if (isDropdownOpen) {
                           setIsDropdownOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
-                          location.pathname.startsWith("/edit-profile")
-                            ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
-                            : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
-                        }`}
-                      >
-                        <FaUserEdit className="text-sm sm:text-base shrink-0" />
-                        <span>Edit Profile</span>
-                      </button>
-                    </div>
+                          return;
+                        }
+                        const btn = roleMenuButtonRef.current;
+                        if (btn) {
+                          const rect = btn.getBoundingClientRect();
+                          setRoleMenuPos({
+                            top: rect.bottom + 6,
+                            right: Math.max(8, window.innerWidth - rect.right),
+                          });
+                        }
+                        setIsDropdownOpen(true);
+                      }}
+                      className="flex items-center gap-1 bg-[#16730F] text-white rounded-full px-3 py-1 mt-0.5 text-xs sm:text-sm md:text-base focus:outline-none hover:bg-[#145a0c] transition-colors"
+                    >
+                      <span>{getDisplayRole()}</span>
+                      <FaChevronDown
+                        className={`text-xs transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
 
-                    {/* Divider */}
-                    <div className="border-t border-gray-100 my-0.5 sm:my-1"></div>
+                    {/* Portaled so header overflow/grid clipping cannot hide the menu */}
+                    {isDropdownOpen &&
+                      roleMenuPos &&
+                      createPortal(
+                        <div
+                          ref={roleMenuPanelRef}
+                          style={{
+                            position: "fixed",
+                            top: roleMenuPos.top,
+                            right: roleMenuPos.right,
+                          }}
+                          className="w-[min(14.5rem,calc(100vw-1.25rem))] sm:w-[min(18rem,calc(100vw-1rem))] md:w-[min(20rem,calc(100vw-1rem))] bg-white rounded-lg sm:rounded-xl shadow-xl border border-gray-100 py-1 sm:py-2 z-[200] overflow-hidden max-h-[min(60vh,22rem)] sm:max-h-[70vh] overflow-y-auto nfl-scroll"
+                        >
+                          {/* User Info Header */}
+                          <div className="px-3 py-2 sm:px-4 sm:py-3 border-b border-gray-100 bg-gray-50">
+                            <div className="flex items-start gap-2 sm:gap-3 min-w-0">
+                              <img
+                                src={avatarSrc(user.image)}
+                                alt={getDisplayName()}
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-[#16730F] shrink-0"
+                              />
+                              <div className="flex flex-col gap-1 sm:gap-1.5 min-w-0 flex-1 overflow-visible">
+                                <PersonName
+                                  user={user}
+                                  badgeSize="xs"
+                                  badgePlacement="below"
+                                  responsiveBadge={false}
+                                  className="font-semibold text-xs sm:text-sm text-[#1A3E32] w-full"
+                                  nameClassName="leading-snug"
+                                />
+                                <span className="text-[10px] sm:text-xs text-gray-500 truncate">
+                                  {getDisplayRole()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
 
-                    {/* Section 2: Navigation */}
-                    <div className="py-0.5 sm:py-1">
-                      {user?.role !== "jobseeker" && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigate("/candidate-search-page");
-                            setIsDropdownOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
-                            location.pathname === "/candidate-search-page"
-                              ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
-                              : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
-                          }`}
-                        >
-                          <FaSearch className="text-sm sm:text-base shrink-0" />
-                          <span>Candidate Search</span>
-                        </button>
-                      )}
-                      {user?.role !== "jobseeker" && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigate("/subscription-dashboard");
-                            setIsDropdownOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
-                            ["/subscription-dashboard", "/subscription-pricing"].includes(
-                              location.pathname,
-                            )
-                              ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
-                              : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
-                          }`}
-                        >
-                          <FaCreditCard className="text-sm sm:text-base shrink-0" />
-                          <span>My Subscription</span>
-                        </button>
-                      )}
-                      {user?.role !== "jobseeker" && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigate("/employer/dashboard");
-                            setIsDropdownOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
-                            location.pathname.startsWith("/employer/") &&
-                            !location.pathname.startsWith(
-                              "/employer/recruitment-management",
-                            )
-                              ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
-                              : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
-                          }`}
-                        >
-                          <FaBriefcase className="text-sm sm:text-base shrink-0" />
-                          <span>Job Postings</span>
-                        </button>
-                      )}
-                      {isRecruiterOrEmployer && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigate("/adpro");
-                            setIsDropdownOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
-                            location.pathname.startsWith("/adpro")
-                              ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
-                              : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
-                          }`}
-                        >
-                          <FaBullhorn className="text-sm sm:text-base shrink-0" />
-                          <span>AdPro</span>
-                        </button>
-                      )}
+                          {/* Section 1: Profile */}
+                          <div className="py-0.5 sm:py-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigate(
+                                  user?.role === "recruiter"
+                                    ? getRecruiterEditProfilePath(user)
+                                    : "/edit-profile/bio",
+                                );
+                                setIsDropdownOpen(false);
+                              }}
+                              className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
+                                location.pathname.startsWith("/edit-profile")
+                                  ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
+                                  : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
+                              }`}
+                            >
+                              <FaUserEdit className="text-sm sm:text-base shrink-0" />
+                              <span>Edit Profile</span>
+                            </button>
+                          </div>
 
-                    </div>
-                    </div>,
-                    document.body,
-                  )}
+                          {/* Divider */}
+                          <div className="border-t border-gray-100 my-0.5 sm:my-1"></div>
+
+                          {/* Section 2: Navigation */}
+                          <div className="py-0.5 sm:py-1">
+                            {user?.role !== "jobseeker" && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigate("/candidate-search-page");
+                                  setIsDropdownOpen(false);
+                                }}
+                                className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
+                                  location.pathname === "/candidate-search-page"
+                                    ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
+                                    : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
+                                }`}
+                              >
+                                <FaSearch className="text-sm sm:text-base shrink-0" />
+                                <span>Candidate Search</span>
+                              </button>
+                            )}
+                            {user?.role !== "jobseeker" && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigate("/subscription-dashboard");
+                                  setIsDropdownOpen(false);
+                                }}
+                                className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
+                                  [
+                                    "/subscription-dashboard",
+                                    "/subscription-pricing",
+                                  ].includes(location.pathname)
+                                    ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
+                                    : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
+                                }`}
+                              >
+                                <FaCreditCard className="text-sm sm:text-base shrink-0" />
+                                <span>My Subscription</span>
+                              </button>
+                            )}
+                            {user?.role !== "jobseeker" && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigate("/employer/dashboard");
+                                  setIsDropdownOpen(false);
+                                }}
+                                className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
+                                  location.pathname.startsWith("/employer/") &&
+                                  !location.pathname.startsWith(
+                                    "/employer/recruitment-management",
+                                  )
+                                    ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
+                                    : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
+                                }`}
+                              >
+                                <FaBriefcase className="text-sm sm:text-base shrink-0" />
+                                <span>Job Postings</span>
+                              </button>
+                            )}
+                            {isRecruiterOrEmployer && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigate("/adpro");
+                                  setIsDropdownOpen(false);
+                                }}
+                                className={`w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm transition-all duration-200 ${
+                                  location.pathname.startsWith("/adpro")
+                                    ? "bg-green-50 text-[#16730F] font-medium border-l-4 border-[#16730F]"
+                                    : "text-gray-700 hover:bg-gray-50 hover:pl-4 sm:hover:pl-5"
+                                }`}
+                              >
+                                <FaBullhorn className="text-sm sm:text-base shrink-0" />
+                                <span>AdPro</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>,
+                        document.body,
+                      )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        </div>
         </div>
       </div>
 
@@ -1111,7 +1117,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                 <div
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={() => {
-                    navigate("/catch-up");
+                    navigate("/milestones");
                   }}
                 >
                   <div className="rounded-[30px] p-1.5 border-2 border-[#16730F]">
@@ -1120,9 +1126,9 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       size={16}
                     />
                   </div>
-                  {/* {renderNavIcon("catch-up", { compact: true })} */}
+                  {/* {renderNavIcon("milestones", { compact: true })} */}
                   <span className="font-medium text-sm text-[#1A3E32]">
-                    Catch Up
+                    Milestones
                   </span>
                 </div>
                 {isRecruiterOrEmployer && (

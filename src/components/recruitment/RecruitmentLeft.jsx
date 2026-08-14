@@ -12,7 +12,7 @@ const navItems = [
   { icon: "/assets/images/messages-2.svg", label: "Chats" },
   { icon: "/assets/images/user-search.svg", label: "Recruitment" },
   { icon: "/assets/images/notification.svg", label: "Notifications" },
-  { icon: Network, label: "Catch Ups" },
+  { icon: Network, label: "milestones" },
 ];
 
 export default function RecruitmentLeft() {
@@ -49,8 +49,8 @@ export default function RecruitmentLeft() {
       case "Notifications":
         navigate("/notification");
         break;
-      case "Catch Ups":
-        navigate("/catch-up");
+      case "milestones":
+        navigate("/milestones");
         break;
       default:
         console.log("Navigation not defined for:", label);
