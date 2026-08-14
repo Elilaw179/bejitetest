@@ -43,24 +43,32 @@ export default function RecruitmentStatCard({
 
   return (
     <div
-      className={`flex items-start gap-2.5 sm:gap-3.5 p-3.5 sm:p-4 rounded-2xl border ${currentVariant.bg} shadow-xs transition-all duration-200 hover:shadow-md ${className}`}
+      className={`flex items-start gap-2.5 sm:gap-3.5 p-3 sm:p-4 rounded-2xl border ${currentVariant.bg} shadow-xs transition-all duration-200 hover:shadow-md ${className}`}
     >
       {Icon && (
         <div
-          className={`shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${currentVariant.iconBg} flex items-center justify-center text-base sm:text-lg font-bold shadow-xs mt-0.5`}
+          className={`shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${currentVariant.iconBg} flex items-center justify-center text-sm sm:text-lg font-bold shadow-xs mt-0.5`}
         >
           <Icon />
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <div className={`text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight ${currentVariant.valueColor}`}>
+        <div
+          className={`text-lg sm:text-2xl lg:text-3xl font-extrabold tracking-tight ${currentVariant.valueColor} truncate`}
+        >
           {value}
         </div>
-        <div className={`text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider mt-0.5 ${currentVariant.labelColor} line-clamp-1`}>
+        <div
+          className={`text-[9px] sm:text-[11px] font-extrabold uppercase tracking-wider mt-0.5 ${currentVariant.labelColor} truncate`}
+          title={label}
+        >
           {label}
         </div>
         {sublabel && (
-          <div className={`text-[11px] sm:text-xs font-medium mt-0.5 ${currentVariant.sublabelColor} line-clamp-1`}>
+          <div
+            className={`text-[10px] sm:text-xs font-medium mt-0.5 ${currentVariant.sublabelColor} truncate`}
+            title={sublabel}
+          >
             {sublabel}
           </div>
         )}
@@ -68,3 +76,4 @@ export default function RecruitmentStatCard({
     </div>
   );
 }
+

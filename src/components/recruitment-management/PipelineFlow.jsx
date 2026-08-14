@@ -73,8 +73,8 @@ export default function PipelineFlow({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-sm">
-      <div className="flex items-center justify-between gap-3 mb-4">
+    <div className="bg-white border border-gray-200 rounded-3xl p-4 sm:p-6 shadow-sm min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3 mb-4">
         <div className="text-xs font-extrabold tracking-wider text-gray-700 uppercase">
           Pipeline Progression Flow
         </div>
@@ -85,10 +85,11 @@ export default function PipelineFlow({
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stageItems.map((stg, index) => {
           const isDragging = dragIndex === index;
           const isDropTarget = overIndex === index && dragIndex !== index;
+          const stageName = stg.name || stg.title || "Stage";
 
           return (
             <div
@@ -98,7 +99,7 @@ export default function PipelineFlow({
               onDragEnd={handleDragEnd}
               onDragOver={(e) => handleDragOver(index, e)}
               onDrop={(e) => handleDrop(index, e)}
-              className={`bg-white border-2 rounded-2xl p-4 flex flex-col justify-between min-h-[110px] shadow-xs relative transition-all gap-2 ${
+              className={`bg-white border-2 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between min-h-[105px] sm:min-h-[110px] min-w-0 shadow-xs relative transition-all gap-2 ${
                 isDragging
                   ? "opacity-55 border-[#16730F] ring-2 ring-[#16730F]/20"
                   : isDropTarget
@@ -106,45 +107,40 @@ export default function PipelineFlow({
                     : "border-[#16730F] hover:shadow-md"
               } ${canReorder ? "cursor-grab active:cursor-grabbing" : ""}`}
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-start justify-between gap-2 min-w-0">
                 <div className="flex items-center gap-1.5 min-w-0">
                   {canReorder && (
                     <span className="text-gray-400 shrink-0" aria-hidden>
                       <FaGripVertical className="w-3 h-3" />
                     </span>
                   )}
-                  <span className="inline-flex items-center justify-center bg-[#E6F4EA] text-[#16730F] text-xs font-bold px-2.5 py-0.5 rounded-full">
+                  <span className="inline-flex items-center justify-center bg-[#E6F4EA] text-[#16730F] text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">
                     {stg.step || String(index + 1).padStart(2, "0")}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="inline-flex items-center bg-[#F0F5F2] text-[#1A3E32] text-xs font-semibold px-3 py-0.5 rounded-full border border-[#D5E5DD] truncate max-w-[9rem]">
-                    {stg.name}
-                  </span>
-                  {canDelete && (
-                    <button
-                      type="button"
-                      title={`Delete ${stg.name}`}
-                      aria-label={`Delete ${stg.name}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteStage(stg);
-                      }}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      className="w-7 h-7 rounded-full bg-red-50 text-[#FF3B30] hover:bg-[#FF3B30] hover:text-white flex items-center justify-center transition-colors"
-                    >
-                      <FaTrash className="w-2.5 h-2.5" />
-                    </button>
-                  )}
-                </div>
+                {canDelete && (
+                  <button
+                    type="button"
+                    title={`Delete ${stageName}`}
+                    aria-label={`Delete ${stageName}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteStage(stg);
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    className="w-7 h-7 rounded-full bg-red-50 text-[#FF3B30] hover:bg-[#FF3B30] hover:text-white flex items-center justify-center transition-colors shrink-0"
+                  >
+                    <FaTrash className="w-2.5 h-2.5" />
+                  </button>
+                )}
               </div>
 
-              <div>
-                <div className="text-base font-extrabold text-[#1A3E32] tracking-tight">
-                  {stg.title || "Invited"}
+              <div className="min-w-0">
+                <div className="text-sm sm:text-base font-extrabold text-[#1A3E32] tracking-tight break-words">
+                  {stageName}
                 </div>
                 <div className="text-xs text-gray-500 font-medium flex items-center gap-1.5 mt-0.5">
-                  <FaUserFriends className="text-[#16730F] text-xs" />
+                  <FaUserFriends className="text-[#16730F] text-xs shrink-0" />
                   <span>
                     <strong className="text-gray-800">{stg.count}</strong>{" "}
                     candidates
@@ -159,12 +155,12 @@ export default function PipelineFlow({
           <button
             type="button"
             onClick={onAddStage}
-            className="bg-[#F8FAF9] border-2 border-dashed border-[#8EB398] hover:border-[#16730F] hover:bg-[#EEF5F0] rounded-2xl p-4 flex flex-col items-center justify-center min-h-[110px] transition-all group active:scale-98"
+            className="bg-[#F8FAF9] border-2 border-dashed border-[#8EB398] hover:border-[#16730F] hover:bg-[#EEF5F0] rounded-2xl p-4 flex flex-col items-center justify-center min-h-[105px] sm:min-h-[110px] transition-all group active:scale-98"
           >
             <div className="w-8 h-8 rounded-full bg-emerald-100 text-[#16730F] group-hover:bg-[#16730F] group-hover:text-white flex items-center justify-center text-sm font-bold transition-colors mb-1">
               <FaPlus />
             </div>
-            <span className="text-sm font-bold text-[#1A3E32] group-hover:text-[#16730F]">
+            <span className="text-xs sm:text-sm font-bold text-[#1A3E32] group-hover:text-[#16730F]">
               Add Stage
             </span>
           </button>
@@ -173,3 +169,4 @@ export default function PipelineFlow({
     </div>
   );
 }
+

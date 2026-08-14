@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import NewsFeedHeader from '../components/NewsFeedHeader';
 import { ConnectionList, RequestList } from '../components/connections';
 import { FaUserFriends, FaUserPlus, FaClock, FaSearch } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import * as connectionsApi from '../services/connectionsApi';
+import * as followsApi from '../services/followsApi';
 import { getAuthorProfileImageUrl } from '../utils/profileImageUtils';
 import useSyncProfilePhoto from '../hooks/useSyncProfilePhoto';
 import NewsFeedLayout from '../components/layout/NewsFeedLayout';
@@ -12,6 +14,13 @@ import { formatDisplayPersonName } from '../utils/personDisplayName';
 import DisplayNameWithBadge from '../components/DisplayNameWithBadge';
 import { filterAdminUsersFromSearch } from '../utils/filterAdminUsers';
 import { RecruiterSelect } from '../components/recruiter/recruiterOnboardingUi';
+import { getUser, storeUser, mergeAuthUsers } from '../utils/tokenManager';
+import {
+  resolveRecruiterMode,
+  isCorporateRecruiter,
+} from '../utils/recruiterProfilePaths';
+import axiosInstance from '../utils/axiosInstance';
+import { updateUser } from '../features/auth/authSlice';
 
 const shuffleArray = (arr) => {
   const shuffled = [...arr];
@@ -50,8 +59,16 @@ const transformConnectionUser = (user, connectedAt) => ({
 const Connections = () => {
   useSyncProfilePhoto();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const reduxUser = useSelector((state) => state.auth?.user);
+  const currentUser = useMemo(() => reduxUser || getUser(), [reduxUser]);
+  const [isCorporateViewer, setIsCorporateViewer] = useState(() =>
+    isCorporateRecruiter(currentUser),
+  );
   const DEFAULT_PAGE_SIZE = 20;
-  const [activeTab, setActiveTab] = useState('network');
+  const [activeTab, setActiveTab] = useState(
+    isCorporateRecruiter(currentUser) ? 'followers' : 'network',
+  );
   const [connections, setConnections] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [outgoingRequests, setOutgoingRequests] = useState([]);
@@ -233,6 +250,50 @@ const Connections = () => {
     (async () => {
       setLoading(true);
       try {
+        let corporate = isCorporateRecruiter(getUser() || currentUser);
+        const localUser = getUser() || currentUser || {};
+        const role = String(localUser?.role || '').toLowerCase();
+
+        // Login payloads often omit mode; resolve from /auth/me before branching.
+        if (role === 'recruiter' && resolveRecruiterMode(localUser) == null) {
+          try {
+            const { data } = await axiosInstance.get('/auth/me');
+            const me = data?.user;
+            if (me && !cancelled) {
+              const merged = mergeAuthUsers(localUser, me);
+              storeUser(merged);
+              dispatch(updateUser({ mode: me.mode ?? null }));
+              corporate = isCorporateRecruiter(merged);
+            }
+          } catch (meError) {
+            console.warn('Failed to resolve recruiter mode:', meError);
+          }
+        }
+
+        if (!cancelled) {
+          setIsCorporateViewer(corporate);
+          if (corporate) setActiveTab('followers');
+        }
+
+        if (corporate) {
+          const followersRes = await followsApi.getMyFollowers(1, pageSize, '');
+          if (cancelled) return;
+          const users = followersRes?.users || [];
+          setConnections(
+            users.map((u) => transformConnectionUser(u, u.followedAt)),
+          );
+          setNetworkMeta(
+            followersRes?.pagination || {
+              total: users.length,
+              pages: 1,
+              page: 1,
+              limit: pageSize,
+            },
+          );
+          setNetworkReady(true);
+          return;
+        }
+
         const [connectionsRes, incomingRes, outgoingRes, discoverRes] = await Promise.all([
           connectionsApi.getConnections(1, pageSize, ''),
           connectionsApi.getIncomingRequests(1, pageSize),
@@ -246,7 +307,11 @@ const Connections = () => {
       } catch (error) {
         if (cancelled) return;
         console.error('Error loading connections data:', error);
-        toast.error('Failed to load connections data');
+        toast.error(
+          isCorporateRecruiter(getUser())
+            ? 'Failed to load followers'
+            : 'Failed to load connections data',
+        );
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -268,6 +333,28 @@ const Connections = () => {
     (async () => {
       setNetworkLoading(true);
       try {
+        if (isCorporateViewer) {
+          const followersRes = await followsApi.getMyFollowers(
+            networkPage,
+            pageSize,
+            debouncedNetworkSearch,
+          );
+          if (cancelled || requestId !== networkRequestIdRef.current) return;
+          const users = followersRes?.users || [];
+          setConnections(
+            users.map((u) => transformConnectionUser(u, u.followedAt)),
+          );
+          setNetworkMeta(
+            followersRes?.pagination || {
+              total: users.length,
+              pages: 1,
+              page: networkPage,
+              limit: pageSize,
+            },
+          );
+          return;
+        }
+
         const connectionsRes = await connectionsApi.getConnections(
           networkPage,
           pageSize,
@@ -278,7 +365,9 @@ const Connections = () => {
       } catch (error) {
         if (cancelled || requestId !== networkRequestIdRef.current) return;
         console.error('Error loading network connections:', error);
-        toast.error('Failed to load connections');
+        toast.error(
+          isCorporateViewer ? 'Failed to load followers' : 'Failed to load connections',
+        );
       } finally {
         if (!cancelled && requestId === networkRequestIdRef.current) {
           setNetworkLoading(false);
@@ -289,11 +378,18 @@ const Connections = () => {
     return () => {
       cancelled = true;
     };
-  }, [networkReady, networkPage, pageSize, debouncedNetworkSearch, applyNetworkResponse]);
+  }, [
+    networkReady,
+    networkPage,
+    pageSize,
+    debouncedNetworkSearch,
+    applyNetworkResponse,
+    isCorporateViewer,
+  ]);
 
   // Invitations / Sent / People page changes
   useEffect(() => {
-    if (!networkReady) return undefined;
+    if (!networkReady || isCorporateViewer) return undefined;
 
     let cancelled = false;
 
@@ -316,7 +412,14 @@ const Connections = () => {
     return () => {
       cancelled = true;
     };
-  }, [networkReady, invitationsPage, sentPage, pageSize, applySecondaryResponses]);
+  }, [
+    networkReady,
+    invitationsPage,
+    sentPage,
+    pageSize,
+    applySecondaryResponses,
+    isCorporateViewer,
+  ]);
 
   // Pagination controls sit below the list; without this, the scroll container stays at the bottom.
   useEffect(() => {
@@ -400,17 +503,26 @@ const Connections = () => {
 
   const handleSendRequest = async (userId, userName) => {
     try {
-      await connectionsApi.sendConnectionRequest(userId);
-      toast.success(`Connection request sent to ${userName}!`);
+      const followStatus = await followsApi.getFollowStatus(userId);
+      if (followStatus?.isCorporate) {
+        await followsApi.followUser(userId);
+        toast.success(`You are now following ${userName}!`);
+      } else {
+        await connectionsApi.sendConnectionRequest(userId);
+        toast.success(`Connection request sent to ${userName}!`);
+      }
 
-      // Update local state - remove from discoverable users and search results
-      setDiscoverableUsers(prev => prev.filter(user => user.id !== userId));
+      setDiscoverableUsers(prev => prev.filter((u) => u.id !== userId));
       setPeopleSearchResults(prev =>
-        prev ? prev.filter(user => user.id !== userId) : prev
+        prev ? prev.filter((u) => u.id !== userId) : prev
       );
     } catch (error) {
-      console.error('Error sending connection request:', error);
-      toast.error('Failed to send connection request');
+      console.error('Error sending network request:', error);
+      toast.error(
+        error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          'Failed to send request',
+      );
     }
   };
 
@@ -459,7 +571,41 @@ const Connections = () => {
     </div>
   );
 
-  const tabs = [
+  const tabs = isCorporateViewer
+    ? [
+        {
+          id: 'followers',
+          label: 'Followers',
+          icon: FaUserFriends,
+          count: networkMeta.total,
+          content: (
+            <>
+              {connectionSearchBar}
+              {networkLoading ? (
+                <div className="py-10 flex flex-col items-center justify-center gap-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#16730F]" />
+                  <p className="text-sm text-gray-500">Updating followers...</p>
+                </div>
+              ) : (
+                <ConnectionList
+                  connections={filteredConnections}
+                  totalCount={networkMeta.total}
+                  searchQuery=""
+                  onViewProfile={(userId) => navigate(`/user-profile/${userId}`)}
+                  variant="followers"
+                  showRemoveButton={false}
+                />
+              )}
+              <PaginationControls
+                currentPage={networkPage}
+                totalPages={Math.max(networkMeta.pages || 1, 1)}
+                onPageChange={setNetworkPage}
+              />
+            </>
+          ),
+        },
+      ]
+    : [
     {
       id: 'network',
       label: 'My Network',
@@ -564,7 +710,9 @@ const Connections = () => {
         <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center px-4">
           <div className="text-center max-w-sm">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F] mx-auto"></div>
-            <p className="mt-4 text-gray-600 text-sm sm:text-base">Loading connections...</p>
+            <p className="mt-4 text-gray-600 text-sm sm:text-base">
+              {isCorporateViewer ? 'Loading followers...' : 'Loading connections...'}
+            </p>
           </div>
         </div>
       </NewsFeedLayout>
@@ -577,8 +725,14 @@ const Connections = () => {
       <div className="min-h-screen bg-[#F5F5F5] w-full min-w-0">
         <div className="w-full min-w-0 max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6">
           <div className="mb-4 sm:mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] mb-1 sm:mb-2">Connections</h1>
-            <p className="text-sm sm:text-base text-gray-600">Manage your professional network</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] mb-1 sm:mb-2">
+              {isCorporateViewer ? 'Followers' : 'Connections'}
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600">
+              {isCorporateViewer
+                ? 'People following your company page'
+                : 'Manage your professional network'}
+            </p>
           </div>
 
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm overflow-hidden min-w-0">

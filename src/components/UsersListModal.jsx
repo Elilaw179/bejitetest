@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTimes, FaUserPlus } from "react-icons/fa";
 import { getConnections, sendConnectionRequest } from "../services/connectionsApi";
+import { followUser, getFollowStatus } from "../services/followsApi";
 import { getAuthorProfileImageUrl } from "../utils/profileImageUtils";
 import { getUser } from "../utils/tokenManager";
+import { resolveRecruiterMode } from "../utils/recruiterProfilePaths";
 
 /**
  * UsersListModal - Displays a list of users (likers, commenters, or sharers)
@@ -21,6 +23,9 @@ const UsersListModal = ({ isOpen, onClose, title, users, type, loading }) => {
 
   const currentUser = getUser();
   const currentUserId = currentUser?.id;
+  const viewerIsCorporate =
+    String(currentUser?.role || "").toLowerCase() === "recruiter" &&
+    resolveRecruiterMode(currentUser) === "corporate";
 
 useEffect(() => {
     if (isOpen && type === 'likes') {
@@ -47,18 +52,24 @@ useEffect(() => {
 
   const handleUserClick = (userId) => {
     if (userId) {
-      onClose();
+    onClose();
       navigate(`/user-profile/${userId}`);
     }
   };
 
 const handleConnect = async (e, userId) => {
     e.stopPropagation();
+    if (viewerIsCorporate) return;
     try {
       setSendingRequest(userId);
-      await sendConnectionRequest(userId);
+      const status = await getFollowStatus(userId);
+      if (status?.isCorporate) {
+        await followUser(userId);
+      } else {
+        await sendConnectionRequest(userId);
+      }
     } catch (err) {
-      console.error('Error sending connection request:', err);
+      console.error('Error sending network request:', err);
     } finally {
       setSendingRequest(null);
     }
@@ -95,7 +106,7 @@ const handleConnect = async (e, userId) => {
           </div>
         </div>
         
-        {connStatus === 'none' && currentUserId !== userId && (
+        {connStatus === 'none' && currentUserId !== userId && !viewerIsCorporate && (
           <button
             type="button"
             onClick={(e) => handleConnect(e, userId)}

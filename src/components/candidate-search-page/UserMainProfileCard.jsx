@@ -243,6 +243,11 @@ const ProfileHeaderCard = ({
   const [messaging, setMessaging] = useState(false);
   const isStatusLoading = Boolean(status.loading);
   const showConnectSpinner = isStatusLoading || sending;
+  const isFollowingState = Boolean(status.isCorporate && status.isFollowing);
+  const isConnectedState = Boolean(!status.isCorporate && status.isConnected);
+  const isPendingState = Boolean(status.pendingOutgoing);
+  const isSettledNetworkState =
+    isFollowingState || isConnectedState || isPendingState;
 
   const handleConnect = async () => {
     if (isStatusLoading || sending) return;
@@ -250,7 +255,7 @@ const ProfileHeaderCard = ({
       await acceptRequest();
       return;
     }
-    if (!connectDisabled) {
+    if (isFollowingState || !connectDisabled) {
       sendRequest();
     }
   };
@@ -306,23 +311,35 @@ const ProfileHeaderCard = ({
           {salaryPreview && (
             <p className="text-sm text-gray-500 break-words">💰 Expected: {salaryPreview}</p>
           )}
-          <div className="mt-4 grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 sm:gap-3 w-full max-w-lg mx-auto sm:mx-0">
+          <div
+            className={`mt-4 grid gap-2 sm:gap-3 w-full max-w-lg mx-auto sm:mx-0 ${
+              status.viewerIsCorporate
+                ? 'grid-cols-1'
+                : 'grid-cols-1 min-[420px]:grid-cols-2'
+            }`}
+          >
+            {!status.viewerIsCorporate && (
             <button
               type="button"
               onClick={handleConnect}
-              disabled={connectDisabled || isStatusLoading}
+              disabled={isStatusLoading || (!isFollowingState && connectDisabled)}
               aria-busy={showConnectSpinner}
-              className={`inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white transition-colors ${
+              aria-pressed={isFollowingState || isConnectedState}
+              className={`inline-flex w-full min-h-[44px] items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition-colors ${
                 isStatusLoading
-                  ? 'bg-[#556B1F]/80 cursor-wait'
-                  : connectDisabled
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-[#556B1F] hover:bg-[#6B8E23]'
+                  ? 'bg-[#556B1F]/80 text-white cursor-wait border-2 border-transparent'
+                  : isSettledNetworkState
+                    ? 'bg-white text-[#556B1F] border-2 border-[#556B1F] hover:bg-[#556B1F]/10'
+                    : connectDisabled
+                      ? 'bg-gray-400 text-white cursor-not-allowed border-2 border-transparent'
+                      : 'bg-[#556B1F] text-white border-2 border-transparent hover:bg-[#6B8E23]'
               }`}
             >
               {showConnectSpinner ? (
                 <span
-                  className="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
+                  className={`inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-t-transparent ${
+                    isSettledNetworkState ? 'border-[#556B1F]' : 'border-white'
+                  }`}
                   aria-hidden="true"
                 />
               ) : (
@@ -335,6 +352,7 @@ const ProfileHeaderCard = ({
                 <span className="sr-only">Loading connection status</span>
               )}
             </button>
+            )}
             <button
               type="button"
               onClick={handleMessage}

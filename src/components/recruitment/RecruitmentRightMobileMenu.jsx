@@ -5,6 +5,13 @@ import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import useRecruitmentRightStats from "../../hooks/useRecruitmentRightStats";
 import { RECRUITMENT_RIGHT_LINKS } from "./recruitmentRightLinks";
 
+function formatNetworkCount(count) {
+  const n = Number(count);
+  if (!Number.isFinite(n) || n <= 0) return "0";
+  if (n > 600) return "600+";
+  return String(Math.floor(n));
+}
+
 export default function RecruitmentRightMobileMenu({ onNavigate }) {
   const navigate = useNavigate();
   const { userData, postCount, connectionCount } = useRecruitmentRightStats();
@@ -49,7 +56,7 @@ export default function RecruitmentRightMobileMenu({ onNavigate }) {
           </div>
           <div className="bg-white/10 rounded-lg py-2 px-2 text-center border border-white/10">
             <p className="text-[10px] text-white/70 uppercase">Network</p>
-            <p className="text-base font-bold">{connectionCount}</p>
+            <p className="text-base font-bold">{formatNetworkCount(connectionCount)}</p>
           </div>
         </div>
 

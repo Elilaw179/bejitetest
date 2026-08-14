@@ -47,7 +47,7 @@ function shouldSkipPath(pathname) {
 function resolveRecruiterMode(user) {
   const mode = String(user?.mode || '').toLowerCase();
   if (mode === 'individual' || mode === 'corporate') return mode;
-  return 'corporate';
+  return null;
 }
 
 function getProfileSetupPath(role, mode) {

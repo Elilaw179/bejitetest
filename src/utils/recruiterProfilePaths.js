@@ -1,7 +1,7 @@
 /**
  * Resolve recruiter employer type from auth user or localStorage fallback.
  * @param {object | null | undefined} user
- * @returns {'individual' | 'corporate'}
+ * @returns {'individual' | 'corporate' | null}
  */
 export function resolveRecruiterMode(user) {
   let resolved = user;
@@ -15,7 +15,20 @@ export function resolveRecruiterMode(user) {
 
   const mode = String(resolved?.mode || '').toLowerCase();
   if (mode === 'individual' || mode === 'corporate') return mode;
-  return 'corporate';
+  // Unknown/missing mode must not default to corporate — that incorrectly
+  // switches individual recruiters onto Followers / blocked-Connect paths.
+  return null;
+}
+
+/**
+ * @param {object | null | undefined} user
+ * @returns {boolean}
+ */
+export function isCorporateRecruiter(user) {
+  return (
+    String(user?.role || '').toLowerCase() === 'recruiter' &&
+    resolveRecruiterMode(user) === 'corporate'
+  );
 }
 
 /**
@@ -27,5 +40,6 @@ export function getRecruiterEditProfilePath(user) {
   if (resolveRecruiterMode(user) === 'individual') {
     return '/edit-profile/individual/basic-details';
   }
+  // Corporate and unknown (legacy) recruiters use the corporate edit flow.
   return '/edit-profile/recruiter/basic-details';
 }

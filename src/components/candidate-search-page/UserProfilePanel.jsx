@@ -404,8 +404,15 @@ const ProfileStats = ({ candidate, connectUserIdProp, onViewMainProfile }) => {
     if (isStatusLoading || sending) return;
     if (status.pendingIncoming) {
       await acceptRequest();
-    } else if (!status.isConnected && !status.pendingOutgoing && !status.loading) {
-      sendRequest();
+      return;
+    }
+    if (status.isCorporate) {
+      // Follow / Following toggle (including unfollow)
+      await sendRequest();
+      return;
+    }
+    if (!status.isConnected && !status.pendingOutgoing && !status.loading) {
+      await sendRequest();
     }
   };
 
@@ -459,6 +466,13 @@ const ProfileStats = ({ candidate, connectUserIdProp, onViewMainProfile }) => {
       loading={showConnectSpinner}
       isStatusLoading={isStatusLoading}
       handleConnectClick={handleConnectClick}
+      hideConnect={Boolean(status.viewerIsCorporate)}
+      settled={Boolean(
+        (status.isCorporate && status.isFollowing) ||
+          (!status.isCorporate &&
+            (status.isConnected || status.pendingOutgoing)),
+      )}
+      allowWhileSettled={Boolean(status.isCorporate && status.isFollowing)}
     />
   </div>
   );
@@ -471,16 +485,22 @@ const ActionButtons = ({
   loading = false,
   isStatusLoading = false,
   handleConnectClick,
+  hideConnect = false,
+  settled = false,
+  allowWhileSettled = false,
 }) => (
   <div className="flex flex-col sm:flex-row sm:justify-start items-center mt-6 gap-3 w-full">
+    {!hideConnect && (
     <Button
       icon="/assets/images/repeate-one.svg"
       text={connectLabel}
       onClick={handleConnectClick}
-      disabled={connectDisabled}
+      disabled={allowWhileSettled ? isStatusLoading : connectDisabled}
       loading={loading}
       isStatusLoading={isStatusLoading}
+      settled={settled}
     />
+    )}
     {/* <Button icon="/assets/images/Send_Submit.svg" text="Reviews" /> */}
     <button 
       className="text-[#6B8E23] text-[12px] hover:underline"
@@ -498,24 +518,29 @@ const Button = ({
   disabled = false,
   loading = false,
   isStatusLoading = false,
+  settled = false,
 }) => (
   <button
     type="button"
     onClick={onClick}
     disabled={disabled}
     aria-busy={loading}
-    className={`w-full sm:w-[180px] text-center text-[12px] text-[#FFFFFF] flex p-2 rounded-3xl gap-2 justify-center items-center transition-colors ${
+    className={`w-full sm:w-[180px] text-center text-[12px] flex p-2 rounded-3xl gap-2 justify-center items-center transition-colors border-2 ${
       isStatusLoading
-        ? "bg-[#556B1F]/80 cursor-wait"
-        : disabled
-          ? "bg-[#828282] cursor-not-allowed opacity-80"
-          : "bg-[#556B1F] hover:bg-[#6B8E23]"
+        ? "bg-[#556B1F]/80 text-white border-transparent cursor-wait"
+        : settled
+          ? "bg-white text-[#556B1F] border-[#556B1F] hover:bg-[#556B1F]/10"
+          : disabled
+            ? "bg-[#828282] text-white border-transparent cursor-not-allowed opacity-80"
+            : "bg-[#556B1F] text-white border-transparent hover:bg-[#6B8E23]"
     }`}
   >
     {loading ? (
       <>
         <span
-          className="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
+          className={`inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-t-transparent ${
+            settled ? "border-[#556B1F]" : "border-white"
+          }`}
           aria-hidden="true"
         />
         <span className="sr-only">Loading connection status</span>

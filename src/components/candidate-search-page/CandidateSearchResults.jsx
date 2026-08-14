@@ -54,7 +54,8 @@ const CandidateSearchResults = ({
         id: candidate.id,
         user_id: candidate.user_id ?? candidate.userId ?? null,
         name: formatDisplayPersonName(candidate, "Unknown User"),
-        type: formatDisplayRole("jobseeker"),
+        type: formatDisplayRole(candidate.role || "jobseeker"),
+        role: candidate.role || "jobseeker",
         jobTitle: formatDisplayText(candidate.title) || "N/A",
         location:
           formatDisplayText(candidate.location || candidate.preferred_country) ||

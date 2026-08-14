@@ -9,6 +9,13 @@ import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import useRecruitmentRightStats from "../../hooks/useRecruitmentRightStats";
 import { RECRUITMENT_RIGHT_LINKS } from "./recruitmentRightLinks";
 
+function formatNetworkCount(count) {
+  const n = Number(count);
+  if (!Number.isFinite(n) || n <= 0) return "0";
+  if (n > 600) return "600+";
+  return String(Math.floor(n));
+}
+
 function RecruitmentRight() {
   const navigate = useNavigate();
   const { userData, postCount, connectionCount } = useRecruitmentRightStats();
@@ -98,10 +105,13 @@ function RecruitmentRight() {
                   </p>
                 </div>
                 <p className="text-[15px] font-bold text-white">
-                  {connectionCount}
+                  {formatNetworkCount(connectionCount)}
                 </p>
                 <p className="text-[10px] font-medium text-white/60 mt-0.5">
-                  Connections Made
+                  {String(userData?.role || "").toLowerCase() === "recruiter" &&
+                  String(userData?.mode || "").toLowerCase() === "corporate"
+                    ? "Followers"
+                    : "Connections Made"}
                 </p>
               </div>
             </div>

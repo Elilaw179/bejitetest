@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
-import { FaImage, FaVideo, FaTimes, FaClock } from 'react-icons/fa';
-import { uploadMedia } from '../services/postsApi';
-import RecruiterSelect from './admin/RecruiterSelect';
+import { useState, useRef, useEffect } from "react";
+import { FaImage, FaVideo, FaTimes, FaClock } from "react-icons/fa";
+import { uploadMedia } from "../services/postsApi";
+import RecruiterSelect from "./admin/RecruiterSelect";
 
 function getDefaultSchedule() {
   const d = new Date();
@@ -15,13 +15,13 @@ function getDefaultSchedule() {
 
 function formatScheduledLabel(dateStr, timeStr) {
   const scheduled = new Date(`${dateStr}T${timeStr}`);
-  if (Number.isNaN(scheduled.getTime())) return '';
+  if (Number.isNaN(scheduled.getTime())) return "";
   return scheduled.toLocaleString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   });
 }
 
@@ -29,13 +29,13 @@ const PostCreationModal = ({
   isOpen,
   onClose,
   onPost,
-  initialVisibility = 'public',
-  initialMode = 'post',
+  initialVisibility = "public",
+  initialMode = "post",
 }) => {
-  const isPollMode = initialMode === 'poll';
-  const [postBody, setPostBody] = useState('');
-  const [pollQuestion, setPollQuestion] = useState('');
-  const [pollOptions, setPollOptions] = useState(['', '']);
+  const isPollMode = initialMode === "poll";
+  const [postBody, setPostBody] = useState("");
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
   const [pollDurationDays, setPollDurationDays] = useState(7);
   const [visibility, setVisibility] = useState(initialVisibility);
   const [mediaFiles, setMediaFiles] = useState([]);
@@ -43,10 +43,16 @@ const PostCreationModal = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [postMode, setPostMode] = useState('now');
-  const [scheduleDate, setScheduleDate] = useState(() => getDefaultSchedule().date);
-  const [scheduleTime, setScheduleTime] = useState(() => getDefaultSchedule().time);
-  const [minDate, setMinDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [postMode, setPostMode] = useState("now");
+  const [scheduleDate, setScheduleDate] = useState(
+    () => getDefaultSchedule().date,
+  );
+  const [scheduleTime, setScheduleTime] = useState(
+    () => getDefaultSchedule().time,
+  );
+  const [minDate, setMinDate] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
   const imageInputRef = useRef(null);
   const videoInputRef = useRef(null);
 
@@ -57,9 +63,9 @@ const PostCreationModal = ({
       setMinDate(new Date().toISOString().slice(0, 10));
       setScheduleDate(defaults.date);
       setScheduleTime(defaults.time);
-      setPostMode('now');
-      setPollQuestion('');
-      setPollOptions(['', '']);
+      setPostMode("now");
+      setPollQuestion("");
+      setPollOptions(["", ""]);
       setPollDurationDays(7);
       setError(null);
       setSuccess(null);
@@ -83,11 +89,17 @@ const PostCreationModal = ({
       };
       setMediaFiles([...mediaFiles, newMedia]);
     } catch (err) {
-      console.error('Error uploading media:', err.response?.data || err.message);
-      setError(err.response?.data?.error || 'Failed to upload media. Please try again.');
+      console.error(
+        "Error uploading media:",
+        err.response?.data || err.message,
+      );
+      setError(
+        err.response?.data?.error ||
+          "Failed to upload media. Please try again.",
+      );
     } finally {
       setUploadingMedia(false);
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
@@ -98,20 +110,22 @@ const PostCreationModal = ({
   const buildScheduledAt = () => {
     const scheduled = new Date(`${scheduleDate}T${scheduleTime}`);
     if (Number.isNaN(scheduled.getTime())) {
-      throw new Error('Please choose a valid date and time.');
+      throw new Error("Please choose a valid date and time.");
     }
     if (scheduled.getTime() <= Date.now()) {
-      throw new Error('Scheduled time must be in the future.');
+      throw new Error("Scheduled time must be in the future.");
     }
     return scheduled.toISOString();
   };
 
   const updatePollOption = (index, value) => {
-    setPollOptions((prev) => prev.map((option, i) => (i === index ? value : option)));
+    setPollOptions((prev) =>
+      prev.map((option, i) => (i === index ? value : option)),
+    );
   };
 
   const addPollOption = () => {
-    setPollOptions((prev) => (prev.length >= 4 ? prev : [...prev, '']));
+    setPollOptions((prev) => (prev.length >= 4 ? prev : [...prev, ""]));
   };
 
   const removePollOption = (index) => {
@@ -123,17 +137,19 @@ const PostCreationModal = ({
   const handlePost = async () => {
     if (isPollMode) {
       const trimmedQuestion = pollQuestion.trim();
-      const trimmedOptions = pollOptions.map((option) => option.trim()).filter(Boolean);
+      const trimmedOptions = pollOptions
+        .map((option) => option.trim())
+        .filter(Boolean);
       if (!trimmedQuestion) {
-        setError('Please enter a poll question.');
+        setError("Please enter a poll question.");
         return;
       }
       if (trimmedOptions.length < 2) {
-        setError('Please provide at least two poll options.');
+        setError("Please provide at least two poll options.");
         return;
       }
     } else if (!postBody.trim() && mediaFiles.length === 0) {
-      setError('Please write something or add media to your post.');
+      setError("Please write something or add media to your post.");
       return;
     }
 
@@ -156,27 +172,29 @@ const PostCreationModal = ({
         };
       }
 
-      if (postMode === 'schedule') {
-        payload.status = 'scheduled';
+      if (postMode === "schedule") {
+        payload.status = "scheduled";
         payload.scheduledAt = buildScheduledAt();
       } else {
-        payload.status = 'published';
+        payload.status = "published";
       }
 
       await onPost(payload);
 
-      if (postMode === 'schedule') {
-        setSuccess(`Post scheduled for ${formatScheduledLabel(scheduleDate, scheduleTime)}.`);
+      if (postMode === "schedule") {
+        setSuccess(
+          `Post scheduled for ${formatScheduledLabel(scheduleDate, scheduleTime)}.`,
+        );
         setTimeout(() => handleClose(), 1200);
       } else {
         handleClose();
       }
     } catch (err) {
-      console.error('Error creating post:', err);
+      console.error("Error creating post:", err);
       setError(
         err?.message ||
           err?.response?.data?.error ||
-          'Failed to create post. Please try again.'
+          "Failed to create post. Please try again.",
       );
     } finally {
       setSubmitting(false);
@@ -185,30 +203,31 @@ const PostCreationModal = ({
 
   const handleClose = () => {
     const nextDefault = getDefaultSchedule();
-    setPostBody('');
+    setPostBody("");
     setMediaFiles([]);
-    setPollQuestion('');
-    setPollOptions(['', '']);
+    setPollQuestion("");
+    setPollOptions(["", ""]);
     setPollDurationDays(7);
     setError(null);
     setSuccess(null);
-    setPostMode('now');
+    setPostMode("now");
     setScheduleDate(nextDefault.date);
     setScheduleTime(nextDefault.time);
     onClose();
   };
 
-  const isScheduleMode = postMode === 'schedule';
+  const isScheduleMode = postMode === "schedule";
   const canSubmit = isPollMode
-    ? pollQuestion.trim() && pollOptions.filter((option) => option.trim()).length >= 2
+    ? pollQuestion.trim() &&
+      pollOptions.filter((option) => option.trim()).length >= 2
     : postBody.trim() || mediaFiles.length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="bg-white rounded-lg w-full max-w-xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-[#A9A9A9]">
           <h2 className="text-lg font-semibold text-[#1A3E32]">
-            {isPollMode ? 'Create Poll' : 'Create Post'}
+            {isPollMode ? "Create Poll" : "Create Post"}
           </h2>
           <button
             onClick={handleClose}
@@ -315,7 +334,7 @@ const PostCreationModal = ({
               <div className="flex flex-wrap gap-2">
                 {mediaFiles.map((media, index) => (
                   <div key={index} className="relative">
-                    {media.kind === 'image' ? (
+                    {media.kind === "image" ? (
                       <img
                         src={media.url}
                         alt={`Media ${index + 1}`}
@@ -342,7 +361,11 @@ const PostCreationModal = ({
 
           <div className="mt-4">
             <div className="flex items-center gap-2 max-w-xs">
-              <img src="/assets/images/public-icon.svg" alt="Public" className="w-4 h-4 shrink-0" />
+              <img
+                src="/assets/images/public-icon.svg"
+                alt="Public"
+                className="w-4 h-4 shrink-0"
+              />
               <div className="flex-1">
                 <RecruiterSelect
                   name="visibility"
@@ -425,22 +448,22 @@ const PostCreationModal = ({
               <div className="flex w-full sm:w-auto rounded-full border border-gray-200 p-1 bg-gray-50">
                 <button
                   type="button"
-                  onClick={() => setPostMode('now')}
+                  onClick={() => setPostMode("now")}
                   className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
                     !isScheduleMode
-                      ? 'bg-[#16730F] text-white'
-                      : 'text-gray-600 hover:text-[#1A3E32]'
+                      ? "bg-[#16730F] text-white"
+                      : "text-gray-600 hover:text-[#1A3E32]"
                   }`}
                 >
                   Post now
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPostMode('schedule')}
+                  onClick={() => setPostMode("schedule")}
                   className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
                     isScheduleMode
-                      ? 'bg-[#16730F] text-white'
-                      : 'text-gray-600 hover:text-[#1A3E32]'
+                      ? "bg-[#16730F] text-white"
+                      : "text-gray-600 hover:text-[#1A3E32]"
                   }`}
                 >
                   <FaClock className="text-xs shrink-0" />
@@ -451,7 +474,9 @@ const PostCreationModal = ({
               {isScheduleMode && (
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <label className="block">
-                    <span className="text-sm text-gray-600 mb-1 block">Date</span>
+                    <span className="text-sm text-gray-600 mb-1 block">
+                      Date
+                    </span>
                     <input
                       type="date"
                       value={scheduleDate}
@@ -461,7 +486,9 @@ const PostCreationModal = ({
                     />
                   </label>
                   <label className="block">
-                    <span className="text-sm text-gray-600 mb-1 block">Time</span>
+                    <span className="text-sm text-gray-600 mb-1 block">
+                      Time
+                    </span>
                     <input
                       type="time"
                       value={scheduleTime}
@@ -470,9 +497,9 @@ const PostCreationModal = ({
                     />
                   </label>
                   <p className="sm:col-span-2 text-xs text-gray-500">
-                    Will publish on{' '}
+                    Will publish on{" "}
                     <span className="font-medium text-[#1A3E32]">
-                      {formatScheduledLabel(scheduleDate, scheduleTime) || '—'}
+                      {formatScheduledLabel(scheduleDate, scheduleTime) || "—"}
                     </span>
                   </p>
                 </div>
@@ -485,13 +512,13 @@ const PostCreationModal = ({
             >
               {submitting
                 ? isScheduleMode
-                  ? 'Scheduling...'
-                  : 'Posting...'
+                  ? "Scheduling..."
+                  : "Posting..."
                 : isScheduleMode
-                  ? 'Schedule post'
+                  ? "Schedule post"
                   : isPollMode
-                    ? 'Post poll'
-                    : 'Post'}
+                    ? "Post poll"
+                    : "Post"}
             </button>
           </div>
         </div>

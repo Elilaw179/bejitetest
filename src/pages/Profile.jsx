@@ -14,9 +14,18 @@ import {
   FaCamera,
   FaChevronDown,
   FaExternalLinkAlt,
+  FaLayerGroup,
+  FaFileAlt,
+  FaNewspaper,
+  FaCheckCircle,
+  FaInfoCircle,
 } from "react-icons/fa";
 import NewsFeedLayout from "../components/layout/NewsFeedLayout";
 import ProfileCvSections from "../components/ProfileCvSections";
+import {
+  ProfileSkillsSection,
+  ProfileLinksSection,
+} from "../components/ProfileCvSections";
 import axiosInstance from "../utils/axiosInstance";
 import { fetchCurrentUserProfilePhoto } from "../services/profilePhotoService";
 import { fetchFullUserProfile } from "../services/fetchFullUserProfile";
@@ -41,6 +50,10 @@ import {
   formatDisplayHandle,
 } from "../utils/personDisplayName";
 import { formatDisplayText } from "../utils/displayFormatUtils";
+import {
+  getVerifiedBadgeLabel,
+  userHasVerifiedBadge,
+} from "../utils/verifiedBadge";
 import ProfileConnectActions from "../components/ProfileConnectActions";
 import ProfilePostsSection from "../components/ProfilePostsSection";
 import DisplayNameWithBadge from "../components/DisplayNameWithBadge";
@@ -48,6 +61,8 @@ import MutualConnectionsModal from "../components/MutualConnectionsModal";
 
 const ABOUT_CHAR_LIMIT = 240;
 const ABOUT_WORD_LIMIT = 35;
+
+const MUTUAL_SIDEBAR_PREVIEW = 4;
 
 const formatConnectionCount = (count) => {
   const n = Number(count);
@@ -100,7 +115,8 @@ const ProfileDetailRow = ({
   value,
   href,
   preserveCase = false,
-  brandColor = "bg-emerald-50 text-[#16730F]",
+  brandColor = "bg-emerald-50 text-[#16730F] border-emerald-100",
+  hoverBorderColor = "hover:border-emerald-300",
 }) => {
   const displayValue = value
     ? preserveCase
@@ -110,14 +126,16 @@ const ProfileDetailRow = ({
   const isLink = Boolean(href && value);
 
   return (
-    <div className="group relative flex items-center gap-3.5 min-w-0 rounded-xl border border-slate-200/80 bg-gradient-to-br from-slate-50/60 via-white to-slate-50/30 p-3.5 sm:p-4 hover:border-emerald-300 hover:shadow-md transition-all duration-200">
+    <div
+      className={`group relative flex items-center gap-3.5 min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 ${hoverBorderColor} hover:shadow-md transition-all duration-200`}
+    >
       <div
-        className={`p-2.5 rounded-xl ${brandColor} shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-200`}
+        className={`p-3 rounded-xl border ${brandColor} shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-200`}
       >
         <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
           {label}
         </p>
         {isLink ? (
@@ -125,13 +143,13 @@ const ProfileDetailRow = ({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs sm:text-sm font-semibold text-[#16730F] hover:text-[#145a0c] hover:underline break-all inline-flex items-center gap-1.5 mt-0.5"
+            className="text-xs sm:text-sm font-bold text-[#16730F] hover:text-[#145a0c] hover:underline break-all inline-flex items-center gap-1.5 mt-0.5"
           >
             <span className="truncate">{displayValue}</span>
             <FaExternalLinkAlt className="w-2.5 h-2.5 shrink-0 opacity-70 group-hover:opacity-100" />
           </a>
         ) : (
-          <p className="text-xs sm:text-sm font-medium text-slate-700 break-words break-all mt-0.5">
+          <p className="text-xs sm:text-sm font-semibold text-slate-700 break-words break-all mt-0.5">
             {displayValue}
           </p>
         )}
@@ -142,18 +160,25 @@ const ProfileDetailRow = ({
 
 const ProfileSkeleton = () => (
   <NewsFeedLayout showSidebars={false}>
-    <div className="w-full min-w-0 max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 animate-pulse">
-      <div className="h-6 w-24 bg-slate-200 rounded-lg mb-6"></div>
-      <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm mb-6">
-        <div className="h-44 sm:h-56 bg-slate-200 w-full"></div>
-        <div className="-mt-14 sm:-mt-20 px-4 sm:px-8 pb-6 flex flex-col sm:flex-row items-start gap-4">
-          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-slate-300 border-4 border-white shrink-0"></div>
-          <div className="w-full pt-4 space-y-3">
-            <div className="h-7 bg-slate-200 rounded-md w-48"></div>
-            <div className="h-4 bg-slate-200 rounded-md w-32"></div>
-            <div className="h-4 bg-slate-200 rounded-md w-64"></div>
+    <div className="w-full min-w-0 max-w-5xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 animate-pulse space-y-6">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 space-y-6 border border-slate-200/80 shadow-xs">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 w-full">
+            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-slate-200 shrink-0"></div>
+            <div className="w-full space-y-3 pt-2 text-center sm:text-left">
+              <div className="h-8 bg-slate-200 rounded-xl w-56 mx-auto sm:mx-0"></div>
+              <div className="h-4 bg-slate-200 rounded-lg w-36 mx-auto sm:mx-0"></div>
+              <div className="h-4 bg-slate-200 rounded-lg w-64 mx-auto sm:mx-0"></div>
+            </div>
           </div>
+          <div className="h-20 bg-slate-100 rounded-2xl w-full md:w-64 shrink-0"></div>
         </div>
+      </div>
+      <div className="h-12 bg-white rounded-2xl border border-slate-200/80 w-full"></div>
+      <div className="bg-white rounded-3xl p-6 space-y-4 border border-slate-200/80">
+        <div className="h-6 bg-slate-200 rounded-lg w-40"></div>
+        <div className="h-4 bg-slate-200 rounded-md w-full"></div>
+        <div className="h-4 bg-slate-200 rounded-md w-3/4"></div>
       </div>
     </div>
   </NewsFeedLayout>
@@ -210,6 +235,7 @@ const Profile = () => {
   const [avatarIndex, setAvatarIndex] = useState(0);
   const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
   const [showMutualConnections, setShowMutualConnections] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
 
   const user = getUser();
 
@@ -388,6 +414,7 @@ const Profile = () => {
     setAvatarIndex(0);
     setIsPhotoViewerOpen(false);
     setShowMutualConnections(false);
+    setActiveTab("all");
     setError(null);
     setLoading(true);
 
@@ -495,17 +522,17 @@ const Profile = () => {
     return (
       <NewsFeedLayout showSidebars={false}>
         <div className="min-h-[60vh] flex items-center justify-center px-4">
-          <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full">
-            <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">
+          <div className="text-center bg-white p-8 sm:p-10 rounded-3xl shadow-sm border border-slate-200 max-w-md w-full">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 font-bold text-2xl shadow-2xs">
               !
             </div>
-            <p className="text-slate-800 font-semibold mb-2">{error}</p>
-            <p className="text-xs text-slate-500 mb-5">
+            <p className="text-slate-900 font-bold text-lg mb-2">{error}</p>
+            <p className="text-xs text-slate-500 mb-6 leading-relaxed">
               Something went wrong while loading this profile.
             </p>
             <button
               onClick={() => fetchProfileData()}
-              className="bg-[#16730F] text-white px-5 py-2.5 rounded-xl hover:bg-[#145a0c] font-medium text-sm transition-all shadow-sm cursor-pointer"
+              className="bg-[#16730F] text-white px-6 py-2.5 rounded-xl hover:bg-[#145a0c] font-semibold text-sm transition-all shadow-md hover:shadow-lg cursor-pointer"
             >
               Try Again
             </button>
@@ -519,14 +546,14 @@ const Profile = () => {
     return (
       <NewsFeedLayout classes={false} scrollable={false} showSidebars={false}>
         <div className="min-h-[60vh] flex items-center justify-center px-4">
-          <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full">
-            <div className="w-12 h-12 rounded-full bg-emerald-50 text-[#16730F] flex items-center justify-center mx-auto mb-4">
-              <FaBriefcase className="w-5 h-5" />
+          <div className="text-center bg-white p-8 sm:p-10 rounded-3xl shadow-sm border border-slate-200 max-w-md w-full">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-[#16730F] flex items-center justify-center mx-auto mb-4 shadow-2xs">
+              <FaBriefcase className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
               No profile data found
             </h3>
-            <p className="text-xs text-slate-500 mb-5">
+            <p className="text-xs text-slate-500 mb-6 leading-relaxed">
               Please complete your profile setup to view your information here.
             </p>
             <button
@@ -537,7 +564,7 @@ const Profile = () => {
                     : getRecruiterEditProfilePath(user),
                 )
               }
-              className="bg-[#16730F] text-white px-5 py-2.5 rounded-xl hover:bg-[#145a0c] font-semibold text-sm transition-all shadow-sm cursor-pointer"
+              className="bg-[#16730F] text-white px-6 py-2.5 rounded-xl hover:bg-[#145a0c] font-semibold text-sm transition-all shadow-md hover:shadow-lg cursor-pointer"
             >
               Complete Profile Setup
             </button>
@@ -549,391 +576,567 @@ const Profile = () => {
 
   return (
     <NewsFeedLayout showSidebars={false}>
-      <div className="w-full min-w-0 max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
-        {/* Main Profile Header Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden mb-6 transition-all duration-300">
-          {/* Hero Cover Banner */}
-          <div className="relative h-44 sm:h-56 md:h-64 w-full bg-gradient-to-r from-[#0a3507] via-[#16730F] to-[#2aa51e] overflow-hidden">
-            {/* Ambient Background Decorative Patterns */}
-            <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]"></div>
-            <div className="absolute -top-10 -right-10 w-60 h-60 bg-white/10 rounded-full blur-2xl"></div>
-            <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-emerald-300/10 rounded-full blur-2xl"></div>
+      <div className="w-full min-w-0 max-w-5xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 space-y-6">
+        {/* Top Control Bar */}
+        <div className="flex items-center justify-between gap-4 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <button
+            type="button"
+            onClick={() => {
+              if (isViewingOwnProfile) {
+                navigate("/news-feed");
+              } else {
+                navigate(-1);
+              }
+            }}
+            className="flex items-center gap-2 text-slate-700 hover:text-[#16730F] bg-slate-100 hover:bg-emerald-50 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer border border-slate-200/60"
+          >
+            <FaArrowLeft className="shrink-0 text-xs" />
+            <span>Back</span>
+          </button>
 
-            {/* Top Navigation Bar inside Banner */}
-            <div className="relative z-10 p-4 sm:p-6 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:inline-block">
+              User Profile
+            </span>
+            {isViewingOwnProfile && (
               <button
                 type="button"
-                onClick={() => {
-                  if (isViewingOwnProfile) {
-                    navigate("/news-feed");
-                  } else {
-                    navigate(-1);
-                  }
-                }}
-                className="flex items-center gap-2 bg-black/25 hover:bg-black/40 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 text-xs sm:text-sm font-medium transition-all shadow-xs cursor-pointer"
+                onClick={handleEditProfile}
+                className="flex items-center gap-2 bg-[#16730F] hover:bg-[#145a0c] text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md hover:shadow-lg cursor-pointer"
               >
-                <FaArrowLeft className="shrink-0 text-xs" />
-                <span>Back</span>
+                <FaEdit className="shrink-0 text-xs" />
+                <span>Edit Profile</span>
               </button>
-
-              {isViewingOwnProfile && (
-                <button
-                  type="button"
-                  onClick={handleEditProfile}
-                  className="flex items-center gap-2 bg-white/90 hover:bg-white text-[#16730F] backdrop-blur-md px-4 py-2 rounded-full border border-white/50 text-xs sm:text-sm font-semibold transition-all shadow-md hover:shadow-lg cursor-pointer"
-                >
-                  <FaEdit className="shrink-0" />
-                  <span>Edit Profile</span>
-                </button>
-              )}
-            </div>
+            )}
           </div>
+        </div>
 
-          {/* Profile Content (Overlapping Hero Cover) */}
-          <div className="relative z-10 -mt-14 sm:-mt-20 px-4 sm:px-8 pb-6 sm:pb-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-5">
-              {/* Left Column: Avatar + Basic Info */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 flex-1 min-w-0">
-                {/* Avatar with Interactive Zoom Overlay */}
-                <div
-                  className="relative group shrink-0 cursor-pointer"
-                  onClick={() => setIsPhotoViewerOpen(true)}
-                  title="Click to view full photo"
-                >
+        {/* Bento Hero Showcase Hub Card (App Colors Light Palette) */}
+        <div className="relative rounded-3xl bg-white p-6 sm:p-8 md:p-9 shadow-sm border border-slate-200/80 overflow-hidden transition-all duration-300">
+          {/* Top Decorative Brand Bar Accent */}
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#16730F] via-emerald-500 to-[#16730F]"></div>
+
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8 pt-2">
+            {/* Identity Column */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 flex-1 min-w-0">
+              {/* Squircle Avatar Frame */}
+              <div
+                className="relative group shrink-0 cursor-pointer"
+                onClick={() => setIsPhotoViewerOpen(true)}
+                title="Click to view full photo"
+              >
+                <div className="p-1 rounded-[28px] bg-gradient-to-br from-emerald-100 via-white to-emerald-50 shadow-md ring-2 ring-emerald-500/20 border border-slate-200/80">
                   <img
                     src={activeAvatarSrc}
                     alt="Profile"
-                    className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover border-4 sm:border-[5px] border-white shadow-xl ring-1 ring-slate-900/10 transition-transform duration-300 group-hover:scale-[1.02] bg-slate-100"
+                    className="w-32 h-32 sm:w-36 sm:h-36 rounded-[24px] object-cover bg-slate-100 transition-transform duration-300 group-hover:scale-[1.02]"
                     onError={() => {
                       setAvatarIndex((prev) =>
                         prev < avatarCandidates.length - 1 ? prev + 1 : prev,
                       );
                     }}
                   />
-                  <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200 text-white text-xs font-semibold gap-1.5">
-                    <FaCamera className="w-4 h-4" />
-                    <span>View</span>
+                  <div className="absolute inset-1 rounded-[24px] bg-slate-950/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-200 text-white text-xs font-semibold backdrop-blur-[2px]">
+                    <FaCamera className="w-5 h-5 mb-1" />
+                    <span>View Photo</span>
                   </div>
-                </div>
-
-                {/* Name & Title Block */}
-                <div className="w-full min-w-0 text-center sm:text-left pt-1 sm:pt-4">
-                  <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 tracking-tight break-words min-w-0 max-w-full">
-                      <DisplayNameWithBadge
-                        user={profileData}
-                        fallback="User"
-                        badgeSize="md"
-                        className="text-slate-900 sm:text-white"
-                      />
-                    </h1>
-
-                    {/* Role Pill */}
-                    <span
-                      className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-semibold tracking-wide border shadow-2xs ${
-                        isRecruiterProfile
-                          ? "bg-purple-50 text-purple-700 border-purple-200"
-                          : "bg-emerald-50 text-[#16730F] border-emerald-200"
-                      }`}
-                    >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          isRecruiterProfile ? "bg-purple-600" : "bg-[#16730F]"
-                        }`}
-                      ></span>
-                      {formatDisplayRole(viewedRole)}
-                    </span>
-                  </div>
-
-                  {/* Company Name */}
-                  {isRecruiterProfile && profileData.company_name && (
-                    <p className="mt-2 flex items-center justify-center sm:justify-start">
-                      <span className="inline-flex items-center gap-1 max-w-full px-2 py-0.5 rounded-md bg-white/90 text-[#16730F] text-xs sm:text-sm font-semibold shadow-sm border border-[#16730F]/60 backdrop-blur-sm">
-                        <FaBuilding className="text-[#16730F] shrink-0 text-[10px]" />
-                        <span className="break-words">
-                          {formatDisplayText(profileData.company_name)}
-                        </span>
-                      </span>
-                    </p>
-                  )}
-
-                  {/* Job Title / Headline */}
-                  {(profileData.job_title || profileData.title) && (
-                    <p className="mt-1.5 flex items-center justify-center sm:justify-start">
-                      <span className="inline-flex items-center max-w-full px-2 py-0.5 rounded-md bg-[#FFF8E7] text-[#3D2E0A] text-xs sm:text-sm font-medium shadow-sm border border-[#E6D5A8] backdrop-blur-sm break-words">
-                        {formatDisplayText(
-                          profileData.job_title || profileData.title,
-                        )}
-                      </span>
-                    </p>
-                  )}
-
-                  {/* Handle & Location Row */}
-                  <div className="flex items-center justify-center sm:justify-start gap-3 flex-wrap text-xs sm:text-sm text-slate-500 mt-2">
-                    {displayHandle && (
-                      <span className="font-mono bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-md font-medium">
-                        {displayHandle}
-                      </span>
-                    )}
-
-                    {isRecruiterProfile && recruiterPublicLocation && (
-                      <span className="flex items-center gap-1 text-slate-600">
-                        <FaMapMarkerAlt className="text-[#16730F] shrink-0" />
-                        <span className="break-words">
-                          {recruiterPublicLocation}
-                        </span>
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Connections Stats Button / Pill */}
-                  <div className="mt-3 flex items-center justify-center sm:justify-start gap-2">
-                    {isViewingOwnProfile ? (
-                      <button
-                        type="button"
-                        onClick={() => navigate("/connection")}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-[#16730F] text-xs font-semibold border border-emerald-200/80 transition-colors cursor-pointer"
-                        title="View all your connections"
-                      >
-                        <FaUserFriends className="text-xs" />
-                        <span>
-                          {formatConnectionCount(profileData.connectionCount)}
-                        </span>
-                        <span className="text-slate-600 font-normal">
-                          {Number(profileData.connectionCount) === 1
-                            ? "Connection"
-                            : "Connections"}
-                        </span>
-                      </button>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200">
-                        <FaUserFriends className="text-xs text-[#16730F]" />
-                        <span className="text-[#16730F]">
-                          {formatConnectionCount(profileData.connectionCount)}
-                        </span>
-                        <span className="text-slate-600 font-normal">
-                          {Number(profileData.connectionCount) === 1
-                            ? "Connection"
-                            : "Connections"}
-                        </span>
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Connect / Message Actions */}
-                  {!isViewingOwnProfile && viewedProfileId && (
-                    <div className="mt-4 pt-2 w-full min-w-0">
-                      <ProfileConnectActions
-                        userId={viewedProfileId}
-                        displayName={formatDisplayPersonName(
-                          profileData,
-                          "User",
-                        )}
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
 
-              {/* Right Column: Mutual Connections Box */}
-              {!isViewingOwnProfile &&
-                Number(profileData.mutualConnectionCount) > 0 && (
-                  <div className="shrink-0 w-full md:w-auto md:max-w-xs bg-slate-50/90 hover:bg-emerald-50/40 border border-slate-200/80 hover:border-emerald-200 p-3.5 sm:p-4 rounded-xl transition-all duration-200 shadow-2xs">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase tracking-wide">
-                        <FaUserFriends className="text-[#16730F]" />
-                        Mutual connections
-                      </span>
-                      <span className="text-xs font-semibold text-[#16730F] bg-emerald-100/70 px-2 py-0.5 rounded-full">
-                        {formatConnectionCount(
-                          profileData.mutualConnectionCount,
-                        )}
-                      </span>
-                    </div>
+              {/* Name, Role & Headline Block */}
+              <div className="w-full min-w-0 text-center sm:text-left space-y-2 pt-1">
+                {/* Title and Role Row */}
+                <div className="flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight break-words min-w-0 max-w-full">
+                    <DisplayNameWithBadge
+                      user={profileData}
+                      fallback="User"
+                      badgeSize="lg"
+                      className="text-slate-900"
+                    />
+                  </h1>
 
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center -space-x-2.5 overflow-hidden py-1">
-                        {(profileData.mutualConnections || [])
-                          .slice(0, 3)
-                          .map((person) => {
-                            const name = [person?.firstName, person?.lastName]
-                              .filter(Boolean)
-                              .join(" ")
-                              .trim();
-                            return (
-                              <button
-                                key={String(person.id)}
-                                type="button"
-                                onClick={() =>
-                                  navigate(`/user-profile/${person.id}`)
-                                }
-                                className="relative h-9 w-9 rounded-full border-2 border-white shadow-sm overflow-hidden bg-slate-200 hover:z-10 focus:z-10 focus:outline-none transition-transform hover:scale-110"
-                                title={
-                                  name
-                                    ? `View ${name}'s profile`
-                                    : "View profile"
-                                }
-                              >
-                                <img
-                                  src={profileAvatarSrc(person.profile_photo)}
-                                  alt={name || "Mutual connection"}
-                                  className="h-full w-full object-cover"
-                                />
-                              </button>
-                            );
-                          })}
-                        {Number(profileData.mutualConnectionCount) > 3 && (
-                          <button
-                            type="button"
-                            onClick={() => setShowMutualConnections(true)}
-                            className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-emerald-100 text-[11px] font-bold text-[#16730F] shadow-sm hover:bg-emerald-200 transition-colors"
-                            title="See all mutual connections"
-                          >
-                            +
-                            {formatConnectionCount(
-                              Number(profileData.mutualConnectionCount) - 3,
-                            )}
-                          </button>
-                        )}
-                      </div>
+                  {/* Account Role Badge */}
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border shadow-2xs ${
+                      isRecruiterProfile
+                        ? "bg-purple-50 text-purple-700 border-purple-200"
+                        : "bg-emerald-50 text-[#16730F] border-emerald-200"
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        isRecruiterProfile ? "bg-purple-600" : "bg-[#16730F]"
+                      }`}
+                    ></span>
+                    {formatDisplayRole(viewedRole)}
+                  </span>
+                </div>
 
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs text-slate-600 leading-snug truncate">
-                          {formatMutualConnectionsLabel(
-                            profileData.mutualConnectionCount,
-                            profileData.mutualConnections,
-                          )}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setShowMutualConnections(true)}
-                          className="text-xs font-semibold text-[#16730F] hover:underline mt-0.5 inline-block"
-                        >
-                          See all mutuals
-                        </button>
-                      </div>
-                    </div>
+                {/* Company Name Badge */}
+                {isRecruiterProfile && profileData.company_name && (
+                  <div className="flex items-center justify-center sm:justify-start">
+                    <span className="inline-flex items-center gap-2 max-w-full px-3.5 py-1 rounded-xl bg-emerald-50 text-[#16730F] text-xs sm:text-sm font-bold border border-emerald-200">
+                      <FaBuilding className="text-[#16730F] shrink-0 text-xs" />
+                      <span className="break-words">
+                        {formatDisplayText(profileData.company_name)}
+                      </span>
+                    </span>
                   </div>
                 )}
+
+                {/* Job Title / Professional Headline */}
+                {(profileData.job_title || profileData.title) && (
+                  <div className="flex items-center justify-center sm:justify-start">
+                    <span className="inline-flex items-center max-w-full px-3.5 py-1 rounded-xl bg-[#FFF8E7] text-[#3D2E0A] text-xs sm:text-sm font-semibold border border-[#E6D5A8] break-words shadow-2xs">
+                      {formatDisplayText(
+                        profileData.job_title || profileData.title,
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {/* Handle & Location Row */}
+                <div className="flex items-center justify-center sm:justify-start gap-3 flex-wrap text-xs sm:text-sm text-slate-500 pt-1">
+                  {displayHandle && (
+                    <span className="font-mono bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-0.5 rounded-lg font-semibold">
+                      {displayHandle}
+                    </span>
+                  )}
+
+                  {isRecruiterProfile && recruiterPublicLocation && (
+                    <span className="flex items-center gap-1.5 text-slate-600 font-medium">
+                      <FaMapMarkerAlt className="text-[#16730F] shrink-0" />
+                      <span className="break-words">
+                        {recruiterPublicLocation}
+                      </span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row lg:flex-col items-center lg:items-end justify-between gap-4 shrink-0 w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+              {/* Connections Stat Widget */}
+              {isViewingOwnProfile ? (
+                <button
+                  type="button"
+                  onClick={() => navigate("/connection")}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-5 py-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-[#16730F] text-xs sm:text-sm font-bold border border-emerald-200 transition-all cursor-pointer shadow-2xs"
+                  title={
+                    profileData.isCorporate ||
+                    (String(profileData.role || "").toLowerCase() ===
+                      "recruiter" &&
+                      String(profileData.mode || "").toLowerCase() ===
+                        "corporate")
+                      ? "View all your followers"
+                      : "View all your connections"
+                  }
+                >
+                  <FaUserFriends className="text-base" />
+                  <span className="text-lg font-extrabold text-[#16730F]">
+                    {formatConnectionCount(profileData.connectionCount)}
+                  </span>
+                  <span className="text-slate-600 font-medium">
+                    {profileData.isCorporate ||
+                    (String(profileData.role || "").toLowerCase() ===
+                      "recruiter" &&
+                      String(profileData.mode || "").toLowerCase() ===
+                        "corporate")
+                      ? Number(profileData.connectionCount) === 1
+                        ? "Follower"
+                        : "Followers"
+                      : Number(profileData.connectionCount) === 1
+                        ? "Connection"
+                        : "Connections"}
+                  </span>
+                </button>
+              ) : (
+                <div className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-5 py-3 rounded-2xl bg-slate-100/90 text-slate-800 text-xs sm:text-sm font-bold border border-slate-200">
+                  <FaUserFriends className="text-[#16730F] text-base" />
+                  <span className="text-lg font-extrabold text-[#16730F]">
+                    {formatConnectionCount(profileData.connectionCount)}
+                  </span>
+                  <span className="text-slate-600 font-medium">
+                    {profileData.isCorporate ||
+                    (String(profileData.role || "").toLowerCase() ===
+                      "recruiter" &&
+                      String(profileData.mode || "").toLowerCase() ===
+                        "corporate")
+                      ? Number(profileData.connectionCount) === 1
+                        ? "Follower"
+                        : "Followers"
+                      : Number(profileData.connectionCount) === 1
+                        ? "Connection"
+                        : "Connections"}
+                  </span>
+                </div>
+              )}
+
+              {/* Connect / Message Actions Panel */}
+              {!isViewingOwnProfile && viewedProfileId && (
+                <div className="w-full min-w-0 lg:max-w-xs">
+                  <ProfileConnectActions
+                    userId={viewedProfileId}
+                    displayName={formatDisplayPersonName(profileData, "User")}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Online Presence Card */}
-        {isRecruiterProfile && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-7 mb-6 transition-all">
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 flex items-center gap-2.5 border-b border-slate-100 pb-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0">
-                <FaGlobe className="w-4 h-4" />
-              </div>
+        {/* Segmented Interactive Nav Tabs */}
+        <div className="flex items-center gap-2 p-1.5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-x-auto scrollbar-none">
+          <button
+            type="button"
+            onClick={() => setActiveTab("all")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
+              activeTab === "all"
+                ? "bg-[#16730F] text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            }`}
+          >
+            <FaLayerGroup className="text-xs" />
+            <span>Overview</span>
+          </button>
+
+          {(isRecruiterProfile || isJobseekerProfile) && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("about")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
+                activeTab === "about"
+                  ? "bg-[#16730F] text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              }`}
+            >
+              <FaBriefcase className="text-xs" />
+              <span>About & Bio</span>
+            </button>
+          )}
+
+          {isJobseekerProfile && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("cv")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
+                activeTab === "cv"
+                  ? "bg-[#16730F] text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              }`}
+            >
+              <FaFileAlt className="text-xs" />
+              <span>CV & Experience</span>
+            </button>
+          )}
+
+          {isRecruiterProfile && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("presence")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
+                activeTab === "presence"
+                  ? "bg-[#16730F] text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              }`}
+            >
+              <FaGlobe className="text-xs" />
               <span>Online Presence</span>
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-              <ProfileDetailRow
-                icon={FaGlobe}
-                label="Website"
-                value={profileData.website}
-                href={toExternalHref(profileData.website)}
-                preserveCase
-                brandColor="bg-emerald-50 text-[#16730F]"
-              />
-              <ProfileDetailRow
-                icon={FaLinkedin}
-                label="LinkedIn"
-                value={linkedinUrl}
-                href={toExternalHref(linkedinUrl)}
-                preserveCase
-                brandColor="bg-blue-50 text-[#0A66C2]"
-              />
-              <ProfileDetailRow
-                icon={FaTwitter}
-                label="X (Twitter)"
-                value={twitterUrl}
-                href={toExternalHref(twitterUrl)}
-                preserveCase
-                brandColor="bg-slate-100 text-slate-900"
-              />
-              <ProfileDetailRow
-                icon={FaInstagram}
-                label="Instagram"
-                value={instagramUrl}
-                href={toExternalHref(instagramUrl)}
-                preserveCase
-                brandColor="bg-pink-50 text-pink-600"
-              />
-            </div>
-          </div>
-        )}
+            </button>
+          )}
 
-        {/* About Section Card */}
-        {(isRecruiterProfile || isJobseekerProfile) && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-7 mb-6 transition-all">
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 flex items-center gap-2.5 border-b border-slate-100 pb-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0">
-                <FaBriefcase className="w-4 h-4" />
-              </div>
-              <span>{isRecruiterProfile ? "About Company" : "About"}</span>
-            </h2>
-            <div className="relative">
-              {aboutText ? (
-                <>
-                  <p className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
-                    {!needsTruncation || isAboutExpanded
-                      ? aboutText
-                      : aboutPreview.text}
-                  </p>
-                  {needsTruncation && (
-                    <button
-                      onClick={() => setIsAboutExpanded(!isAboutExpanded)}
-                      className="mt-3 text-[#16730F] hover:text-[#145a0c] font-semibold text-xs sm:text-sm transition-colors inline-flex items-center gap-1 group cursor-pointer"
-                    >
-                      <span>{isAboutExpanded ? "See Less" : "See More"}</span>
-                      <FaChevronDown
-                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                          isAboutExpanded ? "rotate-180 text-[#16730F]" : ""
-                        }`}
-                      />
-                    </button>
-                  )}
-                </>
-              ) : (
-                <p className="text-sm text-slate-400 italic">
-                  No bio provided yet.
-                </p>
+          {viewedProfileId && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("posts")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
+                activeTab === "posts"
+                  ? "bg-[#16730F] text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              }`}
+            >
+              <FaNewspaper className="text-xs" />
+              <span>Posts & Activity</span>
+            </button>
+          )}
+        </div>
+
+        {/* Main dashboard: CV + activity stack on the left so a tall sidebar cannot open a gap between them. */}
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-3 lg:items-start">
+          <div className="contents lg:col-span-2 lg:flex lg:flex-col lg:gap-6">
+          {/* Main Column – Content (before posts) */}
+          <div className="space-y-6 order-1">
+            {/* Bio / About Bento Section */}
+            {(activeTab === "all" || activeTab === "about") &&
+              (isRecruiterProfile || isJobseekerProfile) && (
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-7 transition-all">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
+                        <FaBriefcase className="w-4 h-4" />
+                      </div>
+                      <span>
+                        {isRecruiterProfile ? "About Company" : "About"}
+                      </span>
+                    </h2>
+                  </div>
+
+                  <div className="relative">
+                    {aboutText ? (
+                      <>
+                        <p className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-wrap break-words font-normal">
+                          {!needsTruncation || isAboutExpanded
+                            ? aboutText
+                            : aboutPreview.text}
+                        </p>
+                        {needsTruncation && (
+                          <button
+                            type="button"
+                            onClick={() => setIsAboutExpanded(!isAboutExpanded)}
+                            className="mt-3 text-[#16730F] hover:text-[#145a0c] font-bold text-xs sm:text-sm transition-colors inline-flex items-center gap-1.5 group cursor-pointer"
+                          >
+                            <span>
+                              {isAboutExpanded ? "See Less" : "See More"}
+                            </span>
+                            <FaChevronDown
+                              className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                isAboutExpanded
+                                  ? "rotate-180 text-[#16730F]"
+                                  : ""
+                              }`}
+                            />
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <div className="py-6 text-center border-2 border-dashed border-slate-100 rounded-2xl">
+                        <p className="text-sm text-slate-400 font-medium">
+                          No bio provided yet.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
-            </div>
+
+            {/* Online Presence Grid (Recruiters) */}
+            {(activeTab === "all" ||
+              activeTab === "about" ||
+              activeTab === "presence") &&
+              isRecruiterProfile && (
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-7 transition-all">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
+                        <FaGlobe className="w-4 h-4" />
+                      </div>
+                      <span>Online Presence</span>
+                    </h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <ProfileDetailRow
+                      icon={FaGlobe}
+                      label="Website"
+                      value={profileData.website}
+                      href={toExternalHref(profileData.website)}
+                      preserveCase
+                      brandColor="bg-emerald-50 text-[#16730F] border-emerald-200"
+                    />
+                    <ProfileDetailRow
+                      icon={FaLinkedin}
+                      label="LinkedIn"
+                      value={linkedinUrl}
+                      href={toExternalHref(linkedinUrl)}
+                      preserveCase
+                      brandColor="bg-blue-50 text-[#0A66C2] border-blue-200"
+                    />
+                    <ProfileDetailRow
+                      icon={FaTwitter}
+                      label="X (Twitter)"
+                      value={twitterUrl}
+                      href={toExternalHref(twitterUrl)}
+                      preserveCase
+                      brandColor="bg-slate-100 text-slate-900 border-slate-200"
+                    />
+                    <ProfileDetailRow
+                      icon={FaInstagram}
+                      label="Instagram"
+                      value={instagramUrl}
+                      href={toExternalHref(instagramUrl)}
+                      preserveCase
+                      brandColor="bg-pink-50 text-pink-600 border-pink-200"
+                    />
+                  </div>
+                </div>
+              )}
+
+            {(activeTab === "all" || activeTab === "cv") &&
+              isJobseekerProfile && (
+                <ProfileCvSections cv={cvData} exclude={["skills", "links"]} />
+              )}
           </div>
-        )}
 
-        {/* CV Sections for Jobseeker */}
-        {isJobseekerProfile && <ProfileCvSections cv={cvData} />}
+          {/* Activity / Posts – last on mobile, below content on desktop */}
+          <div className="space-y-6 order-3">
+            {(activeTab === "all" || activeTab === "posts") &&
+              viewedProfileId && (
+                <ProfilePostsSection
+                  userId={String(viewedProfileId)}
+                  currentUserId={user?.id}
+                />
+              )}
+          </div>
+          </div>
 
-        {/* User Posts Section */}
-        {viewedProfileId && (
-          <ProfilePostsSection
-            userId={String(viewedProfileId)}
-            currentUserId={user?.id}
-          />
-        )}
+          {/* Sidebar Column – appears before posts on mobile, right column on desktop */}
+          <div className="lg:col-span-1 space-y-6 order-2">
+            {/* Mutual Connections Bento Card */}
+            {!isViewingOwnProfile &&
+              Number(profileData.mutualConnectionCount) > 0 && (
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 transition-all">
+                  <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+                    <span className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                      <FaUserFriends className="text-[#16730F]" />
+                      Mutual Connections
+                    </span>
+                    <span className="text-xs font-extrabold text-[#16730F] bg-emerald-100/70 px-2.5 py-0.5 rounded-full">
+                      {formatConnectionCount(profileData.mutualConnectionCount)}
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center -space-x-3 overflow-hidden py-1 justify-center sm:justify-start">
+                      {(profileData.mutualConnections || [])
+                        .slice(0, MUTUAL_SIDEBAR_PREVIEW)
+                        .map((person) => {
+                          const name = [person?.firstName, person?.lastName]
+                            .filter(Boolean)
+                            .join(" ")
+                            .trim();
+                          return (
+                            <button
+                              key={String(person.id)}
+                              type="button"
+                              onClick={() =>
+                                navigate(`/user-profile/${person.id}`)
+                              }
+                              className="relative h-10 w-10 rounded-full border-2 border-white shadow-md overflow-hidden bg-slate-200 hover:z-10 focus:z-10 focus:outline-none transition-transform hover:scale-110 cursor-pointer"
+                              title={
+                                name ? `View ${name}'s profile` : "View profile"
+                              }
+                            >
+                              <img
+                                src={profileAvatarSrc(person.profile_photo)}
+                                alt={name || "Mutual connection"}
+                                className="h-full w-full object-cover"
+                              />
+                            </button>
+                          );
+                        })}
+                      {Number(profileData.mutualConnectionCount) >
+                        MUTUAL_SIDEBAR_PREVIEW && (
+                        <button
+                          type="button"
+                          onClick={() => setShowMutualConnections(true)}
+                          className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-emerald-100 text-xs font-bold text-[#16730F] shadow-md hover:bg-emerald-200 transition-colors cursor-pointer"
+                          title="See all mutual connections"
+                        >
+                          +
+                          {formatConnectionCount(
+                            Number(profileData.mutualConnectionCount) -
+                              MUTUAL_SIDEBAR_PREVIEW,
+                          )}
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-snug text-center sm:text-left font-medium">
+                      {formatMutualConnectionsLabel(
+                        profileData.mutualConnectionCount,
+                        profileData.mutualConnections,
+                      )}
+                    </p>
+
+                    {Number(profileData.mutualConnectionCount) >
+                      MUTUAL_SIDEBAR_PREVIEW && (
+                      <button
+                        type="button"
+                        onClick={() => setShowMutualConnections(true)}
+                        className="w-full py-2.5 bg-slate-50 hover:bg-emerald-50 text-[#16730F] font-bold text-xs rounded-xl border border-slate-200 hover:border-emerald-200 transition-all cursor-pointer text-center"
+                      >
+                        View All Mutuals
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            {/* Profile Information Overview Card */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 transition-all">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <FaInfoCircle className="text-[#16730F]" />
+                <span>Profile Overview</span>
+              </h3>
+
+              <div className="space-y-3.5 text-xs sm:text-sm">
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50">
+                  <span className="text-slate-500 font-medium">
+                    Account Role
+                  </span>
+                  <span className="font-bold text-slate-900 capitalize">
+                    {formatDisplayRole(viewedRole) || "User"}
+                  </span>
+                </div>
+
+                {displayHandle && (
+                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50">
+                    <span className="text-slate-500 font-medium">Handle</span>
+                    <span className="font-mono text-slate-700 font-semibold">
+                      {displayHandle}
+                    </span>
+                  </div>
+                )}
+
+                {userHasVerifiedBadge(profileData) && (
+                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50">
+                    <span className="text-slate-500 font-medium">Status</span>
+                    <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
+                      <FaCheckCircle className="text-xs" />
+                      {getVerifiedBadgeLabel(profileData)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Skills Sidebar Card (Jobseekers) */}
+            {isJobseekerProfile && <ProfileSkillsSection cv={cvData} />}
+
+            {/* Links Sidebar Card (Jobseekers) */}
+            {isJobseekerProfile && <ProfileLinksSection cv={cvData} />}
+          </div>
+        </div>
       </div>
 
       {/* Fullscreen Photo Viewer Modal */}
       {isPhotoViewerOpen && (
         <div
-          className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setIsPhotoViewerOpen(false)}
         >
           <div className="relative max-w-[95vw] max-h-[90vh]">
             <img
               src={activeAvatarSrc}
               alt="Profile full view"
-              className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+              className="max-w-full max-h-[85vh] object-contain rounded-3xl shadow-2xl border border-white/20"
               onClick={(event) => event.stopPropagation()}
             />
             <button
               type="button"
               aria-label="Close photo viewer"
-              className="absolute -top-4 -right-4 text-white text-xl bg-slate-800/80 hover:bg-slate-700 rounded-full w-10 h-10 flex items-center justify-center border border-white/20 shadow-lg transition-all cursor-pointer"
+              className="absolute -top-4 -right-4 text-white text-xl bg-slate-800/90 hover:bg-slate-700 rounded-full w-11 h-11 flex items-center justify-center border border-white/30 shadow-xl transition-all cursor-pointer"
               onClick={() => setIsPhotoViewerOpen(false)}
             >
               ×

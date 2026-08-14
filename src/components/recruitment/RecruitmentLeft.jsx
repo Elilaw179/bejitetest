@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { getUser } from "../../utils/tokenManager";
 import InviteFriendsModal from "../InviteFriendsModal";
 import { Network } from "lucide-react";
+import { isCorporateRecruiter } from "../../utils/recruiterProfilePaths";
 
 const navItems = [
   { icon: FaHome, label: "News Feed" },
@@ -12,7 +13,7 @@ const navItems = [
   { icon: "/assets/images/messages-2.svg", label: "Chats" },
   { icon: "/assets/images/user-search.svg", label: "Recruitment" },
   { icon: "/assets/images/notification.svg", label: "Notifications" },
-  { icon: Network, label: "Catch Ups" },
+  { icon: Network, label: "Milestones" },
 ];
 
 export default function RecruitmentLeft() {
@@ -26,11 +27,23 @@ export default function RecruitmentLeft() {
     return getUser() || {};
   }, [reduxUser]);
 
+  const isCorporate = isCorporateRecruiter(user);
+
+  const displayNavItems = useMemo(
+    () =>
+      navItems.map((item) =>
+        item.label === "Connections" && isCorporate
+          ? { ...item, label: "Followers" }
+          : item,
+      ),
+    [isCorporate],
+  );
+
   // Filter nav items based on user role
   const filteredNavItems =
     user?.role === "jobseeker"
-      ? navItems.filter((item) => item.label !== "Recruitment")
-      : navItems;
+      ? displayNavItems.filter((item) => item.label !== "Recruitment")
+      : displayNavItems;
 
   const handleNavClick = (label) => {
     switch (label) {
@@ -38,6 +51,7 @@ export default function RecruitmentLeft() {
         navigate("/news-feed");
         break;
       case "Connections":
+      case "Followers":
         navigate("/connection");
         break;
       case "Chats":
@@ -49,8 +63,8 @@ export default function RecruitmentLeft() {
       case "Notifications":
         navigate("/notification");
         break;
-      case "Catch Ups":
-        navigate("/catch-up");
+      case "Milestones":
+        navigate("/milestones");
         break;
       default:
         console.log("Navigation not defined for:", label);
