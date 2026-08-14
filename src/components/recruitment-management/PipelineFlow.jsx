@@ -73,8 +73,8 @@ export default function PipelineFlow({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-sm">
-      <div className="flex items-center justify-between gap-3 mb-4">
+    <div className="bg-white border border-gray-200 rounded-3xl p-4 sm:p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3 mb-4">
         <div className="text-xs font-extrabold tracking-wider text-gray-700 uppercase">
           Pipeline Progression Flow
         </div>
@@ -85,7 +85,7 @@ export default function PipelineFlow({
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stageItems.map((stg, index) => {
           const isDragging = dragIndex === index;
           const isDropTarget = overIndex === index && dragIndex !== index;
@@ -98,7 +98,7 @@ export default function PipelineFlow({
               onDragEnd={handleDragEnd}
               onDragOver={(e) => handleDragOver(index, e)}
               onDrop={(e) => handleDrop(index, e)}
-              className={`bg-white border-2 rounded-2xl p-4 flex flex-col justify-between min-h-[110px] shadow-xs relative transition-all gap-2 ${
+              className={`bg-white border-2 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between min-h-[105px] sm:min-h-[110px] shadow-xs relative transition-all gap-2 ${
                 isDragging
                   ? "opacity-55 border-[#16730F] ring-2 ring-[#16730F]/20"
                   : isDropTarget
@@ -118,7 +118,7 @@ export default function PipelineFlow({
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="inline-flex items-center bg-[#F0F5F2] text-[#1A3E32] text-xs font-semibold px-3 py-0.5 rounded-full border border-[#D5E5DD] truncate max-w-[9rem]">
+                  <span className="inline-flex items-center bg-[#F0F5F2] text-[#1A3E32] text-xs font-semibold px-2.5 sm:px-3 py-0.5 rounded-full border border-[#D5E5DD] truncate max-w-[7.5rem] sm:max-w-[9rem]">
                     {stg.name}
                   </span>
                   {canDelete && (
@@ -140,11 +140,11 @@ export default function PipelineFlow({
               </div>
 
               <div>
-                <div className="text-base font-extrabold text-[#1A3E32] tracking-tight">
+                <div className="text-sm sm:text-base font-extrabold text-[#1A3E32] tracking-tight truncate">
                   {stg.title || "Invited"}
                 </div>
                 <div className="text-xs text-gray-500 font-medium flex items-center gap-1.5 mt-0.5">
-                  <FaUserFriends className="text-[#16730F] text-xs" />
+                  <FaUserFriends className="text-[#16730F] text-xs shrink-0" />
                   <span>
                     <strong className="text-gray-800">{stg.count}</strong>{" "}
                     candidates
@@ -159,12 +159,12 @@ export default function PipelineFlow({
           <button
             type="button"
             onClick={onAddStage}
-            className="bg-[#F8FAF9] border-2 border-dashed border-[#8EB398] hover:border-[#16730F] hover:bg-[#EEF5F0] rounded-2xl p-4 flex flex-col items-center justify-center min-h-[110px] transition-all group active:scale-98"
+            className="bg-[#F8FAF9] border-2 border-dashed border-[#8EB398] hover:border-[#16730F] hover:bg-[#EEF5F0] rounded-2xl p-4 flex flex-col items-center justify-center min-h-[105px] sm:min-h-[110px] transition-all group active:scale-98"
           >
             <div className="w-8 h-8 rounded-full bg-emerald-100 text-[#16730F] group-hover:bg-[#16730F] group-hover:text-white flex items-center justify-center text-sm font-bold transition-colors mb-1">
               <FaPlus />
             </div>
-            <span className="text-sm font-bold text-[#1A3E32] group-hover:text-[#16730F]">
+            <span className="text-xs sm:text-sm font-bold text-[#1A3E32] group-hover:text-[#16730F]">
               Add Stage
             </span>
           </button>
@@ -173,3 +173,4 @@ export default function PipelineFlow({
     </div>
   );
 }
+

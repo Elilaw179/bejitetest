@@ -22,6 +22,10 @@ import {
 } from "react-icons/fa";
 import NewsFeedLayout from "../components/layout/NewsFeedLayout";
 import ProfileCvSections from "../components/ProfileCvSections";
+import {
+  ProfileSkillsSection,
+  ProfileLinksSection,
+} from "../components/ProfileCvSections";
 import axiosInstance from "../utils/axiosInstance";
 import { fetchCurrentUserProfilePhoto } from "../services/profilePhotoService";
 import { fetchFullUserProfile } from "../services/fetchFullUserProfile";
@@ -835,8 +839,8 @@ const Profile = () => {
 
         {/* Main Dashboard Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Column */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Main Column – Content (before posts) */}
+          <div className="lg:col-span-2 space-y-6 order-1">
             {/* Bio / About Bento Section */}
             {(activeTab === "all" || activeTab === "about") &&
               (isRecruiterProfile || isJobseekerProfile) && (
@@ -944,22 +948,17 @@ const Profile = () => {
                 </div>
               )}
 
-            {/* CV Sections for Jobseekers */}
             {(activeTab === "all" || activeTab === "cv") &&
-              isJobseekerProfile && <ProfileCvSections cv={cvData} />}
-
-            {/* Feed & User Posts Stream */}
-            {(activeTab === "all" || activeTab === "posts") &&
-              viewedProfileId && (
-                <ProfilePostsSection
-                  userId={String(viewedProfileId)}
-                  currentUserId={user?.id}
+              isJobseekerProfile && (
+                <ProfileCvSections
+                  cv={cvData}
+                  exclude={["skills", "links"]}
                 />
               )}
           </div>
 
-          {/* Sidebar Column */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* Sidebar Column – appears before posts on mobile, right column on desktop */}
+          <div className="lg:col-span-1 lg:row-span-2 space-y-6 order-2">
             {/* Mutual Connections Bento Card */}
             {!isViewingOwnProfile &&
               Number(profileData.mutualConnectionCount) > 0 && (
@@ -1074,6 +1073,27 @@ const Profile = () => {
                 </div>
               </div>
             </div>
+
+            {/* Skills Sidebar Card (Jobseekers) */}
+            {isJobseekerProfile && (
+              <ProfileSkillsSection cv={cvData} />
+            )}
+
+            {/* Links Sidebar Card (Jobseekers) */}
+            {isJobseekerProfile && (
+              <ProfileLinksSection cv={cvData} />
+            )}
+          </div>
+
+          {/* Activity / Posts – last on mobile, below content on desktop */}
+          <div className="lg:col-span-2 space-y-6 order-3">
+            {(activeTab === "all" || activeTab === "posts") &&
+              viewedProfileId && (
+                <ProfilePostsSection
+                  userId={String(viewedProfileId)}
+                  currentUserId={user?.id}
+                />
+              )}
           </div>
         </div>
       </div>

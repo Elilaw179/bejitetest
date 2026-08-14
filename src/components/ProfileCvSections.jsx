@@ -26,8 +26,9 @@ const Section = ({ title, children, empty }) => (
   </div>
 );
 
-const ProfileCvSections = ({ cv, candidate = null }) => {
+const ProfileCvSections = ({ cv, candidate = null, exclude = [] }) => {
   if (!cv) return null;
+  const hidden = new Set(exclude);
 
   const bio = cv.bio;
   const skillItems = normalizeProfileSkills(
@@ -128,12 +129,14 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
         </ul>
       </Section>
 
-      <Section title="Skills" empty={!skillItems.length}>
-        <ProfileSkillsDisplay
-          skills={resolveProfileSkillSource({ cv, candidate })}
-          variant="card"
-        />
-      </Section>
+      {!hidden.has("skills") && (
+        <Section title="Skills" empty={!skillItems.length}>
+          <ProfileSkillsDisplay
+            skills={resolveProfileSkillSource({ cv, candidate })}
+            variant="card"
+          />
+        </Section>
+      )}
 
       <Section title="Work history" empty={!cv.workHistory?.length}>
         <ul className="space-y-4">
@@ -203,72 +206,158 @@ const ProfileCvSections = ({ cv, candidate = null }) => {
         </ul>
       </Section>
 
-      <Section
-        title="Links"
-        empty={
-          !cv.links ||
-          !["linkedin", "twitter", "instagram", "portfolio"].some(
-            (k) => cv.links[k],
-          )
-        }
-      >
-        <ul className="space-y-2 min-w-0">
-          {cv.links?.linkedin && (
-            <li className="min-w-0 break-words">
-              <span className="text-gray-500 text-sm">LinkedIn: </span>
-              <a
-                href={cv.links.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#16730F] hover:underline break-words"
-              >
-                {cv.links.linkedin}
-              </a>
-            </li>
-          )}
-          {cv.links?.twitter && (
-            <li className="min-w-0 break-words">
-              <span className="text-gray-500 text-sm">Twitter: </span>
-              <a
-                href={cv.links.twitter}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#16730F] hover:underline break-words"
-              >
-                {cv.links.twitter}
-              </a>
-            </li>
-          )}
-          {cv.links?.instagram && (
-            <li className="min-w-0 break-words">
-              <span className="text-gray-500 text-sm">Instagram: </span>
-              <a
-                href={cv.links.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#16730F] hover:underline break-words"
-              >
-                {cv.links.instagram}
-              </a>
-            </li>
-          )}
-          {cv.links?.portfolio && (
-            <li className="min-w-0 break-words">
-              <span className="text-gray-500 text-sm">Portfolio: </span>
-              <a
-                href={cv.links.portfolio}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#16730F] hover:underline break-words"
-              >
-                {cv.links.portfolio}
-              </a>
-            </li>
-          )}
-        </ul>
-      </Section>
+      {!hidden.has("links") && (
+        <Section
+          title="Links"
+          empty={
+            !cv.links ||
+            !["linkedin", "twitter", "instagram", "portfolio"].some(
+              (k) => cv.links[k],
+            )
+          }
+        >
+          <ul className="space-y-2 min-w-0">
+            {cv.links?.linkedin && (
+              <li className="min-w-0 break-words">
+                <span className="text-gray-500 text-sm">LinkedIn: </span>
+                <a
+                  href={cv.links.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#16730F] hover:underline break-words"
+                >
+                  {cv.links.linkedin}
+                </a>
+              </li>
+            )}
+            {cv.links?.twitter && (
+              <li className="min-w-0 break-words">
+                <span className="text-gray-500 text-sm">Twitter: </span>
+                <a
+                  href={cv.links.twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#16730F] hover:underline break-words"
+                >
+                  {cv.links.twitter}
+                </a>
+              </li>
+            )}
+            {cv.links?.instagram && (
+              <li className="min-w-0 break-words">
+                <span className="text-gray-500 text-sm">Instagram: </span>
+                <a
+                  href={cv.links.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#16730F] hover:underline break-words"
+                >
+                  {cv.links.instagram}
+                </a>
+              </li>
+            )}
+            {cv.links?.portfolio && (
+              <li className="min-w-0 break-words">
+                <span className="text-gray-500 text-sm">Portfolio: </span>
+                <a
+                  href={cv.links.portfolio}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#16730F] hover:underline break-words"
+                >
+                  {cv.links.portfolio}
+                </a>
+              </li>
+            )}
+          </ul>
+        </Section>
+      )}
     </>
   );
 };
 
 export default ProfileCvSections;
+
+/** Standalone Skills section for sidebar use */
+export const ProfileSkillsSection = ({ cv, candidate = null }) => {
+  if (!cv) return null;
+  const skillItems = normalizeProfileSkills(
+    resolveProfileSkillSource({ cv, candidate }),
+  );
+  if (!skillItems.length) return null;
+  return (
+    <Section title="Skills">
+      <ProfileSkillsDisplay
+        skills={resolveProfileSkillSource({ cv, candidate })}
+        variant="card"
+      />
+    </Section>
+  );
+};
+
+/** Standalone Links section for sidebar use */
+export const ProfileLinksSection = ({ cv }) => {
+  if (!cv) return null;
+  const hasLinks =
+    cv.links &&
+    ["linkedin", "twitter", "instagram", "portfolio"].some((k) => cv.links[k]);
+  if (!hasLinks) return null;
+  return (
+    <Section title="Links">
+      <ul className="space-y-2 min-w-0">
+        {cv.links?.linkedin && (
+          <li className="min-w-0 break-words">
+            <span className="text-gray-500 text-sm">LinkedIn: </span>
+            <a
+              href={cv.links.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#16730F] hover:underline break-words"
+            >
+              {cv.links.linkedin}
+            </a>
+          </li>
+        )}
+        {cv.links?.twitter && (
+          <li className="min-w-0 break-words">
+            <span className="text-gray-500 text-sm">Twitter: </span>
+            <a
+              href={cv.links.twitter}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#16730F] hover:underline break-words"
+            >
+              {cv.links.twitter}
+            </a>
+          </li>
+        )}
+        {cv.links?.instagram && (
+          <li className="min-w-0 break-words">
+            <span className="text-gray-500 text-sm">Instagram: </span>
+            <a
+              href={cv.links.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#16730F] hover:underline break-words"
+            >
+              {cv.links.instagram}
+            </a>
+          </li>
+        )}
+        {cv.links?.portfolio && (
+          <li className="min-w-0 break-words">
+            <span className="text-gray-500 text-sm">Portfolio: </span>
+            <a
+              href={cv.links.portfolio}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#16730F] hover:underline break-words"
+            >
+              {cv.links.portfolio}
+            </a>
+          </li>
+        )}
+      </ul>
+    </Section>
+  );
+};
