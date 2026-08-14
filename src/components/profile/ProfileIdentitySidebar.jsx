@@ -17,6 +17,8 @@ import {
 import { formatDisplayText } from "../../utils/displayFormatUtils";
 import { profileAvatarSrc } from "../../utils/profilePhotoUrl";
 
+const MUTUAL_IDENTITY_PREVIEW = 3;
+
 const formatConnectionCount = (count) => {
   const n = Number(count);
   if (!Number.isFinite(n) || n <= 0) return "0";
@@ -195,15 +197,31 @@ const ProfileIdentitySidebar = ({
                 type="button"
                 onClick={() => navigate("/connection")}
                 className="w-full flex items-center justify-center gap-2 group/conn hover:text-[#16730F] transition-colors cursor-pointer py-1"
-                title="View all your connections"
+                title={
+                  profileData?.isCorporate ||
+                  (String(profileData?.role || "").toLowerCase() ===
+                    "recruiter" &&
+                    String(profileData?.mode || "").toLowerCase() ===
+                      "corporate")
+                    ? "View all your followers"
+                    : "View all your connections"
+                }
               >
                 <span className="text-xl font-black text-slate-900 group-hover/conn:text-[#16730F] tabular-nums transition-colors">
                   {formatConnectionCount(profileData?.connectionCount)}
                 </span>
                 <span className="text-[10.5px] text-slate-500 group-hover/conn:text-[#16730F] font-bold uppercase tracking-wider transition-colors">
-                  {Number(profileData?.connectionCount) === 1
-                    ? "Connection"
-                    : "Connections"}
+                  {profileData?.isCorporate ||
+                  (String(profileData?.role || "").toLowerCase() ===
+                    "recruiter" &&
+                    String(profileData?.mode || "").toLowerCase() ===
+                      "corporate")
+                    ? Number(profileData?.connectionCount) === 1
+                      ? "Follower"
+                      : "Followers"
+                    : Number(profileData?.connectionCount) === 1
+                      ? "Connection"
+                      : "Connections"}
                 </span>
               </button>
             ) : (
@@ -213,9 +231,17 @@ const ProfileIdentitySidebar = ({
                   {formatConnectionCount(profileData?.connectionCount)}
                 </span>
                 <span className="text-[10.5px] text-slate-500 font-bold uppercase tracking-wider">
-                  {Number(profileData?.connectionCount) === 1
-                    ? "Connection"
-                    : "Connections"}
+                  {profileData?.isCorporate ||
+                  (String(profileData?.role || "").toLowerCase() ===
+                    "recruiter" &&
+                    String(profileData?.mode || "").toLowerCase() ===
+                      "corporate")
+                    ? Number(profileData?.connectionCount) === 1
+                      ? "Follower"
+                      : "Followers"
+                    : Number(profileData?.connectionCount) === 1
+                      ? "Connection"
+                      : "Connections"}
                 </span>
               </div>
             )}
@@ -248,7 +274,7 @@ const ProfileIdentitySidebar = ({
                 <div className="flex items-center gap-2.5">
                   <div className="flex items-center -space-x-2.5 overflow-hidden py-1 shrink-0">
                     {(profileData.mutualConnections || [])
-                      .slice(0, 3)
+                      .slice(0, MUTUAL_IDENTITY_PREVIEW)
                       .map((person) => {
                         const name = [person?.firstName, person?.lastName]
                           .filter(Boolean)
@@ -274,7 +300,8 @@ const ProfileIdentitySidebar = ({
                           </button>
                         );
                       })}
-                    {Number(profileData.mutualConnectionCount) > 3 && (
+                    {Number(profileData.mutualConnectionCount) >
+                      MUTUAL_IDENTITY_PREVIEW && (
                       <button
                         type="button"
                         onClick={onOpenMutualModal}
@@ -283,7 +310,8 @@ const ProfileIdentitySidebar = ({
                       >
                         +
                         {formatConnectionCount(
-                          Number(profileData.mutualConnectionCount) - 3,
+                          Number(profileData.mutualConnectionCount) -
+                            MUTUAL_IDENTITY_PREVIEW,
                         )}
                       </button>
                     )}
@@ -296,13 +324,16 @@ const ProfileIdentitySidebar = ({
                         profileData.mutualConnections,
                       )}
                     </p>
-                    <button
-                      type="button"
-                      onClick={onOpenMutualModal}
-                      className="text-[11px] font-bold text-[#16730F] hover:underline mt-0.5 inline-block cursor-pointer"
-                    >
-                      See all
-                    </button>
+                    {Number(profileData.mutualConnectionCount) >
+                      MUTUAL_IDENTITY_PREVIEW && (
+                      <button
+                        type="button"
+                        onClick={onOpenMutualModal}
+                        className="text-[11px] font-bold text-[#16730F] hover:underline mt-0.5 inline-block cursor-pointer"
+                      >
+                        See all
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

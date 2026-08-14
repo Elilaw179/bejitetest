@@ -25,6 +25,9 @@ export function normalizeProfileData(raw) {
     company_name: raw.company_name ?? raw.companyName,
     nickname: raw.nickname,
     role: raw.role,
+    hasVerifiedBadge: Boolean(
+      raw.hasVerifiedBadge ?? raw.has_verified_badge,
+    ),
     website: raw.website,
     linkedin_url: raw.linkedin_url ?? raw.linkedin ?? raw.links?.linkedin ?? null,
     twitter_url: raw.twitter_url ?? raw.twitter ?? raw.links?.twitter ?? null,
@@ -42,6 +45,18 @@ export function normalizeProfileData(raw) {
         : typeof raw.connection_count === "number"
           ? raw.connection_count
           : Number(raw.connectionCount ?? raw.connection_count) || 0,
+    followerCount:
+      typeof raw.followerCount === "number"
+        ? raw.followerCount
+        : typeof raw.follower_count === "number"
+          ? raw.follower_count
+          : Number(raw.followerCount ?? raw.follower_count) || 0,
+    mode: raw.mode ?? null,
+    isCorporate: Boolean(
+      raw.isCorporate ??
+        (String(raw.role || "").toLowerCase() === "recruiter" &&
+          String(raw.mode || "").toLowerCase() === "corporate"),
+    ),
     mutualConnectionCount:
       typeof raw.mutualConnectionCount === "number"
         ? raw.mutualConnectionCount

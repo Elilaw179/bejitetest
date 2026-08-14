@@ -3,8 +3,10 @@ import axiosInstance from "../utils/axiosInstance";
 import { getUser } from "../utils/tokenManager";
 import { getUserPosts } from "../services/postsApi";
 import { getConnections } from "../services/connectionsApi";
+import { getMyFollowers } from "../services/followsApi";
 import { fetchFullUserProfile } from "../services/fetchFullUserProfile";
 import { unwrapAuthProfileBody } from "../utils/profileUtils";
+import { resolveRecruiterMode } from "../utils/recruiterProfilePaths";
 
 async function resolveUserNickname(user) {
   if (!user?.id) return user;
@@ -53,14 +55,26 @@ export default function useRecruitmentRightStats() {
       })
       .catch((err) => console.error("Error fetching posts:", err));
 
-    getConnections(1, 1)
+    const isCorporate =
+      String(user.role || "").toLowerCase() === "recruiter" &&
+      resolveRecruiterMode(user) === "corporate";
+
+    const loadNetworkCount = isCorporate
+      ? getMyFollowers(1, 1)
+      : getConnections(1, 1);
+
+    loadNetworkCount
       .then((data) => {
         const total = data?.pagination?.total;
         setConnectionCount(
-          typeof total === "number" ? total : data.connections?.length || 0,
+          typeof total === "number"
+            ? total
+            : isCorporate
+              ? data.users?.length || 0
+              : data.connections?.length || 0,
         );
       })
-      .catch((err) => console.error("Error fetching connections:", err));
+      .catch((err) => console.error("Error fetching network count:", err));
   }, []);
 
   return { userData, postCount, connectionCount };

@@ -287,10 +287,11 @@ const Notifications = () => {
       return
     }
 
-    // Connection request or accepted — open connections page
+    // Connection request/accepted or new follower — open network page
     if (
       notification.type === 'connection_request' ||
-      notification.type === 'connection_accepted'
+      notification.type === 'connection_accepted' ||
+      notification.type === 'user_followed'
     ) {
       navigate('/connection')
       return
@@ -454,6 +455,8 @@ const Notifications = () => {
         return '🤝'
       case 'connection_accepted':
         return '✅'
+      case 'user_followed':
+        return '👤'
       default:
         return '🔔'
     }

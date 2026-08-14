@@ -5,6 +5,7 @@ import UserList from "../../components/UserList";
 import { discoverRecruitersForSignup } from "../../services/signupApi";
 import axiosPublic from "../../services/axiosPublic";
 import * as connectionsApi from "../../services/connectionsApi";
+import * as followsApi from "../../services/followsApi";
 import { getProfileImageUrl } from "../../utils/profileImageUtils";
 import {
   SIGNUP_BTN_DISABLED,
@@ -19,6 +20,7 @@ const mapRecruiterForList = (user) => ({
   role: user.companyName || user.jobTitle || "Recruiter",
   img:
     getProfileImageUrl(user.profilePhoto) || "/assets/images/photo_placeholder.png",
+  isCorporate: Boolean(user.isCorporate || user.mode === "corporate"),
 });
 
 const JobConnection = () => {
@@ -135,18 +137,25 @@ const JobConnection = () => {
         localStorage.setItem("user", JSON.stringify(responseUser));
       }
 
-      const connectionResults = await Promise.allSettled(
-        addedUsers.map((userId) => connectionsApi.sendConnectionRequest(userId))
+      const byId = new Map(users.map((u) => [String(u.id), u]));
+      const networkResults = await Promise.allSettled(
+        addedUsers.map((userId) => {
+          const target = byId.get(String(userId));
+          if (target?.isCorporate) {
+            return followsApi.followUser(userId);
+          }
+          return connectionsApi.sendConnectionRequest(userId);
+        }),
       );
 
-      const failedCount = connectionResults.filter((r) => r.status === "rejected").length;
+      const failedCount = networkResults.filter((r) => r.status === "rejected").length;
       if (failedCount > 0) {
         console.warn(
-          `${failedCount} connection request(s) failed after signup`,
-          connectionResults
+          `${failedCount} follow/connection request(s) failed after signup`,
+          networkResults,
         );
         toast.warn(
-          `Signup complete, but ${failedCount} connection request(s) could not be sent.`
+          `Signup complete, but ${failedCount} request(s) could not be sent.`,
         );
       }
 
@@ -178,7 +187,7 @@ const JobConnection = () => {
             Connect With Recruiters
           </p>
           <p className="text-[#333] font-normal text-sm sm:text-base md:text-lg mt-2">
-            Follow at least 10 recruiters to continue the signup process
+            Follow or connect with at least 10 recruiters to continue
           </p>
         </div>
 

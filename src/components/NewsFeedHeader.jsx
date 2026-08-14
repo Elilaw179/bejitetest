@@ -28,7 +28,7 @@ import {
   profileAvatarSrc,
   PROFILE_PHOTO_PLACEHOLDER,
 } from "../utils/profilePhotoUrl";
-import { getRecruiterEditProfilePath } from "../utils/recruiterProfilePaths";
+import { getRecruiterEditProfilePath, isCorporateRecruiter } from "../utils/recruiterProfilePaths";
 import { pickAuthorProfilePhoto } from "../utils/profileImageUtils";
 import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
@@ -236,6 +236,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                 lastName: u.lastName,
                 email: u.email,
                 username: u.username,
+                role: u.role || null,
                 subtitle: u.jobTitle || "Professional",
                 image: pickAuthorProfilePhoto(u),
                 url: `/user-profile/${u.id}`,
@@ -265,6 +266,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
                       lastName: candidate.last_name,
                       email: candidate.email,
                       username: candidate.username,
+                      role: candidate.role || null,
                       subtitle:
                         formatDisplayText(candidate.title) || "Professional",
                       image: pickAuthorProfilePhoto(candidate),
@@ -305,12 +307,25 @@ const NewsFeedHeader = ({ user: propUser }) => {
       if (requestId !== searchRequestIdRef.current) return;
 
       const combinedResults = results.flatMap((result) => result.results);
-      const seen = new Set();
-      const deduped = combinedResults.filter((item) => {
-        if (!item?.id || seen.has(String(item.id))) return false;
-        seen.add(String(item.id));
-        return true;
-      });
+      const byId = new Map();
+      for (const item of combinedResults) {
+        if (!item?.id) continue;
+        const key = `${item.type || "item"}:${String(item.id)}`;
+        const existing = byId.get(key);
+        if (!existing) {
+          byId.set(key, item);
+          continue;
+        }
+        // Prefer the hit that carries a real account role (esp. recruiter).
+        const existingRole = String(existing.role || "").toLowerCase();
+        const nextRole = String(item.role || "").toLowerCase();
+        const preferNext =
+          (!existingRole && nextRole) ||
+          (nextRole === "recruiter" && existingRole !== "recruiter") ||
+          (nextRole === "employer" && existingRole !== "employer");
+        if (preferNext) byId.set(key, item);
+      }
+      const deduped = Array.from(byId.values());
       const publicResults = filterAdminSearchResults(deduped);
       setSearchResults(publicResults.slice(0, 10));
       setShowSearchResults(publicResults.length > 0);
@@ -461,8 +476,13 @@ const NewsFeedHeader = ({ user: propUser }) => {
   }, []);
 
   // Fetch connection request count on mount and periodically
-  const fetchConnectionRequestCount = async () => {
+  const fetchConnectionRequestCount = useCallback(async () => {
     try {
+      if (isCorporateRecruiter(user)) {
+        setConnectionRequestCount(0);
+        return;
+      }
+
       const token =
         localStorage.getItem("accessToken") ||
         localStorage.getItem("authToken") ||
@@ -488,13 +508,13 @@ const NewsFeedHeader = ({ user: propUser }) => {
     } catch (err) {
       console.error("Error fetching connection request count:", err);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchConnectionRequestCount();
     const interval = setInterval(fetchConnectionRequestCount, 30000);
     return () => clearInterval(interval);
-  }, [location.pathname]);
+  }, [location.pathname, fetchConnectionRequestCount]);
 
   const clearNewJobVacancyCount = () => {
     markJobVacanciesSeen();
@@ -673,6 +693,12 @@ const NewsFeedHeader = ({ user: propUser }) => {
     if (name === "invite-friends") return "Invite Friends";
     if (name === "adpro") return "AdPro";
     if (name === "job-vacancy") return "Job Vacancy";
+    if (name === "connection") {
+      return isCorporateRecruiter(user) ? "Followers" : "Connections";
+    }
+    if (name === "CHAT") return "Chats";
+    if (name === "notifications") return "Notifications";
+    if (name === "recruitment") return "Recruitment";
     return name.toLowerCase();
   };
 

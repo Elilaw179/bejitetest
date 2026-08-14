@@ -50,6 +50,10 @@ import {
   formatDisplayHandle,
 } from "../utils/personDisplayName";
 import { formatDisplayText } from "../utils/displayFormatUtils";
+import {
+  getVerifiedBadgeLabel,
+  userHasVerifiedBadge,
+} from "../utils/verifiedBadge";
 import ProfileConnectActions from "../components/ProfileConnectActions";
 import ProfilePostsSection from "../components/ProfilePostsSection";
 import DisplayNameWithBadge from "../components/DisplayNameWithBadge";
@@ -57,6 +61,8 @@ import MutualConnectionsModal from "../components/MutualConnectionsModal";
 
 const ABOUT_CHAR_LIMIT = 240;
 const ABOUT_WORD_LIMIT = 35;
+
+const MUTUAL_SIDEBAR_PREVIEW = 4;
 
 const formatConnectionCount = (count) => {
   const n = Number(count);
@@ -706,10 +712,6 @@ const Profile = () => {
                       </span>
                     </span>
                   )}
-
-                  <span className="inline-flex items-center gap-1 text-emerald-600 font-bold text-xs">
-                    <FaCheckCircle className="text-xs" /> Verified Member
-                  </span>
                 </div>
               </div>
             </div>
@@ -721,16 +723,32 @@ const Profile = () => {
                   type="button"
                   onClick={() => navigate("/connection")}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-5 py-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-[#16730F] text-xs sm:text-sm font-bold border border-emerald-200 transition-all cursor-pointer shadow-2xs"
-                  title="View all your connections"
+                  title={
+                    profileData.isCorporate ||
+                    (String(profileData.role || "").toLowerCase() ===
+                      "recruiter" &&
+                      String(profileData.mode || "").toLowerCase() ===
+                        "corporate")
+                      ? "View all your followers"
+                      : "View all your connections"
+                  }
                 >
                   <FaUserFriends className="text-base" />
                   <span className="text-lg font-extrabold text-[#16730F]">
                     {formatConnectionCount(profileData.connectionCount)}
                   </span>
                   <span className="text-slate-600 font-medium">
-                    {Number(profileData.connectionCount) === 1
-                      ? "Connection"
-                      : "Connections"}
+                    {profileData.isCorporate ||
+                    (String(profileData.role || "").toLowerCase() ===
+                      "recruiter" &&
+                      String(profileData.mode || "").toLowerCase() ===
+                        "corporate")
+                      ? Number(profileData.connectionCount) === 1
+                        ? "Follower"
+                        : "Followers"
+                      : Number(profileData.connectionCount) === 1
+                        ? "Connection"
+                        : "Connections"}
                   </span>
                 </button>
               ) : (
@@ -740,9 +758,17 @@ const Profile = () => {
                     {formatConnectionCount(profileData.connectionCount)}
                   </span>
                   <span className="text-slate-600 font-medium">
-                    {Number(profileData.connectionCount) === 1
-                      ? "Connection"
-                      : "Connections"}
+                    {profileData.isCorporate ||
+                    (String(profileData.role || "").toLowerCase() ===
+                      "recruiter" &&
+                      String(profileData.mode || "").toLowerCase() ===
+                        "corporate")
+                      ? Number(profileData.connectionCount) === 1
+                        ? "Follower"
+                        : "Followers"
+                      : Number(profileData.connectionCount) === 1
+                        ? "Connection"
+                        : "Connections"}
                   </span>
                 </div>
               )}
@@ -836,10 +862,11 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Main Dashboard Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main dashboard: CV + activity stack on the left so a tall sidebar cannot open a gap between them. */}
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-3 lg:items-start">
+          <div className="contents lg:col-span-2 lg:flex lg:flex-col lg:gap-6">
           {/* Main Column – Content (before posts) */}
-          <div className="lg:col-span-2 space-y-6 order-1">
+          <div className="space-y-6 order-1">
             {/* Bio / About Bento Section */}
             {(activeTab === "all" || activeTab === "about") &&
               (isRecruiterProfile || isJobseekerProfile) && (
@@ -951,8 +978,20 @@ const Profile = () => {
               )}
           </div>
 
+          {/* Activity / Posts – last on mobile, below content on desktop */}
+          <div className="space-y-6 order-3">
+            {(activeTab === "all" || activeTab === "posts") &&
+              viewedProfileId && (
+                <ProfilePostsSection
+                  userId={String(viewedProfileId)}
+                  currentUserId={user?.id}
+                />
+              )}
+          </div>
+          </div>
+
           {/* Sidebar Column – appears before posts on mobile, right column on desktop */}
-          <div className="lg:col-span-1 lg:row-span-2 space-y-6 order-2">
+          <div className="lg:col-span-1 space-y-6 order-2">
             {/* Mutual Connections Bento Card */}
             {!isViewingOwnProfile &&
               Number(profileData.mutualConnectionCount) > 0 && (
@@ -970,7 +1009,7 @@ const Profile = () => {
                   <div className="space-y-4">
                     <div className="flex items-center -space-x-3 overflow-hidden py-1 justify-center sm:justify-start">
                       {(profileData.mutualConnections || [])
-                        .slice(0, 4)
+                        .slice(0, MUTUAL_SIDEBAR_PREVIEW)
                         .map((person) => {
                           const name = [person?.firstName, person?.lastName]
                             .filter(Boolean)
@@ -996,7 +1035,8 @@ const Profile = () => {
                             </button>
                           );
                         })}
-                      {Number(profileData.mutualConnectionCount) > 4 && (
+                      {Number(profileData.mutualConnectionCount) >
+                        MUTUAL_SIDEBAR_PREVIEW && (
                         <button
                           type="button"
                           onClick={() => setShowMutualConnections(true)}
@@ -1005,7 +1045,8 @@ const Profile = () => {
                         >
                           +
                           {formatConnectionCount(
-                            Number(profileData.mutualConnectionCount) - 4,
+                            Number(profileData.mutualConnectionCount) -
+                              MUTUAL_SIDEBAR_PREVIEW,
                           )}
                         </button>
                       )}
@@ -1018,13 +1059,16 @@ const Profile = () => {
                       )}
                     </p>
 
-                    <button
-                      type="button"
-                      onClick={() => setShowMutualConnections(true)}
-                      className="w-full py-2.5 bg-slate-50 hover:bg-emerald-50 text-[#16730F] font-bold text-xs rounded-xl border border-slate-200 hover:border-emerald-200 transition-all cursor-pointer text-center"
-                    >
-                      View All Mutuals
-                    </button>
+                    {Number(profileData.mutualConnectionCount) >
+                      MUTUAL_SIDEBAR_PREVIEW && (
+                      <button
+                        type="button"
+                        onClick={() => setShowMutualConnections(true)}
+                        className="w-full py-2.5 bg-slate-50 hover:bg-emerald-50 text-[#16730F] font-bold text-xs rounded-xl border border-slate-200 hover:border-emerald-200 transition-all cursor-pointer text-center"
+                      >
+                        View All Mutuals
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -1055,12 +1099,15 @@ const Profile = () => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between py-1.5 border-b border-slate-50">
-                  <span className="text-slate-500 font-medium">Status</span>
-                  <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
-                    <FaCheckCircle className="text-xs" /> Verified Member
-                  </span>
-                </div>
+                {userHasVerifiedBadge(profileData) && (
+                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50">
+                    <span className="text-slate-500 font-medium">Status</span>
+                    <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
+                      <FaCheckCircle className="text-xs" />
+                      {getVerifiedBadgeLabel(profileData)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1069,17 +1116,6 @@ const Profile = () => {
 
             {/* Links Sidebar Card (Jobseekers) */}
             {isJobseekerProfile && <ProfileLinksSection cv={cvData} />}
-          </div>
-
-          {/* Activity / Posts – last on mobile, below content on desktop */}
-          <div className="lg:col-span-2 space-y-6 order-3">
-            {(activeTab === "all" || activeTab === "posts") &&
-              viewedProfileId && (
-                <ProfilePostsSection
-                  userId={String(viewedProfileId)}
-                  currentUserId={user?.id}
-                />
-              )}
           </div>
         </div>
       </div>
