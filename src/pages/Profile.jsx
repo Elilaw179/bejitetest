@@ -714,7 +714,6 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Quick Metrics & Actions Hub */}
             <div className="flex flex-col sm:flex-row lg:flex-col items-center lg:items-end justify-between gap-4 shrink-0 w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100">
               {/* Connections Stat Widget */}
               {isViewingOwnProfile ? (
@@ -867,9 +866,7 @@ const Profile = () => {
                         {needsTruncation && (
                           <button
                             type="button"
-                            onClick={() =>
-                              setIsAboutExpanded(!isAboutExpanded)
-                            }
+                            onClick={() => setIsAboutExpanded(!isAboutExpanded)}
                             className="mt-3 text-[#16730F] hover:text-[#145a0c] font-bold text-xs sm:text-sm transition-colors inline-flex items-center gap-1.5 group cursor-pointer"
                           >
                             <span>
@@ -950,10 +947,7 @@ const Profile = () => {
 
             {(activeTab === "all" || activeTab === "cv") &&
               isJobseekerProfile && (
-                <ProfileCvSections
-                  cv={cvData}
-                  exclude={["skills", "links"]}
-                />
+                <ProfileCvSections cv={cvData} exclude={["skills", "links"]} />
               )}
           </div>
 
@@ -969,9 +963,7 @@ const Profile = () => {
                       Mutual Connections
                     </span>
                     <span className="text-xs font-extrabold text-[#16730F] bg-emerald-100/70 px-2.5 py-0.5 rounded-full">
-                      {formatConnectionCount(
-                        profileData.mutualConnectionCount,
-                      )}
+                      {formatConnectionCount(profileData.mutualConnectionCount)}
                     </span>
                   </div>
 
@@ -993,9 +985,7 @@ const Profile = () => {
                               }
                               className="relative h-10 w-10 rounded-full border-2 border-white shadow-md overflow-hidden bg-slate-200 hover:z-10 focus:z-10 focus:outline-none transition-transform hover:scale-110 cursor-pointer"
                               title={
-                                name
-                                  ? `View ${name}'s profile`
-                                  : "View profile"
+                                name ? `View ${name}'s profile` : "View profile"
                               }
                             >
                               <img
@@ -1075,14 +1065,10 @@ const Profile = () => {
             </div>
 
             {/* Skills Sidebar Card (Jobseekers) */}
-            {isJobseekerProfile && (
-              <ProfileSkillsSection cv={cvData} />
-            )}
+            {isJobseekerProfile && <ProfileSkillsSection cv={cvData} />}
 
             {/* Links Sidebar Card (Jobseekers) */}
-            {isJobseekerProfile && (
-              <ProfileLinksSection cv={cvData} />
-            )}
+            {isJobseekerProfile && <ProfileLinksSection cv={cvData} />}
           </div>
 
           {/* Activity / Posts – last on mobile, below content on desktop */}
