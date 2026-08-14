@@ -493,43 +493,61 @@ const Notifications = () => {
 
   return (
     <NewsFeedLayout showSidebars={false}>
-      <div className="max-w-2xl mx-auto p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-semibold text-[#16730F]">
+      <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 py-4 min-w-0 overflow-x-hidden">
+        <div className="flex items-center justify-between gap-3 mb-4 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold text-[#16730F] truncate">
             Notifications
           </h1>
           {!showInvitations && notifications.some((n) => !n.is_read) && (
             <button
               type="button"
               onClick={markAllAsRead}
-              className="text-sm font-medium text-[#16730F] hover:underline"
+              className="shrink-0 text-xs sm:text-sm font-medium text-[#16730F] hover:underline whitespace-nowrap"
             >
-              Mark all as read
+              Mark all read
             </button>
           )}
         </div>
 
-        {/* Toggle between Notifications and Invitations */}
-        <div className="flex justify-center gap-2 mb-6">
+        {/* Equal-width segmented control — short labels on narrow screens so recruiter copy doesn't overflow */}
+        <div
+          role="tablist"
+          aria-label="Notification views"
+          className="flex w-full gap-1.5 p-1 mb-5 rounded-xl bg-gray-200/80 min-w-0"
+        >
           <button
+            type="button"
+            role="tab"
+            aria-selected={!showInvitations}
             onClick={() => setShowInvitations(false)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${!showInvitations
-              ? 'bg-[#16730F] text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+            className={`flex-1 min-w-0 px-2 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
+              !showInvitations
+                ? 'bg-[#16730F] text-white shadow-sm'
+                : 'text-gray-700 hover:bg-white/70'
+            }`}
           >
             Notifications
           </button>
           <button
+            type="button"
+            role="tab"
+            aria-selected={showInvitations}
             onClick={() => setShowInvitations(true)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${showInvitations
-              ? 'bg-[#16730F] text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+            className={`flex-1 min-w-0 px-2 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors inline-flex items-center justify-center gap-1.5 ${
+              showInvitations
+                ? 'bg-[#16730F] text-white shadow-sm'
+                : 'text-gray-700 hover:bg-white/70'
+            }`}
           >
-            {isRecruiter ? 'Sent Interview Invitations' : 'My Interview Invitations'}
+            <span className="truncate">Invitations</span>
             {pendingInvitationCount > 0 && (
-              <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+              <span
+                className={`shrink-0 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                  showInvitations
+                    ? 'bg-white text-[#16730F]'
+                    : 'bg-red-500 text-white'
+                }`}
+              >
                 {pendingInvitationCount}
               </span>
             )}
@@ -538,14 +556,14 @@ const Notifications = () => {
 
           {/* Interview Invitations View */}
           {showInvitations ? (
-            <div>
-              <h2 className="text-lg font-semibold text-gray-700 mb-2">
-                {isRecruiter ? 'Interview invitations you sent' : 'Interview invitations you received'}
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-1">
+                {isRecruiter ? 'Invitations you sent' : 'Invitations you received'}
               </h2>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-xs sm:text-sm text-gray-500 mb-4">
                 {isRecruiter
-                  ? 'Track every invite you have sent to candidates, including pending, accepted, declined, and expired.'
-                  : 'View every interview invite sent to you, and respond to pending ones.'}
+                  ? 'Track pending, accepted, declined, and expired invites.'
+                  : 'View invites sent to you and respond to pending ones.'}
               </p>
 
               <div className="flex flex-wrap gap-2 mb-4">
@@ -554,7 +572,7 @@ const Notifications = () => {
                     key={filter.value}
                     type="button"
                     onClick={() => setInvitationStatusFilter(filter.value)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
                       invitationStatusFilter === filter.value
                         ? 'bg-[#16730F] text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -566,7 +584,7 @@ const Notifications = () => {
               </div>
 
               {invitationsError && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-center">
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-center text-sm">
                   {invitationsError}
                 </div>
               )}
@@ -586,67 +604,94 @@ const Notifications = () => {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 min-w-0">
                   {invitations.map((invitation) => (
                     <div
                       key={invitation.id}
-                      className="bg-white border border-gray-200 rounded-lg p-4"
+                      className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 min-w-0 overflow-hidden"
                     >
-                      <div className="flex justify-between items-start gap-3">
-                        <div>
-                          <h3 className="font-medium text-[#16730F]">
-                            {invitation.job_title || 'Interview Invitation'}
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {isRecruiter ? (
-                              <>
-                                To: {invitation.first_name} {invitation.last_name}
-                                {invitation.candidate_title ? ` · ${invitation.candidate_title}` : ''}
-                              </>
-                            ) : (
-                              <>
-                                From: {invitation.employer_first_name} {invitation.employer_last_name}
-                                {invitation.company_name && ` (${invitation.company_name})`}
-                              </>
-                            )}
-                          </p>
-                          <div className="mt-2 text-sm text-gray-500">
-                            <p><strong>Date:</strong> {new Date(invitation.interview_date).toLocaleDateString()}</p>
-                            <p><strong>Time:</strong> {formatInvitationTime(invitation.interview_time)}</p>
-                            <p><strong>Type:</strong> {invitation.interview_type === 'online' ? 'Online (Video Call)' : 'In-Person'}</p>
-                            {invitation.interview_type === 'online' && invitation.meeting_link && (
-                              <p><strong>Link:</strong> <a href={invitation.meeting_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline break-all">{invitation.meeting_link}</a></p>
-                            )}
-                            {invitation.interview_type === 'offline' && invitation.venue && (
-                              <p><strong>Venue:</strong> {invitation.venue}</p>
-                            )}
-                            {invitation.message && (
-                              <p className="mt-2"><strong>Message:</strong> {invitation.message}</p>
-                            )}
-                            {invitation.status === 'pending' && invitation.expires_at && (
-                              <p className="mt-2 text-red-500">
-                                Expires: {new Date(invitation.expires_at).toLocaleString()}
-                              </p>
-                            )}
-                          </div>
-                        </div>
+                      <div className="flex items-start justify-between gap-2 min-w-0">
+                        <h3 className="font-medium text-[#16730F] text-sm sm:text-base break-words min-w-0 flex-1">
+                          {invitation.job_title || 'Interview Invitation'}
+                        </h3>
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 ${getInvitationStatusClasses(invitation.status)}`}
+                          className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-medium shrink-0 ${getInvitationStatusClasses(invitation.status)}`}
                         >
                           {invitation.status.charAt(0).toUpperCase() + invitation.status.slice(1)}
                         </span>
                       </div>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1 break-words">
+                        {isRecruiter ? (
+                          <>
+                            To: {invitation.first_name} {invitation.last_name}
+                            {invitation.candidate_title ? ` · ${invitation.candidate_title}` : ''}
+                          </>
+                        ) : (
+                          <>
+                            From: {invitation.employer_first_name}{' '}
+                            {invitation.employer_last_name}
+                            {invitation.company_name && ` (${invitation.company_name})`}
+                          </>
+                        )}
+                      </p>
+                      <div className="mt-2 text-xs sm:text-sm text-gray-500 space-y-0.5 break-words">
+                        <p>
+                          <strong>Date:</strong>{' '}
+                          {new Date(invitation.interview_date).toLocaleDateString()}
+                        </p>
+                        <p>
+                          <strong>Time:</strong>{' '}
+                          {formatInvitationTime(invitation.interview_time)}
+                        </p>
+                        <p>
+                          <strong>Type:</strong>{' '}
+                          {invitation.interview_type === 'online'
+                            ? 'Online (Video Call)'
+                            : 'In-Person'}
+                        </p>
+                        {invitation.interview_type === 'online' &&
+                          invitation.meeting_link && (
+                            <p>
+                              <strong>Link:</strong>{' '}
+                              <a
+                                href={invitation.meeting_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 underline break-all"
+                              >
+                                {invitation.meeting_link}
+                              </a>
+                            </p>
+                          )}
+                        {invitation.interview_type === 'offline' && invitation.venue && (
+                          <p>
+                            <strong>Venue:</strong> {invitation.venue}
+                          </p>
+                        )}
+                        {invitation.message && (
+                          <p className="mt-1">
+                            <strong>Message:</strong> {invitation.message}
+                          </p>
+                        )}
+                        {invitation.status === 'pending' && invitation.expires_at && (
+                          <p className="mt-1 text-red-500">
+                            Expires: {new Date(invitation.expires_at).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
                       {!isRecruiter && invitation.status === 'pending' && (
-                        <div className="flex gap-3 mt-4">
+                        <div className="flex gap-2 sm:gap-3 mt-3">
                           <button
+                            type="button"
                             onClick={() => handleDecline(invitation.id)}
-                            className="flex-1 py-2 px-4 border-2 border-red-500 text-red-500 rounded-lg font-medium hover:bg-red-50 transition-colors"
+                            className="flex-1 py-2 px-3 border-2 border-red-500 text-red-500 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
                           >
                             Decline
                           </button>
                           <button
+                            type="button"
                             onClick={() => handleAccept(invitation.id)}
-                            className="flex-1 py-2 px-4 bg-[#16730F] text-white rounded-lg font-medium hover:bg-[#125a0c] transition-colors"
+                            className="flex-1 py-2 px-3 bg-[#16730F] text-white rounded-lg text-sm font-medium hover:bg-[#125a0c] transition-colors"
                           >
                             Accept
                           </button>
@@ -657,7 +702,13 @@ const Notifications = () => {
                   <FeedLoadMoreButton
                     hasMore={invitationsHasMore}
                     loading={invitationsLoadingMore}
-                    onLoadMore={() => fetchInvitations(invitationsPage + 1, true, invitationStatusFilter)}
+                    onLoadMore={() =>
+                      fetchInvitations(
+                        invitationsPage + 1,
+                        true,
+                        invitationStatusFilter,
+                      )
+                    }
                     label="Load more invitations"
                   />
                 </div>
@@ -665,9 +716,9 @@ const Notifications = () => {
             </div>
           ) : (
             /* Notifications View */
-            <>
+            <div className="min-w-0">
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-center">
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-center text-sm">
                   {error}
                 </div>
               )}
@@ -678,28 +729,34 @@ const Notifications = () => {
                   <p className="text-gray-500 mt-2">No notifications yet</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 min-w-0">
                   {notifications.map((notification) => (
                     <button
                       type="button"
                       key={notification.id}
                       onClick={() => handleNotificationClick(notification)}
-                      className={`w-full text-left p-4 rounded-lg cursor-pointer transition-colors select-none [-webkit-tap-highlight-color:transparent] touch-manipulation active:bg-gray-50 ${notification.is_read
+                      className={`w-full min-w-0 text-left p-3 sm:p-4 rounded-lg cursor-pointer transition-colors select-none [-webkit-tap-highlight-color:transparent] touch-manipulation active:bg-gray-50 ${notification.is_read
                         ? 'bg-white border border-gray-200'
                         : 'bg-[#16730F]/5 border-l-4 border-[#16730F]'
                         }`}
                     >
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl pointer-events-none">{getNotificationIcon(notification.type)}</span>
+                      <div className="flex items-start gap-3 min-w-0">
+                        <span className="text-xl sm:text-2xl pointer-events-none shrink-0">
+                          {getNotificationIcon(notification.type)}
+                        </span>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-[#16730F]">{notification.title}</h3>
-                          <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                          <p className="text-xs text-gray-400 mt-2">
+                          <h3 className="font-medium text-[#16730F] text-sm sm:text-base break-words">
+                            {notification.title}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-gray-600 mt-1 break-words">
+                            {notification.message}
+                          </p>
+                          <p className="text-[10px] sm:text-xs text-gray-400 mt-2">
                             {formatDate(notification.created_at)}
                           </p>
                         </div>
                         {!notification.is_read && (
-                          <span className="w-2 h-2 bg-[#16730F] rounded-full shrink-0"></span>
+                          <span className="w-2 h-2 bg-[#16730F] rounded-full shrink-0 mt-1.5"></span>
                         )}
                       </div>
                     </button>
@@ -712,19 +769,19 @@ const Notifications = () => {
                   />
                 </div>
               )}
-            </>
+            </div>
           )}
-        </div>
+      </div>
 
         {/* Interview Invitation Modal */}
         {selectedNotification && selectedNotification.type === 'interview_invite' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto nfl-scroll scroll-smooth">
-              <div className="p-6">
-                <h2 className="text-xl font-semibold text-[#16730F] mb-4">Interview Invitation</h2>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-3">
+            <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto nfl-scroll scroll-smooth">
+              <div className="p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-[#16730F] mb-4">Interview Invitation</h2>
 
                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <p className="text-gray-600 mb-2">{selectedNotification.message}</p>
+                  <p className="text-gray-600 mb-2 break-words">{selectedNotification.message}</p>
                   {selectedNotification.data?.interview_date && (
                     <p className="text-sm text-gray-500 mt-2">
                       <strong>Date:</strong> {new Date(selectedNotification.data.interview_date).toLocaleDateString()}
