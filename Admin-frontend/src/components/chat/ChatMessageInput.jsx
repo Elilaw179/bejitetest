@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import EmojiPicker from 'emoji-picker-react';
-import { fileToDataUrl, inferUploadKind, simpleAudioMime } from '../../utils/chatAttachmentUtils';
+import { inferUploadKind, simpleAudioMime } from '../../utils/chatAttachmentUtils';
 import {
   createLiveAnalyser,
   formatVoiceDuration,
@@ -8,6 +9,10 @@ import {
 } from '../../utils/voiceWaveform';
 import messagingService from '../../services/messagingService';
 import VoiceWaveform from './VoiceWaveform';
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from '../../hooks/usePortaledMenu';
 
 function ChatMessageInput({
   message,
@@ -37,19 +42,20 @@ function ChatMessageInput({
   const recordStartRef = useRef(0);
   const emojiRef = useRef(null);
   const attachRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (emojiRef.current && !emojiRef.current.contains(e.target)) {
-        setShowEmoji(false);
-      }
-      if (attachRef.current && !attachRef.current.contains(e.target)) {
-        setShowAttachMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const emojiMenu = usePortaledMenu({
+    isOpen: showEmoji,
+    onClose: () => setShowEmoji(false),
+    minWidth: 280,
+    maxHeight: 400,
+    extraContainRefs: [emojiRef],
+  });
+  const attachMenu = usePortaledMenu({
+    isOpen: showAttachMenu,
+    onClose: () => setShowAttachMenu(false),
+    minWidth: 140,
+    maxHeight: 160,
+    extraContainRefs: [attachRef],
+  });
 
   const cleanupAnalyser = async () => {
     analyserRef.current = null;
@@ -89,8 +95,7 @@ function ChatMessageInput({
       setUploading(true);
       setRecordError(null);
       const kind = kindOverride || inferUploadKind(file);
-      const dataUrl = await fileToDataUrl(file);
-      const { url } = await messagingService.uploadChatMedia(dataUrl, kind);
+      const uploaded = await messagingService.uploadChatMedia(file, kind);
       const label =
         kind === 'image'
           ? ''
@@ -98,8 +103,12 @@ function ChatMessageInput({
             ? '🎬 Video'
             : kind === 'audio'
               ? '🎤 Voice message'
-              : `📎 ${file.name || 'Document'}`;
-      await onSendAttachment(url, label);
+              : `📎 ${uploaded.name || file.name || 'Document'}`;
+      await onSendAttachment(uploaded.url, label, {
+        kind: uploaded.kind || kind,
+        name: uploaded.name || file.name || null,
+        mime: uploaded.mime || file.type || null,
+      });
     } catch (err) {
       console.error('Upload failed:', err);
       setRecordError(err.response?.data?.error || 'Failed to upload file');
@@ -249,6 +258,7 @@ function ChatMessageInput({
           <div className="flex items-center space-x-1 md:space-x-2">
             <div className="relative" ref={emojiRef}>
               <button
+                ref={emojiMenu.triggerRef}
                 type="button"
                 onClick={() => {
                   setShowEmoji((v) => !v);
@@ -260,21 +270,29 @@ function ChatMessageInput({
               >
                 😊
               </button>
-              {showEmoji && (
-                <div className="absolute bottom-full left-0 mb-2 z-30 rounded-xl shadow-lg overflow-hidden">
-                  <EmojiPicker
-                    onEmojiClick={handleEmojiClick}
-                    width={320}
-                    height={400}
-                    searchPlaceholder="Search emojis…"
-                    previewConfig={{ showPreview: false }}
-                  />
-                </div>
-              )}
+              {showEmoji &&
+                emojiMenu.menuPos &&
+                createPortal(
+                  <div
+                    ref={emojiMenu.menuRef}
+                    className="rounded-xl shadow-lg overflow-hidden"
+                    style={getPortaledMenuStyle(emojiMenu.menuPos)}
+                  >
+                    <EmojiPicker
+                      onEmojiClick={handleEmojiClick}
+                      width={Math.min(320, emojiMenu.menuPos.width)}
+                      height={Math.min(400, emojiMenu.menuPos.maxHeight)}
+                      searchPlaceholder="Search emojis…"
+                      previewConfig={{ showPreview: false }}
+                    />
+                  </div>,
+                  document.body,
+                )}
             </div>
 
             <div className="relative" ref={attachRef}>
               <button
+                ref={attachMenu.triggerRef}
                 type="button"
                 onClick={() => {
                   setShowAttachMenu((v) => !v);
@@ -286,31 +304,38 @@ function ChatMessageInput({
               >
                 ＋
               </button>
-              {showAttachMenu && (
-                <div className="absolute bottom-full left-0 mb-2 z-20 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[140px]">
-                  <button
-                    type="button"
-                    onClick={() => imageInputRef.current?.click()}
-                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+              {showAttachMenu &&
+                attachMenu.menuPos &&
+                createPortal(
+                  <div
+                    ref={attachMenu.menuRef}
+                    className="bg-white border border-gray-200 rounded-xl shadow-lg py-1"
+                    style={getPortaledMenuStyle(attachMenu.menuPos)}
                   >
-                    Photo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => videoInputRef.current?.click()}
-                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    Video
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => docInputRef.current?.click()}
-                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    Document
-                  </button>
-                </div>
-              )}
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current?.click()}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      Photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => videoInputRef.current?.click()}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      Video
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => docInputRef.current?.click()}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      Document
+                    </button>
+                  </div>,
+                  document.body,
+                )}
               <input
                 ref={imageInputRef}
                 type="file"

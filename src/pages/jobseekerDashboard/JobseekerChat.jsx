@@ -14,6 +14,13 @@ function JobseekerChat() {
     setCurrentView('chatView');
   };
 
+  const handleConversationHidden = (conversationId) => {
+    if (selectedChat && String(selectedChat.id) === String(conversationId)) {
+      setSelectedChat(null);
+      setCurrentView('chatList');
+    }
+  };
+
   const showChatList = () => {
     setCurrentView('chatList');
   };
@@ -39,6 +46,7 @@ function JobseekerChat() {
                 <ChatsLeft
                   onSelectChat={handleSelectChat}
                   selectedChat={selectedChat}
+                  onConversationHidden={handleConversationHidden}
                 />
               </div>
             )}
@@ -69,6 +77,7 @@ function JobseekerChat() {
               <ChatsLeft
                 onSelectChat={handleSelectChat}
                 selectedChat={selectedChat}
+                onConversationHidden={handleConversationHidden}
               />
             </div>
 
@@ -95,6 +104,7 @@ function JobseekerChat() {
               <ChatsLeft
                 onSelectChat={handleSelectChat}
                 selectedChat={selectedChat}
+                onConversationHidden={handleConversationHidden}
               />
             </div>
 

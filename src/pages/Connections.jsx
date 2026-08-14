@@ -441,7 +441,21 @@ const Connections = () => {
         />
         <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1A3E32] h-5 w-5 pointer-events-none" />
       </div>
-
+      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+        <label htmlFor="connections-page-size" className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+          Page size
+        </label>
+        <RecruiterSelect
+          name="pageSize"
+          value={String(pageSize)}
+          onChange={(e) => setPageSize(Number(e.target.value))}
+          options={[
+            { value: "10", label: "10" },
+            { value: "20", label: "20" },
+          ]}
+          placeholder="Page size"
+        />
+      </div>
     </div>
   );
 
@@ -565,36 +579,6 @@ const Connections = () => {
           <div className="mb-4 sm:mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#1A3E32] mb-1 sm:mb-2">Connections</h1>
             <p className="text-sm sm:text-base text-gray-600">Manage your professional network</p>
-          </div>
-
-          <div className="mb-4 sm:mb-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="relative w-full sm:max-w-md min-w-0">
-                <input
-                  type="text"
-                  placeholder="Search by name or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none text-sm sm:text-base"
-                />
-                <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1A3E32] h-5 w-5 pointer-events-none" />
-              </div>
-              <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-                <label htmlFor="connections-page-size" className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                  Page size
-                </label>
-                <RecruiterSelect
-                  name="pageSize"
-                  value={String(pageSize)}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  options={[
-                    { value: "10", label: "10" },
-                    { value: "20", label: "20" },
-                  ]}
-                  placeholder="Page size"
-                />
-              </div>
-            </div>
           </div>
 
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm overflow-hidden min-w-0">

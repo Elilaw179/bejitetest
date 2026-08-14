@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import NavigationButtons from "../../../components/NavigationButtons";
 import {
@@ -22,6 +23,10 @@ import {
   experienceOptions,
 } from "../../../data/skillsData";
 import { SKILL_SUGGESTIONS } from "../../../utils/checksFormat";
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from "../../../hooks/usePortaledMenu";
 
 // Skills options removed - now using text inputs
 // const skillOptions = [...];
@@ -59,20 +64,16 @@ const AutocompleteSkillInput = ({ value, onChange, placeholder, suggestions, onA
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const wrapperRef = useRef(null);
+  const { triggerRef, menuRef, menuPos } = usePortaledMenu({
+    isOpen: showSuggestions,
+    onClose: () => setShowSuggestions(false),
+    maxHeight: 240,
+    extraContainRefs: [wrapperRef],
+  });
 
   useEffect(() => {
     setInputValue(value);
   }, [value]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const handleInputChange = (e) => {
     const newValue = e.target.value;
@@ -108,6 +109,7 @@ const AutocompleteSkillInput = ({ value, onChange, placeholder, suggestions, onA
   return (
     <div ref={wrapperRef} className="relative w-full" style={{ position: "relative", zIndex: 20 }}>
       <input
+        ref={triggerRef}
         type="text"
         value={inputValue}
         onChange={handleInputChange}
@@ -130,51 +132,53 @@ const AutocompleteSkillInput = ({ value, onChange, placeholder, suggestions, onA
         <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] text-lg pointer-events-none" />
       )}
 
-      {showSuggestions && (
-        <div
-          className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto nfl-scroll"
-          style={{
-            zIndex: 9999,
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            right: 0
-          }}
-        >
-          {filteredSuggestions.length > 0 ? (
-            <>
-              {filteredSuggestions.map((suggestion, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleSelectSuggestion(suggestion)}
-                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 transition-colors"
-                >
-                  {suggestion}
-                </div>
-              ))}
-              {inputValue.trim() && !filteredSuggestions.includes(inputValue.trim()) && (
+      {showSuggestions &&
+        menuPos &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-y-auto nfl-scroll"
+            style={{
+              ...getPortaledMenuStyle(menuPos),
+              maxHeight: menuPos.maxHeight,
+            }}
+          >
+            {filteredSuggestions.length > 0 ? (
+              <>
+                {filteredSuggestions.map((suggestion, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleSelectSuggestion(suggestion)}
+                    className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 transition-colors"
+                  >
+                    {suggestion}
+                  </div>
+                ))}
+                {inputValue.trim() && !filteredSuggestions.includes(inputValue.trim()) && (
+                  <div
+                    onClick={handleAddNew}
+                    className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2 border-t border-gray-100"
+                  >
+                    <FaPlus className="text-xs" />
+                    Add "{inputValue}"
+                  </div>
+                )}
+              </>
+            ) : (
+              inputValue.trim() && (
                 <div
                   onClick={handleAddNew}
-                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2 border-t border-gray-100"
+                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2"
                 >
                   <FaPlus className="text-xs" />
                   Add "{inputValue}"
                 </div>
-              )}
-            </>
-          ) : (
-            inputValue.trim() && (
-              <div
-                onClick={handleAddNew}
-                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2"
-              >
-                <FaPlus className="text-xs" />
-                Add "{inputValue}"
-              </div>
-            )
-          )}
-        </div>
-      )}
+              )
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };
@@ -183,16 +187,12 @@ const AutocompleteSkillInput = ({ value, onChange, placeholder, suggestions, onA
 const CategorySelect = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const { triggerRef, menuRef, menuPos } = usePortaledMenu({
+    isOpen,
+    onClose: () => setIsOpen(false),
+    maxHeight: 320,
+    extraContainRefs: [wrapperRef],
+  });
 
   const selectedCategory = CATEGORY_OPTIONS.find(opt => opt.value === value);
   const SelectedIcon = selectedCategory?.icon;
@@ -200,6 +200,7 @@ const CategorySelect = ({ value, onChange }) => {
   return (
     <div ref={wrapperRef} className="relative w-full" style={{ position: "relative", zIndex: 15 }}>
       <div
+        ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full h-12 border-2 rounded-[10px] pl-4 pr-10 flex items-center justify-between cursor-pointer focus:outline-1 focus:outline-[#16730F] ${value ? "border-[#828282]" : "border-[#F5F5F5]"
           } bg-white`}
@@ -217,44 +218,46 @@ const CategorySelect = ({ value, onChange }) => {
         )}
       </div>
 
-      {isOpen && (
-        <div
-          className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
-          style={{
-            zIndex: 9998,
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            right: 0
-          }}
-        >
-          {CATEGORY_OPTIONS.map((option) => {
-            const OptionIcon = option.icon;
-            return (
-              <div
-                key={option.value}
-                onClick={() => {
-                  onChange({ target: { value: option.value } });
-                  setIsOpen(false);
-                }}
-                className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors flex items-center gap-3"
-              >
-                <OptionIcon className={`text-lg ${option.color}`} />
-                <div>
-                  <div className="text-sm font-medium text-gray-700">{option.label}</div>
-                  <div className="text-xs text-gray-400">
-                    {option.value === "Entry Level" && "0-2 years experience"}
-                    {option.value === "Junior" && "2-4 years experience"}
-                    {option.value === "Mid-level" && "4-7 years experience"}
-                    {option.value === "Senior" && "7-10 years experience"}
-                    {option.value === "Veteran" && "10+ years experience"}
+      {isOpen &&
+        menuPos &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+            style={{
+              ...getPortaledMenuStyle(menuPos),
+              maxHeight: menuPos.maxHeight,
+            }}
+          >
+            {CATEGORY_OPTIONS.map((option) => {
+              const OptionIcon = option.icon;
+              return (
+                <div
+                  key={option.value}
+                  onClick={() => {
+                    onChange({ target: { value: option.value } });
+                    setIsOpen(false);
+                  }}
+                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors flex items-center gap-3"
+                >
+                  <OptionIcon className={`text-lg ${option.color}`} />
+                  <div>
+                    <div className="text-sm font-medium text-gray-700">{option.label}</div>
+                    <div className="text-xs text-gray-400">
+                      {option.value === "Entry Level" && "0-2 years experience"}
+                      {option.value === "Junior" && "2-4 years experience"}
+                      {option.value === "Mid-level" && "4-7 years experience"}
+                      {option.value === "Senior" && "7-10 years experience"}
+                      {option.value === "Veteran" && "10+ years experience"}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };
