@@ -1,5 +1,10 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Type } from "lucide-react";
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from "../../../hooks/usePortaledMenu";
 
 const FONT_FAMILIES = [
   { name: "Sans-Serif (Clean)", value: "Arial, sans-serif" },
@@ -11,10 +16,17 @@ const FONT_FAMILIES = [
 
 const FontSelectorDropdown = ({ currentFontName, onSelectFont }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { triggerRef, menuRef, menuPos } = usePortaledMenu({
+    isOpen,
+    onClose: () => setIsOpen(false),
+    minWidth: 192,
+    maxHeight: 280,
+  });
 
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setIsOpen(!isOpen)}
@@ -25,25 +37,33 @@ const FontSelectorDropdown = ({ currentFontName, onSelectFont }) => {
         <ChevronDown size={12} className="text-gray-400" />
       </button>
 
-      {isOpen && (
-        <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-30 p-1 text-left">
-          {FONT_FAMILIES.map((font) => (
-            <button
-              key={font.name}
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => {
-                onSelectFont(font);
-                setIsOpen(false);
-              }}
-              className="w-full px-3 py-2 text-xs text-gray-700 hover:bg-green-50 hover:text-[#16730F] font-medium rounded-lg text-left transition-colors cursor-pointer"
-              style={{ fontFamily: font.value }}
-            >
-              {font.name}
-            </button>
-          ))}
-        </div>
-      )}
+      {isOpen &&
+        menuPos &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="bg-white border border-gray-200 rounded-xl shadow-xl p-1 text-left"
+            style={getPortaledMenuStyle(menuPos)}
+          >
+            {FONT_FAMILIES.map((font) => (
+              <button
+                key={font.name}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onSelectFont(font);
+                  setIsOpen(false);
+                }}
+                className="w-full px-3 py-2 text-xs text-gray-700 hover:bg-green-50 hover:text-[#16730F] font-medium rounded-lg text-left transition-colors cursor-pointer"
+                style={{ fontFamily: font.value }}
+              >
+                {font.name}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

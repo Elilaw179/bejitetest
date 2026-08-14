@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { FaTimes, FaChevronDown, FaSearch, FaCheck } from "react-icons/fa";
 import FormLabel from "../forms/FormLabel";
 
+const MENU_Z_INDEX = 10060;
+const MENU_GAP = 6;
+const MENU_MAX_HEIGHT = 224;
+
 /**
  * Shared searchable select used across onboarding, recruitment, and admin.
- * Raises stacking context while open so menus are not covered by sibling fields.
+ * Menu is portaled so overflow-hidden parents (modals, scroll areas) cannot clip it.
  */
 export function RecruiterSelect({
   label,
@@ -24,7 +29,10 @@ export function RecruiterSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [menuPos, setMenuPos] = useState(null);
   const dropdownRef = useRef(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
   const searchInputRef = useRef(null);
 
   const optionsFromChildren = React.Children.toArray(children)
@@ -57,7 +65,9 @@ export function RecruiterSelect({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      const inTrigger = dropdownRef.current?.contains(event.target);
+      const inMenu = menuRef.current?.contains(event.target);
+      if (!inTrigger && !inMenu) {
         setIsOpen(false);
         setSearchTerm("");
       }
@@ -82,9 +92,53 @@ export function RecruiterSelect({
   }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen && searchInputRef.current) {
+    if (isOpen && menuPos && searchInputRef.current) {
       searchInputRef.current.focus();
     }
+  }, [isOpen, menuPos]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setMenuPos(null);
+      return undefined;
+    }
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current;
+      if (!trigger) return;
+
+      const rect = trigger.getBoundingClientRect();
+      const margin = 8;
+      const width = Math.max(rect.width, 140);
+      const spaceBelow = window.innerHeight - rect.bottom - MENU_GAP - margin;
+      const spaceAbove = rect.top - MENU_GAP - margin;
+      const openUp = spaceBelow < 140 && spaceAbove > spaceBelow;
+
+      let left = rect.left;
+      if (left + width > window.innerWidth - margin) {
+        left = Math.max(margin, window.innerWidth - width - margin);
+      }
+      if (left < margin) left = margin;
+
+      setMenuPos({
+        top: openUp ? undefined : rect.bottom + MENU_GAP,
+        bottom: openUp ? window.innerHeight - rect.top + MENU_GAP : undefined,
+        left,
+        width,
+        maxHeight: Math.max(
+          120,
+          Math.min(MENU_MAX_HEIGHT, openUp ? spaceAbove : spaceBelow),
+        ),
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
   }, [isOpen]);
 
   const handleSelect = (val) => {
@@ -128,6 +182,7 @@ export function RecruiterSelect({
         ))}
 
       <div
+        ref={triggerRef}
         tabIndex={disabled ? -1 : 0}
         role="combobox"
         aria-expanded={isOpen}
@@ -193,67 +248,86 @@ export function RecruiterSelect({
         </div>
       </div>
 
-      {isOpen && !disabled && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-[210] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 min-w-[140px]">
-          {normalizedOptions.length >= 4 && (
-            <div className="px-3 pb-2 mb-1 border-b border-gray-100">
-              <div className="relative flex items-center">
-                <FaSearch className="absolute left-3 w-3.5 h-3.5 text-gray-400" />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search options..."
-                  className="w-full h-9 pl-9 pr-3 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-[#16730F] focus:ring-1 focus:ring-[#16730F] transition-all"
-                  onClick={(e) => e.stopPropagation()}
-                />
-                {searchTerm && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchTerm("")}
-                    className="absolute right-2 text-gray-400 hover:text-gray-600 p-1"
-                  >
-                    <FaTimes className="w-2.5 h-2.5" />
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="max-h-56 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 divide-y divide-gray-50/50">
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((opt) => {
-                const isSelected = String(opt.value) === String(value);
-                return (
-                  <div
-                    key={String(opt.value)}
-                    role="option"
-                    aria-selected={isSelected}
-                    onClick={() => handleSelect(opt.value)}
-                    className={`px-4 py-2.5 text-sm cursor-pointer flex items-center justify-between transition-colors ${
-                      isSelected
-                        ? "bg-emerald-50 text-[#16730F] font-semibold"
-                        : "text-gray-700 hover:bg-emerald-50/50 hover:text-[#16730F]"
-                    }`}
-                  >
-                    <span className="truncate pr-2">{opt.label}</span>
-                    {isSelected && (
-                      <FaCheck className="w-3.5 h-3.5 text-[#16730F] shrink-0" />
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <div className="px-4 py-6 text-center text-xs text-gray-400">
-                {searchTerm
-                  ? `No matches for "${searchTerm}"`
-                  : "No options available"}
+      {isOpen &&
+        !disabled &&
+        menuPos &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="bg-white rounded-xl shadow-2xl border border-gray-100 py-2 overflow-hidden min-w-[140px]"
+            style={{
+              position: "fixed",
+              top: menuPos.top,
+              bottom: menuPos.bottom,
+              left: menuPos.left,
+              width: menuPos.width,
+              zIndex: MENU_Z_INDEX,
+            }}
+          >
+            {normalizedOptions.length >= 4 && (
+              <div className="px-3 pb-2 mb-1 border-b border-gray-100">
+                <div className="relative flex items-center">
+                  <FaSearch className="absolute left-3 w-3.5 h-3.5 text-gray-400" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search options..."
+                    className="w-full h-9 pl-9 pr-3 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-[#16730F] focus:ring-1 focus:ring-[#16730F] transition-all"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchTerm("")}
+                      className="absolute right-2 text-gray-400 hover:text-gray-600 p-1"
+                    >
+                      <FaTimes className="w-2.5 h-2.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
+
+            <div
+              className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 divide-y divide-gray-50/50"
+              style={{ maxHeight: menuPos.maxHeight }}
+            >
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((opt) => {
+                  const isSelected = String(opt.value) === String(value);
+                  return (
+                    <div
+                      key={String(opt.value)}
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => handleSelect(opt.value)}
+                      className={`px-4 py-2.5 text-sm cursor-pointer flex items-center justify-between transition-colors ${
+                        isSelected
+                          ? "bg-emerald-50 text-[#16730F] font-semibold"
+                          : "text-gray-700 hover:bg-emerald-50/50 hover:text-[#16730F]"
+                      }`}
+                    >
+                      <span className="truncate pr-2">{opt.label}</span>
+                      {isSelected && (
+                        <FaCheck className="w-3.5 h-3.5 text-[#16730F] shrink-0" />
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="px-4 py-6 text-center text-xs text-gray-400">
+                  {searchTerm
+                    ? `No matches for "${searchTerm}"`
+                    : "No options available"}
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
 
       {hint && <p className="text-xs text-gray-500 mt-1.5">{hint}</p>}
     </div>

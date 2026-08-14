@@ -1,5 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Search } from "lucide-react";
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from "../../hooks/usePortaledMenu";
 import {
   getAllCountryNames,
   getStateOptionsForCountries,
@@ -21,6 +26,12 @@ const SearchableMultiSelect = ({
   const containerRef = useRef(null);
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const { triggerRef, menuRef, menuPos } = usePortaledMenu({
+    isOpen,
+    onClose: () => setIsOpen(false),
+    maxHeight: 192,
+    extraContainRefs: [containerRef],
+  });
 
   const filteredOptions = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -29,22 +40,6 @@ const SearchableMultiSelect = ({
       getOptionLabel(option).toLowerCase().includes(query),
     );
   }, [options, search, getOptionLabel]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (event) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
 
   const toggleValue = (value) => {
     if (selectedValues.includes(value)) {
@@ -89,7 +84,7 @@ const SearchableMultiSelect = ({
         </div>
       )}
 
-      <div className={`relative ${isOpen ? "z-[200]" : ""}`}>
+      <div ref={triggerRef} className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         <input
           type="text"
@@ -103,9 +98,20 @@ const SearchableMultiSelect = ({
           placeholder={placeholder}
           className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1A3E32] focus:border-transparent text-sm"
         />
+      </div>
 
-        {isOpen && (
-          <div className="absolute z-[9999] left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-xl divide-y divide-gray-100">
+      {isOpen &&
+        menuPos &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-xl divide-y divide-gray-100"
+            style={{
+              ...getPortaledMenuStyle(menuPos),
+              maxHeight: menuPos.maxHeight,
+            }}
+          >
             {filteredOptions.length === 0 ? (
               <p className="px-4 py-3 text-sm text-gray-500">{emptyMessage}</p>
             ) : (
@@ -131,9 +137,9 @@ const SearchableMultiSelect = ({
                 );
               })
             )}
-          </div>
+          </div>,
+          document.body,
         )}
-      </div>
     </div>
   );
 };

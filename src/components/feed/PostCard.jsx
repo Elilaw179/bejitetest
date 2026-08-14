@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
@@ -25,6 +26,10 @@ import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import { OriginalPostNest, RepostIntro } from "./RepostChrome";
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from "../../hooks/usePortaledMenu";
 
 const PostDetailModal = React.lazy(() => import("./PostDetailModal"));
 
@@ -77,23 +82,15 @@ const PostHeader = ({
   isOwner,
 }) => {
   const navigate = useNavigate();
-  const menuRef = useRef(null);
+  const { triggerRef, menuRef, menuPos } = usePortaledMenu({
+    isOpen: showMenu,
+    onClose: () => setShowMenu(false),
+    minWidth: 128,
+    maxHeight: 120,
+  });
   const displayName = getDisplayName(author);
   const displayJobTitle = getAuthorSubtitle(author, authorId);
   const authorImage = getProfileImageUrl(author?.image || author?.profile_photo);
-
-  useEffect(() => {
-    if (!showMenu) return;
-
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowMenu(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showMenu, setShowMenu]);
 
   const goToAuthorProfile = () => {
     if (authorId) navigate(`/user-profile/${authorId}`);
@@ -134,8 +131,9 @@ const PostHeader = ({
         </div>
       </div>
       {isOwner && (
-        <div className="relative shrink-0 self-start" ref={menuRef}>
+        <div className="relative shrink-0 self-start">
           <button
+            ref={triggerRef}
             type="button"
             onClick={() => setShowMenu(!showMenu)}
             className="p-2 -mr-1 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
@@ -144,28 +142,36 @@ const PostHeader = ({
           >
             <FaEllipsisH className="text-base" />
           </button>
-          {showMenu && (
-            <div className="absolute right-0 mt-1 bg-white shadow-lg rounded-lg py-2 w-32 border border-[#D3D3D3] z-20">
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  onEdit();
-                }}
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+          {showMenu &&
+            menuPos &&
+            typeof document !== "undefined" &&
+            createPortal(
+              <div
+                ref={menuRef}
+                className="bg-white shadow-lg rounded-lg py-2 border border-[#D3D3D3]"
+                style={getPortaledMenuStyle(menuPos)}
               >
-                Edit
-              </button>
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  onDelete();
-                }}
-                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-              >
-                Delete
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onEdit();
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onDelete();
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                >
+                  Delete
+                </button>
+              </div>,
+              document.body,
+            )}
         </div>
       )}
     </div>

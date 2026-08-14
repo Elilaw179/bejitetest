@@ -1,10 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import EmojiPicker from 'emoji-picker-react';
-import { fileToDataUrl, inferUploadKind } from '../../utils/chatAttachmentUtils';
+import { inferUploadKind } from '../../utils/chatAttachmentUtils';
 import { useVoiceRecorder } from '../../hooks/useVoiceRecorder';
 import messagingService from '../../services/messagingService';
 import { formatVoiceDuration } from '../../utils/voiceWaveform';
 import VoiceWaveform from './VoiceWaveform';
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from '../../hooks/usePortaledMenu';
 
 function ChatMessageInput({
   message,
@@ -27,6 +32,20 @@ function ChatMessageInput({
   const textareaRef = useRef(null);
   const inputBarRef = useRef(null);
   const [emojiPickerSize, setEmojiPickerSize] = useState({ width: 300, height: 320 });
+  const emojiMenu = usePortaledMenu({
+    isOpen: showEmoji,
+    onClose: () => setShowEmoji(false),
+    minWidth: 240,
+    maxHeight: 400,
+    extraContainRefs: [emojiRef],
+  });
+  const attachMenu = usePortaledMenu({
+    isOpen: showAttachMenu,
+    onClose: () => setShowAttachMenu(false),
+    minWidth: 140,
+    maxHeight: 160,
+    extraContainRefs: [attachRef],
+  });
 
   const uploadingRef = useRef(false);
   const disabledRef = useRef(disabled);
@@ -50,8 +69,7 @@ function ChatMessageInput({
         setUploading(true);
         uploadingRef.current = true;
         const kind = kindOverride || inferUploadKind(file);
-        const dataUrl = await fileToDataUrl(file);
-        const { url } = await messagingService.uploadChatMedia(dataUrl, kind);
+        const uploaded = await messagingService.uploadChatMedia(file, kind);
         const label =
           kind === 'image'
             ? ''
@@ -59,8 +77,12 @@ function ChatMessageInput({
               ? '🎬 Video'
               : kind === 'audio'
                 ? '🎤 Voice message'
-                : `📎 ${file.name || 'Document'}`;
-        await onSendAttachment(url, label);
+                : `📎 ${uploaded.name || file.name || 'Document'}`;
+        await onSendAttachment(uploaded.url, label, {
+          kind: uploaded.kind || kind,
+          name: uploaded.name || file.name || null,
+          mime: uploaded.mime || file.type || null,
+        });
       } catch (err) {
         setRecordErrorRef.current(
           err.response?.data?.error || 'Failed to upload file'
@@ -135,19 +157,6 @@ function ChatMessageInput({
     };
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (emojiRef.current && !emojiRef.current.contains(e.target)) {
-        setShowEmoji(false);
-      }
-      if (attachRef.current && !attachRef.current.contains(e.target)) {
-        setShowAttachMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const handleFileChange = (e, kindOverride) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -217,6 +226,7 @@ function ChatMessageInput({
           <div className="flex items-center gap-1 sm:gap-2 md:gap-3 min-w-0">
             <div className="relative shrink-0" ref={emojiRef}>
               <button
+                ref={emojiMenu.triggerRef}
                 type="button"
                 onClick={() => {
                   setEmojiPickerSize(computeEmojiPickerSize());
@@ -233,23 +243,44 @@ function ChatMessageInput({
                   className="block w-[18px] h-[18px] sm:w-5 sm:h-5"
                 />
               </button>
-              {showEmoji && (
-                <div className="absolute bottom-full left-0 mb-2 z-30 rounded-xl shadow-lg overflow-hidden max-h-[min(70dvh,400px)]">
-                  <EmojiPicker
-                    onEmojiClick={(emojiData) =>
-                      setMessage((prev) => `${prev || ''}${emojiData.emoji}`)
-                    }
-                    width={emojiPickerSize.width}
-                    height={emojiPickerSize.height}
-                    searchPlaceholder="Search emojis…"
-                    previewConfig={{ showPreview: false }}
-                  />
-                </div>
-              )}
+              {showEmoji &&
+                emojiMenu.menuPos &&
+                typeof document !== 'undefined' &&
+                createPortal(
+                  <div
+                    ref={emojiMenu.menuRef}
+                    className="rounded-xl shadow-lg overflow-hidden"
+                    style={{
+                      ...getPortaledMenuStyle(emojiMenu.menuPos),
+                      width: Math.min(
+                        emojiPickerSize.width,
+                        emojiMenu.menuPos.width,
+                      ),
+                    }}
+                  >
+                    <EmojiPicker
+                      onEmojiClick={(emojiData) =>
+                        setMessage((prev) => `${prev || ''}${emojiData.emoji}`)
+                      }
+                      width={Math.min(
+                        emojiPickerSize.width,
+                        emojiMenu.menuPos.width,
+                      )}
+                      height={Math.min(
+                        emojiPickerSize.height,
+                        emojiMenu.menuPos.maxHeight,
+                      )}
+                      searchPlaceholder="Search emojis…"
+                      previewConfig={{ showPreview: false }}
+                    />
+                  </div>,
+                  document.body,
+                )}
             </div>
 
             <div className="relative shrink-0" ref={attachRef}>
               <button
+                ref={attachMenu.triggerRef}
                 type="button"
                 onClick={() => {
                   setShowAttachMenu((v) => !v);
@@ -265,31 +296,39 @@ function ChatMessageInput({
                   className="block w-3.5 h-3.5 sm:w-4 sm:h-4"
                 />
               </button>
-              {showAttachMenu && (
-                <div className="absolute bottom-full left-0 mb-2 z-20 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[140px]">
-                  <button
-                    type="button"
-                    onClick={() => imageInputRef.current?.click()}
-                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+              {showAttachMenu &&
+                attachMenu.menuPos &&
+                typeof document !== 'undefined' &&
+                createPortal(
+                  <div
+                    ref={attachMenu.menuRef}
+                    className="bg-white border border-gray-200 rounded-xl shadow-lg py-1"
+                    style={getPortaledMenuStyle(attachMenu.menuPos)}
                   >
-                    Photo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => videoInputRef.current?.click()}
-                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    Video
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => docInputRef.current?.click()}
-                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    Document
-                  </button>
-                </div>
-              )}
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current?.click()}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      Photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => videoInputRef.current?.click()}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      Video
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => docInputRef.current?.click()}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      Document
+                    </button>
+                  </div>,
+                  document.body,
+                )}
               <input
                 ref={imageInputRef}
                 type="file"

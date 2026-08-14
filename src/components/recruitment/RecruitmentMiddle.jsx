@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -44,6 +45,10 @@ import { getAuthorProfileImageUrl, getUserProfileImage } from "../../utils/profi
 import PostCreationModal from "../PostCreationModal";
 import ConfirmModal from "../ConfirmModal";
 import useSyncProfilePhoto from "../../hooks/useSyncProfilePhoto";
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from "../../hooks/usePortaledMenu";
 import SharePostModal from "../SharePostModal";
 import RepostModal from "../RepostModal";
 import UsersListModal from "../UsersListModal";
@@ -584,6 +589,12 @@ const RecruitmentPostCard = ({
     setSharesCount(post.sharesCount || 0);
   }, [post.id, post.likedByMe, post.savedByMe, post.sharedByMe, post.sharesCount, post.feedItemKey]);
   const [showMenu, setShowMenu] = useState(false);
+  const { triggerRef, menuRef, menuPos } = usePortaledMenu({
+    isOpen: showMenu,
+    onClose: () => setShowMenu(false),
+    minWidth: 128,
+    maxHeight: 120,
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(post.body || "");
   const [savingEdit, setSavingEdit] = useState(false);
@@ -917,6 +928,7 @@ const RecruitmentPostCard = ({
         {isOwner && (
           <div className="relative shrink-0 self-start">
             <button
+              ref={triggerRef}
               type="button"
               onClick={() => setShowMenu(!showMenu)}
               className="p-2 -mr-1 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
@@ -925,28 +937,36 @@ const RecruitmentPostCard = ({
             >
               <FaEllipsisH className="text-base" />
             </button>
-            {showMenu && (
-              <div className="absolute right-0 mt-1 bg-white shadow-lg rounded-lg py-2 w-32 border border-[#D3D3D3] z-20">
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    handleEditClick();
-                  }}
-                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+            {showMenu &&
+              menuPos &&
+              typeof document !== "undefined" &&
+              createPortal(
+                <div
+                  ref={menuRef}
+                  className="bg-white shadow-lg rounded-lg py-2 border border-[#D3D3D3]"
+                  style={getPortaledMenuStyle(menuPos)}
                 >
-                  Edit
-                </button>
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    handleDeleteClick();
-                  }}
-                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                >
-                  Delete
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      handleEditClick();
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      handleDeleteClick();
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
+                </div>,
+                document.body,
+              )}
           </div>
         )}
       </div>

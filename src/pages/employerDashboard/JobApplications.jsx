@@ -385,7 +385,7 @@ const JobApplications = () => {
 
         {/* Main Content - Responsive Grid */}
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col lg:flex-row lg:items-start gap-6">
             {/* Applications List - Left Side */}
             <div className="w-full lg:w-2/3">
               {/* Filters */}
@@ -545,8 +545,8 @@ const JobApplications = () => {
             </div>
 
             {/* Right Panel - Desktop only */}
-            <div className="hidden lg:block lg:w-1/3">
-              <div className="bg-white rounded-2xl border border-gray-200 sticky top-20">
+            <div className="hidden lg:block lg:w-1/3 lg:self-start lg:sticky lg:top-4 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto nfl-scroll">
+              <div className="bg-white rounded-2xl border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-xl font-bold text-gray-900">
                     Application Details

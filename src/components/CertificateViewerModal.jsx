@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import axiosInstance from '../utils/axiosInstance';
 import {
   documentViewUrl,
@@ -99,13 +100,14 @@ function CertificateViewerModalContent({
   }, [onClose]);
 
   if (fetchUrl && loading && !resolvedUrl) {
-    return (
+    return createPortal(
       <div
         className={`fixed inset-0 ${overlayClassName} bg-black/85 flex items-center justify-center p-4`}
         onClick={onClose}
       >
         <p className="text-white text-sm">Loading document...</p>
-      </div>
+      </div>,
+      document.body,
     );
   }
 
@@ -114,7 +116,7 @@ function CertificateViewerModalContent({
   const showImagePreview = kind === 'image';
   const showPdfDownload = kind === 'pdf' || kind === 'unknown';
 
-  return (
+  return createPortal(
     <div
       className={`fixed inset-0 ${overlayClassName} bg-black/85 flex items-center justify-center p-4`}
       onClick={onClose}
@@ -185,7 +187,8 @@ function CertificateViewerModalContent({
           ×
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -195,6 +198,7 @@ export function CertificateViewerModal({
   fileUrl,
   title,
   fetchUrl,
+  overlayClassName,
 }) {
   if (!open) return null;
 
@@ -204,6 +208,7 @@ export function CertificateViewerModal({
       fileUrl={fileUrl}
       title={title}
       fetchUrl={fetchUrl}
+      overlayClassName={overlayClassName}
     />
   );
 }
@@ -217,6 +222,7 @@ export function CertificateViewLink({
   className = '',
   children = 'View certificate',
   fetchUrl,
+  overlayClassName,
 }) {
   const [open, setOpen] = useState(false);
   const kind = getDocumentMediaKind(fileUrl);
@@ -239,6 +245,7 @@ export function CertificateViewLink({
         fileUrl={fileUrl}
         title={title}
         fetchUrl={fetchUrl}
+        overlayClassName={overlayClassName}
       />
     </>
   );
