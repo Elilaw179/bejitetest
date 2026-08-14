@@ -12,7 +12,7 @@ const navItems = [
   { icon: "/assets/images/messages-2.svg", label: "Chats" },
   { icon: "/assets/images/user-search.svg", label: "Recruitment" },
   { icon: "/assets/images/notification.svg", label: "Notifications" },
-  { icon: Network, label: "milestones" },
+  { icon: Network, label: "Milestones" },
 ];
 
 export default function RecruitmentLeft() {
@@ -49,7 +49,7 @@ export default function RecruitmentLeft() {
       case "Notifications":
         navigate("/notification");
         break;
-      case "milestones":
+      case "Milestones":
         navigate("/milestones");
         break;
       default:
