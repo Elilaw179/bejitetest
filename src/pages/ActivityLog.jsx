@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -47,6 +48,10 @@ import { profileAvatarSrc } from "../utils/profilePhotoUrl";
 import { getAuthorProfileImageUrl } from "../utils/profileImageUtils";
 import ConfirmModal from "../components/ConfirmModal";
 import SharePostModal from "../components/SharePostModal";
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from "../hooks/usePortaledMenu";
 import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
 import PostActions from "../components/feed/PostActions";
 import UsersListModal from "../components/UsersListModal";
@@ -151,20 +156,12 @@ const ActivityLogPostCard = ({
   }, [post.id, post.likedByMe, post.savedByMe]);
   
   const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    if (!showMenu) return;
-
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowMenu(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showMenu]);
+  const { triggerRef, menuRef, menuPos } = usePortaledMenu({
+    isOpen: showMenu,
+    onClose: () => setShowMenu(false),
+    minWidth: 128,
+    maxHeight: 120,
+  });
 
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(post.body || "");
@@ -408,8 +405,9 @@ const ActivityLogPostCard = ({
           </div>
         </div>
         {isOwner && (
-          <div className="relative shrink-0 self-start" ref={menuRef}>
+          <div className="relative shrink-0 self-start">
             <button
+              ref={triggerRef}
               type="button"
               onClick={() => setShowMenu(!showMenu)}
               className="p-2 -mr-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
@@ -418,28 +416,36 @@ const ActivityLogPostCard = ({
             >
               <MoreHorizontal className="w-5 h-5" />
             </button>
-            {showMenu && (
-              <div className="absolute right-0 mt-1 bg-white shadow-lg rounded-xl py-2 w-32 border border-[#D3D3D3] z-20">
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    handleEditClick();
-                  }}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            {showMenu &&
+              menuPos &&
+              typeof document !== "undefined" &&
+              createPortal(
+                <div
+                  ref={menuRef}
+                  className="bg-white shadow-lg rounded-xl py-2 border border-[#D3D3D3]"
+                  style={getPortaledMenuStyle(menuPos)}
                 >
-                  Edit
-                </button>
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    handleDeleteClick();
-                  }}
-                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                >
-                  Delete
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      handleEditClick();
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      handleDeleteClick();
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
+                </div>,
+                document.body,
+              )}
           </div>
         )}
       </div>

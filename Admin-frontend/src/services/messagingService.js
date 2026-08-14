@@ -52,12 +52,12 @@ async startConversation(otherUserId) {
   },
 
   // Upload chat attachment (image, video, audio, document)
-  async uploadChatMedia(dataUrl, kind = 'image') {
+  async uploadChatMedia(file, kind = 'image') {
     try {
-      const response = await axiosInstance.post('/messages/upload', {
-        dataUrl,
-        kind,
-      });
+      const form = new FormData();
+      form.append('file', file);
+      form.append('kind', kind);
+      const response = await axiosInstance.post('/messages/upload', form);
       return response.data;
     } catch (error) {
       console.error('Error uploading chat media:', error);
@@ -65,8 +65,7 @@ async startConversation(otherUserId) {
     }
   },
 
-  // Send a message
-  async sendMessage(conversationId, content, imageUrl = null) {
+  async sendMessage(conversationId, content, imageUrl = null, attachment = null) {
     try {
       const messageData = {
         conversation_id: conversationId,
@@ -74,6 +73,11 @@ async startConversation(otherUserId) {
       };
       if (imageUrl) {
         messageData.image_url = imageUrl;
+      }
+      if (attachment?.kind) {
+        messageData.attachment_kind = attachment.kind;
+        messageData.attachment_name = attachment.name || null;
+        messageData.attachment_mime = attachment.mime || null;
       }
       const response = await axiosInstance.post('/messages', messageData);
       return response.data.message;

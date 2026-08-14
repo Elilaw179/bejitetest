@@ -150,6 +150,10 @@ export default function ChatMessageBubble({
         <MessageAttachment
           url={message.image_url}
           caption={message.content}
+          kind={message.attachment_kind}
+          filename={message.attachment_name}
+          mime={message.attachment_mime}
+          messageId={message.id}
           isOwnMessage={isOwnMessage}
         />
       )}

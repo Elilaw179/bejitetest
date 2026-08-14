@@ -21,12 +21,14 @@ function Chat() {
 
     (async () => {
       try {
-        const conversations = await messagingService.getConversations();
-        const match = (conversations || []).find(
+        const page = await messagingService.getConversations();
+        const match = (page.conversations || []).find(
           (c) => String(c.id) === String(openConversationId),
         );
-        if (!cancelled && match) {
-          setSelectedChat(match);
+        const conversation = match
+          || (await messagingService.getConversation(openConversationId).catch(() => null));
+        if (!cancelled && conversation) {
+          setSelectedChat(conversation);
           setCurrentView('chatView');
         }
       } catch (err) {
@@ -42,6 +44,13 @@ function Chat() {
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);
     setCurrentView('chatView');
+  };
+
+  const handleConversationHidden = (conversationId) => {
+    if (selectedChat && String(selectedChat.id) === String(conversationId)) {
+      setSelectedChat(null);
+      setCurrentView('chatList');
+    }
   };
 
   const showChatList = () => {
@@ -68,6 +77,7 @@ function Chat() {
                 <ChatsLeft
                   onSelectChat={handleSelectChat}
                   selectedChat={selectedChat}
+                  onConversationHidden={handleConversationHidden}
                 />
               </div>
             )}
@@ -98,6 +108,7 @@ function Chat() {
               <ChatsLeft
                 onSelectChat={handleSelectChat}
                 selectedChat={selectedChat}
+                onConversationHidden={handleConversationHidden}
               />
             </div>
 
@@ -124,6 +135,7 @@ function Chat() {
               <ChatsLeft
                 onSelectChat={handleSelectChat}
                 selectedChat={selectedChat}
+                onConversationHidden={handleConversationHidden}
               />
             </div>
 

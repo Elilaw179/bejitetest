@@ -119,7 +119,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     }
   };
 
-  const handleSendAttachment = async (url, caption = '') => {
+  const handleSendAttachment = async (url, caption = '', attachment = null) => {
     if (!selectedChat?.id || sending) {
       return;
     }
@@ -127,7 +127,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     try {
       setSending(true);
       stickToBottomRef.current = true;
-      await messagingService.sendMessage(selectedChat.id, caption, url);
+      await messagingService.sendMessage(selectedChat.id, caption, url, attachment);
       setMessage('');
       await fetchMessages(selectedChat.id, true);
       window.dispatchEvent(new CustomEvent('chat:conversation-updated'));

@@ -1,6 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { FaSearch, FaCalendarAlt, FaTimes } from "react-icons/fa";
 import { RecruiterSelect } from "../recruiter/recruiterOnboardingUi";
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from "../../hooks/usePortaledMenu";
 
 const formatChipDate = (isoDay) => {
   if (!isoDay) return "";
@@ -64,26 +69,19 @@ export default function RecruitmentFilterBar({
 }) {
   const [isDateOpen, setIsDateOpen] = useState(false);
   const datePanelRef = useRef(null);
+  const { triggerRef, menuRef, menuPos } = usePortaledMenu({
+    isOpen: isDateOpen,
+    onClose: () => setIsDateOpen(false),
+    minWidth: 288,
+    maxHeight: 320,
+    extraContainRefs: [datePanelRef],
+  });
   const hasDateRange = Boolean(dateFrom || dateTo);
   const chipLabel =
     dateRange ||
     (hasDateRange
       ? buildDateRangeLabel(dateFrom, dateTo)
       : "Select dates");
-
-  useEffect(() => {
-    if (!isDateOpen) return undefined;
-    const handlePointerDown = (event) => {
-      if (
-        datePanelRef.current &&
-        !datePanelRef.current.contains(event.target)
-      ) {
-        setIsDateOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [isDateOpen]);
 
   return (
     <div className="bg-[#EFF5F2] border border-[#D5E5DD] p-3 sm:p-4 rounded-2xl flex flex-col xl:flex-row items-stretch xl:items-center gap-2.5 sm:gap-3 shadow-xs">
@@ -147,6 +145,7 @@ export default function RecruitmentFilterBar({
               }`}
             >
               <button
+                ref={triggerRef}
                 type="button"
                 onClick={() => setIsDateOpen((open) => !open)}
                 className="inline-flex items-center gap-1.5 focus:outline-none"
@@ -176,59 +175,67 @@ export default function RecruitmentFilterBar({
               )}
             </div>
 
-            {isDateOpen && (
-              <div className="absolute z-30 top-full left-0 mt-2 w-[min(100vw-2rem,18rem)] bg-white border border-gray-200 rounded-2xl shadow-lg p-3 space-y-3">
-                <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
-                  Created date range
-                </div>
-                <label className="block space-y-1">
-                  <span className="text-xs font-semibold text-gray-600">
-                    From
-                  </span>
-                  <input
-                    type="date"
-                    value={dateFrom || ""}
-                    max={dateTo || undefined}
-                    onChange={(e) =>
-                      onDateFromChange && onDateFromChange(e.target.value)
-                    }
-                    className="w-full bg-[#F8FAF9] border border-gray-200 text-gray-800 text-xs font-medium px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/40"
-                  />
-                </label>
-                <label className="block space-y-1">
-                  <span className="text-xs font-semibold text-gray-600">To</span>
-                  <input
-                    type="date"
-                    value={dateTo || ""}
-                    min={dateFrom || undefined}
-                    onChange={(e) =>
-                      onDateToChange && onDateToChange(e.target.value)
-                    }
-                    className="w-full bg-[#F8FAF9] border border-gray-200 text-gray-800 text-xs font-medium px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/40"
-                  />
-                </label>
-                <div className="flex items-center justify-end gap-2 pt-1">
-                  {onClearDate && (
+            {isDateOpen &&
+              menuPos &&
+              typeof document !== "undefined" &&
+              createPortal(
+                <div
+                  ref={menuRef}
+                  className="bg-white border border-gray-200 rounded-2xl shadow-lg p-3 space-y-3"
+                  style={getPortaledMenuStyle(menuPos)}
+                >
+                  <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                    Created date range
+                  </div>
+                  <label className="block space-y-1">
+                    <span className="text-xs font-semibold text-gray-600">
+                      From
+                    </span>
+                    <input
+                      type="date"
+                      value={dateFrom || ""}
+                      max={dateTo || undefined}
+                      onChange={(e) =>
+                        onDateFromChange && onDateFromChange(e.target.value)
+                      }
+                      className="w-full bg-[#F8FAF9] border border-gray-200 text-gray-800 text-xs font-medium px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/40"
+                    />
+                  </label>
+                  <label className="block space-y-1">
+                    <span className="text-xs font-semibold text-gray-600">To</span>
+                    <input
+                      type="date"
+                      value={dateTo || ""}
+                      min={dateFrom || undefined}
+                      onChange={(e) =>
+                        onDateToChange && onDateToChange(e.target.value)
+                      }
+                      className="w-full bg-[#F8FAF9] border border-gray-200 text-gray-800 text-xs font-medium px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/40"
+                    />
+                  </label>
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    {onClearDate && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClearDate();
+                        }}
+                        className="text-xs font-semibold text-gray-500 hover:text-gray-700 px-2 py-1"
+                      >
+                        Clear
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => {
-                        onClearDate();
-                      }}
-                      className="text-xs font-semibold text-gray-500 hover:text-gray-700 px-2 py-1"
+                      onClick={() => setIsDateOpen(false)}
+                      className="bg-[#16730F] hover:bg-[#125B0C] text-white text-xs font-bold px-3 py-1.5 rounded-lg"
                     >
-                      Clear
+                      Done
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setIsDateOpen(false)}
-                    className="bg-[#16730F] hover:bg-[#125B0C] text-white text-xs font-bold px-3 py-1.5 rounded-lg"
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-            )}
+                  </div>
+                </div>,
+                document.body,
+              )}
           </div>
         )}
 

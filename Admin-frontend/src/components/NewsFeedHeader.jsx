@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   FaList,
   FaSearch,
@@ -33,6 +34,10 @@ import { formatDisplayText } from "../utils/displayFormatUtils";
 import { filterAdminUsersFromSearch, filterAdminSearchResults } from "../utils/filterAdminUsers";
 import RecruitmentRightMobileMenu from "./recruitment/RecruitmentRightMobileMenu";
 import InviteFriendsModal from "./InviteFriendsModal";
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from "../hooks/usePortaledMenu";
 
 const NewsFeedHeader = ({ user: propUser }) => {
   useSyncProfilePhoto();
@@ -50,6 +55,13 @@ const NewsFeedHeader = ({ user: propUser }) => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
+  const { triggerRef, menuRef, menuPos } = usePortaledMenu({
+    isOpen: isDropdownOpen,
+    onClose: () => setIsDropdownOpen(false),
+    minWidth: 288,
+    maxHeight: 420,
+    extraContainRefs: [dropdownRef],
+  });
   const searchTimeoutRef = useRef(null);
   const searchRequestIdRef = useRef(0);
 
@@ -304,9 +316,6 @@ const NewsFeedHeader = ({ user: propUser }) => {
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSearchResults(false);
       }
@@ -636,6 +645,8 @@ const NewsFeedHeader = ({ user: propUser }) => {
               {/* Custom Dropdown for Role */}
               <div className="relative">
                 <button
+                  ref={triggerRef}
+                  type="button"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center gap-1 bg-[#16730F] text-white rounded-full px-3 py-1 mt-0.5 text-xs sm:text-sm md:text-base focus:outline-none hover:bg-[#145a0c] transition-colors"
                 >
@@ -646,8 +657,17 @@ const NewsFeedHeader = ({ user: propUser }) => {
                 </button>
 
                 {/* Dropdown Menu */}
-                {isDropdownOpen && (
-                  <div className="absolute right-0 left-auto mt-2 w-[min(18rem,calc(100vw-1rem))] bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden max-h-[70vh] overflow-y-auto nfl-scroll">
+                {isDropdownOpen &&
+                  menuPos &&
+                  createPortal(
+                  <div
+                    ref={menuRef}
+                    className="bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-y-auto nfl-scroll"
+                    style={{
+                      ...getPortaledMenuStyle(menuPos),
+                      maxHeight: menuPos.maxHeight,
+                    }}
+                  >
                     {/* User Info Header */}
                     <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                       <div className="flex items-center gap-3">
@@ -778,7 +798,8 @@ const NewsFeedHeader = ({ user: propUser }) => {
                         </button>
                       )}
                     </div>
-                  </div>
+                  </div>,
+                  document.body,
                 )}
               </div>
             </div>

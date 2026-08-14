@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Header from "../../../components/Header";
 import StepTabs from "../../../components/StepTabs";
 import ProgressBar from "../../../components/ProgressBar";
@@ -23,6 +24,10 @@ import { JOB_TITLES } from "../../../data/teamData";
 import { formatDateRange } from "../../../utils/checksFormat";
 import axiosInstance from "../../../utils/axiosInstance";
 import ResponsibilitiesList from "../../../components/ResponsibilitiesList";
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from "../../../hooks/usePortaledMenu";
 
 const buildWorkHistoryApiPayload = (entry) => ({
   userId: entry.userId,
@@ -42,20 +47,16 @@ const AutocompleteJobInput = ({ value, onChange, placeholder, suggestions, onAdd
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const wrapperRef = useRef(null);
+  const { triggerRef, menuRef, menuPos } = usePortaledMenu({
+    isOpen: showSuggestions,
+    onClose: () => setShowSuggestions(false),
+    maxHeight: 240,
+    extraContainRefs: [wrapperRef],
+  });
 
   useEffect(() => {
     setInputValue(value);
   }, [value]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const handleInputChange = (e) => {
     const newValue = e.target.value;
@@ -91,6 +92,7 @@ const AutocompleteJobInput = ({ value, onChange, placeholder, suggestions, onAdd
   return (
     <div ref={wrapperRef} className="relative w-full" style={{ position: "relative", zIndex: 20 }}>
       <input
+        ref={triggerRef}
         type="text"
         value={inputValue}
         onChange={handleInputChange}
@@ -113,51 +115,53 @@ const AutocompleteJobInput = ({ value, onChange, placeholder, suggestions, onAdd
         <FaCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-[#16730F] text-lg pointer-events-none" />
       )}
       
-      {showSuggestions && (
-        <div 
-          className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto nfl-scroll"
-          style={{ 
-            zIndex: 9999,
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            right: 0
-          }}
-        >
-          {filteredSuggestions.length > 0 ? (
-            <>
-              {filteredSuggestions.map((suggestion, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleSelectSuggestion(suggestion)}
-                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 transition-colors"
-                >
-                  {suggestion}
-                </div>
-              ))}
-              {inputValue.trim() && !filteredSuggestions.includes(inputValue.trim()) && (
+      {showSuggestions &&
+        menuPos &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-y-auto nfl-scroll"
+            style={{
+              ...getPortaledMenuStyle(menuPos),
+              maxHeight: menuPos.maxHeight,
+            }}
+          >
+            {filteredSuggestions.length > 0 ? (
+              <>
+                {filteredSuggestions.map((suggestion, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleSelectSuggestion(suggestion)}
+                    className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 transition-colors"
+                  >
+                    {suggestion}
+                  </div>
+                ))}
+                {inputValue.trim() && !filteredSuggestions.includes(inputValue.trim()) && (
+                  <div
+                    onClick={handleAddNew}
+                    className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2 border-t border-gray-100"
+                  >
+                    <FaPlus className="text-xs" />
+                    Add "{inputValue}"
+                  </div>
+                )}
+              </>
+            ) : (
+              inputValue.trim() && (
                 <div
                   onClick={handleAddNew}
-                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2 border-t border-gray-100"
+                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2"
                 >
                   <FaPlus className="text-xs" />
                   Add "{inputValue}"
                 </div>
-              )}
-            </>
-          ) : (
-            inputValue.trim() && (
-              <div
-                onClick={handleAddNew}
-                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-[#16730F] font-medium transition-colors flex items-center gap-2"
-              >
-                <FaPlus className="text-xs" />
-                Add "{inputValue}"
-              </div>
-            )
-          )}
-        </div>
-      )}
+              )
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

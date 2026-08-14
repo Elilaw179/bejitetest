@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   fetchNotifications,
@@ -8,6 +9,10 @@ import {
 import { getPostDetailPath } from "../../utils/postNavigation";
 import { trackPartnerEventClick } from "../../services/verifiedBadgeApi";
 import { getPartnerEventIdFromNotification } from "../../utils/partnerEventClick";
+import {
+  getPortaledMenuStyle,
+  usePortaledMenu,
+} from "../../hooks/usePortaledMenu";
 
 function normalizeNotificationPath(path) {
   if (!path || typeof path !== "string") return path;
@@ -65,7 +70,12 @@ export default function NotificationDropdown({
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const panelRef = useRef(null);
+  const { triggerRef, menuRef, menuPos } = usePortaledMenu({
+    isOpen: open,
+    onClose: () => setOpen(false),
+    minWidth: 288,
+    maxHeight: 400,
+  });
 
   const loadPreview = useCallback(async () => {
     setLoading(true);
@@ -85,16 +95,6 @@ export default function NotificationDropdown({
   useEffect(() => {
     if (open) loadPreview();
   }, [open, loadPreview]);
-
-  useEffect(() => {
-    const onDocClick = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    if (open) document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
-  }, [open]);
 
   const handleItemClick = (notification) => {
     if (!notification?.is_read) {
@@ -141,8 +141,9 @@ export default function NotificationDropdown({
     ) : null;
 
   return (
-    <div className="relative" ref={panelRef}>
+    <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={
@@ -163,57 +164,68 @@ export default function NotificationDropdown({
         {badge}
       </button>
 
-      {open && (
-        <div className="absolute right-0 mt-2 w-[min(100vw-2rem,22rem)] bg-white border border-gray-200 rounded-xl shadow-xl z-[100] overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                navigate("/notifications");
-              }}
-              className="text-xs font-medium text-[#16730F] hover:underline"
-            >
-              View all
-            </button>
-          </div>
+      {open &&
+        menuPos &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
+            style={getPortaledMenuStyle(menuPos)}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/notifications");
+                }}
+                className="text-xs font-medium text-[#16730F] hover:underline"
+              >
+                View all
+              </button>
+            </div>
 
-          <div className="max-h-80 overflow-y-auto nfl-scroll">
-            {loading && (
-              <p className="px-4 py-6 text-sm text-gray-500 text-center">
-                Loading…
-              </p>
-            )}
-            {!loading && items.length === 0 && (
-              <p className="px-4 py-6 text-sm text-gray-500 text-center">
-                No notifications yet
-              </p>
-            )}
-            {!loading &&
-              items.map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => handleItemClick(n)}
-                  className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors select-none [-webkit-tap-highlight-color:transparent] touch-manipulation ${
-                    !n.is_read ? "bg-green-50/40" : ""
-                  }`}
-                >
-                  <p className="text-sm font-medium text-gray-900 line-clamp-1">
-                    {n.title}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">
-                    {n.message}
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    {formatNotificationTime(n.created_at)}
-                  </p>
-                </button>
-              ))}
-          </div>
-        </div>
-      )}
+            <div
+              className="overflow-y-auto nfl-scroll"
+              style={{ maxHeight: Math.min(320, menuPos.maxHeight - 56) }}
+            >
+              {loading && (
+                <p className="px-4 py-6 text-sm text-gray-500 text-center">
+                  Loading…
+                </p>
+              )}
+              {!loading && items.length === 0 && (
+                <p className="px-4 py-6 text-sm text-gray-500 text-center">
+                  No notifications yet
+                </p>
+              )}
+              {!loading &&
+                items.map((n) => (
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={() => handleItemClick(n)}
+                    className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors select-none [-webkit-tap-highlight-color:transparent] touch-manipulation ${
+                      !n.is_read ? "bg-green-50/40" : ""
+                    }`}
+                  >
+                    <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                      {n.title}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">
+                      {n.message}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-1">
+                      {formatNotificationTime(n.created_at)}
+                    </p>
+                  </button>
+                ))}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
