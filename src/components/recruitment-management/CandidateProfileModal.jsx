@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaUser,
   FaTimes,
@@ -21,6 +22,7 @@ import {
   downloadJobApplicationResume,
 } from "../../services/employerApi";
 import { formatDisplayText } from "../../utils/displayFormatUtils";
+import { resolveCandidateUserId } from "../../utils/resolveCandidateUserId";
 
 const mapRecommendationToOutcome = (rec = "") => {
   const value = String(rec).toLowerCase();
@@ -68,6 +70,7 @@ export default function CandidateProfileModal({
   const [feedbackRec, setFeedbackRec] = useState("Pass to Next stage");
   const [feedbackInterviewer, setFeedbackInterviewer] = useState("");
   const [feedbackNotes, setFeedbackNotes] = useState("");
+  const navigate = useNavigate();
 
   const applicationId = candidate?.id;
 
@@ -110,6 +113,16 @@ export default function CandidateProfileModal({
   const display = {
     ...candidate,
     ...(profile || {}),
+  };
+  const profileUserId = resolveCandidateUserId(display) || resolveCandidateUserId(candidate);
+
+  const openPublicProfile = () => {
+    if (!profileUserId) {
+      toast.error("This candidate has no linked profile yet.");
+      return;
+    }
+    onClose?.();
+    navigate(`/user-profile/${profileUserId}`);
   };
 
   const candidateScore =
@@ -265,7 +278,10 @@ export default function CandidateProfileModal({
                   <img
                     src={display.avatar || "/assets/images/photo_placeholder.png"}
                     alt={display.name}
-                    className="w-11 h-11 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-white/40 shrink-0"
+                    className={`w-11 h-11 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-white/40 shrink-0 ${
+                      profileUserId ? "cursor-pointer" : ""
+                    }`}
+                    onClick={profileUserId ? openPublicProfile : undefined}
                     onError={(e) => {
                       e.currentTarget.src = "/assets/images/photo_placeholder.png";
                     }}
@@ -273,7 +289,18 @@ export default function CandidateProfileModal({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h4 className="text-sm sm:text-lg font-bold tracking-tight truncate">
-                        {display.name || "Candidate"}
+                        {profileUserId ? (
+                          <button
+                            type="button"
+                            onClick={openPublicProfile}
+                            className="text-left truncate underline-offset-2 hover:underline focus:underline focus:outline-none"
+                            title="View full profile"
+                          >
+                            {display.name || "Candidate"}
+                          </button>
+                        ) : (
+                          display.name || "Candidate"
+                        )}
                       </h4>
                       <span className="bg-white/20 text-white text-[9px] sm:text-[10px] font-extrabold px-2 sm:px-2.5 py-0.5 rounded-full uppercase shrink-0">
                         SCORE: {candidateScore}
@@ -357,7 +384,18 @@ export default function CandidateProfileModal({
                       <div>
                         <div className="text-gray-500 font-medium">Full Name</div>
                         <div className="font-bold text-gray-900 mt-0.5 truncate">
-                          {display.name || "—"}
+                          {profileUserId ? (
+                            <button
+                              type="button"
+                              onClick={openPublicProfile}
+                              className="text-[#16730F] hover:underline underline-offset-2 truncate max-w-full"
+                              title="View full profile"
+                            >
+                              {display.name || "—"}
+                            </button>
+                          ) : (
+                            display.name || "—"
+                          )}
                         </div>
                       </div>
                       <div>

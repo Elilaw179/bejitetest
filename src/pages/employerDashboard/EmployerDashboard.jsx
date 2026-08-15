@@ -256,7 +256,10 @@ const EmployerDashboard = () => {
 
   return (
     <NewsFeedLayout showSidebars={false}>
-      <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
+      <div
+        className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-8 flex flex-col"
+        data-testid="employer-dashboard"
+      >
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">

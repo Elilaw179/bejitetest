@@ -398,11 +398,12 @@ export default function RecruitmentMiddle() {
   };
 
   return (
-    <main className="w-full px-2 py-6 space-y-8 bg-[#F5F5F5]">
+    <main className="w-full px-2 py-6 space-y-8 bg-[#F5F5F5]" data-testid="news-feed">
       {/* Create Post Button */}
       <div className="max-w-3xl p-6 mx-auto bg-white shadow rounded-2xl">
         <div
           className="flex items-center gap-3 cursor-pointer"
+          data-testid="news-feed-start-post"
           onClick={() => openCreateModal("post")}
         >
           <img

@@ -247,7 +247,10 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto w-full space-y-8">
+    <div
+      className="max-w-7xl mx-auto w-full space-y-8"
+      data-testid="admin-dashboard"
+    >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
@@ -276,7 +279,12 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col gap-4">
           <div className="flex justify-between items-center">
-            <span className="text-gray-500 font-medium">Total Users</span>
+            <span
+              className="text-gray-500 font-medium"
+              data-testid="admin-kpi-total-users"
+            >
+              Total Users
+            </span>
             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
               <Users size={20} />
             </div>

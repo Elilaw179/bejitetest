@@ -4,8 +4,6 @@ import { FaTimes } from 'react-icons/fa';
 import { getUser, isAuthenticated } from '../utils/tokenManager';
 import useProfileCompletionStatus from '../hooks/useProfileCompletionStatus';
 
-const DISMISS_KEY = 'profileCompletionReminderDismissed';
-
 const SKIP_EXACT = new Set([
   '/',
   '/signup',
@@ -44,6 +42,10 @@ function shouldSkipPath(pathname) {
   return SKIP_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
+function normalizeRole(role) {
+  return String(role || '').trim().toLowerCase();
+}
+
 function resolveRecruiterMode(user) {
   const mode = String(user?.mode || '').toLowerCase();
   if (mode === 'individual' || mode === 'corporate') return mode;
@@ -51,7 +53,7 @@ function resolveRecruiterMode(user) {
 }
 
 function getProfileSetupPath(role, mode) {
-  if (role === 'recruiter') {
+  if (role === 'recruiter' || role === 'employer') {
     if (mode === 'individual') {
       return '/individual/basic-details';
     }
@@ -65,29 +67,40 @@ function getProfileSetupPath(role, mode) {
 
 /**
  * Fixed corner popup reminding authenticated users to complete their profile.
+ * Later hides it for this visit only. Login / leaving onboarding shows it again
+ * if the profile is still incomplete.
  */
 export default function ProfileCompletionReminder() {
   const location = useLocation();
   const navigate = useNavigate();
   const prevPathRef = useRef(location.pathname);
+  const userIdRef = useRef(null);
   const [dismissed, setDismissed] = useState(false);
 
   const onAppRoute = !shouldSkipPath(location.pathname);
   const authenticated = isAuthenticated();
   const { profileCompleted, loading } = useProfileCompletionStatus({
-    enabled: authenticated,
+    enabled: authenticated && onAppRoute,
   });
 
   const user = getUser();
-  const role = user?.role;
-  const recruiterMode = role === 'recruiter' ? resolveRecruiterMode(user) : null;
+  const userId = user?.id || null;
+  const role = normalizeRole(user?.role);
+  const recruiterMode = role === 'recruiter' || role === 'employer'
+    ? resolveRecruiterMode(user)
+    : null;
 
-  // Leaving onboarding for the main app — show reminder again if they dismissed it earlier there.
+  useEffect(() => {
+    if (userId && userId !== userIdRef.current) {
+      setDismissed(false);
+    }
+    userIdRef.current = userId;
+  }, [userId]);
+
   useEffect(() => {
     const prev = prevPathRef.current;
     const curr = location.pathname;
     if (shouldSkipPath(prev) && !shouldSkipPath(curr)) {
-      sessionStorage.removeItem(DISMISS_KEY);
       setDismissed(false);
     }
     prevPathRef.current = curr;
@@ -106,26 +119,19 @@ export default function ProfileCompletionReminder() {
     profileCompleted,
   ]);
 
-  useEffect(() => {
-    if (profileCompleted === true) {
-      sessionStorage.removeItem(DISMISS_KEY);
-      setDismissed(false);
-    }
-  }, [profileCompleted]);
-
   if (!visible) return null;
 
   const setupPath = getProfileSetupPath(role, recruiterMode);
-  const isIndividualRecruiter = role === 'recruiter' && recruiterMode === 'individual';
-  const title =
-    role === 'recruiter'
-      ? 'Complete your recruiter profile'
-      : 'Complete your jobseeker profile';
+  const isIndividualRecruiter = recruiterMode === 'individual';
+  const isRecruiter = role === 'recruiter' || role === 'employer';
+  const title = isRecruiter
+    ? 'Complete your recruiter profile'
+    : 'Complete your jobseeker profile';
   const description = isIndividualRecruiter
-    ? 'Add your profile details and verify your identity so jobseekers can trust you.'
-    : role === 'recruiter'
-      ? 'Add your company details so candidates can find and trust you.'
-      : 'Add your bio, skills, and experience to get better job matches.';
+    ? 'Finish every profile step and upload your ID. Skip does not count as complete.'
+    : isRecruiter
+      ? 'Finish every company step and upload your registration document. Skip does not count as complete.'
+      : 'Finish every CV step, including photo and certificate uploads. Skip does not count as complete.';
 
   const handleDismiss = () => {
     setDismissed(true);

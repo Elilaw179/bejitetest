@@ -65,7 +65,7 @@ export default defineConfig({
     },
     {
       name: 'public',
-      testMatch: /auth\.signin\.spec\.js/,
+      testMatch: /auth\.(signin|guard)\.spec\.js/,
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -81,9 +81,9 @@ export default defineConfig({
   webServer: {
     command: `npm run dev -- --host localhost --port ${PORT}`,
     url: baseURL,
-    // Fresh Vite process so VITE_API_URL below is applied (existing :5173 often points at Render).
+    // Fresh Vite so VITE_API_URL (local :3001) is applied.
     reuseExistingServer: false,
-    timeout: 120_000,
+    timeout: 180_000,
     env: {
       ...process.env,
       VITE_API_URL: e2eApiUrl,

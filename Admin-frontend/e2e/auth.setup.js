@@ -43,7 +43,11 @@ setup('authenticate as admin', async ({ page }) => {
 
   fs.mkdirSync(path.dirname(authFile), { recursive: true });
 
-  await page.goto('/admin/login');
+  await page.goto('/admin/login', { waitUntil: 'domcontentloaded' });
+  await page.getByTestId('admin-login-username').waitFor({
+    state: 'visible',
+    timeout: 30_000,
+  });
   await page.getByTestId('admin-login-username').fill(username);
   await page.getByTestId('admin-login-password').fill(password);
   await page.getByTestId('admin-login-submit').click();

@@ -15,6 +15,7 @@ export default function FormField({
   helperText,
   className = "",
   inputClassName = "",
+  searchable,
   children: _children,
   ...props
 }) {
@@ -29,6 +30,7 @@ export default function FormField({
           options={options}
           placeholder={placeholder || "Select option"}
           required={required}
+          searchable={searchable}
         />
       ) : (
         <>

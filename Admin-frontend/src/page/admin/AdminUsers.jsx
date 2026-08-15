@@ -111,7 +111,10 @@ const AdminUsers = () => {
   const endIndex = Math.min(currentPage * itemsPerPage, totalUsers);
 
   return (
-    <div className="max-w-7xl mx-auto w-full space-y-6">
+    <div
+      className="max-w-7xl mx-auto w-full space-y-6"
+      data-testid="admin-users-page"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
