@@ -101,7 +101,7 @@ const Bio = () => {
           gender: toString(bio.gender),
           maritalStatus: toString(bio.marital_status),
           age: toString(bio.age),
-          dob: toString(bio.dob || bio.date_of_birth),
+          dob: toString(bio.dob || bio.date_of_birth).slice(0, 10),
           country: toString(bio.country),
           street: toString(bio.street),
           city: toString(bio.city),

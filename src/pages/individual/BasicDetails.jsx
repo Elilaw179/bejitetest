@@ -6,6 +6,7 @@ import NavigationButtons from "../../components/NavigationButtons";
 import ProgressBar from "../../components/ProgressBar";
 import StepTabs from "../../components/StepTabs";
 import Header from "../../components/Header";
+import DobCalendarPicker from "../../components/forms/DobCalendarPicker";
 import useAuth from "../../hooks/useAuth";
 import useRecruiterProfile from "../../services/recruiterProfile";
 import { updateUser } from "../../features/auth/authSlice";
@@ -29,6 +30,7 @@ const BasicDetails = () => {
     full_name: "",
     email: "",
     phone_number: "",
+    date_of_birth: "",
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -42,6 +44,10 @@ const BasicDetails = () => {
       ),
       email: recruiterData.email || "",
       phone_number: recruiterData.phone_number || "",
+      date_of_birth:
+        recruiterData.date_of_birth ||
+        recruiterData.dob ||
+        "",
     });
   }, [isEditMode, recruiterData]);
 
@@ -67,18 +73,26 @@ const BasicDetails = () => {
       storedUser?.phone_number ||
       storedUser?.phone ||
       "";
+    const resolvedDob =
+      user?.date_of_birth ||
+      user?.dob ||
+      storedUser?.date_of_birth ||
+      storedUser?.dob ||
+      "";
 
     setFormData((prev) => {
       const next = {
         full_name: prev.full_name || resolvedName,
         email: prev.email || resolvedEmail,
         phone_number: prev.phone_number || resolvedPhone,
+        date_of_birth: prev.date_of_birth || resolvedDob,
       };
 
       if (
         prev.full_name === next.full_name &&
         prev.email === next.email &&
-        prev.phone_number === next.phone_number
+        prev.phone_number === next.phone_number &&
+        prev.date_of_birth === next.date_of_birth
       ) {
         return prev;
       }
@@ -93,13 +107,17 @@ const BasicDetails = () => {
     user?.lastName,
     user?.phone_number,
     user?.phone,
+    user?.date_of_birth,
+    user?.dob,
   ]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const isFormComplete = Object.values(formData).every((v) => v.trim() !== "");
+  const isFormComplete = ["full_name", "email", "phone_number"].every(
+    (key) => String(formData[key] || "").trim() !== "",
+  );
 
   const handleNextStep = async () => {
     if (!isFormComplete || submitting) {
@@ -108,9 +126,12 @@ const BasicDetails = () => {
     }
 
     const submitData = async () => {
+      const dob = formData.date_of_birth?.trim() || null;
       await updateBasicDetails({
         full_name: formData.full_name.trim(),
         phone_number: formData.phone_number,
+        date_of_birth: dob,
+        dob,
       });
 
       const { firstName, lastName } = splitRecruiterFullName(
@@ -124,6 +145,8 @@ const BasicDetails = () => {
           lastName,
           phone_number,
           phone: phone_number,
+          date_of_birth: dob,
+          dob,
         }),
       );
 
@@ -137,6 +160,8 @@ const BasicDetails = () => {
             lastName,
             phone_number,
             phone: phone_number,
+            date_of_birth: dob,
+            dob,
           }),
         );
       } catch {
@@ -225,6 +250,18 @@ const BasicDetails = () => {
               value={formData.phone_number}
               onChange={handleChange}
               className="w-full h-11 bg-white border border-gray-300 rounded-xl px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#16730F] focus:border-transparent transition-all shadow-sm placeholder-gray-400"
+            />
+          </div>
+
+          <div>
+            <label className="font-semibold text-[12px] mb-2 block">
+              DATE OF BIRTH
+            </label>
+            <DobCalendarPicker
+              name="date_of_birth"
+              value={formData.date_of_birth || ""}
+              onChange={handleChange}
+              placeholder="Select date of birth"
             />
           </div>
         </div>

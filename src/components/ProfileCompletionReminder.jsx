@@ -58,12 +58,12 @@ function resolveRecruiterMode(user) {
 function getProfileSetupPath(role, mode) {
   if (role === 'recruiter' || role === 'employer') {
     if (mode === 'individual') {
-      return '/individual/basic-details';
+      return '/edit-profile/individual/basic-details';
     }
     return '/edit-profile/recruiter/basic-details';
   }
   if (role === 'jobseeker') {
-    return '/resume';
+    return '/edit-profile/bio';
   }
   return '/complete-signup';
 }
