@@ -25,6 +25,7 @@ export function RecruiterSelect({
   className = "",
   id,
   closeBtn = true,
+  searchable,
   children,
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -265,7 +266,7 @@ export function RecruiterSelect({
               zIndex: MENU_Z_INDEX,
             }}
           >
-            {normalizedOptions.length >= 4 && (
+            {(searchable ?? normalizedOptions.length >= 4) && (
               <div className="px-3 pb-2 mb-1 border-b border-gray-100">
                 <div className="relative flex items-center">
                   <FaSearch className="absolute left-3 w-3.5 h-3.5 text-gray-400" />

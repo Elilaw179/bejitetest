@@ -49,7 +49,8 @@ setup('authenticate as user', async ({ page }) => {
 
   fs.mkdirSync(path.dirname(authFile), { recursive: true });
 
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.getByTestId('signin-email').waitFor({ state: 'visible', timeout: 30_000 });
   await page.getByTestId('signin-email').fill(email);
   await page.getByTestId('signin-password').fill(password);
   await page.getByTestId('signin-submit').click();

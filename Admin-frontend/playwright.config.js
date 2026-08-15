@@ -80,7 +80,7 @@ export default defineConfig({
     command: `npm run dev -- --host localhost --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: false,
-    timeout: 120_000,
+    timeout: 180_000,
     env: {
       ...process.env,
       VITE_API_URL: e2eApiUrl,

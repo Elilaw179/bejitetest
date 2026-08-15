@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { FaCommentDots, FaTimes } from "react-icons/fa";
 import Button from "../ui/Button";
 import FormField from "../ui/FormField";
@@ -22,6 +22,9 @@ const OUTCOME_STATUSES = [
   { label: "Pending", value: "Pending" },
 ];
 
+const hasLinkedAccount = (candidate) =>
+  Boolean(candidate?.userId || candidate?.user_id);
+
 const resolveScoreLabel = (candidate) => {
   if (candidate?.score != null && candidate.score !== "") {
     const raw = String(candidate.score);
@@ -37,6 +40,7 @@ export default function CandidateFeedbackModal({
   isOpen,
   onClose,
   candidate,
+  candidates,
   jobTitle = "",
   onSubmitFeedback,
   submitting = false,
@@ -45,24 +49,34 @@ export default function CandidateFeedbackModal({
   const [feedbackText, setFeedbackText] = useState("");
   const [error, setError] = useState("");
 
+  const list = useMemo(() => {
+    if (Array.isArray(candidates) && candidates.length) return candidates;
+    return candidate ? [candidate] : [];
+  }, [candidates, candidate]);
+
+  const isBulk = list.length > 1;
+  const primary = list[0];
+  const chatable = list.filter(hasLinkedAccount);
+  const skippedCount = list.length - chatable.length;
+  const canChat = chatable.length > 0;
+
   useEffect(() => {
-    if (!isOpen || !candidate) return;
+    if (!isOpen || !primary) return;
     const allowed = OUTCOME_STATUSES.map((s) => s.value);
-    const nextOutcome = allowed.includes(candidate.outcome)
-      ? candidate.outcome
-      : "Pending";
+    const nextOutcome =
+      !isBulk && allowed.includes(primary.outcome) ? primary.outcome : "Pending";
     setSelectedOutcome(nextOutcome);
     setFeedbackText("");
     setError("");
-  }, [isOpen, candidate]);
+  }, [isOpen, primary, isBulk]);
 
-  if (!isOpen || !candidate) return null;
+  if (!isOpen || !list.length) return null;
 
-  const candidateScore = resolveScoreLabel(candidate);
-  const candidateStage = candidate.currentStage || candidate.pipelineStageName || "—";
-  const candidateTitle = candidate.title || "—";
-  const candidateOutcome = candidate.outcome || "Pending";
-  const canChat = Boolean(candidate.userId || candidate.user_id);
+  const candidateScore = resolveScoreLabel(primary);
+  const candidateStage =
+    primary.currentStage || primary.pipelineStageName || "—";
+  const candidateTitle = primary.title || "—";
+  const candidateOutcome = primary.outcome || "Pending";
 
   const handleAddSuggestion = (suggestion) => {
     setFeedbackText((prev) =>
@@ -81,14 +95,16 @@ export default function CandidateFeedbackModal({
 
     if (!canChat) {
       setError(
-        "This candidate has no linked account, so feedback cannot be sent in chat.",
+        isBulk
+          ? "None of the selected candidates have a linked account, so feedback cannot be sent in chat."
+          : "This candidate has no linked account, so feedback cannot be sent in chat.",
       );
       return;
     }
 
     if (!onSubmitFeedback || submitting) return;
 
-    const result = await onSubmitFeedback(candidate, {
+    const result = await onSubmitFeedback(isBulk ? list : primary, {
       outcome: selectedOutcome,
       feedback: feedbackText.trim(),
     });
@@ -118,11 +134,16 @@ export default function CandidateFeedbackModal({
           </div>
           <div>
             <h3 className="text-lg sm:text-xl font-bold text-[#1A3E32] tracking-tight">
-              Send Feedback
+              {isBulk ? "Send Bulk Feedback" : "Send Feedback"}
             </h3>
-            <p className="text-xs text-gray-500 font-normal mt-0.5 line-clamp-1">
-              This message is sent to the candidate&apos;s chat
-              {jobTitle ? ` for “${jobTitle}”` : ""}.
+            <p className="text-xs text-gray-500 font-normal mt-0.5 line-clamp-2">
+              {isBulk
+                ? `This message is sent to ${chatable.length} candidate chat${
+                    chatable.length === 1 ? "" : "s"
+                  }${jobTitle ? ` for “${jobTitle}”` : ""}.`
+                : `This message is sent to the candidate's chat${
+                    jobTitle ? ` for “${jobTitle}”` : ""
+                  }.`}
             </p>
           </div>
         </div>
@@ -130,39 +151,77 @@ export default function CandidateFeedbackModal({
         <div className="overflow-y-auto nfl-scroll flex-1 min-h-0 space-y-3.5 pr-1 sm:pr-2">
           <div className="bg-[#16730F] text-white rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <img
-                src={candidate.avatar || "/assets/images/photo_placeholder.png"}
-                alt={candidate.name}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border border-white/40 shrink-0"
-                onError={(e) => {
-                  e.currentTarget.src = "/assets/images/photo_placeholder.png";
-                }}
-              />
+              {isBulk ? (
+                <div className="flex -space-x-2 shrink-0">
+                  {list.slice(0, 3).map((c) => (
+                    <img
+                      key={c.id}
+                      src={c.avatar || "/assets/images/photo_placeholder.png"}
+                      alt={c.name}
+                      className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-white/40"
+                      onError={(e) => {
+                        e.currentTarget.src =
+                          "/assets/images/photo_placeholder.png";
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <img
+                  src={
+                    primary.avatar || "/assets/images/photo_placeholder.png"
+                  }
+                  alt={primary.name}
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border border-white/40 shrink-0"
+                  onError={(e) => {
+                    e.currentTarget.src =
+                      "/assets/images/photo_placeholder.png";
+                  }}
+                />
+              )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="text-sm font-bold truncate">{candidate.name}</h4>
-                  <span className="bg-white/20 text-white text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">
-                    SCORE: {candidateScore}
-                  </span>
+                  <h4 className="text-sm font-bold truncate">
+                    {isBulk ? `${list.length} candidates` : primary.name}
+                  </h4>
+                  {!isBulk && (
+                    <span className="bg-white/20 text-white text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">
+                      SCORE: {candidateScore}
+                    </span>
+                  )}
                 </div>
-                <div className="text-xs text-emerald-100 mt-0.5 truncate">
-                  {candidateTitle}
+                <div className="text-xs text-emerald-100 mt-0.5 line-clamp-2">
+                  {isBulk
+                    ? list.map((c) => c.name).join(", ")
+                    : candidateTitle}
                 </div>
-                <div className="text-[11px] text-emerald-200 mt-0.5 truncate">
-                  Stage: {candidateStage}
-                </div>
+                {!isBulk && (
+                  <div className="text-[11px] text-emerald-200 mt-0.5 truncate">
+                    Stage: {candidateStage}
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="self-start sm:self-auto text-left sm:text-right shrink-0 border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0 w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end">
-              <div className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-200 mb-0.5">
-                CURRENT OUTCOME
+            {!isBulk && (
+              <div className="self-start sm:self-auto text-left sm:text-right shrink-0 border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0 w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end">
+                <div className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-200 mb-0.5">
+                  CURRENT OUTCOME
+                </div>
+                <span className="inline-block bg-[#856404] text-white text-xs font-bold px-3 py-0.5 rounded-full">
+                  {candidateOutcome}
+                </span>
               </div>
-              <span className="inline-block bg-[#856404] text-white text-xs font-bold px-3 py-0.5 rounded-full">
-                {candidateOutcome}
-              </span>
-            </div>
+            )}
           </div>
+
+          {isBulk && skippedCount > 0 && (
+            <div className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+              {skippedCount} selected candidate
+              {skippedCount === 1 ? "" : "s"} have no linked account and will be
+              skipped.
+            </div>
+          )}
 
           <div>
             <label className="block text-[11px] font-extrabold uppercase tracking-wider text-gray-600 mb-2">
@@ -254,11 +313,14 @@ export default function CandidateFeedbackModal({
             disabled={submitting || !canChat}
             className="w-full sm:w-auto"
           >
-            {submitting ? "Sending…" : "Send to Chat"}
+            {submitting
+              ? "Sending…"
+              : isBulk
+                ? `Send to ${chatable.length} Chat${chatable.length === 1 ? "" : "s"}`
+                : "Send to Chat"}
           </Button>
         </div>
       </div>
     </div>
   );
 }
-

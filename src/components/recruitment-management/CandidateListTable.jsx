@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaCheckCircle, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 export default function CandidateListTable({
@@ -6,14 +6,40 @@ export default function CandidateListTable({
   onViewCandidateProfile,
   onFeedback,
   onMoveStage,
+  onBulkMove,
+  onBulkFeedback,
+  selectionResetKey = 0,
   currentPage = 1,
   totalPages = 1,
   onPageChange,
 }) {
   const [selectedIds, setSelectedIds] = useState([]);
+  const selectAllRef = useRef(null);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [selectionResetKey]);
+
+  useEffect(() => {
+    const visible = new Set(candidates.map((c) => c.id));
+    setSelectedIds((prev) => {
+      const next = prev.filter((id) => visible.has(id));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [candidates]);
+
+  const allSelected =
+    candidates.length > 0 && selectedIds.length === candidates.length;
+  const someSelected = selectedIds.length > 0 && !allSelected;
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someSelected;
+    }
+  }, [someSelected]);
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === candidates.length) {
+    if (allSelected) {
       setSelectedIds([]);
     } else {
       setSelectedIds(candidates.map((c) => c.id));
@@ -22,20 +48,32 @@ export default function CandidateListTable({
 
   const toggleSelect = (id) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
+  const selectedCandidates = candidates.filter((c) =>
+    selectedIds.includes(c.id),
+  );
+
   const getOutcomeBadge = (outcome) => {
     const formatted = (outcome || "").toLowerCase();
-    if (formatted === "passed" || formatted === "hired" || formatted === "accepted") {
+    if (
+      formatted === "passed" ||
+      formatted === "hired" ||
+      formatted === "accepted"
+    ) {
       return (
         <span className="inline-block bg-[#E6F4EA] text-[#16730F] text-xs font-semibold px-3 py-1 rounded-full text-center">
           {outcome}
         </span>
       );
     }
-    if (formatted === "failed" || formatted === "declined" || formatted === "rejected") {
+    if (
+      formatted === "failed" ||
+      formatted === "declined" ||
+      formatted === "rejected"
+    ) {
       return (
         <span className="inline-block bg-[#FDF2F2] text-[#D93838] text-xs font-semibold px-3 py-1 rounded-full text-center">
           {outcome}
@@ -51,28 +89,67 @@ export default function CandidateListTable({
 
   return (
     <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm flex flex-col">
+      {selectedIds.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-[#EFF5F2] border-b border-[#D5E5DD]">
+          <div className="text-sm font-bold text-[#1A3E32]">
+            {selectedIds.length} candidate
+            {selectedIds.length === 1 ? "" : "s"} selected
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onBulkMove && onBulkMove(selectedCandidates)}
+              className="bg-white border border-gray-400 hover:bg-gray-100 text-gray-800 text-xs px-3.5 py-1.5 rounded-full font-bold transition-all shadow-xs active:scale-95"
+            >
+              Move
+            </button>
+            <button
+              type="button"
+              onClick={() => onBulkFeedback && onBulkFeedback(selectedCandidates)}
+              className="bg-[#B45309] hover:bg-[#92400E] text-white text-xs px-3.5 py-1.5 rounded-full font-bold transition-all shadow-xs active:scale-95"
+            >
+              Send Feedback
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedIds([])}
+              className="text-xs font-bold text-gray-600 hover:text-[#1A3E32] px-2 py-1.5"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="w-full overflow-x-auto nfl-scroll">
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-[#1A3E32] text-white text-[11px] font-bold uppercase tracking-wider">
               <th className="py-3.5 px-4 w-12 text-center rounded-tl-xl sm:rounded-none">
                 <input
+                  ref={selectAllRef}
                   type="checkbox"
-                  checked={candidates.length > 0 && selectedIds.length === candidates.length}
+                  checked={allSelected}
                   onChange={toggleSelectAll}
+                  aria-label="Select all candidates"
                   className="rounded text-[#16730F] focus:ring-[#16730F] h-4 w-4 accent-[#16730F] cursor-pointer"
                 />
               </th>
               <th className="py-3.5 px-4">Candidate</th>
               <th className="py-3.5 px-4 text-center">Current Stage</th>
               <th className="py-3.5 px-4 text-center">Outcome</th>
-              <th className="py-3.5 px-4 text-right rounded-tr-xl sm:rounded-none">Actions</th>
+              <th className="py-3.5 px-4 text-right rounded-tr-xl sm:rounded-none">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm">
             {candidates.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-gray-400 font-medium text-sm">
+                <td
+                  colSpan={5}
+                  className="py-12 text-center text-gray-400 font-medium text-sm"
+                >
                   No candidates found matching your filter criteria.
                 </td>
               </tr>
@@ -82,25 +159,28 @@ export default function CandidateListTable({
                   key={candidate.id}
                   className="hover:bg-emerald-50/30 transition-colors duration-150"
                 >
-                  {/* Checkbox */}
                   <td className="py-4 px-4 text-center">
                     <input
                       type="checkbox"
                       checked={selectedIds.includes(candidate.id)}
                       onChange={() => toggleSelect(candidate.id)}
+                      aria-label={`Select ${candidate.name}`}
                       className="rounded text-[#16730F] focus:ring-[#16730F] h-4 w-4 accent-[#16730F] cursor-pointer"
                     />
                   </td>
 
-                  {/* Candidate Info */}
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
                       <img
-                        src={candidate.avatar || "/assets/images/photo_placeholder.png"}
+                        src={
+                          candidate.avatar ||
+                          "/assets/images/photo_placeholder.png"
+                        }
                         alt={candidate.name}
                         className="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0"
                         onError={(e) => {
-                          e.currentTarget.src = "/assets/images/photo_placeholder.png";
+                          e.currentTarget.src =
+                            "/assets/images/photo_placeholder.png";
                         }}
                       />
                       <div className="min-w-0">
@@ -120,19 +200,16 @@ export default function CandidateListTable({
                     </div>
                   </td>
 
-                  {/* Current Stage */}
                   <td className="py-4 px-4 text-center">
                     <span className="inline-block bg-[#EAEAEA] text-[#374151] text-xs font-semibold px-3.5 py-1 rounded-full border border-gray-200">
                       {candidate.currentStage || "Invited"}
                     </span>
                   </td>
 
-                  {/* Outcome */}
                   <td className="py-4 px-4 text-center">
                     {getOutcomeBadge(candidate.outcome)}
                   </td>
 
-                  {/* Action Buttons */}
                   <td className="py-4 px-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
@@ -151,7 +228,10 @@ export default function CandidateListTable({
                       </button>
                       <button
                         type="button"
-                        onClick={() => onViewCandidateProfile && onViewCandidateProfile(candidate)}
+                        onClick={() =>
+                          onViewCandidateProfile &&
+                          onViewCandidateProfile(candidate)
+                        }
                         className="bg-[#16730F] hover:bg-[#125B0C] text-white text-xs px-3.5 py-1.5 rounded-full font-bold transition-all shadow-xs active:scale-95"
                       >
                         View Profile
@@ -165,10 +245,10 @@ export default function CandidateListTable({
         </table>
       </div>
 
-      {/* Pagination Footer */}
       <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-gray-100 bg-white">
         <div className="text-xs text-gray-500 font-medium">
-          Showing <strong>1</strong> to <strong>{candidates.length}</strong> candidates
+          Showing <strong>1</strong> to <strong>{candidates.length}</strong>{" "}
+          candidates
         </div>
         <div className="flex items-center gap-1.5">
           <button

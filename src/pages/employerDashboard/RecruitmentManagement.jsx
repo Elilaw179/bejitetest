@@ -5,7 +5,6 @@ import {
   FaUsers,
   FaUserCheck,
   FaUserTimes,
-  FaClock,
   FaCheckCircle,
   FaTimesCircle,
   FaPencilAlt,
@@ -35,13 +34,13 @@ import {
   createEmployerJob,
   updateEmployerJob,
   closeEmployerJob,
-  getEmployerInterviewInvitations,
   getJobPipeline,
   createPipelineStage,
   updatePipelineStage,
   deletePipelineStage,
   reorderPipelineStages,
   moveApplicationStage,
+  createApplicationFeedback,
   getJobAuditLogs,
 } from "../../services/employerApi";
 import messagingService from "../../services/messagingService";
@@ -222,22 +221,6 @@ const applyStoredActiveStage = (exercise, jobMeta = {}, { closed = false } = {})
   };
 };
 
-const aggregateInviteStats = (invitations = []) => {
-  const stats = {
-    total: invitations.length,
-    accepted: 0,
-    declined: 0,
-    pending: 0,
-  };
-  invitations.forEach((inv) => {
-    const status = String(inv.status || "").toLowerCase();
-    if (status === "accepted") stats.accepted += 1;
-    else if (status === "declined") stats.declined += 1;
-    else if (status === "pending") stats.pending += 1;
-  });
-  return stats;
-};
-
 export default function RecruitmentManagement() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -245,12 +228,6 @@ export default function RecruitmentManagement() {
 
   const [exercises, setExercises] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
-  const [inviteStats, setInviteStats] = useState({
-    total: 0,
-    accepted: 0,
-    declined: 0,
-    pending: 0,
-  });
 
   const [listLoading, setListLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -279,8 +256,11 @@ export default function RecruitmentManagement() {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
   const [feedbackCandidate, setFeedbackCandidate] = useState(null);
+  const [bulkFeedbackCandidates, setBulkFeedbackCandidates] = useState([]);
   const [feedbackSaving, setFeedbackSaving] = useState(false);
   const [moveCandidate, setMoveCandidate] = useState(null);
+  const [bulkMoveCandidates, setBulkMoveCandidates] = useState([]);
+  const [selectionResetKey, setSelectionResetKey] = useState(0);
   const [viewProfileCandidate, setViewProfileCandidate] = useState(null);
   const [profileInitialTab, setProfileInitialTab] = useState("overview");
   const [recruitmentAccess, setRecruitmentAccess] = useState(null);
@@ -335,10 +315,10 @@ export default function RecruitmentManagement() {
     setListLoading(true);
     setListError(null);
     try {
-      const [dashboardRes, invitesRes] = await Promise.all([
-        getEmployerDashboard({ status: "all", listing_kind: "recruitment" }),
-        getEmployerInterviewInvitations({ limit: 100 }).catch(() => null),
-      ]);
+      const dashboardRes = await getEmployerDashboard({
+        status: "all",
+        listing_kind: "recruitment",
+      });
 
       if (!dashboardRes?.success) {
         throw new Error(dashboardRes?.message || "Failed to load jobs");
@@ -346,13 +326,6 @@ export default function RecruitmentManagement() {
 
       const jobs = dashboardRes.data?.jobs || [];
       setExercises(jobs.map(mapJobToExercise));
-
-      const invitations = Array.isArray(invitesRes?.data)
-        ? invitesRes.data
-        : Array.isArray(invitesRes)
-          ? invitesRes
-          : [];
-      setInviteStats(aggregateInviteStats(invitations));
     } catch (err) {
       console.error("Recruitment list load error:", err);
       const code = err.response?.data?.code;
@@ -518,6 +491,14 @@ export default function RecruitmentManagement() {
         : prev,
     );
   }, [exercises, selectedExercise?.id]);
+
+  useEffect(() => {
+    setSelectionResetKey((key) => key + 1);
+    setBulkMoveCandidates([]);
+    setBulkFeedbackCandidates([]);
+    setMoveCandidate(null);
+    setFeedbackCandidate(null);
+  }, [selectedExercise?.id]);
 
   const handleViewExercise = (ex) => {
     navigate(`/employer/recruitment-management/${ex.id}`);
@@ -860,8 +841,13 @@ export default function RecruitmentManagement() {
     }
   };
 
-  const handleMoveCandidateStage = async (candidate, targetStageValue) => {
-    if (!selectedExercise?.id || !candidate?.id) return false;
+  const handleMoveCandidateStage = async (candidateOrList, targetStageValue) => {
+    const list = Array.isArray(candidateOrList)
+      ? candidateOrList
+      : candidateOrList
+        ? [candidateOrList]
+        : [];
+    if (!selectedExercise?.id || !list.length) return false;
 
     const stages = selectedExercise.stagesList || [];
     const matched =
@@ -873,19 +859,79 @@ export default function RecruitmentManagement() {
       return false;
     }
 
-    setMoving(true);
-    try {
-      const response = await moveApplicationStage(
-        selectedExercise.id,
-        candidate.id,
-        matched.id,
-      );
-      if (!response?.success) {
-        throw new Error(response?.message || "Failed to move candidate");
+    const isAlreadyOnStage = (candidate) => {
+      if (
+        candidate?.pipelineStageId != null &&
+        String(candidate.pipelineStageId) === String(matched.id)
+      ) {
+        return true;
       }
-      toast.success(`Moved ${candidate.name} to ${matched.name}`);
+      const current = String(candidate?.currentStage || "")
+        .trim()
+        .toLowerCase();
+      const target = String(matched.name || "").trim().toLowerCase();
+      return Boolean(current && target && current === target);
+    };
+
+    const isBulk = list.length > 1;
+    setMoving(true);
+    let moved = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    try {
+      for (const candidate of list) {
+        if (!candidate?.id || isAlreadyOnStage(candidate)) {
+          skipped += 1;
+          continue;
+        }
+        try {
+          const response = await moveApplicationStage(
+            selectedExercise.id,
+            candidate.id,
+            matched.id,
+          );
+          if (!response?.success) {
+            throw new Error(response?.message || "Failed to move candidate");
+          }
+          moved += 1;
+        } catch {
+          failed += 1;
+        }
+      }
+
+      if (moved > 0) {
+        await loadDetail(selectedExercise.id, selectedExercise);
+      }
+
+      if (isBulk) {
+        const parts = [];
+        if (moved) parts.push(`Moved ${moved} to ${matched.name}`);
+        if (skipped) parts.push(`${skipped} already there`);
+        if (failed) parts.push(`${failed} failed`);
+        if (failed && moved === 0) {
+          toast.error(parts.join(". ") || "Failed to move candidates");
+          return false;
+        }
+        toast.success(parts.join(". ") || "No candidates needed moving");
+        setMoveCandidate(null);
+        setBulkMoveCandidates([]);
+        setSelectionResetKey((key) => key + 1);
+        return failed === 0;
+      }
+
+      if (failed || moved === 0) {
+        toast.error(
+          skipped
+            ? `${list[0]?.name} is already in ${matched.name}`
+            : `Failed to move ${list[0]?.name || "candidate"}`,
+        );
+        return false;
+      }
+
+      toast.success(`Moved ${list[0].name} to ${matched.name}`);
       setMoveCandidate(null);
-      await loadDetail(selectedExercise.id, selectedExercise);
+      setBulkMoveCandidates([]);
       return true;
     } catch (err) {
       toast.error(
@@ -899,42 +945,107 @@ export default function RecruitmentManagement() {
     }
   };
 
-  const handleSaveFeedback = async (candidate, payload) => {
-    if (!selectedExercise?.id || !candidate?.id || feedbackSaving) return false;
+  const sendCandidateChatFeedback = async (candidate, payload) => {
+    const recipientUserId = String(
+      candidate.userId || candidate.user_id || "",
+    ).trim();
+    if (!recipientUserId) {
+      throw new Error(
+        "This candidate has no linked account, so feedback cannot be sent in chat.",
+      );
+    }
+
+    const conversation =
+      await messagingService.startConversation(recipientUserId);
+    if (!conversation?.id) {
+      throw new Error("Failed to open chat with candidate");
+    }
+
+    const jobTitle = selectedExercise.title || "your application";
+    const outcome = payload.outcome || "Pending";
+    const feedbackBody = String(payload.feedback || "").trim();
+    const content = [
+      `Recruitment feedback — ${jobTitle}`,
+      `Outcome: ${outcome}`,
+      "",
+      feedbackBody,
+    ].join("\n");
+
+    await messagingService.sendMessage(conversation.id, content);
+  };
+
+  const handleSaveFeedback = async (candidateOrList, payload) => {
+    const list = Array.isArray(candidateOrList)
+      ? candidateOrList
+      : candidateOrList
+        ? [candidateOrList]
+        : [];
+    if (!selectedExercise?.id || !list.length || feedbackSaving) return false;
+
+    const isBulk = list.length > 1;
     setFeedbackSaving(true);
     try {
-      const recipientUserId = String(
-        candidate.userId || candidate.user_id || "",
-      ).trim();
-      if (!recipientUserId) {
-        throw new Error(
-          "This candidate has no linked account, so feedback cannot be sent in chat.",
+      if (!isBulk) {
+        await sendCandidateChatFeedback(list[0], payload);
+        toast.success(
+          `Feedback sent to ${list[0].name}'s chat. They can view it on their Chats page.`,
         );
+        setFeedbackCandidate(null);
+        setBulkFeedbackCandidates([]);
+        return true;
       }
 
-      const conversation =
-        await messagingService.startConversation(recipientUserId);
-      if (!conversation?.id) {
-        throw new Error("Failed to open chat with candidate");
+      let sent = 0;
+      let skipped = 0;
+      let failed = 0;
+
+      for (const candidate of list) {
+        const recipientUserId = String(
+          candidate.userId || candidate.user_id || "",
+        ).trim();
+        if (!recipientUserId) {
+          skipped += 1;
+          continue;
+        }
+        try {
+          await sendCandidateChatFeedback(candidate, payload);
+          try {
+            await createApplicationFeedback(
+              selectedExercise.id,
+              candidate.id,
+              {
+                outcome: payload.outcome || "Pending",
+                feedback: String(payload.feedback || "").trim(),
+              },
+            );
+          } catch {
+            // Chat already sent; outcome log is best-effort.
+          }
+          sent += 1;
+        } catch {
+          failed += 1;
+        }
       }
 
-      const jobTitle = selectedExercise.title || "your application";
-      const outcome = payload.outcome || "Pending";
-      const feedbackBody = String(payload.feedback || "").trim();
-      const content = [
-        `Recruitment feedback — ${jobTitle}`,
-        `Outcome: ${outcome}`,
-        "",
-        feedbackBody,
-      ].join("\n");
+      if (sent > 0) {
+        await loadDetail(selectedExercise.id, selectedExercise);
+      }
 
-      await messagingService.sendMessage(conversation.id, content);
+      const parts = [];
+      if (sent) parts.push(`Sent feedback to ${sent} candidate${sent === 1 ? "" : "s"}`);
+      if (skipped) parts.push(`${skipped} skipped (no linked account)`);
+      if (failed) parts.push(`${failed} failed`);
 
-      toast.success(
-        `Feedback sent to ${candidate.name}'s chat. They can view it on their Chats page.`,
-      );
+      if (sent === 0) {
+        toast.error(parts.join(". ") || "Failed to send feedback");
+        return false;
+      }
+
+      toast.success(parts.join(". "));
       setFeedbackCandidate(null);
-      return true;
+      setBulkFeedbackCandidates([]);
+      setSelectionResetKey((key) => key + 1);
+      return failed === 0;
     } catch (err) {
       toast.error(
         err.response?.data?.error ||
@@ -1235,37 +1346,6 @@ export default function RecruitmentManagement() {
                 </div>
               )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
-              <RecruitmentStatCard
-                icon={FaUsers}
-                value={listLoading ? "—" : inviteStats.total}
-                label="TOTAL INVITED"
-                sublabel="Interview invitations sent"
-                variant="green"
-              />
-              <RecruitmentStatCard
-                icon={FaUserCheck}
-                value={listLoading ? "—" : inviteStats.accepted}
-                label="ACCEPTED"
-                sublabel="Candidates who accepted"
-                variant="green"
-              />
-              <RecruitmentStatCard
-                icon={FaUserTimes}
-                value={listLoading ? "—" : inviteStats.declined}
-                label="DECLINED"
-                sublabel="Candidates who declined"
-                variant="red"
-              />
-              <RecruitmentStatCard
-                icon={FaClock}
-                value={listLoading ? "—" : inviteStats.pending}
-                label="PENDING RESPONSE"
-                sublabel="Awaiting candidate"
-                variant="amber"
-              />
-            </div>
-
             <RecruitmentFilterBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -1521,11 +1601,26 @@ export default function RecruitmentManagement() {
 
                     <CandidateListTable
                       candidates={filteredCandidates}
+                      selectionResetKey={selectionResetKey}
                       onViewCandidateProfile={(cand) =>
                         handleViewCandidateProfile(cand, "overview")
                       }
-                      onFeedback={(cand) => setFeedbackCandidate(cand)}
-                      onMoveStage={(cand) => setMoveCandidate(cand)}
+                      onFeedback={(cand) => {
+                        setBulkFeedbackCandidates([]);
+                        setFeedbackCandidate(cand);
+                      }}
+                      onMoveStage={(cand) => {
+                        setBulkMoveCandidates([]);
+                        setMoveCandidate(cand);
+                      }}
+                      onBulkMove={(cands) => {
+                        setMoveCandidate(null);
+                        setBulkMoveCandidates(cands);
+                      }}
+                      onBulkFeedback={(cands) => {
+                        setFeedbackCandidate(null);
+                        setBulkFeedbackCandidates(cands);
+                      }}
                     />
                   </div>
                 )}
@@ -1606,20 +1701,39 @@ export default function RecruitmentManagement() {
         />
 
         <CandidateFeedbackModal
-          isOpen={Boolean(feedbackCandidate)}
-          onClose={() => !feedbackSaving && setFeedbackCandidate(null)}
+          isOpen={
+            Boolean(feedbackCandidate) || bulkFeedbackCandidates.length > 0
+          }
+          onClose={() => {
+            if (feedbackSaving) return;
+            setFeedbackCandidate(null);
+            setBulkFeedbackCandidates([]);
+          }}
           candidate={feedbackCandidate}
+          candidates={
+            bulkFeedbackCandidates.length > 0
+              ? bulkFeedbackCandidates
+              : undefined
+          }
           jobTitle={selectedExercise?.title || ""}
           onSubmitFeedback={handleSaveFeedback}
           submitting={feedbackSaving}
         />
 
         <MoveCandidateModal
-          isOpen={Boolean(moveCandidate)}
-          onClose={() => !moving && setMoveCandidate(null)}
+          isOpen={Boolean(moveCandidate) || bulkMoveCandidates.length > 0}
+          onClose={() => {
+            if (moving) return;
+            setMoveCandidate(null);
+            setBulkMoveCandidates([]);
+          }}
           candidate={moveCandidate}
+          candidates={
+            bulkMoveCandidates.length > 0 ? bulkMoveCandidates : undefined
+          }
           stages={selectedExercise?.stagesList || []}
           onMoveCandidate={handleMoveCandidateStage}
+          submitting={moving}
         />
       </div>
     </NewsFeedLayout>
