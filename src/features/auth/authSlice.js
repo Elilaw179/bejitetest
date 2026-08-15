@@ -115,6 +115,7 @@ const authSlice = createSlice({
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
       localStorage.removeItem("token");
+      sessionStorage.removeItem("bejite_profile_reminder_dismissed_for");
     },
     // ✅ New reducer for Google login
     setGoogleAuth: (state, action) => {

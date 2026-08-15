@@ -11,10 +11,13 @@ import {
 
 /**
  * Loads profileCompleted from /auth/me and syncs Redux + localStorage.
- * Stale /auth/me responses are ignored. A failed fetch never treats an old
- * cached `true` as complete.
+ * Re-fetches whenever `authKey` changes (new login). A failed fetch never
+ * treats a stale cached `true` as complete for a new session.
  */
-export default function useProfileCompletionStatus({ enabled = true } = {}) {
+export default function useProfileCompletionStatus({
+  enabled = true,
+  authKey = null,
+} = {}) {
   const dispatch = useDispatch();
   const requestIdRef = useRef(0);
   const hasServerResultRef = useRef(false);
@@ -51,6 +54,8 @@ export default function useProfileCompletionStatus({ enabled = true } = {}) {
       return fromApi;
     } catch {
       if (requestId !== requestIdRef.current) return null;
+      // New session with no successful /auth/me yet → treat as incomplete
+      // so the reminder can still appear rather than hiding forever.
       if (!hasServerResultRef.current) {
         setProfileCompleted(false);
       }
@@ -63,11 +68,14 @@ export default function useProfileCompletionStatus({ enabled = true } = {}) {
   }, [dispatch, enabled]);
 
   useEffect(() => {
+    hasServerResultRef.current = false;
+    setProfileCompleted(false);
+    if (enabled) setLoading(true);
     fetchStatus();
     return () => {
       requestIdRef.current += 1;
     };
-  }, [fetchStatus]);
+  }, [fetchStatus, enabled, authKey]);
 
   return { profileCompleted, loading, refresh: fetchStatus };
 }

@@ -106,10 +106,6 @@ const AuthSuccess = () => {
           sessionUser.verified || sessionUser.isEmailVerified;
         const hasCompletedSignup =
           sessionUser.role !== null && sessionUser.role !== undefined;
-        const hasCompletedProfile =
-          profileCompletedParam === 'true' ||
-          sessionUser.profileCompleted === true;
-        const userRole = sessionUser.role;
 
         if (!isVerified) {
           console.log('User not verified, redirecting to email sent page');
@@ -124,18 +120,11 @@ const AuthSuccess = () => {
               `/complete-signup?email=${encodeURIComponent(email)}&status=verified`,
             );
           }, 1000);
-        } else if (userRole === 'recruiter') {
-          console.log('User is a recruiter, redirecting to recruitment dashboard');
-          toast.success('Welcome back!');
-          setTimeout(() => navigate('/news-feed'), 1000);
-        } else if (hasCompletedProfile) {
-          console.log('User verified and profile complete, redirecting to recruitment dashboard');
-          toast.success('Welcome back!');
-          setTimeout(() => navigate('/news-feed'), 1000);
         } else {
-          console.log('User verified and signup complete, redirecting to resume');
+          // Land on the app; ProfileCompletionReminder prompts incomplete profiles.
+          console.log('Signup complete, redirecting to news feed');
           toast.success('Welcome back!');
-          setTimeout(() => navigate('/resume'), 1000);
+          setTimeout(() => navigate('/news-feed'), 1000);
         }
       } catch (err) {
         console.error('Token decode failed:', err);
