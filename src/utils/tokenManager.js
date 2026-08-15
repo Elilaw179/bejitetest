@@ -56,6 +56,8 @@ export const clearAuthData = () => {
   localStorage.removeItem('user');
   localStorage.removeItem('authToken'); // legacy token
   localStorage.removeItem('token'); // legacy key checked by EmailSent
+  // Allow profile reminder to show again on the next login if still incomplete.
+  sessionStorage.removeItem('bejite_profile_reminder_dismissed_for');
 };
 
 // Check if user is authenticated (access or refresh token present)

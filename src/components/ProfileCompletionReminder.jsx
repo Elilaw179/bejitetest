@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { FaTimes } from 'react-icons/fa';
-import { getUser, isAuthenticated } from '../utils/tokenManager';
+import { getAccessToken, getUser, isAuthenticated } from '../utils/tokenManager';
 import useProfileCompletionStatus from '../hooks/useProfileCompletionStatus';
+
+const REMINDER_DISMISS_KEY = 'bejite_profile_reminder_dismissed_for';
 
 const SKIP_EXACT = new Set([
   '/',
@@ -65,59 +68,85 @@ function getProfileSetupPath(role, mode) {
   return '/complete-signup';
 }
 
+function readDismissedForToken(token) {
+  if (!token) return false;
+  try {
+    return sessionStorage.getItem(REMINDER_DISMISS_KEY) === token;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Fixed corner popup reminding authenticated users to complete their profile.
- * Later hides it for this visit only. Login / leaving onboarding shows it again
- * if the profile is still incomplete.
+ *
+ * - Incomplete profile: shows on app routes after every login.
+ * - "Later" / dismiss: hides only for this login session (current access token).
+ * - Logout + login again: shows again if still incomplete.
+ * - Complete profile: never shows (driven by fresh /auth/me), even across sessions.
  */
 export default function ProfileCompletionReminder() {
   const location = useLocation();
   const navigate = useNavigate();
-  const prevPathRef = useRef(location.pathname);
-  const userIdRef = useRef(null);
-  const [dismissed, setDismissed] = useState(false);
+  const reduxToken = useSelector((state) => state.auth?.token);
+  const reduxUser = useSelector((state) => state.auth?.user);
+  const [, setDismissVersion] = useState(0);
 
+  const token = reduxToken || getAccessToken() || '';
+  const authenticated = Boolean(token) || isAuthenticated();
   const onAppRoute = !shouldSkipPath(location.pathname);
-  const authenticated = isAuthenticated();
+
   const { profileCompleted, loading } = useProfileCompletionStatus({
     enabled: authenticated && onAppRoute,
+    authKey: token || null,
   });
 
-  const user = getUser();
-  const userId = user?.id || null;
+  const user = reduxUser || getUser();
   const role = normalizeRole(user?.role);
-  const recruiterMode = role === 'recruiter' || role === 'employer'
-    ? resolveRecruiterMode(user)
-    : null;
+  const recruiterMode =
+    role === 'recruiter' || role === 'employer'
+      ? resolveRecruiterMode(user)
+      : null;
+
+  // New login issues a new access token → previous "Later" no longer applies.
+  const dismissedThisSession = readDismissedForToken(token);
 
   useEffect(() => {
-    if (userId && userId !== userIdRef.current) {
-      setDismissed(false);
+    if (!token) {
+      try {
+        sessionStorage.removeItem(REMINDER_DISMISS_KEY);
+      } catch {
+        /* ignore */
+      }
+      setDismissVersion((v) => v + 1);
     }
-    userIdRef.current = userId;
-  }, [userId]);
-
-  useEffect(() => {
-    const prev = prevPathRef.current;
-    const curr = location.pathname;
-    if (shouldSkipPath(prev) && !shouldSkipPath(curr)) {
-      setDismissed(false);
-    }
-    prevPathRef.current = curr;
-  }, [location.pathname]);
+  }, [token]);
 
   const visible = useMemo(() => {
-    if (!authenticated || !onAppRoute || dismissed || loading) return false;
+    if (!authenticated || !onAppRoute || loading) return false;
     if (!role) return false;
-    return profileCompleted !== true;
+    if (profileCompleted === true) return false;
+    if (dismissedThisSession) return false;
+    return true;
   }, [
     authenticated,
     onAppRoute,
-    dismissed,
     loading,
     role,
     profileCompleted,
+    dismissedThisSession,
   ]);
+
+  const handleDismiss = () => {
+    if (token) {
+      try {
+        sessionStorage.setItem(REMINDER_DISMISS_KEY, token);
+      } catch {
+        /* ignore */
+      }
+    }
+    setDismissVersion((v) => v + 1);
+  };
 
   if (!visible) return null;
 
@@ -133,15 +162,12 @@ export default function ProfileCompletionReminder() {
       ? 'Finish every company step and upload your registration document. Skip does not count as complete.'
       : 'Finish every CV step, including photo and certificate uploads. Skip does not count as complete.';
 
-  const handleDismiss = () => {
-    setDismissed(true);
-  };
-
   return (
     <div
       role="dialog"
       aria-live="polite"
       aria-label="Profile completion reminder"
+      data-testid="profile-completion-reminder"
       className="fixed bottom-4 right-4 z-[100] w-[min(100vw-2rem,22rem)] rounded-xl border border-[#16730F]/30 bg-white p-4 shadow-lg"
     >
       <div className="flex items-start justify-between gap-2">
