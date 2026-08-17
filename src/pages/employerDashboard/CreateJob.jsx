@@ -14,6 +14,10 @@ import {
 } from "../../data/jobTypeData";
 import { formatSalaryExpectation } from "../../utils/formatSalary";
 import {
+  JOB_ABOUT_MAX_LENGTH,
+  getJobAboutValidationError,
+} from "../../utils/jobAbout";
+import {
   FaBriefcase,
   FaBuilding,
   FaClock,
@@ -56,6 +60,7 @@ const CreateJob = () => {
   const [formData, setFormData] = useState({
     title: "",
     industry: "",
+    about: "",
     qualifications: "",
     responsibilities: "",
     requirements: "",
@@ -107,6 +112,8 @@ const CreateJob = () => {
     if (!formData.responsibilities.trim()) {
       return "Responsibilities are required";
     }
+    const aboutError = getJobAboutValidationError(formData.about);
+    if (aboutError) return aboutError;
     if (formData.salary && Number(formData.salary) < 0) {
       return "Salary must be zero or greater";
     }
@@ -159,6 +166,7 @@ const CreateJob = () => {
       const response = await createEmployerJob({
         title: formData.title.trim(),
         industry: formData.industry,
+        about: formData.about.trim() || undefined,
         qualifications: formData.qualifications.trim(),
         responsibilities: formData.responsibilities.trim(),
         requirements: formData.requirements.trim() || undefined,
@@ -266,6 +274,17 @@ const CreateJob = () => {
             </div>
 
             <div className="p-6">
+              {formData.about.trim() && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">
+                    About
+                  </h3>
+                  <p className="text-gray-600 whitespace-pre-wrap">
+                    {formData.about}
+                  </p>
+                </div>
+              )}
+
               <div className="mb-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-3">
                   Responsibilities
@@ -450,6 +469,27 @@ const CreateJob = () => {
                   formName="employer-job"
                   fieldName="industry_sector"
                   staticOptions={INDUSTRY_SUGGESTIONS}
+                />
+              </div>
+
+              {/* About */}
+              <div>
+                <label className="block mb-2 font-semibold text-[#1A3E32]">
+                  About{" "}
+                  <span className="font-normal text-gray-500">(optional)</span>
+                </label>
+                <textarea
+                  rows={4}
+                  maxLength={JOB_ABOUT_MAX_LENGTH}
+                  placeholder="Introduce the company or this role. This appears on the job listing."
+                  className="w-full border rounded-xl px-4 py-3 resize-none focus:ring-2 focus:ring-[#16730F] outline-none"
+                  value={formData.about}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      about: e.target.value,
+                    })
+                  }
                 />
               </div>
 

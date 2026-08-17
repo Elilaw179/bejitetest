@@ -22,6 +22,9 @@ import SharePostModal from "../SharePostModal";
 import { getJobPlatformHref, copyJobLink } from "../../utils/jobShare";
 import { formatJobDescriptionText } from "../../utils/jobDescription";
 
+const JOB_DETAIL_LIST_CLASS =
+  "list-disc list-outside pl-5 space-y-1.5 sm:space-y-2 text-sm sm:text-base text-gray-700 break-words";
+
 export const JobDetailsModal = ({ job, onClose, onApply }) => {
   const [isApplying, setIsApplying] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
@@ -295,12 +298,23 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                 {activeTab === "details" ? (
                   <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
                     <div className="lg:col-span-2 space-y-5 sm:space-y-6 order-2 lg:order-1">
+                      {job.about?.trim() ? (
+                        <section>
+                          <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
+                            About
+                          </h2>
+                          <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line break-words">
+                            {job.about}
+                          </p>
+                        </section>
+                      ) : null}
+
                       {job.responsibilities?.length > 0 ? (
                         <section>
                           <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
                             Responsibilities
                           </h2>
-                          <ul className="list-disc list-inside space-y-1.5 sm:space-y-2 text-sm sm:text-base text-gray-700">
+                          <ul className={JOB_DETAIL_LIST_CLASS}>
                             {job.responsibilities.map((resp, idx) => (
                               <li key={idx}>{resp}</li>
                             ))}
@@ -331,7 +345,7 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                           </h2>
                           {job.qualifications?.length > 0 ||
                           job.roles?.length > 0 ? (
-                            <ul className="list-disc list-inside space-y-1.5 sm:space-y-2 text-sm sm:text-base text-gray-700">
+                            <ul className={JOB_DETAIL_LIST_CLASS}>
                               {(job.qualifications?.length
                                 ? job.qualifications
                                 : job.roles
@@ -356,7 +370,7 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                             <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
                               Requirements
                             </h2>
-                            <ul className="list-disc list-inside space-y-1.5 sm:space-y-2 text-sm sm:text-base text-gray-700">
+                            <ul className={JOB_DETAIL_LIST_CLASS}>
                               {job.requirements.map((req, idx) => (
                                 <li key={idx}>{req}</li>
                               ))}
