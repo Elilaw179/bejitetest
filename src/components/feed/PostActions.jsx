@@ -8,6 +8,7 @@ export default function PostActions({
   likesCount,
   commentsCount,
   sharesCount,
+  hideCounts = false,
   onLike,
   onComment,
   onRepost,
@@ -36,7 +37,9 @@ export default function PostActions({
         aria-label={liked ? "Unlike" : "Like"}
       >
         <PostActionIcon type="like" active={liked} />
-        <span className="text-xs tabular-nums sm:hidden">{likesCount}</span>
+        {!hideCounts && (
+          <span className="text-xs tabular-nums sm:hidden">{likesCount}</span>
+        )}
         <span className="hidden sm:inline text-xs sm:text-sm">
           {liked ? "Liked" : "Like"}
         </span>
@@ -48,7 +51,9 @@ export default function PostActions({
         aria-label="Comment"
       >
         <PostActionIcon type="comment" />
-        <span className="text-xs tabular-nums sm:hidden">{commentsCount}</span>
+        {!hideCounts && (
+          <span className="text-xs tabular-nums sm:hidden">{commentsCount}</span>
+        )}
         <span className="hidden sm:inline text-xs sm:text-sm">Comment</span>
       </button>
       <button
@@ -63,7 +68,9 @@ export default function PostActions({
         aria-pressed={sharedByMe}
       >
         <PostActionIcon type="repost" active={sharedByMe} />
-        <span className="text-xs tabular-nums sm:hidden">{sharesCount}</span>
+        {!hideCounts && (
+          <span className="text-xs tabular-nums sm:hidden">{sharesCount}</span>
+        )}
         <span className="hidden sm:inline text-xs sm:text-sm">{repostLabel}</span>
       </button>
       <button

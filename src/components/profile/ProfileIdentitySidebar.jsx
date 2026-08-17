@@ -11,7 +11,7 @@ import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import ProfileConnectActions from "../ProfileConnectActions";
 import {
   formatDisplayPersonName,
-  formatDisplayRole,
+  formatRoleAndMode,
   formatDisplayHandle,
 } from "../../utils/personDisplayName";
 import { formatDisplayText } from "../../utils/displayFormatUtils";
@@ -155,7 +155,7 @@ const ProfileIdentitySidebar = ({
               className="w-1.5 h-1.5 rounded-full animate-pulse"
               style={{ backgroundColor: roleTone }}
             />
-            {formatDisplayRole(viewedRole)}
+            {formatRoleAndMode(viewedRole, profileData?.mode)}
           </span>
 
           {/* Company Name */}

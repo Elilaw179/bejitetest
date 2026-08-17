@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import { getJobAboutValidationError } from "./jobAbout";
 
 const REQUIRED_COLUMNS = ["title", "industry", "responsibilities", "country", "skills"];
 
@@ -12,6 +13,9 @@ const HEADER_ALIASES = {
   work_mode: "workmode",
   remote_preference: "workmode",
   description: "responsibilities",
+  company_about: "about",
+  "about company": "about",
+  "about the company": "about",
 };
 
 const normalizeHeader = (header) => {
@@ -100,6 +104,8 @@ export const validateBulkJobRow = (job) => {
   if (!job.responsibilities?.trim()) errors.push("Responsibilities are required");
   if (!job.country?.trim()) errors.push("Country is required");
   if (!job.skills?.length) errors.push("At least one skill is required");
+  const aboutError = getJobAboutValidationError(job.about);
+  if (aboutError) errors.push(aboutError);
 
   return errors;
 };
@@ -122,6 +128,7 @@ const normalizeJobRow = (row, rowNumber) => {
   const payload = {
     title: row.title || "",
     industry: row.industry || "",
+    about: row.about || "",
     roles: row.roles || "",
     responsibilities: row.responsibilities || "",
     workMode: normalizeWorkMode(row.workmode),
@@ -232,6 +239,7 @@ export const BULK_JOB_TEMPLATE_ROWS = [
   {
     title: "",
     industry: "",
+    about: "",
     roles: "",
     responsibilities: "",
     workMode: "Remote",
@@ -246,6 +254,7 @@ export const downloadBulkJobTemplate = () => {
   const headers = [
     "title",
     "industry",
+    "about",
     "roles",
     "responsibilities",
     "workMode",

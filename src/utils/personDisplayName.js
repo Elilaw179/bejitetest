@@ -34,6 +34,20 @@ export function formatDisplayRole(role, fallback = 'User') {
   return toTitleCaseWords(String(role).replace(/[_-]+/g, ' '));
 }
 
+/** Title-case account mode (e.g. active_member → Active Member, corporate → Corporate). */
+export function formatDisplayMode(mode, fallback = '') {
+  if (mode == null || !String(mode).trim()) return fallback;
+  return toTitleCaseWords(String(mode).replace(/[_-]+/g, ' '));
+}
+
+/** Role with optional mode, e.g. "Jobseeker · Active Member". */
+export function formatRoleAndMode(role, mode, roleFallback = 'User') {
+  const roleLabel = formatDisplayRole(role, roleFallback);
+  const modeLabel = formatDisplayMode(mode, '');
+  if (!modeLabel) return roleLabel;
+  return `${roleLabel} · ${modeLabel}`;
+}
+
 /** Format @handle from nickname/username on a user object or raw string. */
 export function formatDisplayHandle(input, fallback = null) {
   if (input == null) return fallback;

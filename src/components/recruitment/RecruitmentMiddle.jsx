@@ -577,6 +577,7 @@ const RecruitmentPostCard = ({
   };
 
   const isOwner = String(post.authorId) === String(currentUserId);
+  const isRepost = Boolean(post.repostedBy);
   const [liked, setLiked] = useState(post.likedByMe === true);
   const [saved, setSaved] = useState(post.savedByMe === true);
   const [sharedByMe, setSharedByMe] = useState(post.sharedByMe === true);
@@ -652,6 +653,10 @@ const RecruitmentPostCard = ({
   };
 
   const handleCommentAction = () => {
+    if (isRepost) {
+      openPostDetail();
+      return;
+    }
     toggleComments();
   };
 
@@ -1071,7 +1076,7 @@ const RecruitmentPostCard = ({
       )}
       </OriginalPostNest>
 
-      {/* Post Stats — numbers with labels on desktop/tablet only */}
+      {!isRepost && (
       <div className="hidden sm:flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
         {post.likesCount > 0 && (
           <button
@@ -1099,6 +1104,7 @@ const RecruitmentPostCard = ({
           </button>
         )}
       </div>
+      )}
 
       <PostActions
         liked={liked}
@@ -1108,6 +1114,7 @@ const RecruitmentPostCard = ({
         likesCount={post.likesCount || 0}
         commentsCount={commentsCount}
         sharesCount={sharesCount}
+        hideCounts={isRepost}
         onLike={handleLikeClick}
         onComment={handleCommentAction}
         onRepost={handleRepostClick}
@@ -1115,7 +1122,7 @@ const RecruitmentPostCard = ({
         onSave={handleSaveClick}
       />
 
-      {showComments && (
+      {showComments && !isRepost && (
         <PostCommentsSection
           postId={post.id}
           comments={comments}

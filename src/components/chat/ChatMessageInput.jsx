@@ -6,6 +6,7 @@ import { useVoiceRecorder } from '../../hooks/useVoiceRecorder';
 import messagingService from '../../services/messagingService';
 import { formatVoiceDuration } from '../../utils/voiceWaveform';
 import VoiceWaveform from './VoiceWaveform';
+import ChatQuotePreview from './ChatQuotePreview';
 import {
   getPortaledMenuStyle,
   usePortaledMenu,
@@ -19,6 +20,8 @@ function ChatMessageInput({
   onRecordingChange,
   disabled = false,
   sending = false,
+  replyTo = null,
+  onCancelReply,
 }) {
   const [showEmoji, setShowEmoji] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
@@ -125,6 +128,11 @@ function ChatMessageInput({
     adjustTextareaHeight();
   }, [message]);
 
+  useEffect(() => {
+    if (!replyTo?.id) return;
+    textareaRef.current?.focus();
+  }, [replyTo?.id]);
+
   const computeEmojiPickerSize = useCallback(() => ({
     width: Math.min(320, Math.max(240, window.innerWidth - 24)),
     height: Math.min(400, Math.max(220, Math.floor(window.innerHeight * 0.38))),
@@ -189,6 +197,9 @@ function ChatMessageInput({
       )}
 
       <div className="flex flex-col gap-0.5 sm:gap-1 border border-[#16730F] rounded-3xl sm:rounded-[2rem] px-3 sm:px-4 md:px-5 pt-2 pb-1.5 sm:pt-2.5 sm:pb-2 md:pt-3 md:pb-2.5 bg-[#F3F3F3] shadow-sm">
+        {replyTo?.id && !recording ? (
+          <ChatQuotePreview quote={replyTo} onDismiss={onCancelReply} />
+        ) : null}
         {recording ? (
           <div className="flex min-h-[2rem] items-center gap-3 py-1">
             <span

@@ -303,6 +303,8 @@ const PostCard = ({
   defaultShowComments = false,
 }) => {
   const isOwner = String(post.authorId) === String(currentUserId);
+  const isRepost = Boolean(post.repostedBy);
+  const showOriginalEngagement = isDetailView || !isRepost;
   const [showComments, setShowComments] = useState(defaultShowComments);
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -385,6 +387,10 @@ const PostCard = ({
   }, [post.id, defaultShowComments]);
 
   const handleCommentAction = () => {
+    if (!showOriginalEngagement) {
+      openPostDetail();
+      return;
+    }
     toggleComments();
   };
 
@@ -528,8 +534,6 @@ const PostCard = ({
     setEditBody(post.body || "");
   };
 
-  const isRepost = Boolean(post.repostedBy);
-
   return (
     <div
       id={isDetailView ? undefined : `post-${post.feedItemKey || post.id}`}
@@ -617,13 +621,15 @@ const PostCard = ({
           />
         )}
       </OriginalPostNest>
-      <PostStats
-        likesCount={post.likesCount || 0}
-        commentsCount={commentsCount}
-        sharesCount={sharesCount}
-        onCommentsClick={handleCommentAction}
-        isDetailView={isDetailView}
-      />
+      {showOriginalEngagement && (
+        <PostStats
+          likesCount={post.likesCount || 0}
+          commentsCount={commentsCount}
+          sharesCount={sharesCount}
+          onCommentsClick={handleCommentAction}
+          isDetailView={isDetailView}
+        />
+      )}
       <PostActions
         liked={liked}
         saved={saved}
@@ -632,6 +638,7 @@ const PostCard = ({
         likesCount={post.likesCount || 0}
         commentsCount={commentsCount}
         sharesCount={sharesCount}
+        hideCounts={!showOriginalEngagement}
         onLike={handleLikeClick}
         onComment={handleCommentAction}
         onRepost={handleRepostClick}
@@ -662,7 +669,7 @@ const PostCard = ({
         }
       />
 
-      {showComments && (
+      {showComments && showOriginalEngagement && (
         <PostCommentsSection
           postId={post.id}
           comments={comments}

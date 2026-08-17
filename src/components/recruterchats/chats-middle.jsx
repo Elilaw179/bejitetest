@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { FaArrowLeft, FaPhone, FaVideo, FaBars } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -8,6 +8,24 @@ import ChatMessageInput from '../chat/ChatMessageInput';
 import ChatMessageBubble from '../chat/ChatMessageBubble';
 import { formatChatMessageTime } from '../../utils/chatTimeUtils';
 import { formatDisplayPersonName } from '../../utils/personDisplayName';
+import { toQuotePreview } from '../../utils/chatQuote';
+
+function messagesFingerprint(msgs) {
+  return (msgs || [])
+    .map(
+      (msg) =>
+        `${msg.id}:${msg.updated_at || ''}:${msg.is_deleted ? 1 : 0}:${msg.content || ''}:${msg.reply_to_message_id || ''}:${msg.reply_to?.is_deleted ? 1 : 0}`,
+    )
+    .join('|');
+}
+
+function escapeMessageId(messageId) {
+  const value = String(messageId);
+  if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+    return CSS.escape(value);
+  }
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
 
 function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   const [message, setMessage] = useState('');
@@ -17,10 +35,12 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
   const currentUser = useSelector((state) => state.auth.user);
   const messagesContainerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const stickToBottomRef = useRef(true);
+  const programmaticScrollRef = useRef(false);
 
   const isNearBottom = useCallback((threshold = 96) => {
     const container = messagesContainerRef.current;
@@ -31,33 +51,40 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     );
   }, []);
 
-  const scrollToBottom = useCallback((behavior = 'auto') => {
+  const scrollToBottom = useCallback(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
 
-    // Scroll only the messages pane — never scrollIntoView (that scrolls the
-    // page on mobile and pushes the composer off-screen behind the keyboard).
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior,
-    });
+    // Jump the messages pane instantly. Do not use scrollIntoView (it scrolls
+    // the page on mobile) or CSS smooth scrolling (that animates from the top).
+    programmaticScrollRef.current = true;
+    container.scrollTop = container.scrollHeight;
   }, []);
 
   const handleMessagesScroll = () => {
+    if (programmaticScrollRef.current) {
+      programmaticScrollRef.current = false;
+      stickToBottomRef.current = true;
+      return;
+    }
     stickToBottomRef.current = isNearBottom();
   };
 
   useEffect(() => {
-    if (selectedChat?.id) {
-      stickToBottomRef.current = true;
-      setEditingMessageId(null);
-      fetchMessages(selectedChat.id);
-      // Mark conversation as read when opened
-      messagingService.markConversationRead(selectedChat.id).catch((err) => {
-        console.error('Error marking conversation as read:', err);
-      });
+    if (!selectedChat?.id) {
+      setMessages([]);
+      return;
     }
-  }, [selectedChat]);
+
+    stickToBottomRef.current = true;
+    setMessages([]);
+    setEditingMessageId(null);
+    setReplyTo(null);
+    fetchMessages(selectedChat.id);
+    messagingService.markConversationRead(selectedChat.id).catch((err) => {
+      console.error('Error marking conversation as read:', err);
+    });
+  }, [selectedChat?.id]);
 
   useEffect(() => {
     if (!selectedChat?.id || isRecordingVoice) {
@@ -71,14 +98,26 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     return () => clearInterval(interval);
   }, [selectedChat?.id, isRecordingVoice]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!messages.length || loading) return;
     if (!stickToBottomRef.current) return;
+    scrollToBottom();
+  }, [messages, loading, selectedChat?.id, scrollToBottom]);
 
-    requestAnimationFrame(() => {
-      scrollToBottom('auto');
-    });
-  }, [messages, loading, scrollToBottom]);
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container || !messages.length || loading) return undefined;
+
+    const pinIfNeeded = () => {
+      if (stickToBottomRef.current) scrollToBottom();
+    };
+
+    const observer = new ResizeObserver(pinIfNeeded);
+    const inner = container.firstElementChild;
+    if (inner) observer.observe(inner);
+
+    return () => observer.disconnect();
+  }, [messages, loading, selectedChat?.id, scrollToBottom]);
 
   const fetchMessages = async (conversationId, silent = false) => {
     try {
@@ -86,11 +125,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       const data = await messagingService.getMessages(conversationId);
       const next = (data || []).reverse();
       setMessages((prev) => {
-        if (
-          prev.length === next.length &&
-          prev.length > 0 &&
-          prev[prev.length - 1]?.id === next[next.length - 1]?.id
-        ) {
+        if (messagesFingerprint(prev) === messagesFingerprint(next)) {
           return prev;
         }
         return next;
@@ -108,12 +143,24 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     try {
       setSending(true);
       stickToBottomRef.current = true;
-      await messagingService.sendMessage(selectedChat.id, message.trim());
+      await messagingService.sendMessage(
+        selectedChat.id,
+        message.trim(),
+        null,
+        null,
+        replyTo?.id || null,
+      );
       setMessage('');
+      setReplyTo(null);
       await fetchMessages(selectedChat.id, true);
       window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
     } catch (error) {
       console.error('Error sending message:', error);
+      toast.error(
+        error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          'Failed to send message',
+      );
     } finally {
       setSending(false);
     }
@@ -127,8 +174,15 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     try {
       setSending(true);
       stickToBottomRef.current = true;
-      await messagingService.sendMessage(selectedChat.id, caption, url, attachment);
+      await messagingService.sendMessage(
+        selectedChat.id,
+        caption,
+        url,
+        attachment,
+        replyTo?.id || null,
+      );
       setMessage('');
+      setReplyTo(null);
       await fetchMessages(selectedChat.id, true);
       window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
     } catch (error) {
@@ -171,6 +225,9 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       if (editingMessageId === messageId) {
         setEditingMessageId(null);
       }
+      if (replyTo?.id === messageId) {
+        setReplyTo(null);
+      }
       await fetchMessages(selectedChat.id, true);
       window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
     } catch (error) {
@@ -181,6 +238,29 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       toast.error(msg);
     }
   };
+
+  const handleStartReply = (msg) => {
+    setEditingMessageId(null);
+    setReplyTo(toQuotePreview(msg));
+  };
+
+  const handleQuoteClick = (messageId) => {
+    const container = messagesContainerRef.current;
+    if (!container || !messageId) return;
+    const target = container.querySelector(
+      `[data-message-id="${escapeMessageId(messageId)}"]`,
+    );
+    if (!target) return;
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    container.scrollTop += targetRect.top - containerRect.top - 16;
+    stickToBottomRef.current = isNearBottom();
+  };
+
+  const messageIds = useMemo(
+    () => new Set(messages.map((msg) => String(msg.id))),
+    [messages],
+  );
 
   const isOwnMessage = (msg) => {
     const currentUserId =
@@ -300,7 +380,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   <div
     ref={messagesContainerRef}
     onScroll={handleMessagesScroll}
-    className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain nfl-scroll scroll-smooth p-3 md:p-5 bg-[#F7F7F7]"
+    className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain nfl-scroll [overflow-anchor:none] p-3 md:p-5 bg-[#F7F7F7]"
   >
     {loading ? (
       <div className="text-center text-[#16730F] py-2 md:py-4">
@@ -358,6 +438,9 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
               onCancelEdit={() => setEditingMessageId(null)}
               onSaveEdit={(content) => handleEditMessage(msg.id, content)}
               onDelete={() => handleDeleteMessage(msg.id)}
+              onReply={() => handleStartReply(msg)}
+              onQuoteClick={handleQuoteClick}
+              canJumpToQuote={messageIds.has(String(msg.reply_to?.id))}
             />
           );
         })}
@@ -376,6 +459,8 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       onRecordingChange={setIsRecordingVoice}
       sending={sending}
       disabled={!selectedChat?.id}
+      replyTo={replyTo}
+      onCancelReply={() => setReplyTo(null)}
     />
   ) : (
     <div className="shrink-0 p-4 text-center text-sm text-gray-500">

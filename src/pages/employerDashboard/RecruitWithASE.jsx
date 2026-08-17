@@ -460,34 +460,40 @@ const RecruitWithASE = () => {
 
   return (
     <NewsFeedLayout showSidebars={false}>
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div
+        className={`max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 ${
+          selectedCandidates.length > 0 ? "pb-28 sm:pb-32" : ""
+        }`}
+      >
         <button
           type="button"
           onClick={() => navigate("/employer/dashboard")}
-          className="flex items-center gap-2 text-gray-600 hover:text-[#16730F] mb-6"
+          className="flex items-center gap-2 text-gray-600 hover:text-[#16730F] mb-4 sm:mb-6 text-sm sm:text-base"
         >
           <FaChevronLeft />
           Back to Dashboard
         </button>
 
-        <div className="bg-gradient-to-r from-[#16730F] to-[#1A3E32] rounded-2xl p-8 text-white mb-8">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="text-2xl font-bold mb-2">
+        <div className="bg-gradient-to-r from-[#16730F] to-[#1A3E32] rounded-xl sm:rounded-2xl p-4 sm:p-8 text-white mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold mb-2">
                 Top Qualified Candidates
               </h1>
               {job?.title && (
-                <p className="text-green-200 font-medium mb-1">{job.title}</p>
+                <p className="text-green-200 font-medium mb-1 break-words">
+                  {job.title}
+                </p>
               )}
-              <p className="text-green-100">
+              <p className="text-green-100 text-sm sm:text-base">
                 ASE-ranked applicants based on skills, experience, and job
                 requirements
               </p>
             </div>
-            <div className="bg-white/20 rounded-xl px-6 py-3">
+            <div className="bg-white/20 rounded-xl px-4 sm:px-6 py-2.5 sm:py-3 self-start sm:self-auto shrink-0">
               <div className="text-center">
-                <p className="text-sm">Selected</p>
-                <p className="text-3xl font-bold">
+                <p className="text-xs sm:text-sm">Selected</p>
+                <p className="text-2xl sm:text-3xl font-bold">
                   {selectedCandidates.length}
                 </p>
               </div>
@@ -496,31 +502,31 @@ const RecruitWithASE = () => {
         </div>
 
         {candidates.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+          <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-6 sm:p-12 text-center">
             <FaUsers className="text-4xl text-gray-300 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
               No applicants yet
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-6 text-sm sm:text-base">
               There are no applications for this job. Share the posting or wait
               for candidates to apply.
             </p>
             <button
               type="button"
               onClick={() => navigate(`/employer/job/${jobId}/applications`)}
-              className="px-6 py-3 bg-[#16730F] text-white rounded-xl font-semibold hover:bg-[#145A0C]"
+              className="w-full sm:w-auto px-6 py-3 bg-[#16730F] text-white rounded-xl font-semibold hover:bg-[#145A0C]"
             >
               View Applications
             </button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mb-8">
             {candidates.map((candidate, index) => (
               <div
                 key={candidate.id}
                 role="button"
                 tabIndex={0}
-                className={`bg-white rounded-2xl border-2 p-6 transition-all cursor-pointer ${
+                className={`bg-white rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 transition-all cursor-pointer ${
                   selectedCandidates.includes(candidate.id)
                     ? "border-[#16730F] shadow-lg"
                     : "border-gray-200 hover:shadow-lg"
@@ -533,40 +539,51 @@ const RecruitWithASE = () => {
                   }
                 }}
               >
-                <div className="flex items-start gap-4">
-                  <div className="relative">
-                    <CandidateAvatar candidate={candidate} />
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="relative shrink-0">
+                    <CandidateAvatar
+                      candidate={candidate}
+                      className="w-12 h-12 sm:w-16 sm:h-16"
+                    />
                     {index === 0 && candidate.matchScore > 0 && (
-                      <div className="absolute -top-2 -right-2">
-                        <FaTrophy className="text-yellow-500 text-xl" />
+                      <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2">
+                        <FaTrophy className="text-yellow-500 text-base sm:text-xl" />
                       </div>
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <h3 className="text-lg font-bold text-gray-900 truncate">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-snug break-words">
                         {candidate.name}
                       </h3>
-                      <div
-                        className={`px-3 py-1 rounded-full text-sm font-bold shrink-0 ${getScoreColor(candidate.matchScore)}`}
-                      >
-                        {candidate.matchScore}% Match
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div
+                          className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold ${getScoreColor(candidate.matchScore)}`}
+                        >
+                          <span className="sm:hidden">{candidate.matchScore}%</span>
+                          <span className="hidden sm:inline">
+                            {candidate.matchScore}% Match
+                          </span>
+                        </div>
+                        {selectedCandidates.includes(candidate.id) && (
+                          <FaCheckCircle className="text-[#16730F] text-xl sm:text-2xl" />
+                        )}
                       </div>
                     </div>
-                    <p className="text-gray-600 text-sm mb-2">
+                    <p className="text-gray-600 text-sm mb-1 sm:mb-2 break-words">
                       {candidate.location}
                     </p>
-                    <p className="text-gray-500 text-xs mb-3">
+                    <p className="text-gray-500 text-xs mb-3 break-words">
                       {candidate.education}
                     </p>
 
                     {candidate.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-3">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3">
                         {candidate.skills.slice(0, 5).map((skill) => (
                           <span
                             key={skill}
-                            className="px-2 py-1 bg-gray-100 rounded-lg text-xs"
+                            className="px-2 py-1 bg-gray-100 rounded-lg text-xs break-all"
                           >
                             {skill}
                           </span>
@@ -575,24 +592,18 @@ const RecruitWithASE = () => {
                     )}
 
                     {candidate.summary && (
-                      <p className="text-sm text-gray-600 line-clamp-2">
+                      <p className="text-sm text-gray-600 line-clamp-2 break-words">
                         {candidate.summary}
                       </p>
                     )}
 
                     <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-                      <div className="flex items-center gap-1 text-sm">
-                        <FaUserCheck className="text-green-600" />
+                      <div className="flex items-center gap-1 text-xs sm:text-sm">
+                        <FaUserCheck className="text-green-600 shrink-0" />
                         <span>{candidate.experience} years exp</span>
                       </div>
                     </div>
                   </div>
-
-                  {selectedCandidates.includes(candidate.id) && (
-                    <div className="text-[#16730F] shrink-0">
-                      <FaCheckCircle className="text-2xl" />
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
@@ -600,28 +611,32 @@ const RecruitWithASE = () => {
         )}
 
         {selectedCandidates.length > 0 && (
-          <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white rounded-2xl shadow-2xl border-2 border-[#16730F] p-4 flex gap-4 items-center z-40 max-w-[calc(100vw-2rem)]">
-            <div className="px-4 py-2 bg-green-100 rounded-xl whitespace-nowrap">
+          <div className="fixed bottom-3 sm:bottom-8 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 bg-white rounded-xl sm:rounded-2xl shadow-2xl border-2 border-[#16730F] p-3 sm:p-4 flex flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center z-40 sm:max-w-[calc(100vw-2rem)] w-auto sm:w-max">
+            <div className="px-3 sm:px-4 py-2 bg-green-100 rounded-xl text-center sm:text-left shrink-0">
               <span className="font-bold text-[#16730F]">
                 {selectedCandidates.length}
               </span>
               <span className="text-gray-600 ml-1">selected</span>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowInviteModal(true)}
-              className="px-6 py-3 bg-[#16730F] text-white rounded-xl font-semibold hover:bg-[#145A0C] transition-colors flex items-center gap-2 whitespace-nowrap"
-            >
-              <FaEnvelope />
-              Send Invitations
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedCandidates([])}
-              className="px-6 py-3 border border-gray-300 rounded-xl text-gray-600 hover:bg-gray-50 whitespace-nowrap"
-            >
-              Clear All
-            </button>
+            <div className="flex gap-2 sm:gap-4 min-w-0">
+              <button
+                type="button"
+                onClick={() => setShowInviteModal(true)}
+                className="flex-1 sm:flex-none px-3 sm:px-6 py-2.5 sm:py-3 bg-[#16730F] text-white rounded-xl font-semibold hover:bg-[#145A0C] transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+              >
+                <FaEnvelope className="shrink-0" />
+                <span className="sm:hidden">Invite</span>
+                <span className="hidden sm:inline">Send Invitations</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCandidates([])}
+                className="flex-1 sm:flex-none px-3 sm:px-6 py-2.5 sm:py-3 border border-gray-300 rounded-xl text-gray-600 hover:bg-gray-50 text-sm sm:text-base"
+              >
+                Clear
+                <span className="hidden sm:inline"> All</span>
+              </button>
+            </div>
           </div>
         )}
 

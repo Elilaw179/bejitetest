@@ -13,6 +13,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
+import { JOB_ABOUT_MAX_LENGTH } from "../../utils/jobAbout";
 
 const RepostJob = () => {
   const { jobId } = useParams();
@@ -24,6 +25,7 @@ const RepostJob = () => {
   const [formData, setFormData] = useState({
     title: "",
     industry: "",
+    about: "",
     skills: [],
     responsibilities: "",
     workMode: "Remote",
@@ -44,6 +46,8 @@ const RepostJob = () => {
         ],
         responsibilities:
           "Build and maintain web applications using React. Collaborate with cross-functional teams to deliver high-quality software solutions.",
+        about:
+          "We are a product team building hiring tools for African talent.",
         workMode: "Remote",
         country: "Nigeria",
         previousApplications: 45,
@@ -54,6 +58,7 @@ const RepostJob = () => {
       setFormData({
         title: mockJob.title,
         industry: mockJob.industry,
+        about: mockJob.about || "",
         skills: mockJob.skills,
         responsibilities: mockJob.responsibilities,
         workMode: mockJob.workMode,
@@ -414,6 +419,23 @@ const RepostJob = () => {
                       handleFieldChange("industry", e.target.value)
                     }
                     placeholder="e.g., Technology, Finance, Healthcare"
+                  />
+                </div>
+
+                {/* About */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    About
+                  </label>
+                  <textarea
+                    rows={4}
+                    maxLength={JOB_ABOUT_MAX_LENGTH}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#16730F] focus:border-transparent outline-none transition-all resize-none"
+                    value={formData.about}
+                    onChange={(e) =>
+                      handleFieldChange("about", e.target.value)
+                    }
+                    placeholder="Introduce the company or this role..."
                   />
                 </div>
 

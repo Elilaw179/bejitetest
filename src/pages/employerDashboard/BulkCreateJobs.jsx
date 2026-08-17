@@ -118,6 +118,7 @@ const BulkCreateJobs = () => {
         const response = await createEmployerJob({
           title: job.payload.title.trim(),
           industry: job.payload.industry.trim(),
+          about: job.payload.about?.trim() || undefined,
           roles: job.payload.roles.trim(),
           responsibilities: job.payload.responsibilities.trim(),
           workMode: job.payload.workMode,
@@ -394,6 +395,12 @@ const BulkCreateJobs = () => {
                               72 hours visibility
                             </span>
                           </div>
+
+                          {job.payload.about?.trim() && (
+                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                              {job.payload.about}
+                            </p>
+                          )}
 
                           <p className="text-sm text-gray-600 mb-2 line-clamp-2">
                             {job.payload.responsibilities ||

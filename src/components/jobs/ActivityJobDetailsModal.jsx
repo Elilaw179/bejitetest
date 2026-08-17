@@ -311,6 +311,15 @@ const ActivityJobDetailsModal = ({
                 />
               </div>
 
+              {!isJobSeekerRole && job.about?.trim() && (
+                <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5">
+                  <h3 className="font-semibold text-gray-900 mb-3">About</h3>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+                    {job.about}
+                  </p>
+                </div>
+              )}
+
               {descriptionLines.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5">
                   <h3 className="font-semibold text-gray-900 mb-3">

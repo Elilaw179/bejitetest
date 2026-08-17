@@ -65,7 +65,7 @@ async startConversation(otherUserId) {
     }
   },
 
-  async sendMessage(conversationId, content, imageUrl = null, attachment = null) {
+  async sendMessage(conversationId, content, imageUrl = null, attachment = null, replyToMessageId = null) {
     try {
       const messageData = {
         conversation_id: conversationId,
@@ -78,6 +78,9 @@ async startConversation(otherUserId) {
         messageData.attachment_kind = attachment.kind;
         messageData.attachment_name = attachment.name || null;
         messageData.attachment_mime = attachment.mime || null;
+      }
+      if (replyToMessageId) {
+        messageData.reply_to_message_id = replyToMessageId;
       }
       const response = await axiosInstance.post('/messages', messageData);
       return response.data.message;

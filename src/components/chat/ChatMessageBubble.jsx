@@ -1,14 +1,13 @@
 import {
-  useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
-import { createPortal } from "react-dom";
-import { FaPen, FaTrash } from "react-icons/fa";
+import { FaPen, FaReply, FaTrash } from "react-icons/fa";
 import MessageAttachment from "./MessageAttachment";
+import ChatQuotePreview from "./ChatQuotePreview";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
+import { getQuotedMessage } from "../../utils/chatQuote";
 
 function isAttachmentOnlyCaption(content, imageUrl) {
   if (!imageUrl || !content) return Boolean(imageUrl);
@@ -17,6 +16,11 @@ function isAttachmentOnlyCaption(content, imageUrl) {
     content === "🎤 Voice message" ||
     content.startsWith("📎")
   );
+}
+
+function hasTextSelection() {
+  const selection = window.getSelection?.();
+  return Boolean(selection && selection.toString().trim());
 }
 
 export default function ChatMessageBubble({
@@ -34,13 +38,13 @@ export default function ChatMessageBubble({
   onCancelEdit,
   onSaveEdit,
   onDelete,
+  onReply,
+  onQuoteClick,
+  canJumpToQuote = false,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [menuStyle, setMenuStyle] = useState(null);
   const [draft, setDraft] = useState(message.content || "");
   const menuRef = useRef(null);
-  const bubbleRef = useRef(null);
-  const menuPopupRef = useRef(null);
 
   useEffect(() => {
     if (editing) {
@@ -54,59 +58,11 @@ export default function ChatMessageBubble({
     }
   }, [editing]);
 
-  const updateMenuPosition = useCallback(() => {
-    const anchor = bubbleRef.current;
-    if (!anchor) return;
-
-    const rect = anchor.getBoundingClientRect();
-    const gap = 8;
-    const menuHeight = menuPopupRef.current?.offsetHeight ?? 88;
-
-    let top = rect.top - gap;
-    let transform = "translate(-100%, -100%)";
-
-    if (top - menuHeight < gap) {
-      top = rect.bottom + gap;
-      transform = "translateX(-100%)";
-    }
-
-    setMenuStyle({
-      top: `${top}px`,
-      left: `${rect.right}px`,
-      transform,
-    });
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!menuOpen) {
-      setMenuStyle(null);
-      return undefined;
-    }
-
-    updateMenuPosition();
-    const rafId = requestAnimationFrame(updateMenuPosition);
-
-    window.addEventListener("resize", updateMenuPosition);
-    window.addEventListener("scroll", updateMenuPosition, true);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", updateMenuPosition);
-      window.removeEventListener("scroll", updateMenuPosition, true);
-    };
-  }, [menuOpen, updateMenuPosition]);
-
   useEffect(() => {
     if (!menuOpen) return undefined;
 
     const handleClickOutside = (event) => {
-      const target = event.target;
-      if (
-        menuRef.current?.contains(target) ||
-        menuPopupRef.current?.contains(target)
-      ) {
-        return;
-      }
+      if (menuRef.current?.contains(event.target)) return;
       setMenuOpen(false);
     };
 
@@ -132,7 +88,9 @@ export default function ChatMessageBubble({
     typeof onSaveEdit === "function";
   const canDelete =
     isOwnMessage && !isDeleted && typeof onDelete === "function";
-  const showActions = (canEdit || canDelete) && !editing;
+  const canReply = !isDeleted && typeof onReply === "function";
+  const showActions = (canReply || canEdit || canDelete) && !editing;
+  const quotedMessage = getQuotedMessage(message);
   const wasEdited =
     message.updated_at &&
     message.created_at &&
@@ -144,8 +102,21 @@ export default function ChatMessageBubble({
     onSaveEdit(trimmed);
   };
 
+  const handleBubbleActivate = () => {
+    if (!showActions || hasTextSelection()) return;
+    setMenuOpen((open) => !open);
+  };
+
   const renderBubbleContent = () => (
     <>
+      {quotedMessage && (
+        <ChatQuotePreview
+          quote={quotedMessage}
+          isOwnMessage={isOwnMessage}
+          onClick={onQuoteClick}
+          clickable={canJumpToQuote}
+        />
+      )}
       {hasAttachment && (
         <MessageAttachment
           url={message.image_url}
@@ -202,7 +173,7 @@ export default function ChatMessageBubble({
         <>
           {!attachmentOnly && message.content && (
             <p
-              className={`text-sm leading-relaxed whitespace-pre-wrap break-words ${
+              className={`text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${
                 isDeleted
                   ? isOwnMessage
                     ? "italic text-white/70"
@@ -227,26 +198,28 @@ export default function ChatMessageBubble({
     </>
   );
 
-  const handleBubbleActivate = () => {
-    if (!showActions) return;
-    setMenuOpen((open) => !open);
-  };
-
   const renderActionsMenu = () => {
-    if (!showActions || !menuOpen || !menuStyle) return null;
+    if (!showActions || !menuOpen) return null;
 
-    return createPortal(
+    return (
       <div
-        ref={menuPopupRef}
-        style={{
-          position: "fixed",
-          top: menuStyle.top,
-          left: menuStyle.left,
-          transform: menuStyle.transform,
-          zIndex: 9999,
-        }}
-        className="min-w-[7rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+        className={`absolute z-10 bottom-full mb-1 min-w-[7rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg ${
+          isOwnMessage ? "right-0" : "left-0"
+        }`}
       >
+        {canReply && (
+          <button
+            type="button"
+            onClick={() => {
+              setMenuOpen(false);
+              onReply();
+            }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <FaReply className="text-xs" />
+            Reply
+          </button>
+        )}
         {canEdit && (
           <button
             type="button"
@@ -273,40 +246,45 @@ export default function ChatMessageBubble({
             Delete
           </button>
         )}
-      </div>,
-      document.body,
+      </div>
     );
   };
 
+  const bubbleProps = showActions
+    ? {
+        role: "button",
+        tabIndex: 0,
+        onClick: handleBubbleActivate,
+        onKeyDown: (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleBubbleActivate();
+          }
+        },
+        "aria-label": "Message options",
+        "aria-expanded": menuOpen,
+      }
+    : {};
+
   if (isOwnMessage) {
     return (
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end mb-6 min-w-0 w-full" data-message-id={message.id}>
         <div
           ref={menuRef}
-          className="relative flex flex-col items-end max-w-[min(100%,28rem)]"
+          className="relative flex flex-col items-end min-w-0 max-w-[min(100%,28rem)]"
         >
-          <div
-            ref={bubbleRef}
-            role={showActions ? "button" : undefined}
-            tabIndex={showActions ? 0 : undefined}
-            onClick={handleBubbleActivate}
-            onKeyDown={(event) => {
-              if (!showActions) return;
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                handleBubbleActivate();
-              }
-            }}
-            aria-label={showActions ? "Message options" : undefined}
-            aria-expanded={showActions ? menuOpen : undefined}
-            className={`bg-[#1A3E32] text-white rounded-2xl rounded-br-none px-4 py-3 shadow-sm ${
-              showActions ? "cursor-pointer select-none active:opacity-90" : ""
-            } ${menuOpen ? "ring-2 ring-white/25" : ""}`}
-          >
-            {renderBubbleContent()}
+          <div className="relative w-fit max-w-full min-w-0">
+            <div
+              {...bubbleProps}
+              className={`bg-[#1A3E32] text-white rounded-2xl rounded-br-none px-4 py-3 shadow-sm w-fit max-w-full min-w-0 ${
+                showActions ? "cursor-pointer active:opacity-90" : ""
+              } ${menuOpen ? "ring-2 ring-white/25" : ""}`}
+            >
+              {renderBubbleContent()}
+            </div>
+            {renderActionsMenu()}
           </div>
-          {renderActionsMenu()}
-          <div className="flex items-center justify-end gap-2 mt-1.5 w-full">
+          <div className="flex items-center justify-end gap-2 mt-1.5 w-fit max-w-full">
             {wasEdited && !isDeleted && (
               <span className="text-[10px] italic text-[#A89B72]">edited</span>
             )}
@@ -328,7 +306,10 @@ export default function ChatMessageBubble({
   }
 
   return (
-    <div className="flex items-start gap-3 mb-6 max-w-[min(100%,32rem)]">
+    <div
+      className="flex items-start gap-3 mb-6 min-w-0 max-w-[min(100%,32rem)]"
+      data-message-id={message.id}
+    >
       {senderAvatar ? (
         <img
           src={senderAvatar}
@@ -354,8 +335,16 @@ export default function ChatMessageBubble({
             badgeSize="xs"
           />
         </p>
-        <div className="bg-[#E8E8E8] text-[#1A3E32] rounded-2xl rounded-tl-none px-4 py-3 shadow-sm w-fit max-w-full">
-          {renderBubbleContent()}
+        <div ref={menuRef} className="relative w-fit max-w-full">
+          <div
+            {...bubbleProps}
+            className={`bg-[#E8E8E8] text-[#1A3E32] rounded-2xl rounded-tl-none px-4 py-3 shadow-sm w-fit max-w-full ${
+              showActions ? "cursor-pointer active:opacity-90" : ""
+            } ${menuOpen ? "ring-2 ring-[#16730F]/20" : ""}`}
+          >
+            {renderBubbleContent()}
+          </div>
+          {renderActionsMenu()}
         </div>
         {messageTime && (
           <p className="text-[10px] tracking-wide text-[#A89B72] mt-1.5 self-start">

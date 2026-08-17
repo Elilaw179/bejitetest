@@ -47,6 +47,8 @@ import {
 import {
   formatDisplayPersonName,
   formatDisplayRole,
+  formatDisplayMode,
+  formatRoleAndMode,
   formatDisplayHandle,
 } from "../utils/personDisplayName";
 import { formatDisplayText } from "../utils/displayFormatUtils";
@@ -443,6 +445,9 @@ const Profile = () => {
   const viewedRole = isViewingOwnProfile
     ? profileData?.role || user?.role || null
     : profileData?.role || null;
+  const viewedMode = isViewingOwnProfile
+    ? profileData?.mode || user?.mode || null
+    : profileData?.mode || null;
   const isJobseekerProfile = viewedRole === "jobseeker";
   const isRecruiterProfile = viewedRole === "recruiter";
   const displayHandle = formatDisplayHandle(profileData);
@@ -669,7 +674,7 @@ const Profile = () => {
                         isRecruiterProfile ? "bg-purple-600" : "bg-[#16730F]"
                       }`}
                     ></span>
-                    {formatDisplayRole(viewedRole)}
+                    {formatRoleAndMode(viewedRole, viewedMode)}
                   </span>
                 </div>
 
@@ -1089,6 +1094,17 @@ const Profile = () => {
                     {formatDisplayRole(viewedRole) || "User"}
                   </span>
                 </div>
+
+                {formatDisplayMode(viewedMode) ? (
+                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50">
+                    <span className="text-slate-500 font-medium">
+                      Account Mode
+                    </span>
+                    <span className="font-bold text-slate-900 capitalize">
+                      {formatDisplayMode(viewedMode)}
+                    </span>
+                  </div>
+                ) : null}
 
                 {displayHandle && (
                   <div className="flex items-center justify-between py-1.5 border-b border-slate-50">
