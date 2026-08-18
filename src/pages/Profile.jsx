@@ -145,13 +145,14 @@ const ProfileDetailRow = ({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs sm:text-sm font-bold text-[#16730F] hover:text-[#145a0c] hover:underline break-all inline-flex items-center gap-1.5 mt-0.5"
+            title={href}
+            className="mt-0.5 flex min-w-0 w-full items-center gap-1.5 text-xs sm:text-sm font-bold text-[#16730F] hover:text-[#145a0c] hover:underline"
           >
-            <span className="truncate">{displayValue}</span>
+            <span className="min-w-0 flex-1 truncate">{displayValue}</span>
             <FaExternalLinkAlt className="w-2.5 h-2.5 shrink-0 opacity-70 group-hover:opacity-100" />
           </a>
         ) : (
-          <p className="text-xs sm:text-sm font-semibold text-slate-700 break-words break-all mt-0.5">
+          <p className="text-xs sm:text-sm font-semibold text-slate-700 truncate mt-0.5" title={displayValue}>
             {displayValue}
           </p>
         )}

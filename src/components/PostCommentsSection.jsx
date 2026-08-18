@@ -134,7 +134,7 @@ function CommentItem({
             </div>
           </div>
 
-          <p className="text-sm break-words text-gray-800 mt-1.5">
+          <p className="text-sm break-words text-gray-800 mt-1.5 whitespace-pre-wrap">
             {isEditing ? (
               <form
                 onSubmit={(e) => onSaveEdit(e, comment)}
@@ -248,20 +248,21 @@ function CommentItem({
         {isReplying && (
           <form
             onSubmit={(e) => onSubmitReply(e, comment.id)}
-            className="flex flex-wrap sm:flex-nowrap gap-2 mt-2 items-center"
+            className="flex flex-wrap sm:flex-nowrap gap-2 mt-2 items-start"
           >
             <img
               src={currentUserPhotoUrl}
               alt=""
-              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover shrink-0"
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover shrink-0 mt-1"
             />
-            <div className="flex-1 min-w-[120px] sm:min-w-[140px] flex items-center gap-1 border border-[#D3D3D3] rounded-full px-2 py-1 focus-within:border-[#16730F]">
-              <input
-                type="text"
+            <div className="flex-1 min-w-[120px] sm:min-w-[140px] flex items-end gap-1 border border-[#D3D3D3] rounded-2xl px-2 py-1 focus-within:border-[#16730F]">
+              <textarea
+                rows={2}
                 placeholder={`Reply to ${getDisplayName(comment.author)}...`}
                 value={replyText}
                 onChange={(e) => onReplyTextChange(e.target.value)}
-                className="flex-1 min-w-0 border-0 bg-transparent px-2 py-0.5 text-xs sm:text-sm outline-none"
+                enterKeyHint="enter"
+                className="flex-1 min-w-0 border-0 bg-transparent px-2 py-1.5 text-xs sm:text-sm outline-none resize-none overflow-y-auto max-h-28 leading-relaxed"
                 autoFocus
               />
               <EmojiPickerButton
@@ -272,7 +273,7 @@ function CommentItem({
             <button
               type="submit"
               disabled={!replyText.trim()}
-              className="bg-[#16730F] text-white px-3 py-1.5 rounded-full text-xs hover:bg-[#145a0c] disabled:opacity-50"
+              className="bg-[#16730F] text-white px-3 py-1.5 rounded-full text-xs hover:bg-[#145a0c] disabled:opacity-50 mt-1"
             >
               Reply
             </button>
@@ -511,23 +512,24 @@ export default function PostCommentsSection({
     <div ref={sectionRef} className="border-t border-[#A9A9A9] pt-4 mt-4">
       <form
         onSubmit={handleAddComment}
-        className="flex flex-wrap sm:flex-nowrap gap-2 mb-4 items-center"
+        className="flex flex-wrap sm:flex-nowrap gap-2 mb-4 items-start"
       >
         {currentUserPhotoUrl && (
           <img
             src={currentUserPhotoUrl}
             alt="Your profile"
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shrink-0"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shrink-0 mt-1"
           />
         )}
-        <div className="flex-1 min-w-[180px] flex items-center gap-1 border border-[#D3D3D3] rounded-full px-2 py-1 focus-within:border-[#16730F]">
-          <input
+        <div className="flex-1 min-w-[180px] flex items-end gap-1 border border-[#D3D3D3] rounded-2xl px-2 py-1 focus-within:border-[#16730F]">
+          <textarea
             ref={inputRef}
-            type="text"
+            rows={2}
             placeholder="Write a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="flex-1 min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm outline-none"
+            enterKeyHint="enter"
+            className="flex-1 min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm outline-none resize-none overflow-y-auto max-h-32 leading-relaxed"
           />
           <EmojiPickerButton
             onEmojiSelect={(emoji) => setNewComment((prev) => `${prev}${emoji}`)}
@@ -536,7 +538,7 @@ export default function PostCommentsSection({
         </div>
         <button
           type="submit"
-          className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c]"
+          className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c] mt-1"
         >
           Post
         </button>

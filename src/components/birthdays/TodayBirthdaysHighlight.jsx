@@ -6,6 +6,8 @@ import {
   FaEnvelope,
 } from "react-icons/fa";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
+import { getAuthorProfileImageUrl } from "../../utils/profileImageUtils";
+import { milestoneJobSubtitle } from "../../services/milestonesApi";
 
 export default function TodayBirthdaysHighlight({
   todayList,
@@ -39,7 +41,7 @@ export default function TodayBirthdaysHighlight({
             <div className="flex items-start gap-3">
               <div className="relative shrink-0">
                 <img
-                  src={person.image}
+                  src={getAuthorProfileImageUrl(person)}
                   alt={person.name}
                   className="w-12 h-12 rounded-full object-cover border-2 border-[#16730F]"
                 />
@@ -53,7 +55,7 @@ export default function TodayBirthdaysHighlight({
                   <DisplayNameWithBadge user={person} fallback={person.name} />
                 </h3>
                 <p className="text-xs text-gray-500 truncate mt-0.5">
-                  {person.role}
+                  {milestoneJobSubtitle(person)}
                 </p>
                 <p className="text-[11px] text-emerald-700 font-semibold mt-1 flex items-center gap-1">
                   <FaGift className="text-yellow-500" />
@@ -72,7 +74,13 @@ export default function TodayBirthdaysHighlight({
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => onQuickWish(person.id, person.name)}
+                    onClick={() =>
+                      onQuickWish(
+                        person.id,
+                        person.name,
+                        "🎂 Happy Birthday! 🎉",
+                      )
+                    }
                     className="flex-1 py-2 px-3 bg-[#16730F] text-white rounded-lg text-xs font-bold hover:bg-[#145a0c] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <FaPaperPlane className="text-[10px]" />

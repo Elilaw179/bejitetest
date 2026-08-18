@@ -1,6 +1,8 @@
 import React from "react";
 import { FaCalendarAlt, FaPaperPlane, FaEnvelope, FaCheckCircle } from "react-icons/fa";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
+import { getAuthorProfileImageUrl } from "../../utils/profileImageUtils";
+import { milestoneJobSubtitle } from "../../services/milestonesApi";
 
 const QUICK_CHIPS = [
   "🎂 Happy Birthday! 🎉",
@@ -19,7 +21,7 @@ export default function BirthdayCard({
         {/* User Info Header */}
         <div className="flex items-center gap-3 mb-3">
           <img
-            src={person.image}
+            src={getAuthorProfileImageUrl(person)}
             alt={person.name}
             className="w-12 h-12 rounded-full object-cover border-2 border-emerald-600/20 shrink-0"
           />
@@ -30,7 +32,9 @@ export default function BirthdayCard({
             >
               <DisplayNameWithBadge user={person} fallback={person.name} />
             </h3>
-            <p className="text-xs text-gray-500 truncate mt-0.5">{person.role}</p>
+            <p className="text-xs text-gray-500 truncate mt-0.5">
+              {milestoneJobSubtitle(person)}
+            </p>
           </div>
         </div>
 
@@ -63,7 +67,7 @@ export default function BirthdayCard({
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => onQuickWish(person.id, person.name)}
+                  onClick={() => onQuickWish(person.id, person.name, chipText)}
                   className="text-left text-xs bg-gray-50 hover:bg-emerald-50 hover:text-[#16730F] border border-gray-200/80 hover:border-emerald-300 px-3 py-1.5 rounded-lg transition-all duration-150 cursor-pointer truncate font-medium"
                 >
                   {chipText}
@@ -85,7 +89,9 @@ export default function BirthdayCard({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => onQuickWish(person.id, person.name)}
+              onClick={() =>
+                onQuickWish(person.id, person.name, "🎂 Happy Birthday! 🎉")
+              }
               className="flex-1 py-2.5 px-3 bg-[#16730F] hover:bg-[#145a0c] text-white rounded-xl text-xs font-bold transition-all duration-150 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <FaPaperPlane className="text-[10px]" />

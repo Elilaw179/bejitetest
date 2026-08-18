@@ -22,6 +22,15 @@ import {
   buildContactInfoItems,
   getFormattedEducationFields,
 } from "../../utils/displayFormatUtils";
+import {
+  FaPhone,
+  FaMapMarkerAlt,
+  FaEnvelope,
+  FaLinkedin,
+  FaGithub,
+  FaGlobe,
+  FaExternalLinkAlt,
+} from "react-icons/fa";
 import { formatDisplayPersonName, formatDisplayRole } from "../../utils/personDisplayName";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import AvailabilityStatusDot from "./AvailabilityStatusDot";
@@ -689,12 +698,12 @@ const CertificationItem = ({ certification }) => (
 );
 
 const CONTACT_ICONS = {
-  Phone: "📱",
-  Address: "📍",
-  Email: "📧",
-  LinkedIn: "💼",
-  GitHub: "💻",
-  Portfolio: "🌐",
+  Phone: FaPhone,
+  Address: FaMapMarkerAlt,
+  Email: FaEnvelope,
+  LinkedIn: FaLinkedin,
+  GitHub: FaGithub,
+  Portfolio: FaGlobe,
 };
 
 const ContactInfoList = ({ candidate }) => {
@@ -704,37 +713,43 @@ const ContactInfoList = ({ candidate }) => {
   const contacts = buildContactInfoItems({ candidate, bio: bioRow });
 
   return (
-    <div className="px-4 sm:px-8 pb-6 text-[#FFFFFF] space-y-4">
-      {contacts.map((contact) => (
-        <div key={contact.type} className="flex gap-3 items-start min-w-0">
-          <div className="w-10 h-10 rounded-full bg-[#1A3E32] flex items-center justify-center shrink-0">
-            <span className="text-xl">{CONTACT_ICONS[contact.type] || "•"}</span>
-          </div>
-          <div className="min-w-0 flex-1">
-            {contact.href ? (
-              <a
-                href={
-                  contact.value.startsWith("http")
-                    ? contact.value
-                    : `https://${contact.value}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[13px] font-semibold text-[#9AE6B0] hover:underline break-words block"
-              >
-                {contact.value}
-              </a>
-            ) : (
-              <p className="text-[13px] font-semibold break-words leading-relaxed">
-                {contact.value}
+    <div className="px-4 sm:px-8 pb-6 text-[#FFFFFF] space-y-3.5">
+      {contacts.map((contact) => {
+        const Icon = CONTACT_ICONS[contact.type] || FaGlobe;
+        const href = contact.href
+          ? contact.value.startsWith("http")
+            ? contact.value
+            : `https://${contact.value}`
+          : null;
+
+        return (
+          <div key={contact.type} className="flex gap-3 items-center min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10">
+              <Icon className="text-base text-[#9AE6B0]" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold text-[#E0E0E0] uppercase tracking-wider">
+                {contact.type}
               </p>
-            )}
-            <p className="text-[11px] font-medium text-[#E0E0E0] mt-0.5">
-              {contact.type}
-            </p>
+              {href ? (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[13px] font-semibold text-[#9AE6B0] hover:text-white hover:underline truncate max-w-full inline-flex items-center gap-1.5 mt-0.5"
+                >
+                  <span className="truncate">{contact.value}</span>
+                  <FaExternalLinkAlt className="text-[10px] shrink-0 opacity-70" />
+                </a>
+              ) : (
+                <p className="text-[13px] font-semibold break-words leading-relaxed mt-0.5">
+                  {contact.value}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -23,6 +24,32 @@ function hasTextSelection() {
   return Boolean(selection && selection.toString().trim());
 }
 
+function getTruncatedContent(content, maxChars = 320, maxLines = 6) {
+  if (!content) return { isLong: false, text: "" };
+  const lines = content.split("\n");
+  const exceedsLines = lines.length > maxLines;
+  const chars = Array.from(content);
+  const exceedsChars = chars.length > maxChars;
+
+  if (!exceedsLines && !exceedsChars) {
+    return { isLong: false, text: content };
+  }
+
+  let truncated = content;
+  if (exceedsLines) {
+    truncated = lines.slice(0, maxLines).join("\n");
+  }
+  const truncatedChars = Array.from(truncated);
+  if (truncatedChars.length > maxChars) {
+    truncated = truncatedChars.slice(0, maxChars).join("").trimEnd();
+  }
+
+  return {
+    isLong: true,
+    text: truncated.trimEnd() + "...",
+  };
+}
+
 export default function ChatMessageBubble({
   message,
   isOwnMessage,
@@ -43,6 +70,8 @@ export default function ChatMessageBubble({
   canJumpToQuote = false,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPlacement, setMenuPlacement] = useState("above");
+  const [isExpanded, setIsExpanded] = useState(false);
   const [draft, setDraft] = useState(message.content || "");
   const menuRef = useRef(null);
 
@@ -58,8 +87,27 @@ export default function ChatMessageBubble({
     }
   }, [editing]);
 
+  const placeMenu = useCallback(() => {
+    const anchor = menuRef.current;
+    if (!anchor) return;
+
+    const scrollParent =
+      anchor.closest("[data-chat-messages]") ||
+      anchor.closest(".overflow-y-auto");
+    const parentRect = scrollParent?.getBoundingClientRect();
+    const anchorRect = anchor.getBoundingClientRect();
+    const menuHeight = 148;
+    const spaceAbove = parentRect
+      ? anchorRect.top - parentRect.top
+      : anchorRect.top;
+    setMenuPlacement(spaceAbove < menuHeight ? "below" : "above");
+  }, []);
+
   useEffect(() => {
     if (!menuOpen) return undefined;
+
+    placeMenu();
+    requestAnimationFrame(placeMenu);
 
     const handleClickOutside = (event) => {
       if (menuRef.current?.contains(event.target)) return;
@@ -68,11 +116,13 @@ export default function ChatMessageBubble({
 
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("touchstart", handleClickOutside);
+    window.addEventListener("resize", placeMenu);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("touchstart", handleClickOutside);
+      window.removeEventListener("resize", placeMenu);
     };
-  }, [menuOpen]);
+  }, [menuOpen, placeMenu]);
 
   const isDeleted = message.is_deleted;
   const hasAttachment = Boolean(message.image_url) && !isDeleted;
@@ -96,6 +146,13 @@ export default function ChatMessageBubble({
     message.created_at &&
     message.updated_at !== message.created_at;
 
+  const { isLong: isLongContent, text: truncatedText } = getTruncatedContent(
+    message.content,
+  );
+  const isLongMessage = !isDeleted && isLongContent;
+  const displayedContent =
+    isLongMessage && !isExpanded ? truncatedText : message.content;
+
   const handleSaveEdit = () => {
     const trimmed = draft.trim();
     if (!trimmed || saving) return;
@@ -104,6 +161,9 @@ export default function ChatMessageBubble({
 
   const handleBubbleActivate = () => {
     if (!showActions || hasTextSelection()) return;
+    if (!menuOpen) {
+      placeMenu();
+    }
     setMenuOpen((open) => !open);
   };
 
@@ -172,17 +232,35 @@ export default function ChatMessageBubble({
       ) : (
         <>
           {!attachmentOnly && message.content && (
-            <p
-              className={`text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${
-                isDeleted
-                  ? isOwnMessage
-                    ? "italic text-white/70"
-                    : "italic text-gray-500"
-                  : ""
-              }`}
-            >
-              {message.content}
-            </p>
+            <div>
+              <p
+                className={`text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${
+                  isDeleted
+                    ? isOwnMessage
+                      ? "italic text-white/70"
+                      : "italic text-gray-500"
+                    : ""
+                }`}
+              >
+                {displayedContent}
+              </p>
+              {isLongMessage && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded((prev) => !prev);
+                  }}
+                  className={`mt-1.5 text-xs font-semibold hover:underline focus:outline-none inline-block transition-colors ${
+                    isOwnMessage
+                      ? "text-emerald-300 hover:text-emerald-200"
+                      : "text-[#16730F] hover:text-[#125c0c]"
+                  }`}
+                >
+                  {isExpanded ? "See less" : "See more"}
+                </button>
+              )}
+            </div>
           )}
           {isDeleted && !message.content && (
             <p
@@ -203,9 +281,9 @@ export default function ChatMessageBubble({
 
     return (
       <div
-        className={`absolute z-10 bottom-full mb-1 min-w-[7rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg ${
-          isOwnMessage ? "right-0" : "left-0"
-        }`}
+        className={`absolute z-[80] min-w-[7rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg ${
+          menuPlacement === "below" ? "top-full mt-1" : "bottom-full mb-1"
+        } ${isOwnMessage ? "right-0" : "left-0"}`}
       >
         {canReply && (
           <button
@@ -256,6 +334,7 @@ export default function ChatMessageBubble({
         tabIndex: 0,
         onClick: handleBubbleActivate,
         onKeyDown: (event) => {
+          if (event.target.closest("button, a, textarea, input")) return;
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             handleBubbleActivate();
@@ -268,7 +347,12 @@ export default function ChatMessageBubble({
 
   if (isOwnMessage) {
     return (
-      <div className="flex justify-end mb-6 min-w-0 w-full" data-message-id={message.id}>
+      <div
+        className={`flex justify-end mb-6 min-w-0 w-full ${
+          menuOpen ? "relative z-[80]" : ""
+        }`}
+        data-message-id={message.id}
+      >
         <div
           ref={menuRef}
           className="relative flex flex-col items-end min-w-0 max-w-[min(100%,28rem)]"
@@ -307,7 +391,9 @@ export default function ChatMessageBubble({
 
   return (
     <div
-      className="flex items-start gap-3 mb-6 min-w-0 max-w-[min(100%,32rem)]"
+      className={`flex items-start gap-3 mb-6 min-w-0 max-w-[min(100%,32rem)] ${
+        menuOpen ? "relative z-[80]" : ""
+      }`}
       data-message-id={message.id}
     >
       {senderAvatar ? (

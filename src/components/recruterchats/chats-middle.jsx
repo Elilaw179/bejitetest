@@ -380,6 +380,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
   <div
     ref={messagesContainerRef}
     onScroll={handleMessagesScroll}
+    data-chat-messages
     className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain nfl-scroll [overflow-anchor:none] p-3 md:p-5 bg-[#F7F7F7]"
   >
     {loading ? (
