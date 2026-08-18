@@ -1,5 +1,7 @@
 import React from "react";
 import { FaBirthdayCake, FaPaperPlane } from "react-icons/fa";
+import { getAuthorProfileImageUrl } from "../../utils/profileImageUtils";
+import { milestoneJobSubtitle } from "../../services/milestonesApi";
 
 export default function BirthdayWishModal({
   selectedUser,
@@ -37,7 +39,7 @@ export default function BirthdayWishModal({
         <form onSubmit={onSubmit} className="p-5 space-y-4">
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
             <img
-              src={selectedUser.image}
+              src={getAuthorProfileImageUrl(selectedUser)}
               alt={selectedUser.name}
               className="w-10 h-10 rounded-full object-cover"
             />
@@ -46,7 +48,7 @@ export default function BirthdayWishModal({
                 {selectedUser.name}
               </p>
               <p className="text-xs text-gray-500 truncate">
-                {selectedUser.role}
+                {milestoneJobSubtitle(selectedUser)}
               </p>
             </div>
           </div>

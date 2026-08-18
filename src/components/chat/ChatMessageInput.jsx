@@ -221,11 +221,17 @@ function ChatMessageInput({
             rows={1}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            enterKeyHint="enter"
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendClick();
+              if (e.key !== 'Enter' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) {
+                return;
               }
+              // Phone/tablet Return should insert a new line. Send with the button.
+              if (window.matchMedia('(pointer: coarse)').matches) {
+                return;
+              }
+              e.preventDefault();
+              handleSendClick();
             }}
             placeholder="Type a message"
             disabled={busy}

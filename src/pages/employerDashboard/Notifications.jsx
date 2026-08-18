@@ -297,6 +297,16 @@ const Notifications = () => {
       return
     }
 
+    if (notification.type === 'birthday_wish') {
+      const senderId = parsedData?.fromUserId || parsedData?.userId
+      if (senderId) {
+        navigate(`/user-profile/${senderId}`)
+        return
+      }
+      navigate('/milestones')
+      return
+    }
+
     // New message — open the conversation in chats
     if (notification.type === 'new_message') {
       const conversationId =
@@ -457,6 +467,8 @@ const Notifications = () => {
         return '✅'
       case 'user_followed':
         return '👤'
+      case 'birthday_wish':
+        return '🎂'
       default:
         return '🔔'
     }

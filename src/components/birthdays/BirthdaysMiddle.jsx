@@ -1,8 +1,7 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaRegSmileBeam } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { INITIAL_BIRTHDAY_DATA } from "../../utils/mockJobs";
 import BirthdayBanner from "./BirthdayBanner";
 import TodayBirthdaysHighlight from "./TodayBirthdaysHighlight";
 import BirthdayCard from "./BirthdayCard";
@@ -10,67 +9,143 @@ import BirthdayCardSkeleton from "./BirthdayCardSkeleton";
 import BirthdayTabs from "./BirthdayTabs";
 import BirthdayWishModal from "./BirthdayWishModal";
 import BirthdayPagination from "./BirthdayPagination";
+import {
+  getMilestones,
+  getViewerTimeZone,
+  milestoneJobSubtitle,
+  sendBirthdayWish,
+} from "../../services/milestonesApi";
+
+const DEFAULT_WISH = "🎂 Happy Birthday! 🎉";
+
+function isCanceled(err, signal) {
+  return (
+    signal?.aborted ||
+    err?.name === "CanceledError" ||
+    err?.name === "AbortError" ||
+    err?.code === "ERR_CANCELED"
+  );
+}
 
 export default function BirthdaysMiddle() {
   const navigate = useNavigate();
-  const [birthdayList, setBirthdayList] = useState(INITIAL_BIRTHDAY_DATA);
+  const inFlightRef = useRef(new Set());
+  const [birthdayList, setBirthdayList] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(6);
   const [loading, setLoading] = useState(true);
 
-  // Custom Wish Modal State
   const [selectedUserForModal, setSelectedUserForModal] = useState(null);
   const [customMessage, setCustomMessage] = useState("");
 
-  // Simulate initial data loading with shimmer
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    const ac = new AbortController();
+    const timeZone = getViewerTimeZone();
+
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await getMilestones({ timeZone, signal: ac.signal });
+        if (ac.signal.aborted) return;
+        setBirthdayList(Array.isArray(data?.milestones) ? data.milestones : []);
+      } catch (err) {
+        if (isCanceled(err, ac.signal)) return;
+        console.error("Error fetching milestones:", err);
+        toast.error(
+          err.response?.data?.error || "Failed to load connection birthdays",
+        );
+        setBirthdayList([]);
+      } finally {
+        if (!ac.signal.aborted) setLoading(false);
+      }
+    })();
+
+    return () => ac.abort();
   }, []);
 
-  // Quick wish handler
-  const handleQuickWish = (userId, userName) => {
+  const markWished = (userId, wished = true) => {
     setBirthdayList((prev) =>
       prev.map((item) =>
-        item.id === userId ? { ...item, wished: true } : item,
+        String(item.id) === String(userId) ? { ...item, wished } : item,
       ),
     );
-    toast.success(`Birthday wish sent to ${userName}! 🎉`);
   };
 
-  // Open modal for personal message
+  const sendWish = async (userId, userName, message, { successToast } = {}) => {
+    if (inFlightRef.current.has(userId)) return false;
+    const current = birthdayList.find(
+      (item) => String(item.id) === String(userId),
+    );
+    if (!current || current.wished) return false;
+
+    inFlightRef.current.add(userId);
+    markWished(userId, true);
+    try {
+      await sendBirthdayWish(userId, message, getViewerTimeZone());
+      toast.success(successToast);
+      return true;
+    } catch (err) {
+      if (err.response?.status === 409) {
+        markWished(userId, true);
+        toast.info(`You already wished ${userName} this year`);
+        return true;
+      }
+      markWished(userId, false);
+      toast.error(
+        err.response?.data?.error ||
+          `Failed to send birthday wish to ${userName}`,
+      );
+      return false;
+    } finally {
+      inFlightRef.current.delete(userId);
+    }
+  };
+
+  const handleQuickWish = (userId, userName, message = DEFAULT_WISH) => {
+    void sendWish(userId, userName, message, {
+      successToast: `Birthday wish sent to ${userName}! 🎉`,
+    });
+  };
+
   const handleOpenWishModal = (user) => {
     setSelectedUserForModal(user);
+    const first = String(user.name || "")
+      .split(" ")
+      .filter(Boolean)[0];
     setCustomMessage(
-      `Happy Birthday ${user.name.split(" ")[0]}! Wishing you all the best on your special day! 🎂`,
+      first
+        ? `Happy Birthday ${first}! Wishing you all the best on your special day! 🎂`
+        : DEFAULT_WISH,
     );
   };
 
-  // Submit custom wish from modal
-  const handleSendCustomWish = (e) => {
+  const handleSendCustomWish = async (e) => {
     e.preventDefault();
     if (!selectedUserForModal || !customMessage.trim()) return;
 
-    setBirthdayList((prev) =>
-      prev.map((item) =>
-        item.id === selectedUserForModal.id ? { ...item, wished: true } : item,
-      ),
+    const user = selectedUserForModal;
+    const ok = await sendWish(
+      user.id,
+      user.name,
+      customMessage.trim(),
+      { successToast: `Personal wish sent to ${user.name}! 🎂` },
     );
-    toast.success(`Personal wish sent to ${selectedUserForModal.name}! 🎂`);
-    setSelectedUserForModal(null);
-    setCustomMessage("");
+    if (ok) {
+      setSelectedUserForModal(null);
+      setCustomMessage("");
+    }
   };
 
-  // Filter list by tab & search query
   const filteredList = useMemo(() => {
+    const q = searchQuery.toLowerCase();
     return birthdayList.filter((item) => {
       const matchesSearch =
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.role.toLowerCase().includes(searchQuery.toLowerCase());
+        String(item.name || "")
+          .toLowerCase()
+          .includes(q) ||
+        milestoneJobSubtitle(item).toLowerCase().includes(q);
 
       if (!matchesSearch) return false;
 
@@ -81,7 +156,6 @@ export default function BirthdaysMiddle() {
     });
   }, [birthdayList, activeTab, searchQuery]);
 
-  // Counts
   const todayCount = useMemo(
     () => birthdayList.filter((i) => i.category === "today").length,
     [birthdayList],
@@ -95,19 +169,15 @@ export default function BirthdaysMiddle() {
     [birthdayList],
   );
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredList.length / pageSize) || 1;
   const paginatedItems = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredList.slice(start, start + pageSize);
   }, [filteredList, currentPage, pageSize]);
 
-  // Reset page & trigger brief shimmer on tab change
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
     setCurrentPage(1);
-    setLoading(true);
-    setTimeout(() => setLoading(false), 300);
   };
 
   const handleSearchChange = (e) => {
@@ -117,8 +187,6 @@ export default function BirthdaysMiddle() {
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-    setLoading(true);
-    setTimeout(() => setLoading(false), 250);
   };
 
   const todayList = useMemo(
@@ -134,12 +202,10 @@ export default function BirthdaysMiddle() {
   ];
 
   return (
-    <div className="min-h-[#100dvh] bg-[#F5F5F5] w-full min-w-0 pb-12">
+    <div className="min-h-[100dvh] bg-[#F5F5F5] w-full min-w-0 pb-12">
       <div className="w-full min-w-0 max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        {/* Header Banner */}
         <BirthdayBanner />
 
-        {/* Today's Special Birthday Highlight Card */}
         {activeTab !== "recent" && (
           <TodayBirthdaysHighlight
             todayList={todayList}
@@ -149,30 +215,25 @@ export default function BirthdaysMiddle() {
           />
         )}
 
-        {/* Controls & Search Section */}
         <div className="mb-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="Search connection by name or role..."
+              placeholder="Search by name or role..."
               value={searchQuery}
               onChange={handleSearchChange}
               className="w-full border-2 border-[#16730F] p-2.5 pl-4 pr-10 rounded-xl focus:outline-none text-sm bg-white shadow-xs"
             />
             <FaSearch className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#1A3E32] h-4 w-4 pointer-events-none" />
           </div>
-
-          {/* Page-size selector temporarily disabled; pageSize stays fixed at 6. */}
         </div>
 
-        {/* Category Tabs */}
         <BirthdayTabs
           tabs={tabsConfig}
           activeTab={activeTab}
           onTabChange={handleTabChange}
         />
 
-        {/* Birthday Cards Grid with Shimmer Effect */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
             {Array.from({ length: pageSize }).map((_, idx) => (
@@ -187,8 +248,8 @@ export default function BirthdaysMiddle() {
             </h3>
             <p className="text-xs text-gray-500 max-w-xs mx-auto">
               {searchQuery
-                ? `No connections matching "${searchQuery}" in this section.`
-                : "No connection birthdays in this selected view."}
+                ? `No people matching "${searchQuery}" in this section.`
+                : "No network birthdays in this selected view."}
             </p>
           </div>
         ) : (
@@ -205,7 +266,6 @@ export default function BirthdaysMiddle() {
           </div>
         )}
 
-        {/* Pagination Controls */}
         <BirthdayPagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -215,7 +275,6 @@ export default function BirthdaysMiddle() {
         />
       </div>
 
-      {/* Modal: Write Custom Birthday Note */}
       <BirthdayWishModal
         selectedUser={selectedUserForModal}
         customMessage={customMessage}
