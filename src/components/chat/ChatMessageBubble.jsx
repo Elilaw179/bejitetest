@@ -70,11 +70,8 @@ export default function ChatMessageBubble({
   canJumpToQuote = false,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-<<<<<<< HEAD
   const [menuPlacement, setMenuPlacement] = useState("above");
-=======
   const [isExpanded, setIsExpanded] = useState(false);
->>>>>>> 6a10f45548e67e722e25ac37676ce01d7b60a576
   const [draft, setDraft] = useState(message.content || "");
   const menuRef = useRef(null);
 

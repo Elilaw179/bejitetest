@@ -103,23 +103,6 @@ export default function RecruitmentLeft() {
 
         {/* Action Buttons */}
         <div className="p-2 space-y-2">
-          {user?.role === "jobseeker" && (
-            <button
-              type="button"
-              onClick={() => setShowConnectModal(true)}
-              className="flex items-center cursor-pointer space-x-3 w-full px-4 py-2 bg-[#15600b] hover:bg-[#0f4a08] rounded-lg transition-colors"
-            >
-              <img
-                src="/assets/images/repeate-one.svg"
-                alt="Connect"
-                className="w-4 h-4 object-contain brightness-0 invert"
-              />
-              <span className="text-[#F5F5F5] text-sm font-bold whitespace-nowrap">
-                Connect
-              </span>
-            </button>
-          )}
-
           {/* Invite Friends Button */}
           <button
             type="button"
