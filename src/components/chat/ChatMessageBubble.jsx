@@ -23,6 +23,32 @@ function hasTextSelection() {
   return Boolean(selection && selection.toString().trim());
 }
 
+function getTruncatedContent(content, maxChars = 320, maxLines = 6) {
+  if (!content) return { isLong: false, text: "" };
+  const lines = content.split("\n");
+  const exceedsLines = lines.length > maxLines;
+  const chars = Array.from(content);
+  const exceedsChars = chars.length > maxChars;
+
+  if (!exceedsLines && !exceedsChars) {
+    return { isLong: false, text: content };
+  }
+
+  let truncated = content;
+  if (exceedsLines) {
+    truncated = lines.slice(0, maxLines).join("\n");
+  }
+  const truncatedChars = Array.from(truncated);
+  if (truncatedChars.length > maxChars) {
+    truncated = truncatedChars.slice(0, maxChars).join("").trimEnd();
+  }
+
+  return {
+    isLong: true,
+    text: truncated.trimEnd() + "...",
+  };
+}
+
 export default function ChatMessageBubble({
   message,
   isOwnMessage,
@@ -43,6 +69,7 @@ export default function ChatMessageBubble({
   canJumpToQuote = false,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [draft, setDraft] = useState(message.content || "");
   const menuRef = useRef(null);
 
@@ -95,6 +122,13 @@ export default function ChatMessageBubble({
     message.updated_at &&
     message.created_at &&
     message.updated_at !== message.created_at;
+
+  const { isLong: isLongContent, text: truncatedText } = getTruncatedContent(
+    message.content,
+  );
+  const isLongMessage = !isDeleted && isLongContent;
+  const displayedContent =
+    isLongMessage && !isExpanded ? truncatedText : message.content;
 
   const handleSaveEdit = () => {
     const trimmed = draft.trim();
@@ -172,17 +206,35 @@ export default function ChatMessageBubble({
       ) : (
         <>
           {!attachmentOnly && message.content && (
-            <p
-              className={`text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${
-                isDeleted
-                  ? isOwnMessage
-                    ? "italic text-white/70"
-                    : "italic text-gray-500"
-                  : ""
-              }`}
-            >
-              {message.content}
-            </p>
+            <div>
+              <p
+                className={`text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${
+                  isDeleted
+                    ? isOwnMessage
+                      ? "italic text-white/70"
+                      : "italic text-gray-500"
+                    : ""
+                }`}
+              >
+                {displayedContent}
+              </p>
+              {isLongMessage && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded((prev) => !prev);
+                  }}
+                  className={`mt-1.5 text-xs font-semibold hover:underline focus:outline-none inline-block transition-colors ${
+                    isOwnMessage
+                      ? "text-emerald-300 hover:text-emerald-200"
+                      : "text-[#16730F] hover:text-[#125c0c]"
+                  }`}
+                >
+                  {isExpanded ? "See less" : "See more"}
+                </button>
+              )}
+            </div>
           )}
           {isDeleted && !message.content && (
             <p
@@ -256,6 +308,7 @@ export default function ChatMessageBubble({
         tabIndex: 0,
         onClick: handleBubbleActivate,
         onKeyDown: (event) => {
+          if (event.target.closest("button, a, textarea, input")) return;
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             handleBubbleActivate();
