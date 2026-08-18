@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getUser } from "../../utils/tokenManager";
 import InviteFriendsModal from "../InviteFriendsModal";
+import ConnectModal from "../ConnectModal";
 import { Network } from "lucide-react";
 import { isCorporateRecruiter } from "../../utils/recruiterProfilePaths";
 
@@ -19,6 +20,7 @@ const navItems = [
 export default function RecruitmentLeft() {
   const navigate = useNavigate();
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
 
   // Get user from Redux store or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
@@ -99,8 +101,26 @@ export default function RecruitmentLeft() {
           ))}
         </nav>
 
-        {/* Invite Friends Button */}
-        <div className="  p-2">
+        {/* Action Buttons */}
+        <div className="p-2 space-y-2">
+          {user?.role === "jobseeker" && (
+            <button
+              type="button"
+              onClick={() => setShowConnectModal(true)}
+              className="flex items-center cursor-pointer space-x-3 w-full px-4 py-2 bg-[#15600b] hover:bg-[#0f4a08] rounded-lg transition-colors"
+            >
+              <img
+                src="/assets/images/repeate-one.svg"
+                alt="Connect"
+                className="w-4 h-4 object-contain brightness-0 invert"
+              />
+              <span className="text-[#F5F5F5] text-sm font-bold whitespace-nowrap">
+                Connect
+              </span>
+            </button>
+          )}
+
+          {/* Invite Friends Button */}
           <button
             type="button"
             onClick={() => setShowInviteModal(true)}
@@ -112,12 +132,19 @@ export default function RecruitmentLeft() {
             </span>
           </button>
         </div>
+
+        <ConnectModal
+          isOpen={showConnectModal}
+          onClose={() => setShowConnectModal(false)}
+        />
+
         <InviteFriendsModal
           isOpen={showInviteModal}
           onClose={() => setShowInviteModal(false)}
           user={user}
         />
-        {(user?.role === "recruiter" || user?.role === "employer") && (
+
+        {user?.role === "recruiter" || user?.role === "employer" ? (
           <div className="bg-[#1A3E32] flex-1 rounded-b-2xl mt-4 flex flex-col items-center pt-8 pb-6 space-y-5">
             <button
               className="text-white hover:text-green-300 transition-colors font-semibold text-sm"
@@ -126,6 +153,30 @@ export default function RecruitmentLeft() {
               AdPro
             </button>
             {/* <div className="w-[180px] h-[80px] bg-white/10 rounded-xl border border-white/10" /> */}
+          </div>
+        ) : (
+          <div className="bg-[#1A3E32] flex-1 rounded-b-2xl mt-4 p-4 flex flex-col items-center justify-between text-center space-y-3">
+            <div className="flex flex-col items-center space-y-2 pt-1">
+              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                <img
+                  src="/assets/images/repeate-one.svg"
+                  alt="Connect"
+                  className="w-5 h-5 brightness-0 invert"
+                />
+              </div>
+              <h4 className="text-white font-semibold text-sm">Grow Your Network</h4>
+              <p className="text-white/70 text-xs leading-relaxed">
+                Connect with professionals & peers in your industry.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowConnectModal(true)}
+              className="w-full py-2 px-3 bg-[#16730F] hover:bg-[#135d0c] text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-95"
+            >
+              <FaUserPlus className="text-xs" />
+              <span>Connect Now</span>
+            </button>
           </div>
         )}
       </aside>
