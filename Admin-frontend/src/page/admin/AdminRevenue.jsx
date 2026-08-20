@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
-import { CreditCard, DollarSign, Activity, TrendingUp } from "lucide-react";
+import { CreditCard, DollarSign, Activity, TrendingUp, Eye } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -12,9 +12,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import ChartPeriodSelect from "../../components/admin/ChartPeriodSelect";
+import AdminTransactionDetailModal from "../../components/admin/AdminTransactionDetailModal";
 import {
   DEFAULT_CHART_PERIOD,
   getChartPeriodLabel,
+  formatChartTick,
+  fillDailyChartSeries,
+  getChartTickInterval,
 } from "../../constants/chartPeriods";
 
 // StatCard component
@@ -31,25 +35,59 @@ const StatCard = ({ title, value, icon: Icon, colorClass, subtitle }) => (
   </div>
 );
 
+const ITEMS_PER_PAGE = 5;
+
+const formatCurrency = (amount, currency = "NGN") => {
+  const code = currency || "NGN";
+  try {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: code,
+    }).format(Number(amount || 0));
+  } catch {
+    return `${code} ${Number(amount || 0).toLocaleString()}`;
+  }
+};
+
+const formatAxisAmount = (value) => {
+  const n = Number(value) || 0;
+  if (Math.abs(n) >= 1000) {
+    const thousands = n / 1000;
+    return `₦${Number.isInteger(thousands) ? thousands : thousands.toFixed(1)}k`;
+  }
+  return `₦${n}`;
+};
+
 const AdminRevenue = () => {
   const [metrics, setMetrics] = useState({
     totalRevenue: 0,
     totalTransactions: 0,
     recentTransactions: [],
     monthlyRevenue: [],
+    revenueTrend: [],
   });
   const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [period, setPeriod] = useState(DEFAULT_CHART_PERIOD);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [txPagination, setTxPagination] = useState({
+    page: 1,
+    limit: ITEMS_PER_PAGE,
+    total: 0,
+    totalPages: 0,
+  });
+  const [metricsReady, setMetricsReady] = useState(false);
   const periodLabel = getChartPeriodLabel(period);
-
-  const ITEMS_PER_PAGE = 5;
+  const hasLoadedRef = useRef(false);
+  const metricsRef = useRef(metrics);
+  metricsRef.current = metrics;
 
   useEffect(() => {
     const fetchRevenueData = async () => {
       try {
-        setLoading(true);
+        if (!hasLoadedRef.current) setLoading(true);
         const [revenueRes, overviewRes] = await Promise.all([
           axiosInstance.get(`/api/admin/metrics/revenue?period=${period}`),
           axiosInstance.get("/api/admin/metrics/overview"),
@@ -57,7 +95,8 @@ const AdminRevenue = () => {
 
         setMetrics(revenueRes.data);
         setTotalUsers(overviewRes.data?.totalUsers || 0);
-        setCurrentPage(1);
+        hasLoadedRef.current = true;
+        setMetricsReady(true);
       } catch (error) {
         console.error("Error fetching revenue metrics", error);
         toast.error("Failed to load revenue data");
@@ -69,6 +108,44 @@ const AdminRevenue = () => {
     fetchRevenueData();
   }, [period]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchTransactions = async () => {
+      try {
+        const { data } = await axiosInstance.get(
+          `/api/admin/metrics/revenue/transactions?page=${currentPage}&limit=${ITEMS_PER_PAGE}`,
+        );
+        if (cancelled) return;
+        setTransactions(data.transactions || []);
+        setTxPagination(
+          data.pagination || {
+            page: currentPage,
+            limit: ITEMS_PER_PAGE,
+            total: (data.transactions || []).length,
+            totalPages: 1,
+          },
+        );
+      } catch {
+        if (cancelled) return;
+        const all = metricsRef.current.recentTransactions || [];
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        setTransactions(all.slice(start, start + ITEMS_PER_PAGE));
+        setTxPagination({
+          page: currentPage,
+          limit: ITEMS_PER_PAGE,
+          total: all.length,
+          totalPages: all.length > 0 ? Math.ceil(all.length / ITEMS_PER_PAGE) : 0,
+        });
+      }
+    };
+
+    fetchTransactions();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage, metricsReady]);
+
   if (loading) {
     return (
       <div className="h-[80vh] flex items-center justify-center">
@@ -77,21 +154,19 @@ const AdminRevenue = () => {
     );
   }
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-    }).format(amount);
-  };
+  const totalTx = txPagination.total || 0;
+  const totalPages = txPagination.totalPages || 0;
+  const startIdx =
+    totalTx === 0 ? 0 : (txPagination.page - 1) * txPagination.limit;
+  const endIdx = Math.min(startIdx + (transactions.length || 0), totalTx);
+  const paginatedTx = transactions;
 
-  // Pagination helpers for Recent Transactions
-  const recentTransactions = metrics.recentTransactions || [];
-  const totalTx = recentTransactions.length;
-  const totalPages = Math.ceil(totalTx / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, totalTx);
-  const paginatedTx = recentTransactions.slice(startIdx, endIdx);
+  const revenueChartData = fillDailyChartSeries(
+    metrics.revenueTrend || metrics.monthlyRevenue,
+    period,
+    "revenue",
+  );
+  const tickInterval = getChartTickInterval(revenueChartData.length);
 
   return (
     <div className="max-w-7xl mx-auto w-full space-y-6">
@@ -237,22 +312,36 @@ const AdminRevenue = () => {
             Revenue ({periodLabel})
           </h2>
           <div className="h-[300px]">
-            {metrics.monthlyRevenue && metrics.monthlyRevenue.length > 0 ? (
+            {revenueChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={metrics.monthlyRevenue}>
+                <BarChart
+                  data={revenueChartData}
+                  margin={{ top: 8, right: 12, left: 0, bottom: 28 }}
+                >
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
                     stroke="#f0f0f0"
                   />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={formatChartTick}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#9ca3af", fontSize: 12 }}
+                    interval={tickInterval}
+                    minTickGap={0}
+                    dy={8}
+                    padding={{ left: 12, right: 12 }}
+                  />
                   <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tickFormatter={(value) => `₦${value / 1000}k`}
+                    tickFormatter={formatAxisAmount}
                   />
                   <RechartsTooltip
                     formatter={(value) => formatCurrency(value)}
+                    labelFormatter={formatChartTick}
                     cursor={{ fill: "transparent" }}
                     contentStyle={{
                       borderRadius: "8px",
@@ -262,9 +351,10 @@ const AdminRevenue = () => {
                   />
                   <Bar
                     dataKey="revenue"
+                    name="Revenue"
                     fill="#16730F"
                     radius={[4, 4, 0, 0]}
-                    barSize={40}
+                    maxBarSize={40}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -284,29 +374,49 @@ const AdminRevenue = () => {
           <div className="overflow-x-auto">
             <div className="space-y-4 min-w-[500px]">
               {totalTx > 0 ? (
-                paginatedTx.map((tx) => (
-                  <div
-                    key={tx.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
-                        <CreditCard size={18} />
+                paginatedTx.map((tx) => {
+                  const payerName =
+                    tx.payer_name ||
+                    [tx.first_name, tx.last_name]
+                      .filter(Boolean)
+                      .join(" ")
+                      .trim();
+                  return (
+                    <div
+                      key={tx.id}
+                      className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-xl"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-10 w-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center shrink-0">
+                          <CreditCard size={18} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-800 capitalize truncate">
+                            {tx.plan_type || tx.transaction_type || "Custom Plan"}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {payerName ? `${payerName} · ` : ""}
+                            {new Date(tx.created_at).toLocaleDateString()}
+                            {tx.status ? ` · ${tx.status}` : ""}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800 capitalize">
-                          {tx.plan_type || "Custom Plan"}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(tx.created_at).toLocaleDateString()}
-                        </p>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="font-bold text-gray-800">
+                          {formatCurrency(tx.amount, tx.currency)}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTransaction(tx)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-white hover:border-[#16730F] hover:text-[#16730F] transition-colors"
+                        >
+                          <Eye size={14} />
+                          View details
+                        </button>
                       </div>
                     </div>
-                    <div className="font-bold text-gray-800">
-                      {formatCurrency(tx.amount)}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="text-center text-gray-400 py-8">
                   No recent transactions.
@@ -346,6 +456,13 @@ const AdminRevenue = () => {
           )}
         </div>
       </div>
+
+      {selectedTransaction && (
+        <AdminTransactionDetailModal
+          transaction={selectedTransaction}
+          onClose={() => setSelectedTransaction(null)}
+        />
+      )}
     </div>
   );
 };

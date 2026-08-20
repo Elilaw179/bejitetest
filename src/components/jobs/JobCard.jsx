@@ -14,6 +14,7 @@ import { formatSalary, formatTimeRemaining } from "../../utils/checksFormat";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { getJobCardExcerpt } from "../../utils/jobDescription";
 import VerifiedBadge from "../VerifiedBadge";
+import { userHasVerifiedBadge } from "../../utils/verifiedBadge";
 
 export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
   const timeRemaining = formatTimeRemaining(job.expiresAt);
@@ -91,7 +92,7 @@ export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
                 </span>
               </span>
 
-              {job.isVerified && (
+              {userHasVerifiedBadge(job) && (
                 <VerifiedBadge size="xs" role="recruiter" />
               )}
 
@@ -132,21 +133,24 @@ export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
             )}
 
             {/* Skills Tags */}
-            <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3">
-              {job.requirements.slice(0, 3).map((req, idx) => (
-                <span
-                  key={idx}
-                  className="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full border border-gray-200"
-                >
-                  {req.skill} • {req.experience}y
-                </span>
-              ))}
-              {job.requirements.length > 3 && (
-                <span className="text-gray-500 text-xs px-2 py-1 bg-gray-50 rounded-full">
-                  +{job.requirements.length - 3} more
-                </span>
-              )}
-            </div>
+            {job.skillRequirements?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3">
+                {job.skillRequirements.slice(0, 3).map((req, idx) => (
+                  <span
+                    key={idx}
+                    className="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full border border-gray-200"
+                  >
+                    {req.skill}
+                    {req.experience > 0 && ` • ${req.experience}y`}
+                  </span>
+                ))}
+                {job.skillRequirements.length > 3 && (
+                  <span className="text-gray-500 text-xs px-2 py-1 bg-gray-50 rounded-full">
+                    +{job.skillRequirements.length - 3} more
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Footer Stats */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
