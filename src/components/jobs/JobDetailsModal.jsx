@@ -14,11 +14,13 @@ import {
   FaTwitter,
   FaInstagram,
 } from "react-icons/fa";
-import { MdLocationOn, MdWork, MdVerified } from "react-icons/md";
+import { MdLocationOn, MdWork } from "react-icons/md";
 import { formatTimeRemaining, formatSalary } from "../../utils/checksFormat";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { ApplicationForm } from "./ApplicationForm";
 import SharePostModal from "../SharePostModal";
+import VerifiedBadge from "../VerifiedBadge";
+import { userHasVerifiedBadge } from "../../utils/verifiedBadge";
 import { getJobPlatformHref, copyJobLink } from "../../utils/jobShare";
 import { formatJobDescriptionText } from "../../utils/jobDescription";
 
@@ -214,10 +216,8 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                       <h1 className="text-lg sm:text-2xl font-bold text-gray-900 leading-tight">
                         {job.title}
                       </h1>
-                      {job.isVerified && (
-                        <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
-                          <MdVerified className="shrink-0" /> Verified
-                        </span>
+                      {userHasVerifiedBadge(job) && (
+                        <VerifiedBadge size="xs" role="recruiter" />
                       )}
                     </div>
                     <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1.5 sm:gap-x-4 sm:gap-y-2 text-xs sm:text-sm text-gray-600">
