@@ -257,9 +257,22 @@ export default function ConnectModal({ isOpen, onClose }) {
         {/* User List */}
         <div className="flex-1 overflow-y-auto nfl-scroll p-4 space-y-3 min-h-[220px]">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-12 text-gray-400 space-y-3">
-              <FaSpinner className="animate-spin text-2xl text-[#16730F]" />
-              <p className="text-sm font-medium">Finding people to connect with...</p>
+            <div className="space-y-3">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/70 animate-pulse animate-shimmer"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-11 h-11 rounded-full bg-gray-200 shrink-0" />
+                    <div className="space-y-2 flex-1 min-w-0">
+                      <div className="h-3.5 bg-gray-200 rounded-md w-28" />
+                      <div className="h-2.5 bg-gray-200 rounded-md w-40" />
+                    </div>
+                  </div>
+                  <div className="w-20 h-7 bg-gray-200 rounded-xl shrink-0" />
+                </div>
+              ))}
             </div>
           ) : users.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center text-gray-500 space-y-2">
