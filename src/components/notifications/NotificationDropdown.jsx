@@ -56,6 +56,9 @@ function resolveNotificationLink(notification) {
   if (data?.jobId) {
     return `/job-vacancy?jobId=${encodeURIComponent(data.jobId)}`;
   }
+  if (notification?.type === "birthday") {
+    return "/milestones";
+  }
   if (notification?.type === "birthday_wish") {
     const senderId = data?.fromUserId || data?.userId;
     if (senderId) return `/user-profile/${encodeURIComponent(String(senderId))}`;

@@ -176,7 +176,7 @@ const PostContainer = () => {
           <img
             src={currentUserImage}
             alt="profile"
-            className="rounded-full w-12 h-12"
+            className="rounded-full w-12 h-12 object-cover object-center"
           />
           <div className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-gray-500 hover:bg-gray-200 transition-colors">
             Start a post
@@ -267,7 +267,7 @@ const CreatePostSection = ({ postBody, setPostBody, visibility, setVisibility, o
         <img
           src={userImage}
           alt="profile"
-          className="rounded-full w-[60px] h-[60px]"
+          className="rounded-full w-[60px] h-[60px] object-cover object-center"
         />
         <div className="flex-1">
           <p className="font-semibold text-[#16730F] text-sm mb-1">{displayName}</p>

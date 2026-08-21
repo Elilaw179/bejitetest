@@ -5,6 +5,7 @@ import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import { getAuthorProfileImageUrl } from "../../utils/profileImageUtils";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
+import FormattedPostBody from "./FormattedPostBody";
 
 function formatRelativeTime(dateString) {
   if (!dateString) return "Just now";
@@ -113,9 +114,10 @@ export function RepostIntro({
         </div>
       </div>
       {quote ? (
-        <p className="text-[15px] sm:text-base text-[#1A3E32] whitespace-pre-wrap break-words leading-relaxed">
-          {quote}
-        </p>
+        <FormattedPostBody
+          body={quote}
+          className="text-[15px] sm:text-base text-[#1A3E32] whitespace-pre-wrap break-words leading-relaxed"
+        />
       ) : null}
     </div>
   );

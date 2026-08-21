@@ -238,7 +238,7 @@ function ChatsLeft({ onSelectChat, selectedChat, onConversationHidden }) {
         </div>
       </div>
 
-      <div ref={listRef} className="flex-1 overflow-y-auto nfl-sidebar-scroll scroll-smooth border-t border-[#556B1F]/60">
+      <div ref={listRef} className="flex-1 overflow-y-auto overscroll-y-contain nfl-sidebar-scroll scroll-smooth border-t border-[#556B1F]/60">
         <div className="p-2 space-y-1">
           {loading && !isSearching ? (
             <div className="text-center text-white/70 py-6 text-sm">

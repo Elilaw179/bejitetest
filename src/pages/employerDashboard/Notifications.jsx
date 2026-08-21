@@ -297,6 +297,11 @@ const Notifications = () => {
       return
     }
 
+    if (notification.type === 'birthday') {
+      navigate('/milestones')
+      return
+    }
+
     if (notification.type === 'birthday_wish') {
       const senderId = parsedData?.fromUserId || parsedData?.userId
       if (senderId) {
@@ -467,6 +472,7 @@ const Notifications = () => {
         return '✅'
       case 'user_followed':
         return '👤'
+      case 'birthday':
       case 'birthday_wish':
         return '🎂'
       default:

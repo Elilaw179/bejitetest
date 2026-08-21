@@ -43,7 +43,6 @@ import {
 import { profileAvatarSrc } from "../../utils/profilePhotoUrl";
 import { getAuthorProfileImageUrl, getUserProfileImage } from "../../utils/profileImageUtils";
 import PostCreationModal from "../PostCreationModal";
-import ConfirmModal from "../ConfirmModal";
 import useSyncProfilePhoto from "../../hooks/useSyncProfilePhoto";
 import {
   getPortaledMenuStyle,
@@ -61,6 +60,8 @@ import PostActions from "../feed/PostActions";
 import PostDetailModal from "../feed/PostDetailModal";
 import { OriginalPostNest, RepostIntro } from "../feed/RepostChrome";
 import PostCommentsSection from "../PostCommentsSection";
+import FormattedPostBody from "../feed/FormattedPostBody";
+import { normalizeHashtag } from "../../utils/postBodyFormat";
 import FeedLoadMoreButton from "../FeedLoadMoreButton";
 import AdCard from "../Ads/AdCard";
 import { getAdProFeedAds, trackAdCampaignEvent, likeAdCampaign, unlikeAdCampaign, saveAdCampaign, unsaveAdCampaign } from "../../services/adProApi";
@@ -106,19 +107,6 @@ const formatDate = (dateString) => {
     ? { month: "short", day: "numeric" }
     : { month: "short", day: "numeric", year: "numeric" };
   return date.toLocaleDateString("en-US", options);
-};
-
-// Helper function to parse text with links
-const parseTextWithLinks = (text) => {
-  if (!text) return [];
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = text.split(urlRegex);
-  return parts.map((part) => {
-    if (part.match(urlRegex)) {
-      return { type: "link", content: part };
-    }
-    return { type: "text", content: part };
-  });
 };
 
 export default function RecruitmentMiddle() {
@@ -221,6 +209,9 @@ export default function RecruitmentMiddle() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const feedMode = searchParams.get("feed") === "saved" ? "saved" : "home";
+  const feedHashtag = normalizeHashtag(
+    searchParams.get("hashtag") || searchParams.get("tag") || "",
+  );
   const sharedPostId =
     searchParams.get("post") || searchParams.get("postId") || null;
   const reduxUser = useSelector((state) => state.auth?.user);
@@ -248,7 +239,7 @@ export default function RecruitmentMiddle() {
     } else {
       fetchFeed();
     }
-  }, [feedMode]);
+  }, [feedMode, feedHashtag]);
 
   useEffect(() => {
     if (!sharedPostId) return;
@@ -258,7 +249,9 @@ export default function RecruitmentMiddle() {
   const fetchSavedPosts = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const data = await getSavedPosts(FEED_PAGE_SIZE);
+      const data = await getSavedPosts(FEED_PAGE_SIZE, null, {
+        hashtag: feedHashtag || undefined,
+      });
       setPosts(data.posts || []);
       setNextCursor(data.nextCursor ?? null);
       if (!silent) setError(null);
@@ -280,7 +273,9 @@ export default function RecruitmentMiddle() {
   const fetchFeed = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const data = await getFeed(FEED_PAGE_SIZE);
+      const data = await getFeed(FEED_PAGE_SIZE, null, {
+        hashtag: feedHashtag || undefined,
+      });
       setPosts(data.posts || []);
       setNextCursor(data.nextCursor ?? null);
       if (!silent) setError(null);
@@ -298,8 +293,12 @@ export default function RecruitmentMiddle() {
       setLoadingMore(true);
       const data =
         feedMode === "saved"
-          ? await getSavedPosts(FEED_PAGE_SIZE, nextCursor)
-          : await getFeed(FEED_PAGE_SIZE, nextCursor);
+          ? await getSavedPosts(FEED_PAGE_SIZE, nextCursor, {
+              hashtag: feedHashtag || undefined,
+            })
+          : await getFeed(FEED_PAGE_SIZE, nextCursor, {
+              hashtag: feedHashtag || undefined,
+            });
       setPosts((prev) => mergeFeedPosts(prev, data.posts || []));
       setNextCursor(data.nextCursor ?? null);
     } catch (err) {
@@ -409,7 +408,7 @@ export default function RecruitmentMiddle() {
           <img
             src={currentUserImage}
             alt="profile"
-            className="rounded-full w-12 h-12"
+            className="rounded-full w-12 h-12 object-cover object-center"
           />
           <div className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-gray-500 hover:bg-gray-200 transition-colors">
             Start a post
@@ -453,6 +452,24 @@ export default function RecruitmentMiddle() {
       </div>
 
       <hr className="border-t-2 border-[#16730F]" />
+
+      {feedHashtag && (
+        <div className="max-w-3xl mx-auto flex items-center justify-between bg-white rounded-2xl px-4 py-3 shadow-sm">
+          <h2 className="text-lg font-semibold text-[#1A3E32]">
+            {feedMode === "saved" ? "Saved posts tagged" : "Posts tagged"} #
+            {feedHashtag}
+          </h2>
+          <button
+            type="button"
+            onClick={() =>
+              navigate(feedMode === "saved" ? "/news-feed?feed=saved" : "/news-feed")
+            }
+            className="text-sm text-[#16730F] hover:underline font-medium"
+          >
+            Clear tag
+          </button>
+        </div>
+      )}
 
       {feedMode === "saved" && (
         <div className="max-w-3xl mx-auto flex items-center justify-between bg-white rounded-2xl px-4 py-3 shadow-sm">
@@ -597,12 +614,7 @@ const RecruitmentPostCard = ({
     minWidth: 128,
     maxHeight: 120,
   });
-  const [isEditing, setIsEditing] = useState(false);
-  const [editBody, setEditBody] = useState(post.body || "");
-  const [savingEdit, setSavingEdit] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [linkModalOpen, setLinkModalOpen] = useState(false);
-  const [pendingLink, setPendingLink] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showRepostModal, setShowRepostModal] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -620,17 +632,6 @@ const RecruitmentPostCard = ({
   const [usersListType, setUsersListType] = useState("likes");
   const [usersListUsers, setUsersListUsers] = useState([]);
   const [usersListLoading, setUsersListLoading] = useState(false);
-
-  const handleLinkClick = (e, url) => {
-    e.preventDefault();
-    setPendingLink(url);
-    setLinkModalOpen(true);
-  };
-
-  const handleConfirmLink = () => {
-    window.open(pendingLink, "_blank");
-    setLinkModalOpen(false);
-  };
 
   const fetchComments = async (force = false) => {
     if (!force && comments.length > 0) return;
@@ -768,21 +769,7 @@ const RecruitmentPostCard = ({
   };
 
   const handleEditClick = () => {
-    setEditBody(post.body || "");
-    setIsEditing(true);
-  };
-
-  const handleEditSave = async () => {
-    if (!editBody.trim()) return;
-    try {
-      setSavingEdit(true);
-      await onUpdate(post.id, { body: editBody });
-      setIsEditing(false);
-    } catch (err) {
-      console.error("Error updating post:", err);
-    } finally {
-      setSavingEdit(false);
-    }
+    setShowEditModal(true);
   };
 
   const handleDeleteClick = async () => {
@@ -793,11 +780,6 @@ const RecruitmentPostCard = ({
         console.error("Error deleting post:", err);
       }
     }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setEditBody(post.body || "");
   };
 
   // Function to show users who liked
@@ -906,7 +888,7 @@ const RecruitmentPostCard = ({
             <img
               src={authorImage}
               alt="profile"
-              className="rounded-full w-10 h-10 sm:w-12 sm:h-12 cursor-pointer hover:opacity-90"
+              className="rounded-full w-10 h-10 sm:w-12 sm:h-12 object-cover object-center cursor-pointer hover:opacity-90"
             />
           </button>
           <div className="min-w-0 flex-1">
@@ -978,75 +960,9 @@ const RecruitmentPostCard = ({
       </div>
 
       {/* Post Content */}
-      {isEditing ? (
-        <div className="space-y-3">
-          <textarea
-            value={editBody}
-            onChange={(e) => setEditBody(e.target.value)}
-            className="w-full p-3 border-2 border-[#16730F] rounded-xl focus:outline-none"
-            rows={4}
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={handleEditSave}
-              disabled={savingEdit}
-              className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c] disabled:opacity-50"
-            >
-              {savingEdit ? "Saving..." : "Save"}
-            </button>
-            <button
-              onClick={handleCancelEdit}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-full text-sm hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-lg">
-          <p className="text-black text-sm sm:text-base whitespace-pre-wrap break-words">
-            {(() => {
-              const body = post.body || "";
-              const shouldTruncate = body.length > 200;
-              const displayText =
-                shouldTruncate && !isExpanded
-                  ? body.substring(0, 200) + "..."
-                  : body;
-              const textParts = parseTextWithLinks(displayText);
-              return textParts.map((part, index) =>
-                part.type === "link" ? (
-                  <a
-                    key={index}
-                    href={part.content}
-                    onClick={(e) => handleLinkClick(e, part.content)}
-                    className="text-[#16730F] hover:underline cursor-pointer"
-                  >
-                    {part.content}
-                  </a>
-                ) : (
-                  <span key={index}>{part.content}</span>
-                ),
-              );
-            })()}
-          </p>
-          {post.body && post.body.length > 200 && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-[#16730F] font-medium text-sm mt-1 hover:underline"
-            >
-              {isExpanded ? "See less" : "See more"}
-            </button>
-          )}
-        </div>
-      )}
-
-      <ConfirmModal
-        isOpen={linkModalOpen}
-        title="Leaving Bejite"
-        message="You're about to leave Bejite. Are you sure you want to continue?"
-        onConfirm={handleConfirmLink}
-        onCancel={() => setLinkModalOpen(false)}
-      />
+      <div className="rounded-lg">
+        <FormattedPostBody body={post.body} truncateAt={200} />
+      </div>
 
       {post.media && post.media.length > 0 && (
         <div
@@ -1116,6 +1032,7 @@ const RecruitmentPostCard = ({
         sharesCount={sharesCount}
         hideCounts={isRepost}
         onLike={handleLikeClick}
+        onShowLikers={handleShowLikers}
         onComment={handleCommentAction}
         onRepost={handleRepostClick}
         onShare={handleShareClick}
@@ -1160,6 +1077,17 @@ const RecruitmentPostCard = ({
           (isMyScheduledRepost ? post.repostScheduledAt : null)
         }
       />
+
+      {showEditModal && (
+        <PostCreationModal
+          isOpen
+          editingPost={post}
+          onClose={() => setShowEditModal(false)}
+          onPost={async (payload) => {
+            await onUpdate(post.id, payload);
+          }}
+        />
+      )}
 
       {/* Users List Modal */}
       <UsersListModal

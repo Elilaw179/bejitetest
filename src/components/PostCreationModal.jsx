@@ -3,7 +3,9 @@ import { FaImage, FaVideo, FaTimes, FaClock } from "react-icons/fa";
 import { uploadMedia } from "../services/postsApi";
 import { apiErrorMessage, getUploadSizeError } from "../utils/uploadLimits";
 import EmojiPickerButton from "./common/EmojiPickerButton";
+import PostBodyComposer from "./feed/PostBodyComposer";
 import { RecruiterSelect } from "./recruiter/recruiterOnboardingUi";
+import { extractMentionedUserIds } from "../utils/postBodyFormat";
 
 function getDefaultSchedule() {
   const d = new Date();
@@ -33,8 +35,10 @@ const PostCreationModal = ({
   onPost,
   initialVisibility = "public",
   initialMode = "post",
+  editingPost = null,
 }) => {
-  const isPollMode = initialMode === "poll";
+  const isEditing = Boolean(editingPost?.id);
+  const isPollMode = !isEditing && initialMode === "poll";
   const [postBody, setPostBody] = useState("");
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["", ""]);
@@ -57,6 +61,7 @@ const PostCreationModal = ({
   );
   const imageInputRef = useRef(null);
   const videoInputRef = useRef(null);
+  const bodyComposerRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -70,7 +75,18 @@ const PostCreationModal = ({
     setPollDurationDays(7);
     setError(null);
     setSuccess(null);
-  }, [isOpen, initialMode]);
+    if (editingPost?.id) {
+      setPostBody(editingPost.body || "");
+      setVisibility(editingPost.visibility || initialVisibility);
+      setMediaFiles(
+        Array.isArray(editingPost.media) ? [...editingPost.media] : [],
+      );
+    } else {
+      setPostBody("");
+      setMediaFiles([]);
+      setVisibility(initialVisibility);
+    }
+  }, [isOpen, initialMode, editingPost, initialVisibility]);
 
   if (!isOpen) return null;
 
@@ -124,6 +140,14 @@ const PostCreationModal = ({
     return scheduled.toISOString();
   };
 
+  const insertIntoComposer = (emoji) => {
+    if (bodyComposerRef.current?.insertText) {
+      bodyComposerRef.current.insertText(emoji);
+      return;
+    }
+    setPostBody((prev) => `${prev || ""}${emoji}`);
+  };
+
   const insertInto = (setter) => (emoji) => {
     setter((prev) => `${prev || ""}${emoji}`);
   };
@@ -168,10 +192,22 @@ const PostCreationModal = ({
       setError(null);
       setSuccess(null);
 
+      if (isEditing) {
+        await onPost({
+          body: postBody,
+          visibility,
+          media: mediaFiles,
+          mentionedUserIds: extractMentionedUserIds(postBody),
+        });
+        handleClose();
+        return;
+      }
+
       const payload = {
         body: postBody,
         visibility,
         media: isPollMode ? [] : mediaFiles,
+        mentionedUserIds: extractMentionedUserIds(postBody),
       };
 
       if (isPollMode) {
@@ -237,7 +273,7 @@ const PostCreationModal = ({
       <div className="bg-white rounded-lg w-full max-w-xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-[#A9A9A9]">
           <h2 className="text-lg font-semibold text-[#1A3E32]">
-            {isPollMode ? "Create Poll" : "Create Post"}
+            {isEditing ? "Edit Post" : isPollMode ? "Create Poll" : "Create Post"}
           </h2>
           <button
             onClick={handleClose}
@@ -331,11 +367,12 @@ const PostCreationModal = ({
                   Additional context (optional)
                 </label>
                 <div>
-                  <textarea
+                  <PostBodyComposer
                     value={postBody}
-                    onChange={(e) => setPostBody(e.target.value)}
+                    onChange={setPostBody}
                     placeholder="Add more details about your poll..."
-                    className="w-full min-h-[100px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#16730F] resize-none text-sm"
+                    minHeightClass="min-h-[100px]"
+                    textClassName="text-sm"
                   />
                   <div className="flex justify-end mt-2">
                     <EmojiPickerButton
@@ -347,15 +384,15 @@ const PostCreationModal = ({
             </div>
           ) : (
             <div>
-              <textarea
+              <PostBodyComposer
+                ref={bodyComposerRef}
                 value={postBody}
-                onChange={(e) => setPostBody(e.target.value)}
+                onChange={setPostBody}
                 placeholder="What do you want to talk about?"
-                className="w-full min-h-[150px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#16730F] resize-none text-base"
                 autoFocus
               />
               <div className="flex justify-end mt-2">
-                <EmojiPickerButton onEmojiSelect={insertInto(setPostBody)} />
+                <EmojiPickerButton onEmojiSelect={insertIntoComposer} />
               </div>
             </div>
           )}
@@ -472,6 +509,7 @@ const PostCreationModal = ({
           )}
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            {!isEditing && (
             <div className="w-auto max-w-full sm:flex-none">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                 When to publish
@@ -536,20 +574,25 @@ const PostCreationModal = ({
                 </div>
               )}
             </div>
+            )}
             <button
               onClick={handlePost}
               disabled={submitting || !canSubmit}
               className="w-full sm:w-auto bg-[#16730F] text-white px-6 py-2.5 sm:py-2 rounded-full text-sm font-medium hover:bg-[#145a0c] disabled:opacity-50 transition-colors shrink-0"
             >
               {submitting
-                ? isScheduleMode
-                  ? "Scheduling..."
-                  : "Posting..."
-                : isScheduleMode
-                  ? "Schedule post"
-                  : isPollMode
-                    ? "Post poll"
-                    : "Post"}
+                ? isEditing
+                  ? "Saving..."
+                  : isScheduleMode
+                    ? "Scheduling..."
+                    : "Posting..."
+                : isEditing
+                  ? "Save"
+                  : isScheduleMode
+                    ? "Schedule post"
+                    : isPollMode
+                      ? "Post poll"
+                      : "Post"}
             </button>
           </div>
         </div>

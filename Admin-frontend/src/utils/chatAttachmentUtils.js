@@ -1,3 +1,5 @@
+import { CHAT_MAX_BYTES } from './uploadLimits';
+
 /** Infer attachment render type from stored metadata, then URL/caption fallback. */
 export function extensionOf(name = '') {
   const base = String(name).split('?')[0].split('#')[0].trim();
@@ -165,7 +167,7 @@ export async function resolveDocumentForView(url) {
   if (!url || typeof url !== 'string') {
     throw new Error('Missing document URL');
   }
-  const maxBytes = 25 * 1024 * 1024;
+  const maxBytes = CHAT_MAX_BYTES;
   const response = await fetch(url, { mode: 'cors' });
   if (!response.ok) {
     throw new Error(`Failed to load document (${response.status})`);

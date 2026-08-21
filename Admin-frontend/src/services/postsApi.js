@@ -6,6 +6,7 @@
 
 import axiosInstance from '../utils/axiosInstance';
 import { normalizePostsPayload } from '../utils/authorDisplay';
+import { getUploadSizeError } from '../utils/uploadLimits';
 
 const POSTS_API_URL = '/api/posts';
 
@@ -14,28 +15,33 @@ const POSTS_API_URL = '/api/posts';
 // ============================================
 
 /**
- * Upload media (image or video) for posts
+ * Upload media (image or video) for posts via multipart.
  * @param {File} file - The file to upload
- * @returns {Object} - { url, kind }
+ * @returns {Object} - { url, kind, thumbnailUrl }
  */
 export const uploadMedia = async (file) => {
   try {
-    // Convert file to base64 data URL
-    const dataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+    const sizeError = getUploadSizeError(file);
+    if (sizeError) {
+      const err = new Error(sizeError);
+      err.response = { data: { error: sizeError, message: sizeError } };
+      throw err;
+    }
 
-    // Determine kind based on file type
-    const kind = file.type.startsWith('video/') ? 'video' : 'image';
+    const formData = new FormData();
+    formData.append("media", file);
 
-    const response = await axiosInstance.post(`${POSTS_API_URL}/upload`, {
-      dataUrl,
-      kind
-    });
-    return response.data;
+    const response = await axiosInstance.post(
+      `${POSTS_API_URL}/upload-media`,
+      formData,
+    );
+    const data = response.data || {};
+    const first = Array.isArray(data.media) ? data.media[0] : null;
+    return {
+      url: data.url || first?.url,
+      kind: data.kind || first?.kind || (file.type.startsWith("video/") ? "video" : "image"),
+      thumbnailUrl: data.thumbnailUrl ?? first?.thumbnailUrl ?? null,
+    };
   } catch (error) {
     console.error('Error uploading media:', error.response?.data || error.message);
     throw error;
