@@ -171,7 +171,7 @@ const PostContainer = () => {
           <img
             src={currentUserImage}
             alt="profile"
-            className="rounded-full w-12 h-12"
+            className="rounded-full w-12 h-12 object-cover object-center"
           />
           <div className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-gray-500 hover:bg-gray-200 transition-colors">
             Start a post

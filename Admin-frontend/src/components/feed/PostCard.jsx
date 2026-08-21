@@ -105,7 +105,7 @@ const PostHeader = ({
           <img
             src={authorImage}
             alt="profile"
-            className="rounded-full w-10 h-10 sm:w-12 sm:h-12 cursor-pointer hover:opacity-90"
+            className="rounded-full w-10 h-10 sm:w-12 sm:h-12 object-cover object-center cursor-pointer hover:opacity-90"
           />
         </button>
         <div>

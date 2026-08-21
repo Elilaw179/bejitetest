@@ -7,6 +7,7 @@
 import axiosInstance from '../utils/axiosInstance';
 import { normalizePostsPayload } from '../utils/authorDisplay';
 import { getUploadSizeError } from '../utils/uploadLimits';
+import { extractMentionedUserIds } from '../utils/postBodyFormat';
 
 const POSTS_API_URL = '/api/posts';
 
@@ -57,15 +58,32 @@ export const uploadMedia = async (file) => {
  * @param {number} limit - Number of posts to fetch (default 20, max 50)
  * @param {string} cursor - Cursor for pagination
  */
-export const getFeed = async (limit = 20, cursor = null) => {
+export const getFeed = async (limit = 20, cursor = null, options = {}) => {
   try {
     const params = { limit };
     if (cursor) params.cursor = cursor;
+    if (options.hashtag) params.hashtag = options.hashtag;
     const response = await axiosInstance.get(`${POSTS_API_URL}/feed`, { params });
     return normalizePostsPayload(response.data);
   } catch (error) {
     console.error('Error fetching feed:', error);
     throw error;
+  }
+};
+
+export const searchMentionSuggestions = async (query, limit = 12, options = {}) => {
+  const q = String(query || "").trim().replace(/^@/, "");
+  if (options.exact && !q) return [];
+  try {
+    const response = await axiosInstance.get(`${POSTS_API_URL}/mention-suggestions`, {
+      params: { q, limit, exact: options.exact ? "1" : undefined },
+      signal: options.signal,
+    });
+    return Array.isArray(response.data?.users) ? response.data.users : [];
+  } catch (error) {
+    if (error?.code === "ERR_CANCELED" || error?.name === "CanceledError") return [];
+    console.error("Error searching mention suggestions:", error);
+    return [];
   }
 };
 
@@ -87,10 +105,11 @@ export const getDrafts = async () => {
  * @param {number} limit - Number of posts to fetch
  * @param {string} cursor - Cursor for pagination
  */
-export const getSavedPosts = async (limit = 20, cursor = null) => {
+export const getSavedPosts = async (limit = 20, cursor = null, options = {}) => {
   try {
     const params = { limit };
     if (cursor) params.cursor = cursor;
+    if (options.hashtag) params.hashtag = options.hashtag;
     const response = await axiosInstance.get(`${POSTS_API_URL}/saved`, { params });
     return normalizePostsPayload(response.data);
   } catch (error) {
@@ -385,7 +404,8 @@ export const addComment = async (postId, body, parentCommentId = null) => {
   try {
     const response = await axiosInstance.post(`${POSTS_API_URL}/${postId}/comments`, {
       body,
-      parentCommentId
+      parentCommentId,
+      mentionedUserIds: extractMentionedUserIds(body),
     });
     return response.data;
   } catch (error) {
@@ -402,7 +422,10 @@ export const addComment = async (postId, body, parentCommentId = null) => {
  */
 export const updateComment = async (postId, commentId, body) => {
   try {
-    const response = await axiosInstance.patch(`${POSTS_API_URL}/${postId}/comments/${commentId}`, { body });
+    const response = await axiosInstance.patch(`${POSTS_API_URL}/${postId}/comments/${commentId}`, {
+      body,
+      mentionedUserIds: extractMentionedUserIds(body),
+    });
     return response.data;
   } catch (error) {
     console.error('Error updating comment:', error);

@@ -9,6 +9,7 @@ import MessageAttachment from "./MessageAttachment";
 import ChatQuotePreview from "./ChatQuotePreview";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import { getQuotedMessage } from "../../utils/chatQuote";
+import { ensureCloudinaryHttps } from "../../utils/profilePhotoUrl";
 
 function isAttachmentOnlyCaption(content, imageUrl) {
   if (!imageUrl || !content) return Boolean(imageUrl);
@@ -124,11 +125,12 @@ export default function ChatMessageBubble({
     };
   }, [menuOpen, placeMenu]);
 
+  const attachmentUrl = ensureCloudinaryHttps(message.image_url);
   const isDeleted = message.is_deleted;
-  const hasAttachment = Boolean(message.image_url) && !isDeleted;
+  const hasAttachment = Boolean(attachmentUrl) && !isDeleted;
   const attachmentOnly = isAttachmentOnlyCaption(
     message.content,
-    message.image_url,
+    attachmentUrl,
   );
   const canEdit =
     isOwnMessage &&
@@ -179,7 +181,7 @@ export default function ChatMessageBubble({
       )}
       {hasAttachment && (
         <MessageAttachment
-          url={message.image_url}
+          url={attachmentUrl}
           caption={message.content}
           kind={message.attachment_kind}
           filename={message.attachment_name}
