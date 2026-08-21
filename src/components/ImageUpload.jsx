@@ -1,4 +1,5 @@
 import React from "react";
+import { formatBytesAsMb, PROFILE_PHOTO_MAX_BYTES } from "../utils/uploadLimits";
 
 const ImageUpload = ({
   imagePreview,
@@ -31,7 +32,7 @@ const ImageUpload = ({
     </div>
     
     <p className="text-[11px] text-gray-500 text-center font-medium mt-3">
-      Allowed: PNG, JPEG <br/> Max size: 10MB
+      Allowed: PNG, JPEG <br/> Max size: {formatBytesAsMb(PROFILE_PHOTO_MAX_BYTES)}
     </p>
 
     {bio !== undefined && onBioChange && (

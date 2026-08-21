@@ -1,5 +1,6 @@
 import axiosInstance from '../utils/axiosInstance';
 import { filterAdminUsersFromSearch } from '../utils/filterAdminUsers';
+import { getUploadSizeError, maxBytesForChatFile } from '../utils/uploadLimits';
 
 // Messaging API service
 const messagingService = {
@@ -83,6 +84,12 @@ async startConversation(otherUserId) {
   // Upload chat attachment (multipart file)
   async uploadChatMedia(file, kind = 'image') {
     try {
+      const sizeError = getUploadSizeError(file, maxBytesForChatFile(file));
+      if (sizeError) {
+        const err = new Error(sizeError);
+        err.response = { data: { error: sizeError, message: sizeError } };
+        throw err;
+      }
       const form = new FormData();
       form.append('file', file);
       form.append('kind', kind);

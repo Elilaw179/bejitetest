@@ -12,8 +12,69 @@ import {
 import { getAuthorProfileImageUrl } from "../utils/profileImageUtils";
 import { formatDisplayPersonName } from "../utils/personDisplayName";
 import DisplayNameWithBadge from "./DisplayNameWithBadge";
+import FormattedPostBody from "./feed/FormattedPostBody";
+import MentionComposerField from "./feed/MentionComposerField";
 
 const getDisplayName = (user) => formatDisplayPersonName(user);
+
+function CommentComposerBox({
+  textareaRef,
+  value,
+  onValueChange,
+  placeholder,
+  autoFocus = false,
+  maxHeightClass = "max-h-32",
+  textSizeClass = "text-sm",
+  submitLabel,
+  submitAriaLabel,
+  submitButtonClassName,
+}) {
+  const fallbackRef = React.useRef(null);
+  const fieldRef = textareaRef || fallbackRef;
+  const canSubmit = Boolean(value.trim());
+
+  return (
+    <>
+      <div className="relative flex-1 min-w-0 border border-[#D3D3D3] rounded-2xl px-2 pt-1 focus-within:border-[#16730F]">
+        <MentionComposerField
+          ref={fieldRef}
+          value={value}
+          onChange={onValueChange}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          className={`w-full min-w-0 min-h-[40px] ${maxHeightClass} overflow-y-auto px-2 py-1.5 pb-9 ${textSizeClass} leading-relaxed`}
+        />
+        <div className="absolute bottom-1 left-1 z-[2]">
+          <EmojiPickerButton
+            onEmojiSelect={(emoji) => {
+              fieldRef.current?.insertText?.(emoji);
+            }}
+            buttonClassName="p-0.5"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          className="sm:hidden absolute bottom-1 right-1 z-[2] inline-flex items-center justify-center p-0.5 disabled:opacity-40"
+          aria-label={submitAriaLabel}
+        >
+          <img
+            src="/assets/images/chat_send.svg"
+            alt=""
+            className="block w-7 h-7"
+          />
+        </button>
+      </div>
+      <button
+        type="submit"
+        disabled={!canSubmit}
+        className={`hidden sm:inline-flex bg-[#16730F] text-white rounded-full hover:bg-[#145a0c] disabled:opacity-50 mt-1 ${submitButtonClassName}`}
+      >
+        {submitLabel}
+      </button>
+    </>
+  );
+}
 
 function collectDescendantCommentIds(commentId, allComments) {
   const ids = new Set([commentId]);
@@ -32,6 +93,39 @@ function collectDescendantCommentIds(commentId, allComments) {
     }
   }
   return ids;
+}
+
+function CommentEditForm({ value, onChange, onCancel, onSave, saving }) {
+  const fieldRef = React.useRef(null);
+
+  return (
+    <form onSubmit={onSave} className="space-y-2">
+      <MentionComposerField
+        ref={fieldRef}
+        value={value}
+        onChange={onChange}
+        autoFocus
+        className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus-within:border-[#16730F] min-h-[64px]"
+      />
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={saving}
+          className="px-3 py-1 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={saving || !value.trim()}
+          className="px-3 py-1 rounded-full text-xs font-medium bg-[#16730F] text-white hover:bg-[#145a0c] disabled:opacity-50"
+        >
+          {saving ? "Saving..." : "Save"}
+        </button>
+      </div>
+    </form>
+  );
 }
 
 function CommentItem({
@@ -134,43 +228,22 @@ function CommentItem({
             </div>
           </div>
 
-          <p className="text-sm break-words text-gray-800 mt-1.5 whitespace-pre-wrap">
+          <div className="text-sm break-words text-gray-800 mt-1.5 whitespace-pre-wrap">
             {isEditing ? (
-              <form
-                onSubmit={(e) => onSaveEdit(e, comment)}
-                className="space-y-2"
-              >
-                <textarea
-                  value={editDraft}
-                  onChange={(e) => onEditDraftChange(e.target.value)}
-                  rows={2}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#16730F] resize-none"
-                  autoFocus
-                />
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={onCancelEdit}
-                    disabled={savingCommentId === comment.id}
-                    className="px-3 py-1 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={
-                      savingCommentId === comment.id || !editDraft.trim()
-                    }
-                    className="px-3 py-1 rounded-full text-xs font-medium bg-[#16730F] text-white hover:bg-[#145a0c] disabled:opacity-50"
-                  >
-                    {savingCommentId === comment.id ? "Saving..." : "Save"}
-                  </button>
-                </div>
-              </form>
+              <CommentEditForm
+                value={editDraft}
+                onChange={onEditDraftChange}
+                onCancel={onCancelEdit}
+                onSave={(e) => onSaveEdit(e, comment)}
+                saving={savingCommentId === comment.id}
+              />
             ) : (
-              comment.body
+              <FormattedPostBody
+                body={comment.body}
+                className="text-sm text-gray-800 whitespace-pre-wrap break-words"
+              />
             )}
-          </p>
+          </div>
         </div>
 
         <div className="flex flex-row justify-start items-center gap-3 sm:gap-3 mt-1 px-1">
@@ -248,35 +321,24 @@ function CommentItem({
         {isReplying && (
           <form
             onSubmit={(e) => onSubmitReply(e, comment.id)}
-            className="flex flex-wrap sm:flex-nowrap gap-2 mt-2 items-start"
+            className="flex gap-2 mt-2 items-start"
           >
             <img
               src={currentUserPhotoUrl}
               alt=""
               className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover shrink-0 mt-1"
             />
-            <div className="flex-1 min-w-[120px] sm:min-w-[140px] flex items-end gap-1 border border-[#D3D3D3] rounded-2xl px-2 py-1 focus-within:border-[#16730F]">
-              <textarea
-                rows={2}
-                placeholder={`Reply to ${getDisplayName(comment.author)}...`}
-                value={replyText}
-                onChange={(e) => onReplyTextChange(e.target.value)}
-                enterKeyHint="enter"
-                className="flex-1 min-w-0 border-0 bg-transparent px-2 py-1.5 text-xs sm:text-sm outline-none resize-none overflow-y-auto max-h-28 leading-relaxed"
-                autoFocus
-              />
-              <EmojiPickerButton
-                onEmojiSelect={(emoji) => onReplyTextChange(`${replyText}${emoji}`)}
-                buttonClassName="p-0.5"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={!replyText.trim()}
-              className="bg-[#16730F] text-white px-3 py-1.5 rounded-full text-xs hover:bg-[#145a0c] disabled:opacity-50 mt-1"
-            >
-              Reply
-            </button>
+            <CommentComposerBox
+              value={replyText}
+              onValueChange={onReplyTextChange}
+              placeholder={`Reply to ${getDisplayName(comment.author)}...`}
+              autoFocus
+              maxHeightClass="max-h-28"
+              textSizeClass="text-xs sm:text-sm"
+              submitLabel="Reply"
+              submitAriaLabel={`Reply to ${getDisplayName(comment.author)}`}
+              submitButtonClassName="px-3 py-1.5 text-xs"
+            />
           </form>
         )}
       </div>
@@ -512,7 +574,7 @@ export default function PostCommentsSection({
     <div ref={sectionRef} className="border-t border-[#A9A9A9] pt-4 mt-4">
       <form
         onSubmit={handleAddComment}
-        className="flex flex-wrap sm:flex-nowrap gap-2 mb-4 items-start"
+        className="flex gap-2 mb-4 items-start"
       >
         {currentUserPhotoUrl && (
           <img
@@ -521,27 +583,15 @@ export default function PostCommentsSection({
             className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shrink-0 mt-1"
           />
         )}
-        <div className="flex-1 min-w-[180px] flex items-end gap-1 border border-[#D3D3D3] rounded-2xl px-2 py-1 focus-within:border-[#16730F]">
-          <textarea
-            ref={inputRef}
-            rows={2}
-            placeholder="Write a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            enterKeyHint="enter"
-            className="flex-1 min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm outline-none resize-none overflow-y-auto max-h-32 leading-relaxed"
-          />
-          <EmojiPickerButton
-            onEmojiSelect={(emoji) => setNewComment((prev) => `${prev}${emoji}`)}
-            buttonClassName="p-0.5"
-          />
-        </div>
-        <button
-          type="submit"
-          className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c] mt-1"
-        >
-          Post
-        </button>
+        <CommentComposerBox
+          textareaRef={inputRef}
+          value={newComment}
+          onValueChange={setNewComment}
+          placeholder="Write a comment..."
+          submitLabel="Post"
+          submitAriaLabel="Post comment"
+          submitButtonClassName="px-4 py-2 text-sm"
+        />
       </form>
 
       {loading ? (

@@ -16,16 +16,20 @@ import {
   openShareWindow,
 } from "../../utils/postShare";
 import { getUserProfileImage, getProfileImageUrl } from "../../utils/profileImageUtils";
-import ConfirmModal from "../ConfirmModal";
+import FormattedPostBody from "./FormattedPostBody";
 import SharePostModal from "../SharePostModal";
 import RepostModal from "../RepostModal";
 import PostMediaGallery from "../PostMediaGallery";
 import PostPoll from "./PostPoll";
 import PostCommentsSection from "../PostCommentsSection";
+import PostCreationModal from "../PostCreationModal";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import { getAuthorSubtitle } from "../../utils/authorDisplay";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import { OriginalPostNest, RepostIntro } from "./RepostChrome";
+import UsersListModal from "../UsersListModal";
+import usePostUsersList from "../../hooks/usePostUsersList";
+
 import {
   getPortaledMenuStyle,
   usePortaledMenu,
@@ -57,18 +61,6 @@ const formatDate = (dateString) => {
     ? { month: "short", day: "numeric" }
     : { month: "short", day: "numeric", year: "numeric" };
   return date.toLocaleDateString("en-US", options);
-};
-
-const parseTextWithLinks = (text) => {
-  if (!text) return [];
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = text.split(urlRegex);
-  return parts.map((part) => {
-    if (part.match(urlRegex)) {
-      return { type: "link", content: part };
-    }
-    return { type: "text", content: part };
-  });
 };
 
 const PostHeader = ({
@@ -109,7 +101,7 @@ const PostHeader = ({
           <img
             src={authorImage}
             alt="profile"
-            className="rounded-full w-10 h-10 sm:w-12 sm:h-12 cursor-pointer hover:opacity-90"
+            className="rounded-full w-10 h-10 sm:w-12 sm:h-12 object-cover object-center cursor-pointer hover:opacity-90"
           />
         </button>
         <div className="min-w-0 flex-1">
@@ -178,86 +170,35 @@ const PostHeader = ({
   );
 };
 
-const PostContent = ({ body, onOpenDetail, isDetailView }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [linkModalOpen, setLinkModalOpen] = useState(false);
-  const [pendingLink, setPendingLink] = useState("");
-
-  const shouldTruncate = body && body.length > 200;
-  const displayText =
-    shouldTruncate && !isExpanded ? body.substring(0, 200) + "..." : body;
-
-  const textParts = parseTextWithLinks(displayText);
-
-  const handleLinkClick = (e, url) => {
-    e.preventDefault();
-    setPendingLink(url);
-    setLinkModalOpen(true);
-  };
-
-  const handleConfirmLink = () => {
-    window.open(pendingLink, "_blank");
-    setLinkModalOpen(false);
-  };
-
-  return (
-    <div
-      role={!isDetailView && onOpenDetail ? "button" : undefined}
-      tabIndex={!isDetailView && onOpenDetail ? 0 : undefined}
-      onClick={(e) => {
-        if (isDetailView || !onOpenDetail) return;
-        if (e.target.closest("a, button")) return;
+const PostContent = ({ body, onOpenDetail, isDetailView }) => (
+  <div
+    role={!isDetailView && onOpenDetail ? "button" : undefined}
+    tabIndex={!isDetailView && onOpenDetail ? 0 : undefined}
+    onClick={(e) => {
+      if (isDetailView || !onOpenDetail) return;
+      if (e.target.closest("a, button")) return;
+      onOpenDetail();
+    }}
+    onKeyDown={(e) => {
+      if (isDetailView || !onOpenDetail) return;
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
         onOpenDetail();
-      }}
-      onKeyDown={(e) => {
-        if (isDetailView || !onOpenDetail) return;
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onOpenDetail();
-        }
-      }}
-      className={!isDetailView && onOpenDetail ? "cursor-pointer rounded-lg" : undefined}
-    >
-      <ConfirmModal
-        isOpen={linkModalOpen}
-        title="Leaving Bejite"
-        message="You're about to leave Bejite. Are you sure you want to continue?"
-        onConfirm={handleConfirmLink}
-        onCancel={() => setLinkModalOpen(false)}
-      />
-      <p className="text-black text-sm sm:text-base whitespace-pre-wrap break-words">
-        {textParts.map((part, index) =>
-          part.type === "link" ? (
-            <a
-              key={index}
-              href={part.content}
-              onClick={(e) => handleLinkClick(e, part.content)}
-              className="text-[#16730F] hover:underline cursor-pointer"
-            >
-              {part.content}
-            </a>
-          ) : (
-            <span key={index}>{part.content}</span>
-          ),
-        )}
-      </p>
-      {shouldTruncate && (
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-[#16730F] font-medium text-sm mt-1 hover:underline"
-        >
-          {isExpanded ? "See less" : "See more"}
-        </button>
-      )}
-    </div>
-  );
-};
+      }
+    }}
+    className={!isDetailView && onOpenDetail ? "cursor-pointer rounded-lg" : undefined}
+  >
+    <FormattedPostBody body={body} truncateAt={200} />
+  </div>
+);
 
 const PostStats = ({
   likesCount,
   commentsCount,
   sharesCount,
+  onLikesClick,
   onCommentsClick,
+  onSharesClick,
   isDetailView = false,
 }) => {
   if (likesCount <= 0 && commentsCount <= 0 && sharesCount <= 0) return null;
@@ -267,9 +208,13 @@ const PostStats = ({
       className={`${isDetailView ? "flex" : "hidden sm:flex"} flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500`}
     >
       {likesCount > 0 && (
-        <span>
+        <button
+          type="button"
+          onClick={onLikesClick}
+          className="hover:underline font-medium"
+        >
           {likesCount} like{likesCount > 1 ? "s" : ""}
-        </span>
+        </button>
       )}
       {commentsCount > 0 && (
         <button
@@ -281,9 +226,13 @@ const PostStats = ({
         </button>
       )}
       {sharesCount > 0 && (
-        <span>
+        <button
+          type="button"
+          onClick={onSharesClick}
+          className="hover:underline font-medium"
+        >
           {sharesCount} share{sharesCount > 1 ? "s" : ""}
-        </span>
+        </button>
       )}
     </div>
   );
@@ -329,12 +278,11 @@ const PostCard = ({
   };
 
   const [showMenu, setShowMenu] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editBody, setEditBody] = useState(post.body || "");
-  const [savingEdit, setSavingEdit] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showRepostModal, setShowRepostModal] = useState(false);
   const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
+  const { showLikers, showSharers, usersListModalProps } = usePostUsersList();
 
   useEffect(() => {
     setCommentsCount(post.commentsCount || 0);
@@ -502,21 +450,7 @@ const PostCard = ({
   };
 
   const handleEditClick = () => {
-    setEditBody(post.body || "");
-    setIsEditing(true);
-  };
-
-  const handleEditSave = async () => {
-    if (!editBody.trim()) return;
-    try {
-      setSavingEdit(true);
-      await onUpdate(post.id, { body: editBody });
-      setIsEditing(false);
-    } catch (err) {
-      console.error("Error updating post:", err);
-    } finally {
-      setSavingEdit(false);
-    }
+    setShowEditModal(true);
   };
 
   const handleDeleteClick = async () => {
@@ -527,11 +461,6 @@ const PostCard = ({
         console.error("Error deleting post:", err);
       }
     }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setEditBody(post.body || "");
   };
 
   return (
@@ -561,37 +490,11 @@ const PostCard = ({
           onDelete={handleDeleteClick}
           isOwner={isOwner}
         />
-        {isEditing ? (
-          <div className="space-y-3">
-            <textarea
-              value={editBody}
-              onChange={(e) => setEditBody(e.target.value)}
-              className="w-full p-3 border-2 border-[#16730F] rounded-xl focus:outline-none"
-              rows={4}
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleEditSave}
-                disabled={savingEdit}
-                className="bg-[#16730F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#145a0c] disabled:opacity-50"
-              >
-                {savingEdit ? "Saving..." : "Save"}
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-full text-sm hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <PostContent
-            body={post.body}
-            onOpenDetail={undefined}
-            isDetailView={isDetailView}
-          />
-        )}
+        <PostContent
+          body={post.body}
+          onOpenDetail={undefined}
+          isDetailView={isDetailView}
+        />
         {post.media && post.media.length > 0 && (
           <div
             role={!isDetailView ? "button" : undefined}
@@ -626,7 +529,9 @@ const PostCard = ({
           likesCount={post.likesCount || 0}
           commentsCount={commentsCount}
           sharesCount={sharesCount}
+          onLikesClick={() => showLikers(post.id)}
           onCommentsClick={handleCommentAction}
+          onSharesClick={() => showSharers(post.id)}
           isDetailView={isDetailView}
         />
       )}
@@ -640,6 +545,7 @@ const PostCard = ({
         sharesCount={sharesCount}
         hideCounts={!showOriginalEngagement}
         onLike={handleLikeClick}
+        onShowLikers={() => showLikers(post.id)}
         onComment={handleCommentAction}
         onRepost={handleRepostClick}
         onShare={handleShareClick}
@@ -681,6 +587,19 @@ const PostCard = ({
           }
           currentUserPhotoUrl={getUserProfileImage()}
           currentUserId={currentUserId}
+        />
+      )}
+
+      <UsersListModal {...usersListModalProps} />
+
+      {showEditModal && (
+        <PostCreationModal
+          isOpen
+          editingPost={post}
+          onClose={() => setShowEditModal(false)}
+          onPost={async (payload) => {
+            await onUpdate(post.id, payload);
+          }}
         />
       )}
 

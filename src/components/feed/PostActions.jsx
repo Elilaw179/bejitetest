@@ -10,6 +10,7 @@ export default function PostActions({
   sharesCount,
   hideCounts = false,
   onLike,
+  onShowLikers,
   onComment,
   onRepost,
   onShare,
@@ -28,22 +29,38 @@ export default function PostActions({
 
   return (
     <div className="flex flex-row justify-start items-center gap-2.5 sm:gap-5 border-t border-[#D3D3D3] pt-4 flex-wrap">
-      <button
-        type="button"
-        onClick={onLike}
-        className={`flex items-center justify-center gap-1.5 p-0 ${
-          liked ? "text-red-500" : "text-gray-600 hover:text-red-500"
-        }`}
-        aria-label={liked ? "Unlike" : "Like"}
-      >
-        <PostActionIcon type="like" active={liked} />
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={onLike}
+          className={`flex items-center justify-center gap-1.5 p-0 ${
+            liked ? "text-red-500" : "text-gray-600 hover:text-red-500"
+          }`}
+          aria-label={liked ? "Unlike" : "Like"}
+        >
+          <PostActionIcon type="like" active={liked} />
+          <span className="hidden sm:inline text-xs sm:text-sm">
+            {liked ? "Liked" : "Like"}
+          </span>
+        </button>
         {!hideCounts && (
-          <span className="text-xs tabular-nums sm:hidden">{likesCount}</span>
+          <button
+            type="button"
+            onClick={() => {
+              if (likesCount > 0) onShowLikers?.();
+            }}
+            disabled={likesCount <= 0 || !onShowLikers}
+            className="text-xs tabular-nums sm:hidden min-h-[28px] px-0.5 disabled:opacity-70"
+            aria-label={
+              likesCount > 0
+                ? `View ${likesCount} people who liked this post`
+                : "No likes yet"
+            }
+          >
+            {likesCount}
+          </button>
         )}
-        <span className="hidden sm:inline text-xs sm:text-sm">
-          {liked ? "Liked" : "Like"}
-        </span>
-      </button>
+      </div>
       <button
         type="button"
         onClick={onComment}

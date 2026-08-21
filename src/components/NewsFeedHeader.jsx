@@ -54,6 +54,7 @@ import InviteFriendsModal from "./InviteFriendsModal";
 import NotificationDropdown from "./notifications/NotificationDropdown";
 import { onNotificationNew } from "../services/socketClient";
 import { Network } from "lucide-react";
+import { toast } from "react-toastify";
 
 const NewsFeedHeader = ({ user: propUser }) => {
   useSyncProfilePhoto();
@@ -73,6 +74,15 @@ const NewsFeedHeader = ({ user: propUser }) => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isProfileRowHidden, setIsProfileRowHidden] = useState(false);
+  const headerRootRef = useRef(null);
+  const profileRowHiddenRef = useRef(false);
+  const profileRowLockUntilRef = useRef(0);
+  const dropdownRef = useRef(null);
+  const roleMenuButtonRef = useRef(null);
+  const roleMenuPanelRef = useRef(null);
+  const searchRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
+  const searchRequestIdRef = useRef(0);
 
   useEffect(() => {
     if (isMobileSearchOpen) {
@@ -81,41 +91,86 @@ const NewsFeedHeader = ({ user: propUser }) => {
   }, [isMobileSearchOpen]);
 
   // On mobile, hide the profile row while scrolling down; show it again on scroll up.
+  // Capture-phase so nested panes (chat list, messages) count even if they mount later
+  // or use nfl-sidebar-scroll instead of nfl-scroll.
   useEffect(() => {
-    const targets = [
-      window,
-      ...document.querySelectorAll(".nfl-scroll"),
-    ].filter(
-      (el) => !searchRef.current?.contains(el instanceof Element ? el : null),
-    );
+    profileRowHiddenRef.current = false;
+    profileRowLockUntilRef.current = 0;
+    setIsProfileRowHidden(false);
 
     const lastTops = new Map();
-    const getTop = (el) => (el === window ? window.scrollY : el.scrollTop);
+    let frame = 0;
+    let pending = null;
 
-    const handlers = targets.map((el) => {
-      lastTops.set(el, getTop(el));
-      const onScroll = () => {
-        const top = getTop(el);
-        const delta = top - lastTops.get(el);
-        if (Math.abs(delta) < 8) return;
-        setIsProfileRowHidden(delta > 0 && top > 48);
-        lastTops.set(el, top);
-      };
-      el.addEventListener("scroll", onScroll, { passive: true });
-      return { el, onScroll };
-    });
+    const isWindowTarget = (el) =>
+      el === window ||
+      el === document ||
+      el === document.documentElement ||
+      el === document.body;
 
-    return () =>
-      handlers.forEach(({ el, onScroll }) =>
-        el.removeEventListener("scroll", onScroll),
+    const getTop = (el) => (isWindowTarget(el) ? window.scrollY : el.scrollTop);
+
+    const isPageScroller = (el) => {
+      if (isWindowTarget(el)) return true;
+      if (!(el instanceof Element)) return false;
+      if (headerRootRef.current?.contains(el)) return false;
+      if (roleMenuPanelRef.current?.contains(el)) return false;
+      return (
+        el.classList.contains("nfl-scroll") ||
+        el.classList.contains("nfl-sidebar-scroll")
       );
+    };
+
+    const applyHidden = (next) => {
+      if (profileRowHiddenRef.current === next) return;
+      profileRowHiddenRef.current = next;
+      // Header height change resizes the chat pane and can emit a reverse
+      // scroll event — ignore that echo so the row does not flicker.
+      profileRowLockUntilRef.current = performance.now() + 240;
+      setIsProfileRowHidden(next);
+    };
+
+    const flush = () => {
+      frame = 0;
+      const el = pending;
+      pending = null;
+      if (!el) return;
+
+      const top = getTop(el);
+      const last = lastTops.has(el) ? lastTops.get(el) : top;
+      const delta = top - last;
+      lastTops.set(el, top);
+
+      if (performance.now() < profileRowLockUntilRef.current) return;
+      // Opening a thread jumps to the latest message; that is not a user gesture.
+      if (Math.abs(delta) < 10 || Math.abs(delta) > 240) return;
+
+      if (profileRowHiddenRef.current) {
+        if (delta < 0) applyHidden(false);
+        return;
+      }
+      if (delta > 0 && top > 56) applyHidden(true);
+    };
+
+    const onScroll = (event) => {
+      const raw = event.target;
+      const el = isWindowTarget(raw) ? window : raw;
+      if (!isPageScroller(el)) return;
+      if (el instanceof Element && el.scrollHeight <= el.clientHeight + 1) {
+        return;
+      }
+
+      pending = el;
+      if (frame) return;
+      frame = window.requestAnimationFrame(flush);
+    };
+
+    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    return () => {
+      document.removeEventListener("scroll", onScroll, { capture: true });
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, [location.pathname]);
-  const dropdownRef = useRef(null);
-  const roleMenuButtonRef = useRef(null);
-  const roleMenuPanelRef = useRef(null);
-  const searchRef = useRef(null);
-  const searchTimeoutRef = useRef(null);
-  const searchRequestIdRef = useRef(0);
 
   // Get user from Redux store first (most up-to-date after login), fallback to prop or localStorage
   const reduxUser = useSelector((state) => state.auth?.user);
@@ -445,8 +500,13 @@ const NewsFeedHeader = ({ user: propUser }) => {
   useEffect(() => {
     fetchNotificationCount();
     const interval = setInterval(fetchNotificationCount, 30000);
-    const unsubscribe = onNotificationNew(() => {
+    const unsubscribe = onNotificationNew((payload) => {
       setNotificationCount((prev) => prev + 1);
+      if (payload?.type === "mention") {
+        toast.info(payload.message || payload.title || "You were mentioned on Bejite", {
+          autoClose: 4500,
+        });
+      }
     });
     return () => {
       clearInterval(interval);
@@ -727,7 +787,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
   }, [isSidebarOpen]);
 
   return (
-    <header className="bg-[#F5F5F5] w-full relative z-50">
+    <header ref={headerRootRef} className="bg-[#F5F5F5] w-full relative z-50">
       <div className="max-w-[1440px] w-full mx-auto flex flex-col lg:flex-row items-center justify-between px-4 py-3 gap-3 lg:gap-4">
         <div className="w-full lg:w-auto flex items-center justify-between border-b border-gray-300 pb-2.5 lg:border-b-0 lg:pb-0">
           <img
@@ -883,7 +943,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
         </div>
 
         <div
-          className={`grid w-full lg:w-auto lg:block transition-[opacity,margin-top] duration-200 ease-out motion-reduce:transition-none ${
+          className={`grid w-full lg:w-auto lg:block transition-opacity duration-200 ease-out motion-reduce:transition-none ${
             isProfileRowHidden
               ? "grid-rows-[0fr] opacity-0 -mt-3 pointer-events-none lg:grid-rows-[1fr] lg:opacity-100 lg:mt-0 lg:pointer-events-auto"
               : "grid-rows-[1fr] opacity-100 mt-0"

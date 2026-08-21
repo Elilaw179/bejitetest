@@ -4,9 +4,12 @@ import { FaTimes, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { toast } from "react-toastify";
 import PostActions from "./PostActions";
 import PostCommentsSection from "../PostCommentsSection";
+import FormattedPostBody from "./FormattedPostBody";
 import SharePostModal from "../SharePostModal";
 import RepostModal from "../RepostModal";
 import { OriginalPostNest, RepostIntro } from "./RepostChrome";
+import UsersListModal from "../UsersListModal";
+import usePostUsersList from "../../hooks/usePostUsersList";
 import { getComments } from "../../services/postsApi";
 import {
   buildPostShareText,
@@ -61,6 +64,7 @@ export default function PostDetailModal({
   const [showShareModal, setShowShareModal] = useState(false);
   const [showRepostModal, setShowRepostModal] = useState(false);
   const [reposting, setReposting] = useState(false);
+  const { showLikers, usersListModalProps } = usePostUsersList();
 
   useEffect(() => {
     if (!isOpen || !post) return;
@@ -311,9 +315,12 @@ export default function PostDetailModal({
                 {authorName}
               </button>
             </div>
-            <p className="text-sm text-gray-800 whitespace-pre-wrap break-words pl-11">
-              {post.body}
-            </p>
+            <div className="pl-11">
+              <FormattedPostBody
+                body={post.body}
+                className="text-sm text-gray-800 whitespace-pre-wrap break-words"
+              />
+            </div>
           </div>
         ) : null}
         </OriginalPostNest>
@@ -345,15 +352,20 @@ export default function PostDetailModal({
           commentsCount={commentsCount}
           sharesCount={sharesCount}
           onLike={handleLike}
+          onShowLikers={() => showLikers(post.id)}
           onComment={focusComments}
           onRepost={handleRepost}
           onShare={() => setShowShareModal(true)}
           onSave={handleSave}
         />
         {likesCount > 0 && (
-          <p className="text-xs font-semibold text-gray-800">
+          <button
+            type="button"
+            onClick={() => showLikers(post.id)}
+            className="text-xs font-semibold text-gray-800 hover:underline"
+          >
             {likesCount} like{likesCount === 1 ? "" : "s"}
-          </p>
+          </button>
         )}
       </div>
     </div>
@@ -487,6 +499,7 @@ export default function PostDetailModal({
           (isMyScheduledRepost ? post.repostScheduledAt : null)
         }
       />
+      <UsersListModal {...usersListModalProps} />
     </div>
   );
 }

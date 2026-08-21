@@ -46,7 +46,6 @@ import {
 } from "../utils/tokenManager";
 import { profileAvatarSrc } from "../utils/profilePhotoUrl";
 import { getAuthorProfileImageUrl } from "../utils/profileImageUtils";
-import ConfirmModal from "../components/ConfirmModal";
 import SharePostModal from "../components/SharePostModal";
 import {
   getPortaledMenuStyle,
@@ -54,7 +53,9 @@ import {
 } from "../hooks/usePortaledMenu";
 import useSyncProfilePhoto from "../hooks/useSyncProfilePhoto";
 import PostActions from "../components/feed/PostActions";
+import FormattedPostBody from "../components/feed/FormattedPostBody";
 import UsersListModal from "../components/UsersListModal";
+import PostCreationModal from "../components/PostCreationModal";
 import { formatDisplayPersonName } from "../utils/personDisplayName";
 import DisplayNameWithBadge from "../components/DisplayNameWithBadge";
 import { getAuthorSubtitle } from "../utils/authorDisplay";
@@ -94,18 +95,6 @@ const formatDate = (dateString) => {
     ? { month: "short", day: "numeric" }
     : { month: "short", day: "numeric", year: "numeric" };
   return date.toLocaleDateString("en-US", options);
-};
-
-const parseTextWithLinks = (text) => {
-  if (!text) return [];
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = text.split(urlRegex);
-  return parts.map((part) => {
-    if (part.match(urlRegex)) {
-      return { type: "link", content: part };
-    }
-    return { type: "text", content: part };
-  });
 };
 
 const mergeFeedPosts = (existing, incoming) => {
@@ -163,12 +152,7 @@ const ActivityLogPostCard = ({
     maxHeight: 120,
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editBody, setEditBody] = useState(post.body || "");
-  const [savingEdit, setSavingEdit] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [linkModalOpen, setLinkModalOpen] = useState(false);
-  const [pendingLink, setPendingLink] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
   // Users list modal state
@@ -177,17 +161,6 @@ const ActivityLogPostCard = ({
   const [usersListType, setUsersListType] = useState("likes");
   const [usersListUsers, setUsersListUsers] = useState([]);
   const [usersListLoading, setUsersListLoading] = useState(false);
-
-  const handleLinkClick = (e, url) => {
-    e.preventDefault();
-    setPendingLink(url);
-    setLinkModalOpen(true);
-  };
-
-  const handleConfirmLink = () => {
-    window.open(pendingLink, "_blank");
-    setLinkModalOpen(false);
-  };
 
   const fetchComments = async (force = false) => {
     if (!force && comments.length > 0) return;
@@ -258,21 +231,7 @@ const ActivityLogPostCard = ({
   };
 
   const handleEditClick = () => {
-    setEditBody(post.body || "");
-    setIsEditing(true);
-  };
-
-  const handleEditSave = async () => {
-    if (!editBody.trim()) return;
-    try {
-      setSavingEdit(true);
-      await onUpdate(post.id, { body: editBody });
-      setIsEditing(false);
-    } catch (err) {
-      console.error("Error updating post:", err);
-    } finally {
-      setSavingEdit(false);
-    }
+    setShowEditModal(true);
   };
 
   const handleDeleteClick = async () => {
@@ -283,11 +242,6 @@ const ActivityLogPostCard = ({
         console.error("Error deleting post:", err);
       }
     }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setEditBody(post.body || "");
   };
 
   const handleShowLikers = async () => {
@@ -450,75 +404,13 @@ const ActivityLogPostCard = ({
         )}
       </div>
 
-      {isEditing ? (
-        <div className="space-y-3">
-          <textarea
-            value={editBody}
-            onChange={(e) => setEditBody(e.target.value)}
-            className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/20 focus:border-[#16730F]"
-            rows={4}
+      <div>
+        <FormattedPostBody
+          body={post.body}
+            truncateAt={200}
+            className="text-gray-800 text-sm sm:text-base whitespace-pre-wrap break-words leading-relaxed"
           />
-          <div className="flex gap-2 justify-end">
-            <button
-              onClick={handleCancelEdit}
-              className="bg-gray-100 text-gray-700 px-5 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleEditSave}
-              disabled={savingEdit}
-              className="bg-[#16730F] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-[#145a0c] transition-colors disabled:opacity-50"
-            >
-              {savingEdit ? "Saving..." : "Save"}
-            </button>
-          </div>
         </div>
-      ) : (
-        <div>
-          <p className="text-gray-800 text-sm sm:text-base whitespace-pre-wrap break-words leading-relaxed">
-            {(() => {
-              const body = post.body || "";
-              const shouldTruncate = body.length > 200;
-              const displayText =
-                shouldTruncate && !isExpanded
-                  ? body.substring(0, 200) + "..."
-                  : body;
-              const textParts = parseTextWithLinks(displayText);
-              return textParts.map((part, index) =>
-                part.type === "link" ? (
-                  <a
-                    key={index}
-                    href={part.content}
-                    onClick={(e) => handleLinkClick(e, part.content)}
-                    className="text-[#16730F] hover:underline font-medium cursor-pointer"
-                  >
-                    {part.content}
-                  </a>
-                ) : (
-                  <span key={index}>{part.content}</span>
-                )
-              );
-            })()}
-          </p>
-          {post.body && post.body.length > 200 && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-[#16730F] font-semibold text-sm mt-2 hover:underline focus:outline-none"
-            >
-              {isExpanded ? "See less" : "See more"}
-            </button>
-          )}
-        </div>
-      )}
-
-      <ConfirmModal
-        isOpen={linkModalOpen}
-        title="Leaving Bejite"
-        message="You're about to leave Bejite. Are you sure you want to continue?"
-        onConfirm={handleConfirmLink}
-        onCancel={() => setLinkModalOpen(false)}
-      />
 
       {post.media && post.media.length > 0 && (
         <div className="rounded-xl overflow-hidden border border-gray-100">
@@ -569,6 +461,7 @@ const ActivityLogPostCard = ({
         commentsCount={post.commentsCount || 0}
         sharesCount={post.sharesCount || 0}
         onLike={handleLikeClick}
+        onShowLikers={handleShowLikers}
         onComment={toggleComments}
         onShare={handleShareClick}
         onSave={handleSaveClick}
@@ -635,6 +528,17 @@ const ActivityLogPostCard = ({
             </div>
           )}
         </div>
+      )}
+
+      {showEditModal && (
+        <PostCreationModal
+          isOpen
+          editingPost={post}
+          onClose={() => setShowEditModal(false)}
+          onPost={async (payload) => {
+            await onUpdate(post.id, payload);
+          }}
+        />
       )}
 
       <UsersListModal
@@ -918,6 +822,7 @@ export default function ActivityLog() {
       fetchPosts(true);
     } catch (err) {
       console.error("Error updating post:", err);
+      throw err;
     }
   };
 
