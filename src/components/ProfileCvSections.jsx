@@ -157,10 +157,18 @@ export const ProfileLinkItem = ({ type, url }) => {
   );
 };
 
-const Section = ({ title, icon: Icon, children, empty }) => (
-  <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200/80 p-5 sm:p-6 mb-5 sm:mb-6 min-w-0 transition-all">
+const Section = ({ title, icon: Icon, children, empty, className = "" }) => (
+  <div
+    className={`bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200/80 p-5 sm:p-6 min-w-0 transition-all ${
+      className ? className : "mb-5 sm:mb-6"
+    }`}
+  >
     <h2 className="text-base sm:text-lg font-bold text-[#1A3E32] mb-4 pb-3 border-b border-slate-100 flex items-center gap-2.5">
-      {Icon && <Icon className="text-[#16730F] w-4 h-4 sm:w-5 sm:h-5 shrink-0" />}
+      {Icon && (
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
+          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        </div>
+      )}
       <span className="truncate">{title}</span>
     </h2>
     {empty ? (
@@ -401,14 +409,18 @@ const ProfileCvSections = ({ cv, candidate = null, exclude = [] }) => {
 export default ProfileCvSections;
 
 /** Standalone Skills section for sidebar use */
-export const ProfileSkillsSection = ({ cv, candidate = null }) => {
+export const ProfileSkillsSection = ({
+  cv,
+  candidate = null,
+  className = "",
+}) => {
   if (!cv) return null;
   const skillItems = normalizeProfileSkills(
     resolveProfileSkillSource({ cv, candidate }),
   );
   if (!skillItems.length) return null;
   return (
-    <Section title="Skills" icon={FaCode}>
+    <Section title="Skills" icon={FaCode} className={className}>
       <ProfileSkillsDisplay
         skills={resolveProfileSkillSource({ cv, candidate })}
         variant="card"
@@ -418,7 +430,7 @@ export const ProfileSkillsSection = ({ cv, candidate = null }) => {
 };
 
 /** Standalone Links section for sidebar use */
-export const ProfileLinksSection = ({ cv }) => {
+export const ProfileLinksSection = ({ cv, className = "" }) => {
   if (!cv) return null;
   const links = cv.links || {};
   const availableKeys = [
@@ -432,7 +444,7 @@ export const ProfileLinksSection = ({ cv }) => {
 
   if (!availableKeys.length) return null;
   return (
-    <Section title="Links" icon={FaLink}>
+    <Section title="Links & Social" icon={FaLink} className={className}>
       <div className="space-y-2.5 min-w-0">
         {availableKeys.map((key) => (
           <ProfileLinkItem key={key} type={key} url={links[key]} />
