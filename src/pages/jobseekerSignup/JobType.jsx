@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import NavigationButtons from "../../components/NavigationButtons";
 import { useNavigate, useLocation, useOutletContext } from "react-router-dom";
 import { FaBriefcase } from "react-icons/fa";
@@ -20,17 +21,14 @@ import {
   RATE_OPTIONS,
   currencyLabelFromCode,
   currencyCodeFromLabel,
+  JOBSEEKER_STATUS_OPTIONS,
+  RECRUITER_TYPE_OPTIONS,
+  toJobseekerStatusValue,
+  toRecruiterTypeValue,
 } from "../../data/jobTypeData";
 import useCountryStateOptions from "../../hooks/useCountryStateOptions";
 import RecruiterSelect from "../../components/recruiter/RecruiterSelect";
-
-const RECRUITER_TYPE_OPTIONS = ["Individual", "Corporate"];
-
-const JOBSEEKER_STATUS_OPTIONS = [
-  "ACTIVE JOBSEEKER",
-  "FREELANCER",
-  "INACTIVE JOBSEEKER",
-];
+import { updateUser } from "../../features/auth/authSlice";
 
 const EMPTY_FORM = {
   jobseekerStatus: "",
@@ -49,6 +47,7 @@ const EMPTY_FORM = {
 function JobType() {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const { user } = useAuth();
   const { currentStep, isEditMode, getPath } = useOutletContext() ?? {};
 
@@ -92,7 +91,9 @@ function JobType() {
   const statusOptions = isRecruiter
     ? RECRUITER_TYPE_OPTIONS
     : JOBSEEKER_STATUS_OPTIONS;
-  const defaultStatus = isRecruiter ? "Individual" : "ACTIVE JOBSEEKER";
+  const defaultStatus = isRecruiter
+    ? toRecruiterTypeValue(user?.mode || mode)
+    : toJobseekerStatusValue(user?.mode || mode);
 
   useEffect(() => {
     if (!userId) {
@@ -109,12 +110,23 @@ function JobType() {
         if (res.data?.success && res.data?.data) {
           const data = res.data.data;
           setForm({
-            jobseekerStatus:
-              data.jobseeker_status ||
-              data.jobseekerStatus ||
-              data.recruiter_type ||
-              data.recruiterType ||
-              defaultStatus,
+            jobseekerStatus: isRecruiter
+              ? toRecruiterTypeValue(
+                  data.recruiter_type ||
+                    data.recruiterType ||
+                    data.mode ||
+                    data.jobseeker_status ||
+                    data.jobseekerStatus,
+                  defaultStatus,
+                )
+              : toJobseekerStatusValue(
+                  data.jobseeker_status ||
+                    data.jobseekerStatus ||
+                    data.mode ||
+                    data.recruiter_type ||
+                    data.recruiterType,
+                  defaultStatus,
+                ),
             jobTitle: data.job_title || "",
             industry: data.industry_sector || data.industry || "",
             country: data.preferred_country || "",
@@ -205,6 +217,12 @@ function JobType() {
         (res.status >= 200 && res.status < 300 && res.data?.success !== false);
 
       if (ok) {
+        const savedMode =
+          res.data?.data?.mode ||
+          res.data?.data?.jobseeker_status ||
+          res.data?.data?.recruiter_type ||
+          activeStatus;
+        dispatch(updateUser({ mode: savedMode }));
         toast.success("Job preferences saved successfully!");
         if (isEditMode) {
           navigate("/profile", {
@@ -212,7 +230,14 @@ function JobType() {
           });
         } else {
           navigate("/news-feed", {
-            state: { email, firstName, lastName, role, mode, followings },
+            state: {
+              email,
+              firstName,
+              lastName,
+              role,
+              mode: savedMode,
+              followings,
+            },
           });
         }
       } else {
