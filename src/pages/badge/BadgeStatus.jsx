@@ -77,7 +77,7 @@ export default function BadgeStatus() {
   const isRecruiter =
     sessionUser?.role === "recruiter" || sessionUser?.role === "employer";
 
-  // If session already knows the user is verified, skip the marketing page.
+  // If session already knows the user is verified, skip the marketing page
   useEffect(() => {
     if (sessionHasBadge) {
       navigate("/badge-holder", { replace: true });
