@@ -4,13 +4,7 @@ import { formatDisplayPersonName, formatDisplayHandle } from "../../utils/person
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
 import useRecruitmentRightStats from "../../hooks/useRecruitmentRightStats";
 import { RECRUITMENT_RIGHT_LINKS } from "./recruitmentRightLinks";
-
-function formatNetworkCount(count) {
-  const n = Number(count);
-  if (!Number.isFinite(n) || n <= 0) return "0";
-  if (n > 600) return "600+";
-  return String(Math.floor(n));
-}
+import { formatCompactCount as formatNetworkCount } from "../../utils/formatCompactCount";
 
 export default function RecruitmentRightMobileMenu({ onNavigate }) {
   const navigate = useNavigate();

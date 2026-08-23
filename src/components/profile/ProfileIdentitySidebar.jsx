@@ -16,15 +16,9 @@ import {
 } from "../../utils/personDisplayName";
 import { formatDisplayText } from "../../utils/displayFormatUtils";
 import { profileAvatarSrc } from "../../utils/profilePhotoUrl";
+import { formatCompactCount as formatConnectionCount } from "../../utils/formatCompactCount";
 
 const MUTUAL_IDENTITY_PREVIEW = 3;
-
-const formatConnectionCount = (count) => {
-  const n = Number(count);
-  if (!Number.isFinite(n) || n <= 0) return "0";
-  if (n > 600) return "600+";
-  return String(Math.floor(n));
-};
 
 const formatMutualConnectionsLabel = (count, samples = []) => {
   const n = Number(count) || 0;

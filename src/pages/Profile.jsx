@@ -17,14 +17,15 @@ import {
   FaLayerGroup,
   FaFileAlt,
   FaNewspaper,
-  FaCheckCircle,
-  FaInfoCircle,
+  FaShareAlt,
+  FaCheck,
+  FaLink,
 } from "react-icons/fa";
 import NewsFeedLayout from "../components/layout/NewsFeedLayout";
-import ProfileCvSections from "../components/ProfileCvSections";
-import {
+import ProfileCvSections, {
   ProfileSkillsSection,
   ProfileLinksSection,
+  ProfileLinkItem,
 } from "../components/ProfileCvSections";
 import axiosInstance from "../utils/axiosInstance";
 import { fetchCurrentUserProfilePhoto } from "../services/profilePhotoService";
@@ -46,32 +47,21 @@ import {
 } from "../utils/profileUtils";
 import {
   formatDisplayPersonName,
-  formatDisplayRole,
-  formatDisplayMode,
   formatRoleAndMode,
   formatDisplayHandle,
 } from "../utils/personDisplayName";
 import { formatDisplayText } from "../utils/displayFormatUtils";
-import {
-  getVerifiedBadgeLabel,
-  userHasVerifiedBadge,
-} from "../utils/verifiedBadge";
 import ProfileConnectActions from "../components/ProfileConnectActions";
 import ProfilePostsSection from "../components/ProfilePostsSection";
 import DisplayNameWithBadge from "../components/DisplayNameWithBadge";
 import MutualConnectionsModal from "../components/MutualConnectionsModal";
 
+import { formatCompactCount as formatConnectionCount } from "../utils/formatCompactCount";
+
 const ABOUT_CHAR_LIMIT = 240;
 const ABOUT_WORD_LIMIT = 35;
 
 const MUTUAL_SIDEBAR_PREVIEW = 4;
-
-const formatConnectionCount = (count) => {
-  const n = Number(count);
-  if (!Number.isFinite(n) || n <= 0) return "0";
-  if (n > 600) return "600+";
-  return String(Math.floor(n));
-};
 
 const formatMutualConnectionsLabel = (count, samples = []) => {
   const n = Number(count) || 0;
@@ -152,7 +142,10 @@ const ProfileDetailRow = ({
             <FaExternalLinkAlt className="w-2.5 h-2.5 shrink-0 opacity-70 group-hover:opacity-100" />
           </a>
         ) : (
-          <p className="text-xs sm:text-sm font-semibold text-slate-700 truncate mt-0.5" title={displayValue}>
+          <p
+            className="text-xs sm:text-sm font-semibold text-slate-700 truncate mt-0.5"
+            title={displayValue}
+          >
             {displayValue}
           </p>
         )}
@@ -239,6 +232,7 @@ const Profile = () => {
   const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
   const [showMutualConnections, setShowMutualConnections] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const user = getUser();
 
@@ -475,6 +469,28 @@ const Profile = () => {
       navigate("/edit-profile/bio");
     } else {
       navigate(getRecruiterEditProfilePath(user));
+    }
+  };
+
+  const handleCopyProfileLink = async () => {
+    try {
+      const url = window.location.href;
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = url;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2200);
+    } catch (e) {
+      console.error("Failed to copy link:", e);
     }
   };
 
@@ -871,148 +887,155 @@ const Profile = () => {
         {/* Main dashboard: CV + activity stack on the left so a tall sidebar cannot open a gap between them. */}
         <div className="flex flex-col gap-6 lg:grid lg:grid-cols-3 lg:items-start">
           <div className="contents lg:col-span-2 lg:flex lg:flex-col lg:gap-6">
-          {/* Main Column – Content (before posts) */}
-          <div className="space-y-6 order-1">
-            {/* Bio / About Bento Section */}
-            {(activeTab === "all" || activeTab === "about") &&
-              (isRecruiterProfile || isJobseekerProfile) && (
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-7 transition-all">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
-                        <FaBriefcase className="w-4 h-4" />
-                      </div>
-                      <span>
-                        {isRecruiterProfile ? "About Company" : "About"}
-                      </span>
-                    </h2>
-                  </div>
+            {/* Main Column – Content (before posts) */}
+            <div className="space-y-6 order-1">
+              {/* Bio / About Bento Section */}
+              {(activeTab === "all" || activeTab === "about") &&
+                (isRecruiterProfile || isJobseekerProfile) && (
+                  <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-7 transition-all">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                      <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
+                          <FaBriefcase className="w-4 h-4" />
+                        </div>
+                        <span>
+                          {isRecruiterProfile ? "About Company" : "About"}
+                        </span>
+                      </h2>
+                    </div>
 
-                  <div className="relative">
-                    {aboutText ? (
-                      <>
-                        <p className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-wrap break-words font-normal">
-                          {!needsTruncation || isAboutExpanded
-                            ? aboutText
-                            : aboutPreview.text}
-                        </p>
-                        {needsTruncation && (
-                          <button
-                            type="button"
-                            onClick={() => setIsAboutExpanded(!isAboutExpanded)}
-                            className="mt-3 text-[#16730F] hover:text-[#145a0c] font-bold text-xs sm:text-sm transition-colors inline-flex items-center gap-1.5 group cursor-pointer"
-                          >
-                            <span>
-                              {isAboutExpanded ? "See Less" : "See More"}
-                            </span>
-                            <FaChevronDown
-                              className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                                isAboutExpanded
-                                  ? "rotate-180 text-[#16730F]"
-                                  : ""
-                              }`}
-                            />
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <div className="py-6 text-center border-2 border-dashed border-slate-100 rounded-2xl">
-                        <p className="text-sm text-slate-400 font-medium">
-                          No bio provided yet.
-                        </p>
-                      </div>
-                    )}
+                    <div className="relative">
+                      {aboutText ? (
+                        <>
+                          <p className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-wrap break-words font-normal">
+                            {!needsTruncation || isAboutExpanded
+                              ? aboutText
+                              : aboutPreview.text}
+                          </p>
+                          {needsTruncation && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setIsAboutExpanded(!isAboutExpanded)
+                              }
+                              className="mt-3 text-[#16730F] hover:text-[#145a0c] font-bold text-xs sm:text-sm transition-colors inline-flex items-center gap-1.5 group cursor-pointer"
+                            >
+                              <span>
+                                {isAboutExpanded ? "See Less" : "See More"}
+                              </span>
+                              <FaChevronDown
+                                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                  isAboutExpanded
+                                    ? "rotate-180 text-[#16730F]"
+                                    : ""
+                                }`}
+                              />
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <div className="py-6 text-center border-2 border-dashed border-slate-100 rounded-2xl">
+                          <p className="text-sm text-slate-400 font-medium">
+                            No bio provided yet.
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-            {/* Online Presence Grid (Recruiters) */}
-            {(activeTab === "all" ||
-              activeTab === "about" ||
-              activeTab === "presence") &&
-              isRecruiterProfile && (
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-7 transition-all">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
-                        <FaGlobe className="w-4 h-4" />
-                      </div>
-                      <span>Online Presence</span>
-                    </h2>
+              {/* Online Presence Grid (Recruiters) */}
+              {(activeTab === "all" ||
+                activeTab === "about" ||
+                activeTab === "presence") &&
+                isRecruiterProfile && (
+                  <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-7 transition-all">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                      <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
+                          <FaGlobe className="w-4 h-4" />
+                        </div>
+                        <span>Online Presence</span>
+                      </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <ProfileDetailRow
+                        icon={FaGlobe}
+                        label="Website"
+                        value={profileData.website}
+                        href={toExternalHref(profileData.website)}
+                        preserveCase
+                        brandColor="bg-emerald-50 text-[#16730F] border-emerald-200"
+                      />
+                      <ProfileDetailRow
+                        icon={FaLinkedin}
+                        label="LinkedIn"
+                        value={linkedinUrl}
+                        href={toExternalHref(linkedinUrl)}
+                        preserveCase
+                        brandColor="bg-blue-50 text-[#0A66C2] border-blue-200"
+                      />
+                      <ProfileDetailRow
+                        icon={FaTwitter}
+                        label="X (Twitter)"
+                        value={twitterUrl}
+                        href={toExternalHref(twitterUrl)}
+                        preserveCase
+                        brandColor="bg-slate-100 text-slate-900 border-slate-200"
+                      />
+                      <ProfileDetailRow
+                        icon={FaInstagram}
+                        label="Instagram"
+                        value={instagramUrl}
+                        href={toExternalHref(instagramUrl)}
+                        preserveCase
+                        brandColor="bg-pink-50 text-pink-600 border-pink-200"
+                      />
+                    </div>
                   </div>
+                )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <ProfileDetailRow
-                      icon={FaGlobe}
-                      label="Website"
-                      value={profileData.website}
-                      href={toExternalHref(profileData.website)}
-                      preserveCase
-                      brandColor="bg-emerald-50 text-[#16730F] border-emerald-200"
-                    />
-                    <ProfileDetailRow
-                      icon={FaLinkedin}
-                      label="LinkedIn"
-                      value={linkedinUrl}
-                      href={toExternalHref(linkedinUrl)}
-                      preserveCase
-                      brandColor="bg-blue-50 text-[#0A66C2] border-blue-200"
-                    />
-                    <ProfileDetailRow
-                      icon={FaTwitter}
-                      label="X (Twitter)"
-                      value={twitterUrl}
-                      href={toExternalHref(twitterUrl)}
-                      preserveCase
-                      brandColor="bg-slate-100 text-slate-900 border-slate-200"
-                    />
-                    <ProfileDetailRow
-                      icon={FaInstagram}
-                      label="Instagram"
-                      value={instagramUrl}
-                      href={toExternalHref(instagramUrl)}
-                      preserveCase
-                      brandColor="bg-pink-50 text-pink-600 border-pink-200"
-                    />
-                  </div>
-                </div>
-              )}
+              {(activeTab === "all" || activeTab === "cv") &&
+                isJobseekerProfile && (
+                  <ProfileCvSections
+                    cv={cvData}
+                    exclude={["skills", "links"]}
+                  />
+                )}
+            </div>
 
-            {(activeTab === "all" || activeTab === "cv") &&
-              isJobseekerProfile && (
-                <ProfileCvSections cv={cvData} exclude={["skills", "links"]} />
-              )}
+            {/* Activity / Posts – last on mobile, below content on desktop */}
+            <div className="space-y-6 order-3">
+              {(activeTab === "all" || activeTab === "posts") &&
+                viewedProfileId && (
+                  <ProfilePostsSection
+                    userId={String(viewedProfileId)}
+                    currentUserId={user?.id}
+                  />
+                )}
+            </div>
           </div>
 
-          {/* Activity / Posts – last on mobile, below content on desktop */}
-          <div className="space-y-6 order-3">
-            {(activeTab === "all" || activeTab === "posts") &&
-              viewedProfileId && (
-                <ProfilePostsSection
-                  userId={String(viewedProfileId)}
-                  currentUserId={user?.id}
-                />
-              )}
-          </div>
-          </div>
-
-          {/* Sidebar Column – appears before posts on mobile, right column on desktop */}
-          <div className="lg:col-span-1 space-y-6 order-2">
+          {/* Sidebar Column – appears before posts on mobile, sticky floating right column on desktop */}
+          <div className="lg:col-span-1 space-y-5 order-2 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100dvh-5.5rem)] lg:overflow-y-auto lg:overflow-x-hidden nfl-scroll lg:pr-1">
             {/* Mutual Connections Bento Card */}
             {!isViewingOwnProfile &&
               Number(profileData.mutualConnectionCount) > 0 && (
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 transition-all">
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-5 sm:p-6 transition-all hover:border-slate-300">
                   <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
                     <span className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                      <FaUserFriends className="text-[#16730F]" />
-                      Mutual Connections
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
+                        <FaUserFriends className="text-xs sm:text-sm" />
+                      </div>
+                      <span>Mutual Connections</span>
                     </span>
-                    <span className="text-xs font-extrabold text-[#16730F] bg-emerald-100/70 px-2.5 py-0.5 rounded-full">
+                    <span className="text-xs font-extrabold text-[#16730F] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                       {formatConnectionCount(profileData.mutualConnectionCount)}
                     </span>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3.5">
                     <div className="flex items-center -space-x-3 overflow-hidden py-1 justify-center sm:justify-start">
                       {(profileData.mutualConnections || [])
                         .slice(0, MUTUAL_SIDEBAR_PREVIEW)
@@ -1070,7 +1093,7 @@ const Profile = () => {
                       <button
                         type="button"
                         onClick={() => setShowMutualConnections(true)}
-                        className="w-full py-2.5 bg-slate-50 hover:bg-emerald-50 text-[#16730F] font-bold text-xs rounded-xl border border-slate-200 hover:border-emerald-200 transition-all cursor-pointer text-center"
+                        className="w-full py-2 bg-slate-50 hover:bg-emerald-50 text-[#16730F] font-bold text-xs rounded-xl border border-slate-200 hover:border-emerald-200 transition-all cursor-pointer text-center shadow-2xs"
                       >
                         View All Mutuals
                       </button>
@@ -1079,60 +1102,81 @@ const Profile = () => {
                 </div>
               )}
 
-            {/* Profile Information Overview Card */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 transition-all">
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
-                <FaInfoCircle className="text-[#16730F]" />
-                <span>Profile Overview</span>
-              </h3>
-
-              <div className="space-y-3.5 text-xs sm:text-sm">
-                <div className="flex items-center justify-between py-1.5 border-b border-slate-50">
-                  <span className="text-slate-500 font-medium">
-                    Account Role
-                  </span>
-                  <span className="font-bold text-slate-900 capitalize">
-                    {formatDisplayRole(viewedRole) || "User"}
-                  </span>
-                </div>
-
-                {formatDisplayMode(viewedMode) ? (
-                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50">
-                    <span className="text-slate-500 font-medium">
-                      Account Mode
-                    </span>
-                    <span className="font-bold text-slate-900 capitalize">
-                      {formatDisplayMode(viewedMode)}
-                    </span>
-                  </div>
-                ) : null}
-
-                {displayHandle && (
-                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50">
-                    <span className="text-slate-500 font-medium">Handle</span>
-                    <span className="font-mono text-slate-700 font-semibold">
-                      {displayHandle}
-                    </span>
-                  </div>
-                )}
-
-                {userHasVerifiedBadge(profileData) && (
-                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50">
-                    <span className="text-slate-500 font-medium">Status</span>
-                    <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
-                      <FaCheckCircle className="text-xs" />
-                      {getVerifiedBadgeLabel(profileData)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Skills Sidebar Card (Jobseekers) */}
-            {isJobseekerProfile && <ProfileSkillsSection cv={cvData} />}
+            {isJobseekerProfile && (
+              <ProfileSkillsSection cv={cvData} className="mb-5" />
+            )}
 
             {/* Links Sidebar Card (Jobseekers) */}
-            {isJobseekerProfile && <ProfileLinksSection cv={cvData} />}
+            {isJobseekerProfile && (
+              <ProfileLinksSection cv={cvData} className="mb-5" />
+            )}
+
+            {/* Online Presence Sidebar Card (Recruiters) */}
+            {isRecruiterProfile && (
+              <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-5 sm:p-6 transition-all hover:border-slate-300">
+                <h3 className="text-base font-bold text-[#1A3E32] mb-4 pb-3 border-b border-slate-100 flex items-center gap-2.5">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-50 text-[#16730F] flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
+                    <FaGlobe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                  <span>Online Presence</span>
+                </h3>
+
+                <div className="space-y-2.5 min-w-0 ">
+                  {profileData?.website && (
+                    <ProfileLinkItem type="website" url={profileData.website} />
+                  )}
+                  {linkedinUrl && (
+                    <ProfileLinkItem type="linkedin" url={linkedinUrl} />
+                  )}
+                  {twitterUrl && (
+                    <ProfileLinkItem type="twitter" url={twitterUrl} />
+                  )}
+                  {instagramUrl && (
+                    <ProfileLinkItem type="instagram" url={instagramUrl} />
+                  )}
+                  {!profileData?.website &&
+                    !linkedinUrl &&
+                    !twitterUrl &&
+                    !instagramUrl && (
+                      <div className="text-center py-5 text-slate-400 text-xs font-medium">
+                        No online links provided
+                      </div>
+                    )}
+                </div>
+              </div>
+            )}
+
+            {/* Quick Share / Profile URL Floating Card */}
+            <div className="bg-gradient-to-br mt-2 from-emerald-50/60 via-white to-slate-50/80 rounded-3xl p-4 sm:p-5 border border-emerald-100/90 shadow-2xs flex items-center justify-between gap-3 transition-all hover:border-emerald-200 hover:shadow-xs">
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <FaShareAlt className="text-[#16730F] text-[11px]" />
+                  <span>Share Profile</span>
+                </p>
+                <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                  Copy link to share with others
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleCopyProfileLink}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-emerald-50 text-[#16730F] font-bold text-xs border border-emerald-200/90 shadow-2xs hover:shadow-xs transition-all cursor-pointer shrink-0"
+                title="Copy link to clipboard"
+              >
+                {copiedLink ? (
+                  <>
+                    <FaCheck className="text-xs text-emerald-600" />
+                    <span className="text-emerald-700 font-bold">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <FaLink className="text-xs" />
+                    <span>Copy Link</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
