@@ -29,6 +29,21 @@ import {
 import useCountryStateOptions from "../../hooks/useCountryStateOptions";
 import RecruiterSelect from "../../components/recruiter/RecruiterSelect";
 import { updateUser } from "../../features/auth/authSlice";
+import { toTitleCaseWords } from "../../utils/displayFormatUtils";
+
+function canonicalOption(value, options = []) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const matched = options.find((opt) => {
+    const candidate =
+      typeof opt === "string" ? opt : opt?.value ?? opt?.label ?? "";
+    return String(candidate).toLowerCase() === raw.toLowerCase();
+  });
+  if (matched == null) return toTitleCaseWords(raw);
+  return typeof matched === "string"
+    ? matched
+    : String(matched.value ?? matched.label ?? raw);
+}
 
 const EMPTY_FORM = {
   jobseekerStatus: "",
@@ -129,8 +144,8 @@ function JobType() {
                 ),
             jobTitle: data.job_title || "",
             industry: data.industry_sector || data.industry || "",
-            country: data.preferred_country || "",
-            statePref: data.preferred_state || "",
+            country: canonicalOption(data.preferred_country, COUNTRY_OPTIONS),
+            statePref: toTitleCaseWords(data.preferred_state || ""),
             workType: data.work_type || "",
             salary: data.expected_salary || data.salary_expectation || "",
             currency: currencyLabelFromCode(data.currency),
@@ -156,9 +171,17 @@ function JobType() {
     };
 
     fetchJobType();
-  }, [userId, dataLoaded, defaultStatus]);
+  }, [userId, dataLoaded, defaultStatus, isRecruiter]);
 
   const { states } = useCountryStateOptions(form.country);
+
+  useEffect(() => {
+    if (!form.statePref || !states.length) return;
+    const matched = canonicalOption(form.statePref, states);
+    if (matched && matched !== form.statePref) {
+      setForm((prev) => ({ ...prev, statePref: matched }));
+    }
+  }, [states, form.statePref]);
 
   const allFilled = Object.entries(form).every(([key, val]) => {
     if (key === "statePref" && form.country && states.length === 0) {
@@ -200,8 +223,8 @@ function JobType() {
       recruiter_type: isRecruiter ? activeStatus : undefined,
       job_title: String(form.jobTitle).trim(),
       industry_sector: String(form.industry).trim(),
-      preferred_country: String(form.country).trim(),
-      preferred_state: String(form.statePref).trim(),
+      preferred_country: canonicalOption(form.country, COUNTRY_OPTIONS),
+      preferred_state: canonicalOption(form.statePref, states),
       work_type: String(form.workType).trim(),
       expected_salary: String(form.salary).trim(),
       currency: currencyCodeFromLabel(form.currency),
