@@ -46,9 +46,29 @@ const formatDisplayUrl = (url) => {
     .replace(/\/$/, "");
 };
 
+const getUrlHostname = (rawUrl) => {
+  const trimmed = String(rawUrl || "").trim();
+  if (!trimmed) return "";
+  try {
+    const href = /^[a-z][a-z\d+.-]*:\/\//i.test(trimmed)
+      ? trimmed
+      : `https://${trimmed}`;
+    return new URL(href).hostname.replace(/^www\./i, "").toLowerCase();
+  } catch {
+    return trimmed
+      .replace(/^[a-z][a-z\d+.-]*:\/\//i, "")
+      .split("/")[0]
+      .replace(/^www\./i, "")
+      .toLowerCase();
+  }
+};
+
+const hostIs = (hostname, domain) =>
+  hostname === domain || hostname.endsWith(`.${domain}`);
+
 const getLinkMeta = (key, rawUrl) => {
-  const url = (rawUrl || "").toLowerCase();
-  if (key === "linkedin" || url.includes("linkedin.com")) {
+  const hostname = getUrlHostname(rawUrl);
+  if (key === "linkedin" || hostIs(hostname, "linkedin.com")) {
     return {
       label: "LinkedIn",
       icon: FaLinkedin,
@@ -58,7 +78,11 @@ const getLinkMeta = (key, rawUrl) => {
       accentText: "group-hover:text-[#0A66C2]",
     };
   }
-  if (key === "twitter" || url.includes("twitter.com") || url.includes("x.com")) {
+  if (
+    key === "twitter" ||
+    hostIs(hostname, "twitter.com") ||
+    hostIs(hostname, "x.com")
+  ) {
     return {
       label: "X (Twitter)",
       icon: FaTwitter,
@@ -68,7 +92,7 @@ const getLinkMeta = (key, rawUrl) => {
       accentText: "group-hover:text-slate-900",
     };
   }
-  if (key === "instagram" || url.includes("instagram.com")) {
+  if (key === "instagram" || hostIs(hostname, "instagram.com")) {
     return {
       label: "Instagram",
       icon: FaInstagram,
@@ -78,7 +102,7 @@ const getLinkMeta = (key, rawUrl) => {
       accentText: "group-hover:text-pink-600",
     };
   }
-  if (key === "github" || url.includes("github.com")) {
+  if (key === "github" || hostIs(hostname, "github.com")) {
     return {
       label: "GitHub",
       icon: FaGithub,
@@ -88,19 +112,9 @@ const getLinkMeta = (key, rawUrl) => {
       accentText: "group-hover:text-gray-900",
     };
   }
-  if (key === "portfolio" || key === "website") {
-    if (url.includes("github.com")) {
-      return {
-        label: "GitHub",
-        icon: FaGithub,
-        brandBadge: "bg-gray-100 text-gray-900 border-gray-200",
-        hoverBorder: "hover:border-gray-400",
-        hoverBg: "hover:bg-gray-50",
-        accentText: "group-hover:text-gray-900",
-      };
-    }
+  if (key === "website") {
     return {
-      label: "Portfolio",
+      label: "Website",
       icon: FaGlobe,
       brandBadge: "bg-emerald-50 text-[#16730F] border-emerald-200",
       hoverBorder: "hover:border-emerald-400",
