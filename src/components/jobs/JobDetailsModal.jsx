@@ -23,6 +23,7 @@ import VerifiedBadge from "../VerifiedBadge";
 import { userHasVerifiedBadge } from "../../utils/verifiedBadge";
 import { getJobPlatformHref, copyJobLink } from "../../utils/jobShare";
 import { formatJobDescriptionText } from "../../utils/jobDescription";
+import { formatStoredRequirements } from "../../utils/jobRequirements";
 
 const JOB_DETAIL_LIST_CLASS =
   "list-disc list-outside pl-5 space-y-1.5 sm:space-y-2 text-sm sm:text-base text-gray-700 break-words";
@@ -34,6 +35,7 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
   const modalRef = useRef(null);
 
   const salary = formatSalary(job);
+  const requirements = formatStoredRequirements(job?.requirements);
   const timeRemaining = formatTimeRemaining(job.expiresAt);
   const companyLogoSrc = profilePhotoUrl(
     job.recruiterProfilePhoto || job.companyLogo,
@@ -363,15 +365,13 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                         </section>
                       )}
 
-                      {Array.isArray(job.requirements) &&
-                        job.requirements.length > 0 &&
-                        typeof job.requirements[0] === "string" && (
+                      {requirements.length > 0 && (
                           <section>
                             <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
                               Requirements
                             </h2>
                             <ul className={JOB_DETAIL_LIST_CLASS}>
-                              {job.requirements.map((req, idx) => (
+                              {requirements.map((req, idx) => (
                                 <li key={idx}>{req}</li>
                               ))}
                             </ul>
