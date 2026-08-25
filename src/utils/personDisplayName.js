@@ -1,5 +1,6 @@
 import { toTitleCaseWords } from './displayFormatUtils';
 import { formatRecruiterFullName } from './recruiterDisplayName';
+import { formatJobseekerModeLabel } from './jobseekerMode';
 
 /**
  * Title-case a person's display name from a user/candidate object or raw string.
@@ -34,13 +35,15 @@ export function formatDisplayRole(role, fallback = 'User') {
   return toTitleCaseWords(String(role).replace(/[_-]+/g, ' '));
 }
 
-/** Title-case account mode (e.g. active_member → Active Member, corporate → Corporate). */
+/** Jobseeker modes → ACTIVE / INACTIVE / FREELANCE; recruiter modes stay title-cased. */
 export function formatDisplayMode(mode, fallback = '') {
   if (mode == null || !String(mode).trim()) return fallback;
+  const jobseekerLabel = formatJobseekerModeLabel(mode, '');
+  if (jobseekerLabel) return jobseekerLabel;
   return toTitleCaseWords(String(mode).replace(/[_-]+/g, ' '));
 }
 
-/** Role with optional mode, e.g. "Jobseeker · Active Member". */
+/** Role with optional mode, e.g. "Jobseeker · ACTIVE". */
 export function formatRoleAndMode(role, mode, roleFallback = 'User') {
   const roleLabel = formatDisplayRole(role, roleFallback);
   const modeLabel = formatDisplayMode(mode, '');

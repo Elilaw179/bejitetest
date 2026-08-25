@@ -56,17 +56,12 @@ import ProfilePostsSection from "../components/ProfilePostsSection";
 import DisplayNameWithBadge from "../components/DisplayNameWithBadge";
 import MutualConnectionsModal from "../components/MutualConnectionsModal";
 
+import { formatCompactCount as formatConnectionCount } from "../utils/formatCompactCount";
+
 const ABOUT_CHAR_LIMIT = 240;
 const ABOUT_WORD_LIMIT = 35;
 
 const MUTUAL_SIDEBAR_PREVIEW = 4;
-
-const formatConnectionCount = (count) => {
-  const n = Number(count);
-  if (!Number.isFinite(n) || n <= 0) return "0";
-  if (n > 600) return "600+";
-  return String(Math.floor(n));
-};
 
 const formatMutualConnectionsLabel = (count, samples = []) => {
   const n = Number(count) || 0;

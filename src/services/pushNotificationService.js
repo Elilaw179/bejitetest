@@ -112,7 +112,9 @@ export async function unsubscribeFromPushNotifications() {
       data: { endpoint },
     });
   } else {
-    await axiosInstance.delete("/api/notifications/push/subscribe");
+    await axiosInstance.delete("/api/notifications/push/subscribe", {
+      data: {},
+    });
   }
 
   await updateNotificationPreferences({ push_enabled: false });

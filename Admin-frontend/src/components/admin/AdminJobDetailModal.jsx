@@ -46,7 +46,7 @@ const toList = (value) => {
   if (Array.isArray(value)) return value.filter(Boolean);
   if (typeof value === "string") {
     return value
-      .split(/[\n,]/)
+      .split(/\r?\n/)
       .map((item) => item.trim())
       .filter(Boolean);
   }

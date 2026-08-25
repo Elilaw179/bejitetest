@@ -57,7 +57,8 @@ export function RecruiterSelect({
   });
 
   const selectedOption = normalizedOptions.find(
-    (opt) => String(opt.value) === String(value),
+    (opt) =>
+      String(opt.value).toLowerCase() === String(value ?? "").toLowerCase(),
   );
 
   const filteredOptions = normalizedOptions.filter((opt) =>

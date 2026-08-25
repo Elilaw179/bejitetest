@@ -114,7 +114,7 @@ const JobConnection = () => {
       const response = await axiosPublic.post("/auth/complete-signup", {
         email,
         role: role?.toLowerCase(),
-        mode: mode?.toLowerCase(),
+        mode: mode,
         followings: addedUsers,
       });
 
