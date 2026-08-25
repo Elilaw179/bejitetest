@@ -9,7 +9,15 @@ import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import NewsFeedHeader from "../components/NewsFeedHeader";
 import { ConnectionList, RequestList } from "../components/connections";
-import { FaUserFriends, FaUserPlus, FaClock, FaSearch } from "react-icons/fa";
+import {
+  FaUserFriends,
+  FaUserPlus,
+  FaClock,
+  FaSearch,
+  FaSyncAlt,
+  FaCheck,
+  FaSpinner,
+} from "react-icons/fa";
 import { toast } from "react-toastify";
 import * as connectionsApi from "../services/connectionsApi";
 import * as followsApi from "../services/followsApi";
@@ -83,11 +91,16 @@ const Connections = () => {
   const [peopleSearchLoading, setPeopleSearchLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [networkLoading, setNetworkLoading] = useState(false);
+  const [peopleLoading, setPeopleLoading] = useState(false);
+  const [peopleRefreshing, setPeopleRefreshing] = useState(false);
+  const [peopleHasMore, setPeopleHasMore] = useState(true);
+  const [connectingUserIds, setConnectingUserIds] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [networkPage, setNetworkPage] = useState(1);
   const [invitationsPage, setInvitationsPage] = useState(1);
   const [sentPage, setSentPage] = useState(1);
+  const [peoplePage, setPeoplePage] = useState(1);
   const [networkMeta, setNetworkMeta] = useState({
     total: 0,
     pages: 1,
@@ -221,8 +234,74 @@ const Connections = () => {
         : [];
 
       setDiscoverableUsers(shuffleArray(transformedUsers));
+      setPeopleHasMore(transformedUsers.length >= pageSize);
     },
-    [transformIncoming, transformOutgoing],
+    [transformIncoming, transformOutgoing, pageSize],
+  );
+
+  const fetchDiscoverableUsers = useCallback(
+    async (page = 1, limit = pageSize, isAutoReplenish = false) => {
+      if (!isAutoReplenish) {
+        setPeopleLoading(true);
+      }
+      try {
+        const offset = Math.max(0, (page - 1) * limit);
+        const discoverRes = await connectionsApi.discoverUsers(limit, offset);
+        const usersArray = discoverRes?.users || discoverRes || [];
+        const transformedUsers = Array.isArray(usersArray)
+          ? usersArray.map(transformDiscoverableUser)
+          : [];
+
+        // If current offset returned empty and we are beyond page 1, loop back to start to replenish
+        if (transformedUsers.length === 0 && page > 1) {
+          const resetRes = await connectionsApi.discoverUsers(limit, 0);
+          const resetArray = resetRes?.users || resetRes || [];
+          const resetTransformed = Array.isArray(resetArray)
+            ? resetArray.map(transformDiscoverableUser)
+            : [];
+          setDiscoverableUsers(shuffleArray(resetTransformed));
+          setPeoplePage(1);
+          setPeopleHasMore(resetTransformed.length >= limit);
+          return resetTransformed;
+        }
+
+        if (isAutoReplenish) {
+          setDiscoverableUsers((prev) => {
+            const existingIds = new Set(prev.map((u) => u.id));
+            const newUsers = transformedUsers.filter((u) => !existingIds.has(u.id));
+            return [...prev, ...newUsers];
+          });
+        } else {
+          setDiscoverableUsers(shuffleArray(transformedUsers));
+        }
+
+        setPeopleHasMore(transformedUsers.length >= limit);
+        return transformedUsers;
+      } catch (error) {
+        console.error("Error fetching discoverable users:", error);
+        toast.error("Failed to load suggested professionals");
+        return [];
+      } finally {
+        setPeopleLoading(false);
+        setPeopleRefreshing(false);
+      }
+    },
+    [pageSize],
+  );
+
+  const handleRefreshDiscover = useCallback(async () => {
+    setPeopleRefreshing(true);
+    setPeoplePage(1);
+    await fetchDiscoverableUsers(1, pageSize, false);
+    toast.info("Refreshed people suggestions");
+  }, [fetchDiscoverableUsers, pageSize]);
+
+  const handlePeoplePageChange = useCallback(
+    (newPage) => {
+      setPeoplePage(newPage);
+      fetchDiscoverableUsers(newPage, pageSize, false);
+    },
+    [fetchDiscoverableUsers, pageSize],
   );
 
   /**
@@ -348,7 +427,7 @@ const Connections = () => {
             connectionsApi.getConnections(1, pageSize, ""),
             connectionsApi.getIncomingRequests(1, pageSize),
             connectionsApi.getOutgoingRequests(1, pageSize),
-            connectionsApi.discoverUsers(),
+            connectionsApi.discoverUsers(pageSize, 0),
           ]);
         if (cancelled) return;
         applyNetworkResponse(connectionsRes, 1, pageSize);
@@ -447,17 +526,17 @@ const Connections = () => {
 
     (async () => {
       try {
-        const [incomingRes, outgoingRes, discoverRes] = await Promise.all([
+        const [incomingRes, outgoingRes] = await Promise.all([
           connectionsApi.getIncomingRequests(invitationsPage, pageSize),
           connectionsApi.getOutgoingRequests(sentPage, pageSize),
-          connectionsApi.discoverUsers(),
         ]);
         if (cancelled) return;
-        applySecondaryResponses(incomingRes, outgoingRes, discoverRes);
+        transformIncoming(incomingRes);
+        transformOutgoing(outgoingRes);
       } catch (error) {
         if (cancelled) return;
-        console.error("Error loading connections data:", error);
-        toast.error("Failed to load connections data");
+        console.error("Error loading requests data:", error);
+        toast.error("Failed to load requests data");
       }
     })();
 
@@ -469,18 +548,19 @@ const Connections = () => {
     invitationsPage,
     sentPage,
     pageSize,
-    applySecondaryResponses,
+    transformIncoming,
+    transformOutgoing,
     isCorporateViewer,
   ]);
 
   useEffect(() => {
-    if (loading || networkLoading) return;
+    if (loading || networkLoading || peopleLoading) return;
     tabContentRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-  }, [networkPage, invitationsPage, sentPage, loading, networkLoading]);
+  }, [networkPage, invitationsPage, sentPage, peoplePage, loading, networkLoading, peopleLoading]);
 
   useEffect(() => {
     const query = searchQuery.trim();
@@ -493,7 +573,7 @@ const Connections = () => {
     const timer = setTimeout(async () => {
       setPeopleSearchLoading(true);
       try {
-        const searchRes = await connectionsApi.searchUsers(query);
+        const searchRes = await connectionsApi.searchUsers(query, pageSize, 0);
         const usersArray = searchRes?.users || searchRes || [];
         const transformed = Array.isArray(usersArray)
           ? filterAdminUsersFromSearch(usersArray).map(
@@ -511,7 +591,7 @@ const Connections = () => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, pageSize]);
 
   useEffect(() => {
     setNetworkPage((prev) => (prev === 1 ? prev : 1));
@@ -521,7 +601,11 @@ const Connections = () => {
     setNetworkPage(1);
     setInvitationsPage(1);
     setSentPage(1);
-  }, [pageSize]);
+    setPeoplePage(1);
+    if (networkReady && !isCorporateViewer) {
+      fetchDiscoverableUsers(1, pageSize, false);
+    }
+  }, [pageSize, networkReady, isCorporateViewer, fetchDiscoverableUsers]);
 
   const handleAcceptRequest = async (requestId, requesterName) => {
     try {
@@ -558,6 +642,9 @@ const Connections = () => {
   };
 
   const handleSendRequest = async (userId, userName) => {
+    if (connectingUserIds[userId]) return;
+
+    setConnectingUserIds((prev) => ({ ...prev, [userId]: "connecting" }));
     try {
       const followStatus = await followsApi.getFollowStatus(userId);
       if (followStatus?.isCorporate) {
@@ -568,12 +655,49 @@ const Connections = () => {
         toast.success(`Connection request sent to ${userName}!`);
       }
 
-      setDiscoverableUsers((prev) => prev.filter((u) => u.id !== userId));
-      setPeopleSearchResults((prev) =>
-        prev ? prev.filter((u) => u.id !== userId) : prev,
-      );
+      setConnectingUserIds((prev) => ({ ...prev, [userId]: "connected" }));
+
+      // Wait a moment for visual confirmation checkmark before updating list
+      setTimeout(() => {
+        setConnectingUserIds((prev) => {
+          const next = { ...prev };
+          delete next[userId];
+          return next;
+        });
+
+        // Remove from search results if currently searching
+        setPeopleSearchResults((prev) =>
+          prev ? prev.filter((u) => u.id !== userId) : prev,
+        );
+
+        // Remove from discoverable users and auto-replenish if running low
+        setDiscoverableUsers((prev) => {
+          const updated = prev.filter((u) => u.id !== userId);
+
+          // If the list is running low (<= 3 users left) and user isn't searching, auto-fetch more
+          if (!searchQuery.trim() && updated.length <= 3) {
+            const nextPage = peoplePage + 1;
+            fetchDiscoverableUsers(nextPage, pageSize, true).then((newItems) => {
+              if (!newItems || newItems.length === 0) {
+                // If next offset is empty, refresh from beginning
+                fetchDiscoverableUsers(1, pageSize, false);
+                setPeoplePage(1);
+              } else {
+                setPeoplePage(nextPage);
+              }
+            });
+          }
+
+          return updated;
+        });
+      }, 600);
     } catch (error) {
       console.error("Error sending network request:", error);
+      setConnectingUserIds((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
       toast.error(
         error?.response?.data?.error ||
           error?.response?.data?.message ||
@@ -602,14 +726,28 @@ const Connections = () => {
       <div className="relative w-full sm:max-w-md min-w-0">
         <input
           type="text"
-          placeholder="Search by name or email..."
+          placeholder="Search by name, role or email..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none text-sm sm:text-base"
+          className="w-full border-2 border-[#16730F] p-3 pl-4 pr-12 rounded-2xl focus:outline-none text-sm sm:text-base transition-all"
         />
         <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1A3E32] h-5 w-5 pointer-events-none" />
       </div>
       <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+        {activeTab === "people" && !searchQuery.trim() && (
+          <button
+            type="button"
+            onClick={handleRefreshDiscover}
+            disabled={peopleRefreshing || peopleLoading}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-[#16730F] bg-[#16730F]/10 hover:bg-[#16730F]/20 active:scale-95 rounded-xl transition-all disabled:opacity-50 min-h-[38px] cursor-pointer"
+            title="Refresh recommendations"
+          >
+            <FaSyncAlt
+              className={`h-3.5 w-3.5 ${peopleRefreshing ? "animate-spin" : ""}`}
+            />
+            <span>Refresh</span>
+          </button>
+        )}
         <label
           htmlFor="connections-page-size"
           className="text-xs sm:text-sm text-gray-600 whitespace-nowrap"
@@ -714,7 +852,18 @@ const Connections = () => {
                 searchQuery={searchQuery}
                 isSearching={Boolean(searchQuery.trim())}
                 searchLoading={peopleSearchLoading}
+                connectingUserIds={connectingUserIds}
+                onRefresh={handleRefreshDiscover}
+                isRefreshing={peopleRefreshing}
+                isLoading={peopleLoading}
               />
+              {!searchQuery.trim() && (
+                <PaginationControls
+                  currentPage={peoplePage}
+                  totalPages={peopleHasMore ? peoplePage + 1 : peoplePage}
+                  onPageChange={handlePeoplePageChange}
+                />
+              )}
             </>
           ),
         },
@@ -725,6 +874,7 @@ const Connections = () => {
           count: incomingMeta.total,
           content: (
             <>
+              {connectionSearchBar}
               <RequestList
                 requests={incomingRequests}
                 totalCount={incomingMeta.total}
@@ -748,6 +898,7 @@ const Connections = () => {
           count: outgoingMeta.total,
           content: (
             <>
+              {connectionSearchBar}
               <RequestList
                 requests={outgoingRequests}
                 totalCount={outgoingMeta.total}
@@ -768,7 +919,6 @@ const Connections = () => {
   if (loading) {
     return (
       <NewsFeedLayout showSidebars={false}>
-        {/* <NewsFeedHeader /> */}
         <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center px-4">
           <div className="text-center max-w-sm">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16730F] mx-auto"></div>
@@ -808,19 +958,19 @@ const Connections = () => {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex flex-1 min-w-0 flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-3 px-1 sm:py-4 sm:px-4 md:px-5 transition-colors ${
+                    className={`flex flex-1 min-w-0 flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-3 px-1 sm:py-4 sm:px-4 md:px-5 transition-colors cursor-pointer ${
                       isActive
-                        ? "bg-[#16730F] text-white"
-                        : "text-gray-600 hover:bg-gray-50"
+                        ? "bg-[#16730F] text-white font-semibold"
+                        : "text-gray-600 hover:bg-gray-50 font-medium"
                     }`}
                   >
                     <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                    <span className="font-medium text-[10px] sm:text-sm leading-tight text-center w-full min-w-0 truncate px-0.5">
+                    <span className="text-[10px] sm:text-sm leading-tight text-center w-full min-w-0 truncate px-0.5">
                       {tab.label}
                     </span>
                     {tab.count > 0 && (
                       <span
-                        className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[10px] sm:text-xs leading-none ${
+                        className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[10px] sm:text-xs leading-none font-bold ${
                           isActive
                             ? "bg-white text-[#16730F]"
                             : "bg-[#16730F] text-white"
@@ -855,6 +1005,10 @@ const PeopleList = ({
   searchQuery,
   isSearching,
   searchLoading,
+  connectingUserIds = {},
+  onRefresh,
+  isRefreshing = false,
+  isLoading = false,
 }) => {
   const usersArray = Array.isArray(users) ? users : [];
   const filteredUsers = isSearching
@@ -865,74 +1019,116 @@ const PeopleList = ({
           user.role?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
 
-  if (searchLoading) {
+  if (searchLoading || isLoading) {
     return (
-      <div className="text-center py-8 sm:py-12 px-2">
+      <div className="text-center py-10 sm:py-14 px-2">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#16730F] mx-auto"></div>
-        <p className="mt-4 text-gray-600 text-sm sm:text-base">Searching...</p>
+        <p className="mt-4 text-gray-600 text-sm sm:text-base font-medium">
+          {searchLoading ? "Searching professionals..." : "Finding people you may know..."}
+        </p>
       </div>
     );
   }
 
   if (filteredUsers.length === 0) {
     return (
-      <div className="text-center py-8 sm:py-12 px-2">
-        <FaUserFriends className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-base sm:text-lg font-medium text-gray-600 mb-2">
-          {isSearching || usersArray.length === 0
-            ? "No people found"
-            : "No people to connect with"}
-        </h3>
-        <p className="text-gray-500 text-sm sm:text-base px-2">
+      <div className="text-center py-10 sm:py-14 px-4 bg-gray-50/70 rounded-2xl border border-gray-100">
+        <div className="w-16 h-16 bg-[#16730F]/10 rounded-full flex items-center justify-center mx-auto mb-4 text-[#16730F]">
+          <FaUserFriends className="h-8 w-8" />
+        </div>
+        <h3 className="text-base sm:text-lg font-semibold text-[#1A3E32] mb-1">
           {isSearching
-            ? "Try a different name or email"
-            : usersArray.length === 0
-              ? "All users are already connected or have pending requests"
-              : "Try adjusting your search terms"}
+            ? "No people found"
+            : "No more recommendations right now"}
+        </h3>
+        <p className="text-gray-500 text-sm sm:text-base max-w-md mx-auto mb-5">
+          {isSearching
+            ? "Try searching with a different name, job title, or email address."
+            : "You've gone through current suggestions! Refresh to discover more professionals."}
         </p>
+        {!isSearching && onRefresh && (
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#16730F] text-white rounded-xl hover:bg-[#145a0c] active:scale-95 transition-all text-sm font-semibold shadow-sm disabled:opacity-50 cursor-pointer"
+          >
+            <FaSyncAlt className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            <span>Discover More People</span>
+          </button>
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-3 sm:space-y-4">
-      {filteredUsers.map((user) => (
-        <div
-          key={user.id}
-          className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-xl min-w-0"
-        >
-          <button
-            type="button"
-            onClick={() => onViewProfile(user.id)}
-            className="flex items-center gap-3 sm:gap-4 min-w-0 text-left hover:opacity-90 w-full sm:w-auto"
+      {filteredUsers.map((user) => {
+        const state = connectingUserIds[user.id];
+        const isConnecting = state === "connecting";
+        const isConnected = state === "connected";
+
+        return (
+          <div
+            key={user.id}
+            className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-3.5 sm:p-4 bg-gray-50 hover:bg-gray-100/80 rounded-xl transition-all duration-200 border border-transparent hover:border-gray-200 min-w-0"
           >
-            <img
-              src={getAuthorProfileImageUrl(user)}
-              alt={user.name}
-              className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-full object-cover"
-            />
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-[#1A3E32] text-sm sm:text-base truncate hover:text-[#16730F] transition-colors">
-                <DisplayNameWithBadge
-                  user={user}
-                  fallback={user.name}
-                  badgeSize="xs"
-                />
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">
-                {user.role || "Professional"}
-              </p>
-            </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => onSendRequest(user.id, user.name)}
-            className="w-full sm:w-auto shrink-0 px-4 py-2.5 min-h-[44px] bg-[#16730F] text-white rounded-lg hover:bg-[#145a0c] transition-colors text-sm font-medium"
-          >
-            Connect
-          </button>
-        </div>
-      ))}
+            <button
+              type="button"
+              onClick={() => onViewProfile(user.id)}
+              className="flex items-center gap-3 sm:gap-4 min-w-0 text-left hover:opacity-90 w-full sm:w-auto flex-1 cursor-pointer"
+            >
+              <img
+                src={getAuthorProfileImageUrl(user)}
+                alt={user.name}
+                className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-full object-cover ring-2 ring-white shadow-xs"
+              />
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-[#1A3E32] text-sm sm:text-base truncate hover:text-[#16730F] transition-colors">
+                  <DisplayNameWithBadge
+                    user={user}
+                    fallback={user.name}
+                    badgeSize="xs"
+                  />
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  {user.role || "Professional"}
+                </p>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              disabled={isConnecting || isConnected}
+              onClick={() => onSendRequest(user.id, user.name)}
+              className={`w-full sm:w-auto shrink-0 px-5 py-2.5 min-h-[44px] rounded-lg transition-all duration-200 text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer ${
+                isConnected
+                  ? "bg-emerald-600 text-white cursor-default"
+                  : isConnecting
+                  ? "bg-[#16730F]/80 text-white cursor-wait opacity-90"
+                  : "bg-[#16730F] text-white hover:bg-[#145a0c] active:scale-95 shadow-xs"
+              }`}
+            >
+              {isConnected ? (
+                <>
+                  <FaCheck className="h-3.5 w-3.5" />
+                  <span>Connected</span>
+                </>
+              ) : isConnecting ? (
+                <>
+                  <FaSpinner className="animate-spin h-3.5 w-3.5" />
+                  <span>Connecting...</span>
+                </>
+              ) : (
+                <>
+                  <FaUserPlus className="h-3.5 w-3.5" />
+                  <span>Connect</span>
+                </>
+              )}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -970,7 +1166,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
           type="button"
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage <= 1}
-          className="flex-1 sm:flex-none min-h-[44px] px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          className="flex-1 sm:flex-none min-h-[44px] px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 cursor-pointer"
         >
           Previous
         </button>
@@ -993,9 +1189,9 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
                 key={item}
                 type="button"
                 onClick={() => onPageChange(item)}
-                className={`min-w-8 h-8 px-2 rounded-md text-sm border transition-colors ${
+                className={`min-w-8 h-8 px-2 rounded-md text-sm border transition-colors cursor-pointer ${
                   isActive
-                    ? "bg-[#16730F] border-[#16730F] text-white"
+                    ? "bg-[#16730F] border-[#16730F] text-white font-bold"
                     : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                 }`}
                 aria-current={isActive ? "page" : undefined}
@@ -1009,7 +1205,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
           type="button"
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage >= totalPages}
-          className="flex-1 sm:flex-none min-h-[44px] px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          className="flex-1 sm:flex-none min-h-[44px] px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 cursor-pointer"
         >
           Next
         </button>
