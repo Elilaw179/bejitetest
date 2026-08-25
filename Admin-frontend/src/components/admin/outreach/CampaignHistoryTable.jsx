@@ -160,7 +160,10 @@ const CampaignHistoryTable = ({
                     <td className="py-4 px-6">
                       <div className="font-medium text-gray-700 flex items-center gap-1">
                         <Users size={14} className="text-gray-400" />
-                        {camp.role}
+                        {camp.role === "External" ||
+                        camp.audienceSource === "external"
+                          ? "External list"
+                          : camp.role}
                       </div>
                       {camp.profession && camp.profession !== "All" && (
                         <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-md mt-1 font-semibold">

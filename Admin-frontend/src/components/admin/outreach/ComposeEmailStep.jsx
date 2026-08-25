@@ -211,6 +211,14 @@ const ComposeEmailStep = ({
               </button>
             ))}
           </div>
+          {campaignForm.audienceSource === "external" ? (
+            <p className="text-[11px] text-gray-500 mt-2">
+              {"{First Name}"} uses the name from your list when provided;
+              otherwise it becomes “there”. {"{Profession}"} uses the optional
+              label from the audience step. The button still opens bejite.com
+              so recipients can sign up.
+            </p>
+          ) : null}
         </div>
 
         <div

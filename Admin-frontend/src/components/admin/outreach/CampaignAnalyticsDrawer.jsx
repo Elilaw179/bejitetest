@@ -45,7 +45,10 @@ const CampaignAnalyticsDrawer = ({
             <div>
               <span className="text-gray-400">Audience</span>
               <p className="font-semibold text-gray-800 mt-0.5">
-                {selectedCampaign.role}
+                {selectedCampaign.role === "External" ||
+                selectedCampaign.audienceSource === "external"
+                  ? "External list"
+                  : selectedCampaign.role}
                 {selectedCampaign.profession &&
                 selectedCampaign.profession !== "All"
                   ? ` · ${selectedCampaign.profession}`

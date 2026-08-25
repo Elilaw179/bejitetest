@@ -13,6 +13,7 @@ const CampaignBuilderWizard = ({
   matchingCount = 0,
   audienceLoading = false,
   sampleRecipient = null,
+  audienceMeta = {},
   onSubmit = () => {},
   onNavigateTemplates = () => {},
 }) => {
@@ -25,7 +26,20 @@ const CampaignBuilderWizard = ({
       return;
     }
     if (!campaignForm.consentChecked) {
-      toast.error("You must confirm compliance with GDPR/CASL regulations!");
+      toast.error(
+        campaignForm.audienceSource === "external"
+          ? "Confirm you have permission to email these contacts!"
+          : "You must confirm compliance with GDPR/CASL regulations!",
+      );
+      return;
+    }
+    if (
+      campaignForm.audienceSource === "external" &&
+      Number(matchingCount) < 1
+    ) {
+      toast.error(
+        "Add at least one email that is not already registered on Bejite.",
+      );
       return;
     }
     if (campaignForm.sendType === "scheduled") {
@@ -143,6 +157,7 @@ const CampaignBuilderWizard = ({
             matchingCount={matchingCount}
             audienceLoading={audienceLoading}
             sampleRecipient={sampleRecipient}
+            audienceMeta={audienceMeta}
           />
         )}
 
@@ -178,7 +193,19 @@ const CampaignBuilderWizard = ({
           {step < 4 ? (
             <button
               type="button"
-              onClick={() => setStep(step + 1)}
+              onClick={() => {
+                if (
+                  step === 2 &&
+                  campaignForm.audienceSource === "external" &&
+                  Number(matchingCount) < 1
+                ) {
+                  toast.error(
+                    "Add at least one email that is not already registered on Bejite.",
+                  );
+                  return;
+                }
+                setStep(step + 1);
+              }}
               className="flex items-center gap-1.5 text-sm font-bold text-white bg-[#16730F] hover:bg-green-700 px-5 py-2.5 rounded-xl shadow-md cursor-pointer transition-all ml-auto"
             >
               Continue
