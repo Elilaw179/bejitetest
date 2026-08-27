@@ -29,6 +29,9 @@ const AdminEmailOutreach = lazy(
   () => import("./page/admin/AdminEmailOutreach"),
 );
 const AdminEvents = lazy(() => import("./page/admin/AdminEvents"));
+const AdminNotifications = lazy(
+  () => import("./page/admin/AdminNotifications"),
+);
 const EmailSent = lazy(() => import("./page/auth/EmailSent"));
 const AuthSuccess = lazy(() => import("./page/auth/AuthSuccess"));
 const AuthFailure = lazy(() => import("./page/auth/AuthFailure"));
@@ -79,6 +82,7 @@ function App() {
                 <Route path="adpro" element={<AdminAdPro />} />
                 <Route path="email-outreach" element={<AdminEmailOutreach />} />
                 <Route path="events" element={<AdminEvents />} />
+                <Route path="notifications" element={<AdminNotifications />} />
               </Route>
 
               <Route path="/auth/email-sent" element={<EmailSent />} />

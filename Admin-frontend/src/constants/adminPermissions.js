@@ -24,6 +24,7 @@ const ROLE_ALLOWED_PATHS = {
     "/admin/adpro",
     "/admin/email-outreach",
     "/admin/events",
+    "/admin/notifications",
   ],
   [ADMIN_ROLES.ADMIN]: [
     "/admin/dashboard",
@@ -33,8 +34,9 @@ const ROLE_ALLOWED_PATHS = {
     "/admin/adpro",
     "/admin/email-outreach",
     "/admin/events",
+    "/admin/notifications",
   ],
-  [ADMIN_ROLES.ACCOUNT]: ["/admin/revenue"],
+  [ADMIN_ROLES.ACCOUNT]: ["/admin/revenue", "/admin/notifications"],
 };
 
 export function normalizeAdminRole(role) {
