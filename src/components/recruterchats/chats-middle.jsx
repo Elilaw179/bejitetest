@@ -9,6 +9,7 @@ import ChatMessageBubble from '../chat/ChatMessageBubble';
 import { formatChatMessageTime } from '../../utils/chatTimeUtils';
 import { formatDisplayPersonName } from '../../utils/personDisplayName';
 import { toQuotePreview } from '../../utils/chatQuote';
+import { notifyChatConversationUpdated } from '../../utils/headerBadgeEvents';
 
 function messagesFingerprint(msgs) {
   return (msgs || [])
@@ -153,7 +154,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       setMessage('');
       setReplyTo(null);
       await fetchMessages(selectedChat.id, true);
-      window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
+      notifyChatConversationUpdated();
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error(
@@ -184,7 +185,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       setMessage('');
       setReplyTo(null);
       await fetchMessages(selectedChat.id, true);
-      window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
+      notifyChatConversationUpdated();
     } catch (error) {
       const msg =
         error?.response?.data?.error ||
@@ -204,7 +205,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
       await messagingService.editMessage(messageId, content.trim());
       setEditingMessageId(null);
       await fetchMessages(selectedChat.id, true);
-      window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
+      notifyChatConversationUpdated();
     } catch (error) {
       const msg =
         error?.response?.data?.error ||
@@ -229,7 +230,7 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
         setReplyTo(null);
       }
       await fetchMessages(selectedChat.id, true);
-      window.dispatchEvent(new CustomEvent('chat:conversation-updated'));
+      notifyChatConversationUpdated();
     } catch (error) {
       const msg =
         error?.response?.data?.error ||

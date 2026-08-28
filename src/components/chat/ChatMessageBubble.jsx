@@ -414,10 +414,17 @@ export default function ChatMessageBubble({
         <p className="text-sm font-medium text-[#A89B72] mb-1.5">
           <DisplayNameWithBadge
             user={
-              senderBadgeUser || {
-                firstName: senderName,
-                hasVerifiedBadge: senderHasVerifiedBadge,
-              }
+              senderBadgeUser
+                ? {
+                    ...senderBadgeUser,
+                    hasVerifiedBadge: senderHasVerifiedBadge,
+                    role: senderBadgeUser.role || message.role,
+                  }
+                : {
+                    firstName: senderName,
+                    hasVerifiedBadge: senderHasVerifiedBadge,
+                    role: message.role,
+                  }
             }
             fallback={senderName}
             badgeSize="xs"

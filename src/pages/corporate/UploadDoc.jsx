@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import Header from "../../components/Header";
 import useRecruiterProfile from "../../services/recruiterProfile";
 import { documentViewUrl, isDocumentImage, isDocumentPdf } from "../../utils/documentViewUrl";
+import RecruiterVerificationPayGate from "../../components/recruiter/RecruiterVerificationPayGate";
 
 const isPdfPreview = (url) => url === "pdf-document" || isDocumentPdf(url);
 
@@ -24,7 +25,9 @@ const CoperateUploadDoc = () => {
   const [existingDocUrl, setExistingDocUrl] = useState(null);
   const [justUploaded, setJustUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [paymentComplete, setPaymentComplete] = useState(false);
 
   useEffect(() => {
     if (!isEditMode || !recruiterData?.id_document || dataLoaded) return;
@@ -65,15 +68,16 @@ const CoperateUploadDoc = () => {
 
     setUploading(true);
     try {
-      await toast.promise(uploadIdDocument(selectedFile), {
+      const result = await toast.promise(uploadIdDocument(selectedFile), {
         pending: "Uploading document...",
-        success: "Document uploaded successfully!",
+        success: "Document uploaded.",
         error: {
           render({ data }) {
             return `Upload failed: ${data}`;
           },
         },
       });
+      setUploadResult(result?.data || result);
       setJustUploaded(true);
       setExistingDocUrl(null);
       setSelectedFile(null);
@@ -85,7 +89,8 @@ const CoperateUploadDoc = () => {
   };
 
   const hasSavedDocument = Boolean(existingDocUrl) || justUploaded;
-  const isFormComplete = isEditMode ? hasSavedDocument : justUploaded;
+  const documentReady = isEditMode ? hasSavedDocument : justUploaded;
+  const isFormComplete = documentReady && paymentComplete;
   const showFilePicker = isEditMode || !justUploaded;
   const canUploadNewFile = Boolean(selectedFile) && !uploading;
 
@@ -230,6 +235,12 @@ const CoperateUploadDoc = () => {
               )}
             </button>
           </div>
+
+          <RecruiterVerificationPayGate
+            uploadResult={uploadResult}
+            hasDocument={hasSavedDocument}
+            onPaymentComplete={setPaymentComplete}
+          />
         </div>
       </div>
 

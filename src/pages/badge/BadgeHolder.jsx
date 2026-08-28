@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { BadgeCheck, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EventModal } from "../../components/modal/confirmBadgeModal";
 import { EventCard } from "../../components/card/EventCard";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
 import VerifiedBadge from "../../components/VerifiedBadge";
+import VerifiedBadgeIcon from "../../components/VerifiedBadgeIcon";
 import {
   getBadgeStatus,
   getPartnerEvents,
@@ -151,7 +152,7 @@ export default function BadgeHolder() {
           <div className="absolute right-0 top-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
           <div className="flex items-start sm:items-center gap-3 relative min-w-0">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-              <BadgeCheck className="w-5 h-5 text-white" />
+              <VerifiedBadgeIcon className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -177,7 +178,7 @@ export default function BadgeHolder() {
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-8">
             <div className="bg-gradient-to-r from-[#1A3E32] to-[#2d6a54] rounded-2xl p-4 sm:p-5 text-white flex items-start gap-3 sm:gap-4">
               <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                <BadgeCheck className="w-6 h-6 text-white" />
+                <VerifiedBadgeIcon className="w-6 h-6 text-white" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-sm sm:text-base break-words">

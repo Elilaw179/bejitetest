@@ -14,6 +14,7 @@ import {
   createOutreachTemplate,
   deleteOutreachCampaign,
   getOutreachAudienceCount,
+  getOutreachCampaign,
   launchOutreachCampaign,
   listOutreachCampaigns,
   listOutreachTemplates,
@@ -26,6 +27,8 @@ const EMPTY_CAMPAIGN_FORM = {
   previewText: "",
   senderName: "Bejite Support",
   senderEmail: "info@bejite.com",
+  audienceSource: "members",
+  customEmailsText: "",
   role: "Jobseeker",
   profession: "All",
   skills: "",
@@ -49,6 +52,13 @@ const AdminEmailOutreach = () => {
   const [loading, setLoading] = useState(true);
   const [matchingCount, setMatchingCount] = useState(0);
   const [sampleRecipient, setSampleRecipient] = useState(null);
+  const [audienceMeta, setAudienceMeta] = useState({
+    alreadyRegisteredCount: 0,
+    unsubscribedCount: 0,
+    invalidCount: 0,
+    duplicateCount: 0,
+    truncated: false,
+  });
   const [audienceLoading, setAudienceLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -103,10 +113,13 @@ const AdminEmailOutreach = () => {
   useEffect(() => {
     if (activeTab !== "create") return undefined;
 
+    let cancelled = false;
     const timer = setTimeout(async () => {
       setAudienceLoading(true);
       try {
         const data = await getOutreachAudienceCount({
+          audienceSource: campaignForm.audienceSource || "members",
+          customEmails: campaignForm.customEmailsText || "",
           role: campaignForm.role,
           profession: campaignForm.profession,
           skills: campaignForm.skills,
@@ -114,22 +127,43 @@ const AdminEmailOutreach = () => {
           completeness: campaignForm.completeness,
           consentChecked: campaignForm.consentChecked,
         });
+        if (cancelled) return;
         setMatchingCount(Number(data.count) || 0);
         setSampleRecipient(data.sample || null);
+        setAudienceMeta({
+          alreadyRegisteredCount: Number(data.alreadyRegisteredCount) || 0,
+          unsubscribedCount: Number(data.unsubscribedCount) || 0,
+          invalidCount: Number(data.invalidCount) || 0,
+          duplicateCount: Number(data.duplicateCount) || 0,
+          truncated: Boolean(data.truncated),
+        });
       } catch (error) {
+        if (cancelled) return;
         console.warn("audience count failed:", error?.message || error);
         setSampleRecipient(null);
+        setAudienceMeta({
+          alreadyRegisteredCount: 0,
+          unsubscribedCount: 0,
+          invalidCount: 0,
+          duplicateCount: 0,
+          truncated: false,
+        });
         toast.error(
           error?.response?.data?.error || "Could not refresh audience count",
         );
       } finally {
-        setAudienceLoading(false);
+        if (!cancelled) setAudienceLoading(false);
       }
     }, 350);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [
     activeTab,
+    campaignForm.audienceSource,
+    campaignForm.customEmailsText,
     campaignForm.role,
     campaignForm.profession,
     campaignForm.skills,
@@ -183,19 +217,47 @@ const AdminEmailOutreach = () => {
     setActiveTab("create");
   };
 
-  const handleDuplicate = (camp) => {
+  const handleDuplicate = async (camp) => {
+    const audienceSource =
+      camp.audienceSource === "external" || camp.role === "External"
+        ? "external"
+        : "members";
+    let customEmailsText = "";
+    if (audienceSource === "external") {
+      try {
+        const data = await getOutreachCampaign(camp.id);
+        const recips = data.campaign?.customRecipients || [];
+        customEmailsText = recips
+          .map((r) => {
+            const email = r?.email || "";
+            const name = r?.firstName || "";
+            if (!email) return "";
+            return name && name !== "there" ? `${name} <${email}>` : email;
+          })
+          .filter(Boolean)
+          .join("\n");
+      } catch (error) {
+        toast.error(
+          error?.response?.data?.error || "Could not load the original email list",
+        );
+        return;
+      }
+    }
+
     setCampaignForm({
       name: `Copy of ${camp.name}`,
       subject: camp.subject,
       previewText: camp.previewText || "",
       senderName: camp.senderName,
       senderEmail: camp.senderEmail,
-      role: camp.role || "Jobseeker",
+      audienceSource,
+      customEmailsText,
+      role: audienceSource === "external" ? "Jobseeker" : camp.role || "Jobseeker",
       profession: camp.profession || "All",
       skills: camp.skills || "",
       location: camp.location || "",
       completeness: camp.completeness || "All",
-      consentChecked: true,
+      consentChecked: audienceSource !== "external",
       body: camp.body,
       ctaText: camp.ctaText || "",
       ctaLink: camp.ctaLink || "",
@@ -285,8 +347,8 @@ const AdminEmailOutreach = () => {
             Email Outreach & Campaigns
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            Build, schedule, and analyze bulk email communication with segmented
-            Bejite members.
+            Build, schedule, and analyze bulk email to Bejite members or to
+            people who are not yet on the platform.
           </p>
         </div>
 
@@ -353,6 +415,7 @@ const AdminEmailOutreach = () => {
           matchingCount={matchingCount}
           audienceLoading={audienceLoading}
           sampleRecipient={sampleRecipient}
+          audienceMeta={audienceMeta}
           onNavigateTemplates={() => setActiveTab("templates")}
           onSubmit={handleLaunchCampaignSubmit}
         />

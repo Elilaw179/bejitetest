@@ -5,8 +5,9 @@ import { API_URL } from '../../config';
 import { formatConversationPreview } from '../../utils/conversationPreview';
 import { formatDisplayPersonName } from '../../utils/personDisplayName';
 import DisplayNameWithBadge from '../DisplayNameWithBadge';
+import { CHAT_CONVERSATION_UPDATED } from '../../utils/headerBadgeEvents';
 
-const CONVERSATION_UPDATED = 'chat:conversation-updated';
+const CONVERSATION_UPDATED = CHAT_CONVERSATION_UPDATED;
 const PAGE_SIZE = 20;
 
 function mergeFirstPage(previous, firstPage) {

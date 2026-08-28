@@ -1,4 +1,5 @@
 import { Fragment, useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
 import RecruiterSelect from "../../components/admin/RecruiterSelect";
@@ -15,6 +16,7 @@ import {
 import AdminUserDetailModal from "../../components/admin/AdminUserDetailModal";
 
 const AdminUsers = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,6 +35,13 @@ const AdminUsers = () => {
   const [selectedUser, setSelectedUser] = useState(null);
 
   const filterMenuRef = useRef(null);
+  const userIdFromQuery = searchParams.get("userId");
+
+  useEffect(() => {
+    if (userIdFromQuery) {
+      setSelectedUser({ id: userIdFromQuery });
+    }
+  }, [userIdFromQuery]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -554,7 +563,14 @@ const AdminUsers = () => {
       {selectedUser && (
         <AdminUserDetailModal
           user={selectedUser}
-          onClose={() => setSelectedUser(null)}
+          onClose={() => {
+            setSelectedUser(null);
+            if (searchParams.has("userId")) {
+              const next = new URLSearchParams(searchParams);
+              next.delete("userId");
+              setSearchParams(next, { replace: true });
+            }
+          }}
         />
       )}
     </div>

@@ -13,6 +13,7 @@ import AuthBootstrap from "./components/AuthBootstrap";
 import PushNotificationBootstrap from "./components/PushNotificationBootstrap";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
 import AdminLayout from "./components/admin/AdminLayout";
+import { AdminInboxProvider } from "./context/AdminInboxContext";
 import { getDefaultAdminPath } from "./constants/adminPermissions";
 
 const AdminLogin = lazy(() => import("./page/admin/AdminLogin"));
@@ -29,6 +30,9 @@ const AdminEmailOutreach = lazy(
   () => import("./page/admin/AdminEmailOutreach"),
 );
 const AdminEvents = lazy(() => import("./page/admin/AdminEvents"));
+const AdminNotifications = lazy(
+  () => import("./page/admin/AdminNotifications"),
+);
 const EmailSent = lazy(() => import("./page/auth/EmailSent"));
 const AuthSuccess = lazy(() => import("./page/auth/AuthSuccess"));
 const AuthFailure = lazy(() => import("./page/auth/AuthFailure"));
@@ -63,7 +67,9 @@ function App() {
                 path="/admin"
                 element={
                   <AdminProtectedRoute>
-                    <AdminLayout />
+                    <AdminInboxProvider>
+                      <AdminLayout />
+                    </AdminInboxProvider>
                   </AdminProtectedRoute>
                 }
               >
@@ -79,6 +85,7 @@ function App() {
                 <Route path="adpro" element={<AdminAdPro />} />
                 <Route path="email-outreach" element={<AdminEmailOutreach />} />
                 <Route path="events" element={<AdminEvents />} />
+                <Route path="notifications" element={<AdminNotifications />} />
               </Route>
 
               <Route path="/auth/email-sent" element={<EmailSent />} />

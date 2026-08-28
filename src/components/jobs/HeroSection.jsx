@@ -21,9 +21,9 @@ export const HeroSection = () => {
           <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm">
             <FaBuilding className="shrink-0" /> 500+ Companies
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm">
+          {/* <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm">
             <FaUsers className="shrink-0" /> 10k+ Candidates
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

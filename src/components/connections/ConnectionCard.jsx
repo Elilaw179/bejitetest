@@ -19,7 +19,7 @@ const ConnectionCard = ({ user, onRemove, onViewProfile, showRemoveButton = fals
           <DisplayNameWithBadge user={user} fallback={user.name} badgeSize="xs" />
         </h3>
         <p className="text-xs sm:text-sm text-gray-600 truncate">
-          {user.jobTitle || user.role || 'Professional'}
+          {user.jobTitle || 'Professional'}
         </p>
       </div>
     </button>

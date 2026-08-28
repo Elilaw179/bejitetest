@@ -6,9 +6,10 @@ import { API_URL } from '../../config'
 import NewsFeedLayout from '../../components/layout/NewsFeedLayout'
 import { getPostDetailPath } from '../../utils/postNavigation'
 import FeedLoadMoreButton from '../../components/FeedLoadMoreButton'
-import { markAllNotificationsRead } from '../../services/notificationService'
+import { markAllNotificationsRead, markNotificationRead } from '../../services/notificationService'
 import { trackPartnerEventClick } from '../../services/verifiedBadgeApi'
 import { getUser } from '../../utils/tokenManager'
+import { getRecruiterIdUploadPath } from '../../utils/recruiterProfilePaths'
 
 const NOTIFICATIONS_PAGE_SIZE = 20
 const INVITATIONS_PAGE_SIZE = 50
@@ -170,15 +171,7 @@ const Notifications = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token')
-
-      await fetch(`${API_URL}/api/notifications/${notificationId}/read`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      })
+      await markNotificationRead(notificationId)
 
       // Update local state
       setNotifications(prev =>
@@ -350,6 +343,23 @@ const Notifications = () => {
       // If still no ID, still show modal but without pre-filled data
       console.log('No invitation ID found, but showing modal anyway');
     }
+
+    if (
+      notification.type === 'badge_approved' ||
+      notification.type === 'badge_rejected'
+    ) {
+      const url = parsedData?.url || notification.link
+      if (url && String(url).startsWith('http')) {
+        const path = String(url).replace(/^https?:\/\/[^/]+/, '') || '/notifications'
+        navigate(path)
+        return
+      }
+      if (url) {
+        navigate(String(url))
+        return
+      }
+      navigate(notification.type === 'badge_approved' ? '/badge-holder' : getRecruiterIdUploadPath(user))
+    }
   }
 
   const handleAccept = async (invitationId) => {
@@ -475,6 +485,10 @@ const Notifications = () => {
       case 'birthday':
       case 'birthday_wish':
         return '🎂'
+      case 'badge_approved':
+        return '✅'
+      case 'badge_rejected':
+        return '❌'
       default:
         return '🔔'
     }

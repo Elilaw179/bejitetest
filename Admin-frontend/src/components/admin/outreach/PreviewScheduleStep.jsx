@@ -83,6 +83,7 @@ const PreviewScheduleStep = ({
         previewText: campaignForm.previewText,
         profession,
         firstName,
+        audienceSource: campaignForm.audienceSource || "members",
       });
       toast.success(`Test email sent to ${val}`);
     } catch (error) {
@@ -129,7 +130,10 @@ const PreviewScheduleStep = ({
         <h3 className="text-lg font-bold text-gray-900 mb-1">Preview & send</h3>
         <p className="text-gray-500 text-xs">
           Preview uses a real matched recipient when available. Placeholders are
-          filled the same way as on send.
+          filled the same way as on send
+          {campaignForm.audienceSource === "external"
+            ? ". This campaign goes to emails that are not registered on Bejite."
+            : "."}
         </p>
       </div>
 

@@ -14,7 +14,7 @@ import { formatSalary, formatTimeRemaining } from "../../utils/checksFormat";
 import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { getJobCardExcerpt } from "../../utils/jobDescription";
 import VerifiedBadge from "../VerifiedBadge";
-import { userHasVerifiedBadge } from "../../utils/verifiedBadge";
+import { userHasVerifiedBadge, userShowsUnverifiedRecruiterPill } from "../../utils/verifiedBadge";
 
 export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
   const timeRemaining = formatTimeRemaining(job.expiresAt);
@@ -92,9 +92,14 @@ export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
                 </span>
               </span>
 
-              {userHasVerifiedBadge(job) && (
+              {userHasVerifiedBadge(job) ? (
                 <VerifiedBadge size="xs" role="recruiter" />
-              )}
+              ) : userShowsUnverifiedRecruiterPill(
+                  { ...job, role: job.posterRole || job.role },
+                  { forceRecruiter: job.posterRole !== "jobseeker" },
+                ) ? (
+                <VerifiedBadge size="xs" role="recruiter" unverified />
+              ) : null}
 
               {timeRemaining.isUrgent && (
                 <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full animate-pulse">

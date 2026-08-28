@@ -34,6 +34,10 @@ import { API_URL } from "../config";
 import axiosInstance from "../utils/axiosInstance";
 import messagingService from "../services/messagingService";
 import {
+  CHAT_CONVERSATION_UPDATED,
+  NOTIFICATIONS_UNREAD_UPDATED,
+} from "../utils/headerBadgeEvents";
+import {
   getNewJobVacancyCount,
   getJobVacancyLastSeenAt,
   markJobVacanciesSeen,
@@ -496,10 +500,13 @@ const NewsFeedHeader = ({ user: propUser }) => {
     };
   }, [isDropdownOpen, updateRoleMenuPos]);
 
-  // Fetch notification count on mount and periodically; live updates via socket
+  // Live notification badge: poll + socket + mark-read events
   useEffect(() => {
     fetchNotificationCount();
     const interval = setInterval(fetchNotificationCount, 30000);
+    const onUnreadUpdated = () => {
+      fetchNotificationCount();
+    };
     const unsubscribe = onNotificationNew((payload) => {
       setNotificationCount((prev) => prev + 1);
       if (payload?.type === "mention") {
@@ -508,14 +515,21 @@ const NewsFeedHeader = ({ user: propUser }) => {
         });
       }
     });
+    window.addEventListener(NOTIFICATIONS_UNREAD_UPDATED, onUnreadUpdated);
     return () => {
       clearInterval(interval);
       unsubscribe();
+      window.removeEventListener(NOTIFICATIONS_UNREAD_UPDATED, onUnreadUpdated);
     };
   }, []);
 
-  // Fetch unread message count on mount and periodically
-  const fetchUnreadMessageCount = async () => {
+  // Refresh notification badge when the route changes (e.g. open /notifications)
+  useEffect(() => {
+    fetchNotificationCount();
+  }, [location.pathname]);
+
+  // Fetch unread message count on mount, route change, and when a chat is read
+  const fetchUnreadMessageCount = useCallback(async () => {
     try {
       const token =
         localStorage.getItem("accessToken") ||
@@ -527,13 +541,24 @@ const NewsFeedHeader = ({ user: propUser }) => {
     } catch (err) {
       console.error("Error fetching unread message count:", err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchUnreadMessageCount();
     const interval = setInterval(fetchUnreadMessageCount, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    const onChatUpdated = () => {
+      fetchUnreadMessageCount();
+    };
+    window.addEventListener(CHAT_CONVERSATION_UPDATED, onChatUpdated);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(CHAT_CONVERSATION_UPDATED, onChatUpdated);
+    };
+  }, [fetchUnreadMessageCount]);
+
+  useEffect(() => {
+    fetchUnreadMessageCount();
+  }, [location.pathname, fetchUnreadMessageCount]);
 
   // Fetch connection request count on mount and periodically
   const fetchConnectionRequestCount = useCallback(async () => {

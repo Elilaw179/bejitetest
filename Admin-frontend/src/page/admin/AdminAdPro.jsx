@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { toast } from "react-toastify";
 import AdCampaignReviewCard from "../../components/admin/AdCampaignReviewCard";
 import { Search, Megaphone } from "lucide-react";
+import { useAdminInbox } from "../../context/AdminInboxContext";
 
 const STATUS_FILTERS = [
   { value: "pending_review", label: "Pending Review" },
@@ -13,6 +15,9 @@ const STATUS_FILTERS = [
 ];
 
 export default function AdminAdPro() {
+  const [searchParams] = useSearchParams();
+  const highlightedCampaignId = searchParams.get("campaignId");
+  const { refresh: refreshInbox } = useAdminInbox();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,6 +98,11 @@ export default function AdminAdPro() {
 
       toast.success(response.data.message || "Campaign updated");
       await loadCampaigns();
+      try {
+        await refreshInbox({ silent: true });
+      } catch {
+        /* inbox refresh should not fail the campaign update */
+      }
     } catch (error) {
       console.error("Error updating campaign status:", error);
       toast.error(
@@ -108,6 +118,12 @@ export default function AdminAdPro() {
   const pendingCount = campaigns.filter(
     (campaign) => campaign.status === "pending_review",
   ).length;
+
+  useEffect(() => {
+    if (!highlightedCampaignId || loading) return;
+    const el = document.getElementById(`adpro-campaign-${highlightedCampaignId}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [highlightedCampaignId, loading, campaigns]);
 
   return (
     <div className="max-w-7xl mx-auto w-full space-y-6">
@@ -180,6 +196,7 @@ export default function AdminAdPro() {
                 key={campaign.id}
                 campaign={campaign}
                 updatingId={updatingId}
+                highlighted={String(campaign.id) === String(highlightedCampaignId)}
                 onUpdateStatus={updateStatus}
               />
             ))}

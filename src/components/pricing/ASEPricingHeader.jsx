@@ -15,7 +15,7 @@ const ASEPricingHeader = () => {
         </h1>
         <p className="text-white/70 text-base sm:text-lg max-w-2xl leading-relaxed">
           Unlock core Bejite recruiter services, advanced search metrics,
-          verified badges, and ad credits to get the best candidates.
+          and ad credits to get the best candidates.
         </p>
       </div>
     </div>

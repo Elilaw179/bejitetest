@@ -8,12 +8,14 @@ import {
   OnlinePresenceSection,
   VerificationDocumentsSection,
 } from './ProfilePanelShared';
+import RecruiterBadgeReviewSection from './RecruiterBadgeReviewSection';
 
 export default function IndividualRecruiterProfilePanel({
   user,
   profileUser,
   profileFields,
   isVerified,
+  onBadgeReviewed,
 }) {
   const accountItems = buildBaseAccountItems({
     user,
@@ -39,6 +41,11 @@ export default function IndividualRecruiterProfilePanel({
         documentTitle={idType ? `Government ID — ${idType}` : 'Government ID'}
         viewLinkLabel="View uploaded ID document"
         emptyDocumentLabel="No government ID uploaded."
+      />
+      <RecruiterBadgeReviewSection
+        userId={user.id}
+        profileUser={profileUser}
+        onReviewed={onBadgeReviewed}
       />
     </>
   );
