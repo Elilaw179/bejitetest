@@ -98,13 +98,13 @@ const CoperateVerify = () => {
             </p>
 
             <h1 className={`${isIndividual ? "text-[#16730F]" : "text-[#16730F]"} font-semibold text-xl sm:text-2xl md:text-3xl leading-snug px-1`}>
-              {isIndividual ? "Verify Your Identity" : "Confirm Your Legal Role"}
+              {isIndividual ? "Verify Your Identity" : "Build trust"}
             </h1>
 
             <p className="text-xs sm:text-sm italic text-gray-700 leading-relaxed max-w-prose px-1">
               {isIndividual
                 ? "A quick verification helps jobseekers feel safe accepting your offers. Upload or snap a clear image of your valid government-issued ID to get verified on Bejite."
-                : "To maintain a trustworthy platform for jobseekers, Bejite verifies that employers hiring on behalf of companies have proper authority. Help us keep Bejite secure and reliable"}
+                : "Verify your company so jobseekers can trust you. A verified profile shows you are a real employer hiring on Bejite."}
             </p>
 
             <div className="w-full max-w-md flex flex-col items-center gap-3 mt-1 sm:mt-2">

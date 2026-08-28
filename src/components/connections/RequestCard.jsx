@@ -21,7 +21,7 @@ const RequestCard = ({ request, type, onAccept, onReject, onCancel, onViewProfil
           <h3 className="font-semibold text-[#1A3E32] text-sm sm:text-base truncate hover:text-[#16730F]">
             <DisplayNameWithBadge user={user} fallback={user?.name} badgeSize="xs" />
           </h3>
-          <p className="text-xs sm:text-sm text-gray-600 truncate">{user?.role || 'Professional'}</p>
+          <p className="text-xs sm:text-sm text-gray-600 truncate">{user?.jobTitle || 'Professional'}</p>
           <p className="text-xs text-gray-500 mt-0.5">
             {type === 'incoming' ? 'Wants to connect' : 'Request sent'}
           </p>

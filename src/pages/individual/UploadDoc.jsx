@@ -11,6 +11,7 @@ import {
   isDocumentPdf,
 } from "../../utils/documentViewUrl";
 import { CertificateViewLink } from "../../components/CertificateViewerModal";
+import RecruiterVerificationPayGate from "../../components/recruiter/RecruiterVerificationPayGate";
 
 const isPdfPreview = (url) =>
   url === "pdf-document" || isDocumentPdf(url);
@@ -27,6 +28,8 @@ const UploadDoc = () => {
   const [existingDocUrl, setExistingDocUrl] = useState(null);
   const [justUploaded, setJustUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
+  const [paymentComplete, setPaymentComplete] = useState(false);
 
   useEffect(() => {
     if (!isEditMode || !recruiterData?.id_document) return;
@@ -64,15 +67,16 @@ const UploadDoc = () => {
 
     setUploading(true);
     try {
-      await toast.promise(uploadIdDocument(selectedFile), {
+      const result = await toast.promise(uploadIdDocument(selectedFile), {
         pending: "Uploading ID document...",
-        success: "ID document uploaded successfully!",
+        success: "ID document uploaded.",
         error: {
           render({ data }) {
             return `Upload failed: ${data}`;
           },
         },
       });
+      setUploadResult(result?.data || result);
       setJustUploaded(true);
       setExistingDocUrl(null);
       setSelectedFile(null);
@@ -84,7 +88,8 @@ const UploadDoc = () => {
   };
 
   const hasSavedDocument = Boolean(existingDocUrl) || justUploaded;
-  const isFormComplete = isEditMode ? hasSavedDocument : justUploaded;
+  const documentReady = isEditMode ? hasSavedDocument : justUploaded;
+  const isFormComplete = documentReady && paymentComplete;
   const showFilePicker = isEditMode || !justUploaded;
   const canUploadNewFile = Boolean(selectedFile) && !uploading;
 
@@ -207,6 +212,12 @@ const UploadDoc = () => {
                     : "Upload"}
           </button>
         </div>
+
+        <RecruiterVerificationPayGate
+          uploadResult={uploadResult}
+          hasDocument={hasSavedDocument}
+          onPaymentComplete={setPaymentComplete}
+        />
       </div>
 
       <NavigationButtons

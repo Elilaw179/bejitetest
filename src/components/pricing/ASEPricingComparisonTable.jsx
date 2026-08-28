@@ -91,14 +91,14 @@ const ASEPricingComparisonTable = () => {
               <td className="py-3.5 text-gray-500 font-semibold">
                 Verified Badge
               </td>
-              <td className="py-3.5 text-center text-[#1A3E32] font-bold">
-                Included
+              <td className="py-3.5 text-center text-gray-500">
+                Not included
               </td>
-              <td className="py-3.5 text-center text-[#1A3E32] font-bold">
-                Included
+              <td className="py-3.5 text-center text-gray-500">
+                Not included
               </td>
-              <td className="py-3.5 text-center text-[#1A3E32] font-bold">
-                Included
+              <td className="py-3.5 text-center text-gray-500">
+                Not included
               </td>
             </tr>
             <tr>

@@ -1,4 +1,5 @@
 import axiosInstance from "../utils/axiosInstance";
+import { notifyNotificationsUnreadUpdated } from "../utils/headerBadgeEvents";
 
 export async function fetchNotifications({ page = 1, limit = 20, unreadOnly = false } = {}) {
   const params = new URLSearchParams({
@@ -20,11 +21,13 @@ export async function markNotificationRead(notificationId) {
   const { data } = await axiosInstance.put(
     `/api/notifications/${notificationId}/read`,
   );
+  notifyNotificationsUnreadUpdated({ notificationId });
   return data;
 }
 
 export async function markAllNotificationsRead() {
   const { data } = await axiosInstance.put("/api/notifications/read-all");
+  notifyNotificationsUnreadUpdated({ clearedAll: true });
   return data;
 }
 

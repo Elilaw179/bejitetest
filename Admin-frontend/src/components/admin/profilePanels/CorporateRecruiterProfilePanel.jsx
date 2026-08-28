@@ -8,12 +8,14 @@ import {
   OnlinePresenceSection,
   VerificationDocumentsSection,
 } from './ProfilePanelShared';
+import RecruiterBadgeReviewSection from './RecruiterBadgeReviewSection';
 
 export default function CorporateRecruiterProfilePanel({
   user,
   profileUser,
   profileFields,
   isVerified,
+  onBadgeReviewed,
 }) {
   const accountItems = buildBaseAccountItems({
     user,
@@ -39,6 +41,11 @@ export default function CorporateRecruiterProfilePanel({
         documentTitle="Company registration document"
         viewLinkLabel="View uploaded company document"
         emptyDocumentLabel="No company registration document uploaded."
+      />
+      <RecruiterBadgeReviewSection
+        userId={user.id}
+        profileUser={profileUser}
+        onReviewed={onBadgeReviewed}
       />
     </>
   );

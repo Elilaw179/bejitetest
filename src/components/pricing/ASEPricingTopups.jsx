@@ -30,18 +30,11 @@ const ASEPricingTopups = ({
       balanceKey: "topupJobPostsRemaining",
       balanceLabel: "extra posts available",
     },
-    {
-      id: "standalone_badge",
-      title: "Standalone Badge",
-      priceLabel: "/ month",
-      detail: "Display verified employer badge",
-    },
   ];
 
   const prices = {
     extra_search: 10000,
     extra_job_post: 10000,
-    standalone_badge: 5000,
   };
 
   return (
@@ -59,7 +52,7 @@ const ASEPricingTopups = ({
             run out of monthly allowances.
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
           {topUpItems.map((item) => {
             const balance =
               item.balanceKey && topUpBalances

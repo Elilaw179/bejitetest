@@ -25,6 +25,7 @@ const AdminUserDetailModal = ({ user, onClose }) => {
   const [photoError, setPhotoError] = useState(false);
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
   const [resolvedPhotoPath, setResolvedPhotoPath] = useState(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -133,7 +134,7 @@ const AdminUserDetailModal = ({ user, onClose }) => {
     };
 
     load();
-  }, [user]);
+  }, [user, reloadToken]);
 
   const panelType = useMemo(
     () => getAdminProfilePanelType(user, profileUser),
@@ -225,6 +226,7 @@ const AdminUserDetailModal = ({ user, onClose }) => {
                 cvData={cvData}
                 candidate={candidate}
                 isVerified={isVerified}
+                onBadgeReviewed={() => setReloadToken((token) => token + 1)}
               />
             </>
           )}

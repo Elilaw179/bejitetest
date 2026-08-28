@@ -3,6 +3,17 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { verifyBadgeSubscription } from '../../services/verifiedBadgeApi';
 import { refreshVerifiedBadgeInSession } from '../../services/verifiedBadgeSync';
+import { getUser } from '../../utils/tokenManager';
+import { getRecruiterIdUploadPath } from '../../utils/recruiterProfilePaths';
+import { userIsRecruiter } from '../../utils/verifiedBadge';
+
+function getBadgeRetryPath() {
+  const sessionUser = getUser();
+  if (userIsRecruiter(sessionUser)) {
+    return getRecruiterIdUploadPath(sessionUser);
+  }
+  return '/badge';
+}
 
 export default function BadgePaymentCallback() {
   const [searchParams] = useSearchParams();
@@ -10,6 +21,7 @@ export default function BadgePaymentCallback() {
   const dispatch = useDispatch();
   const [status, setStatus] = useState('processing');
   const [message, setMessage] = useState('Verifying your subscription...');
+  const retryPath = getBadgeRetryPath();
 
   useEffect(() => {
     const verify = async () => {
@@ -23,10 +35,30 @@ export default function BadgePaymentCallback() {
       try {
         const response = await verifyBadgeSubscription(ref);
         if (response?.data?.status === 'success') {
+          if (response?.applied === false) {
+            setStatus('error');
+            setMessage(
+              response?.message ||
+                'Payment received, but it does not match your current ID. Upload again and pay for the new file.',
+            );
+            return;
+          }
+          const pendingReview = Boolean(response?.pendingReview);
           setStatus('success');
-          setMessage('Verified Badge activated! Redirecting...');
+          setMessage(
+            pendingReview
+              ? 'Payment received. Your document is awaiting admin review.'
+              : 'Verified Badge activated! Redirecting...',
+          );
           await refreshVerifiedBadgeInSession(dispatch);
-          setTimeout(() => navigate('/badge-holder', { replace: true }), 2000);
+          setTimeout(
+            () =>
+              navigate(
+                pendingReview ? '/badge?pendingReview=1' : '/badge-holder',
+                { replace: true },
+              ),
+            2000,
+          );
         } else {
           setStatus('error');
           setMessage('Payment verification failed. Please try again.');
@@ -34,7 +66,10 @@ export default function BadgePaymentCallback() {
       } catch (error) {
         console.error('Badge payment verification error:', error);
         setStatus('error');
-        setMessage('An error occurred during verification.');
+        setMessage(
+          error.response?.data?.message ||
+            'An error occurred during verification.',
+        );
       }
     };
 
@@ -54,7 +89,9 @@ export default function BadgePaymentCallback() {
         {status === 'success' && (
           <>
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600 text-2xl">✓</div>
-            <h2 className="text-xl font-semibold text-gray-900">You're Verified!</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {message?.includes('awaiting') ? 'Payment received' : "You're Verified!"}
+            </h2>
             <p className="text-gray-600 mt-2">{message}</p>
           </>
         )}
@@ -65,7 +102,7 @@ export default function BadgePaymentCallback() {
             <p className="text-gray-600 mt-2">{message}</p>
             <button
               type="button"
-              onClick={() => navigate('/badge')}
+              onClick={() => navigate(retryPath)}
               className="mt-4 px-6 py-2 bg-[#1A3E32] text-white rounded-lg hover:bg-[#16362a]"
             >
               Try Again

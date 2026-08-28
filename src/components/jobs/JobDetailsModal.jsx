@@ -20,7 +20,7 @@ import { profilePhotoUrl } from "../../utils/profilePhotoUrl";
 import { ApplicationForm } from "./ApplicationForm";
 import SharePostModal from "../SharePostModal";
 import VerifiedBadge from "../VerifiedBadge";
-import { userHasVerifiedBadge } from "../../utils/verifiedBadge";
+import { userHasVerifiedBadge, userShowsUnverifiedRecruiterPill } from "../../utils/verifiedBadge";
 import { getJobPlatformHref, copyJobLink } from "../../utils/jobShare";
 import { formatJobDescriptionText } from "../../utils/jobDescription";
 import { formatStoredRequirements } from "../../utils/jobRequirements";
@@ -218,9 +218,14 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                       <h1 className="text-lg sm:text-2xl font-bold text-gray-900 leading-tight">
                         {job.title}
                       </h1>
-                      {userHasVerifiedBadge(job) && (
+                      {userHasVerifiedBadge(job) ? (
                         <VerifiedBadge size="xs" role="recruiter" />
-                      )}
+                      ) : userShowsUnverifiedRecruiterPill(
+                          { ...job, role: job.posterRole || job.role },
+                          { forceRecruiter: job.posterRole !== "jobseeker" },
+                        ) ? (
+                        <VerifiedBadge size="xs" role="recruiter" unverified />
+                      ) : null}
                     </div>
                     <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1.5 sm:gap-x-4 sm:gap-y-2 text-xs sm:text-sm text-gray-600">
                       <span className="flex items-center gap-1 min-w-0">

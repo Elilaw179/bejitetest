@@ -18,6 +18,7 @@ export default function AdminProfilePanelRouter({
   cvData,
   candidate,
   isVerified,
+  onBadgeReviewed,
 }) {
   const Panel = PANEL_COMPONENTS[panelType];
 
@@ -39,6 +40,7 @@ export default function AdminProfilePanelRouter({
       cvData={cvData}
       candidate={candidate}
       isVerified={isVerified}
+      onBadgeReviewed={onBadgeReviewed}
     />
   );
 }

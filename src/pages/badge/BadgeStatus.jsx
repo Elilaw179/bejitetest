@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   Star,
@@ -9,11 +9,14 @@ import {
   Crown,
   Check,
   FileText,
-  BadgeCheck,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { ConfirmBadgeModal } from "../../components/modal/confirmBadgeModal";
+import {
+  ConfirmBadgeModal,
+  PendingReviewModal,
+} from "../../components/modal/confirmBadgeModal";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
+import VerifiedBadgeIcon from "../../components/VerifiedBadgeIcon";
 import {
   getBadgeStatus,
   getBadgePlans,
@@ -24,7 +27,7 @@ import { userHasVerifiedBadge } from "../../utils/verifiedBadge";
 
 const BADGE_BENEFITS = [
   {
-    icon: BadgeCheck,
+    icon: VerifiedBadgeIcon,
     title: "Verified Badge",
     description:
       "A verified badge appears on your profile, building trust with recruiters and connections.",
@@ -56,10 +59,11 @@ const BADGE_BENEFITS = [
 ];
 
 const RECRUITER_NOTE =
-  "Recruiters receive the Verified Badge automatically when subscribing to the Premium or Jumbo ASE plan.";
+  "Recruiters get the Verified Recruiter badge by uploading an ID, paying ₦5,000 once, and passing admin review. ASE plans do not include the badge.";
 
 export default function BadgeStatus() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const reduxUser = useSelector((state) => state.auth?.user);
   const sessionUser = useMemo(
     () => mergeAuthUsers(getUser() || {}, reduxUser || {}),
@@ -68,6 +72,8 @@ export default function BadgeStatus() {
   const sessionHasBadge = userHasVerifiedBadge(sessionUser);
 
   const [showModal, setShowModal] = useState(false);
+  const [showPendingReviewModal, setShowPendingReviewModal] = useState(false);
+  const [pendingReview, setPendingReview] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState([]);
@@ -77,7 +83,7 @@ export default function BadgeStatus() {
   const isRecruiter =
     sessionUser?.role === "recruiter" || sessionUser?.role === "employer";
 
-  // If session already knows the user is verified, skip the marketing page
+  // Only verified accounts go to badge-holder — pending review stays on /badge.
   useEffect(() => {
     if (sessionHasBadge) {
       navigate("/badge-holder", { replace: true });
@@ -100,6 +106,12 @@ export default function BadgeStatus() {
           return;
         }
 
+        const isPending = Boolean(statusRes?.pendingReview);
+        setPendingReview(isPending);
+        if (isPending || searchParams.get("pendingReview") === "1") {
+          setShowPendingReviewModal(true);
+        }
+
         setPlans(plansRes?.plans || []);
       } catch (err) {
         console.error(err);
@@ -108,7 +120,6 @@ export default function BadgeStatus() {
       }
     };
 
-    // Still confirm with the API even if session already redirected.
     if (!sessionHasBadge) {
       load();
     }
@@ -116,7 +127,18 @@ export default function BadgeStatus() {
     return () => {
       cancelled = true;
     };
+    // Only on mount / badge session change — do not re-open when query is cleared.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, sessionHasBadge]);
+
+  const closePendingReviewModal = () => {
+    setShowPendingReviewModal(false);
+    if (searchParams.get("pendingReview")) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("pendingReview");
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   const badgePlan = plans[0];
   const uiPlan = badgePlan
@@ -125,14 +147,19 @@ export default function BadgeStatus() {
         label: badgePlan.name,
         price: Number(badgePlan.priceNGN || 10000).toLocaleString("en-NG"),
         currency: "₦",
-        period: "/month",
+        period: " one-time",
         amount: (badgePlan.priceNGN || 10000) * 100,
       }
     : null;
 
   const handleCTA = () => {
     if (isRecruiter) {
-      navigate("/subscription-pricing");
+      if (pendingReview) {
+        setShowPendingReviewModal(true);
+        return;
+      }
+      const mode = String(sessionUser?.mode || "").toLowerCase();
+      navigate(mode === "corporate" ? "/corporate/upload" : "/individual/upload");
       return;
     }
     if (!uiPlan) return;
@@ -175,12 +202,12 @@ export default function BadgeStatus() {
           <div className="absolute right-0 top-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
           <div className="flex items-start sm:items-center gap-3 relative min-w-0">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-              <BadgeCheck className="w-5 h-5 text-white" />
+              <VerifiedBadgeIcon className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0 flex-1">
               <h1 className="text-white font-bold text-lg sm:text-xl">Verified Badge</h1>
               <p className="text-green-200 text-xs mt-0.5 leading-relaxed break-words">
-                Premium subscription for jobseekers · included with recruiter ASE plans
+                Premium identity for jobseekers · recruiters verify with ID + ₦5,000
               </p>
             </div>
           </div>
@@ -190,19 +217,23 @@ export default function BadgeStatus() {
           <div className="max-w-4xl mx-auto px-4 py-8 space-y-10">
             <div className="bg-gradient-to-br from-[#1A3E32] to-[#2d6a54] rounded-2xl p-5 sm:p-8 text-white relative overflow-hidden">
               <div className="absolute right-4 top-4 opacity-10 pointer-events-none">
-                <BadgeCheck className="w-24 h-24 sm:w-32 sm:h-32" />
+                <VerifiedBadgeIcon className="w-24 h-24 sm:w-32 sm:h-32" />
               </div>
               <div className="relative min-w-0">
               <p className="text-green-300 text-xs font-semibold uppercase tracking-widest mb-2">
                 Bejite Verified Badge
               </p>
               <h2 className="text-2xl sm:text-3xl font-bold mb-2 break-words">
-                Stand out with a verified profile
+                {pendingReview
+                  ? "Your document is under review"
+                  : "Stand out with a verified profile"}
               </h2>
               <p className="text-green-100 text-sm leading-relaxed max-w-xl">
-                {isRecruiter
-                  ? RECRUITER_NOTE
-                  : "Subscribe monthly to unlock your verified badge, employment reports, and exclusive events."}
+                {pendingReview
+                  ? "Payment received. An admin is reviewing your document. You will unlock badge-holder access once it is approved."
+                  : isRecruiter
+                    ? RECRUITER_NOTE
+                    : "Pay once to unlock your verified badge, employment reports, and exclusive events."}
               </p>
               <button
                 type="button"
@@ -210,9 +241,11 @@ export default function BadgeStatus() {
                 disabled={paying}
                 className="mt-5 w-full sm:w-auto px-6 py-2.5 bg-white text-[#1A3E32] font-semibold rounded-xl hover:bg-green-50 transition-colors text-sm sm:text-base"
               >
-                {isRecruiter
-                  ? "View ASE Plans"
-                  : `Subscribe — ₦${uiPlan?.price || "10,000"}/month`}
+                {pendingReview
+                  ? "View review status"
+                  : isRecruiter
+                    ? "Upload ID & pay ₦5,000"
+                    : `Get verified — ₦${uiPlan?.price || "10,000"} one-time`}
               </button>
               {error && <p className="text-red-200 text-sm mt-3 break-words">{error}</p>}
               </div>
@@ -285,9 +318,13 @@ export default function BadgeStatus() {
       </div>
 
       <AnimatePresence>
+        {showPendingReviewModal ? (
+          <PendingReviewModal onClose={closePendingReviewModal} />
+        ) : null}
         {showModal && selectedPlan && (
           <ConfirmBadgeModal
             plan={selectedPlan}
+            oneTime
             onClose={() => !paying && setShowModal(false)}
             onConfirm={handleConfirm}
             isLoading={paying}

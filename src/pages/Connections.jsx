@@ -54,7 +54,8 @@ const transformDiscoverableUser = (user) => ({
   lastName: user.lastName ?? user.last_name,
   email: user.email,
   image: user.profilePhoto ?? user.profile_photo ?? user.image ?? null,
-  role: user.jobTitle || "Professional",
+  role: user.role,
+  jobTitle: user.jobTitle || user.job_title || null,
   hasVerifiedBadge: Boolean(user?.hasVerifiedBadge),
 });
 
@@ -66,9 +67,34 @@ const transformConnectionUser = (user, connectedAt) => ({
   email: user?.email,
   connectedAt,
   image: user?.profilePhoto ?? user?.profile_photo ?? user?.image ?? null,
-  role: user?.jobTitle || "Professional",
+  role: user?.role,
+  jobTitle: user?.jobTitle || user?.job_title || null,
   hasVerifiedBadge: Boolean(user?.hasVerifiedBadge),
 });
+
+const uniqueUsersById = (users) => {
+  const seen = new Set();
+  return (Array.isArray(users) ? users : []).filter((user) => {
+    const id = user?.id != null ? String(user.id) : "";
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+};
+
+const followersListState = (followersRes, fallbackPage, fallbackLimit) => {
+  const users = uniqueUsersById(followersRes?.users || []);
+  const pagination = followersRes?.pagination;
+  return {
+    users,
+    meta: {
+      total: pagination?.total ?? users.length,
+      pages: pagination?.pages ?? 1,
+      page: pagination?.page ?? fallbackPage,
+      limit: pagination?.limit ?? fallbackLimit,
+    },
+  };
+};
 
 const Connections = () => {
   useSyncProfilePhoto();
@@ -167,7 +193,8 @@ const Connections = () => {
                 req.fromUser?.profilePhoto ??
                 req.fromUser?.profile_photo ??
                 null,
-              role: req.fromUser?.jobTitle || "Professional",
+              role: req.fromUser?.role,
+              jobTitle: req.fromUser?.jobTitle || req.fromUser?.job_title || null,
               hasVerifiedBadge: Boolean(req.fromUser?.hasVerifiedBadge),
             },
             createdAt: req.createdAt,
@@ -202,7 +229,8 @@ const Connections = () => {
               email: req.toUser?.email,
               image:
                 req.toUser?.profilePhoto ?? req.toUser?.profile_photo ?? null,
-              role: req.toUser?.jobTitle || "Professional",
+              role: req.toUser?.role,
+              jobTitle: req.toUser?.jobTitle || req.toUser?.job_title || null,
               hasVerifiedBadge: Boolean(req.toUser?.hasVerifiedBadge),
             },
             createdAt: req.createdAt,
@@ -406,18 +434,11 @@ const Connections = () => {
         if (corporate) {
           const followersRes = await followsApi.getMyFollowers(1, pageSize, "");
           if (cancelled) return;
-          const users = followersRes?.users || [];
+          const { users, meta } = followersListState(followersRes, 1, pageSize);
           setConnections(
             users.map((u) => transformConnectionUser(u, u.followedAt)),
           );
-          setNetworkMeta(
-            followersRes?.pagination || {
-              total: users.length,
-              pages: 1,
-              page: 1,
-              limit: pageSize,
-            },
-          );
+          setNetworkMeta(meta);
           setNetworkReady(true);
           return;
         }
@@ -469,18 +490,15 @@ const Connections = () => {
             debouncedNetworkSearch,
           );
           if (cancelled || requestId !== networkRequestIdRef.current) return;
-          const users = followersRes?.users || [];
+          const { users, meta } = followersListState(
+            followersRes,
+            networkPage,
+            pageSize,
+          );
           setConnections(
             users.map((u) => transformConnectionUser(u, u.followedAt)),
           );
-          setNetworkMeta(
-            followersRes?.pagination || {
-              total: users.length,
-              pages: 1,
-              page: networkPage,
-              limit: pageSize,
-            },
-          );
+          setNetworkMeta(meta);
           return;
         }
 
@@ -774,7 +792,6 @@ const Connections = () => {
           id: "followers",
           label: "Followers",
           icon: FaUserFriends,
-          count: networkMeta.total,
           content: (
             <>
               {connectionSearchBar}
@@ -809,7 +826,6 @@ const Connections = () => {
           id: "network",
           label: "My Network",
           icon: FaUserFriends,
-          count: networkMeta.total,
           content: (
             <>
               {connectionSearchBar}
@@ -968,7 +984,7 @@ const Connections = () => {
                     <span className="text-[10px] sm:text-sm leading-tight text-center w-full min-w-0 truncate px-0.5">
                       {tab.label}
                     </span>
-                    {tab.count > 0 && (
+                    {typeof tab.count === "number" && tab.count > 0 && (
                       <span
                         className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[10px] sm:text-xs leading-none font-bold ${
                           isActive
@@ -1016,7 +1032,7 @@ const PeopleList = ({
     : usersArray.filter(
         (user) =>
           user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.role?.toLowerCase().includes(searchQuery.toLowerCase()),
+          user.jobTitle?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
 
   if (searchLoading || isLoading) {
@@ -1092,7 +1108,7 @@ const PeopleList = ({
                   />
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-600 truncate">
-                  {user.role || "Professional"}
+                  {user.jobTitle || "Professional"}
                 </p>
               </div>
             </button>

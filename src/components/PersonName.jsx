@@ -1,6 +1,9 @@
 import React from "react";
 import { formatDisplayPersonName } from "../utils/personDisplayName";
-import { userHasVerifiedBadge } from "../utils/verifiedBadge";
+import {
+  userHasVerifiedBadge,
+  userShowsUnverifiedRecruiterPill,
+} from "../utils/verifiedBadge";
 import VerifiedBadge from "./VerifiedBadge";
 
 /**
@@ -26,6 +29,10 @@ export default function PersonName({
 }) {
   const name = formatDisplayPersonName(user, fallback);
   const hasBadge = showBadge ?? userHasVerifiedBadge(user);
+  const showUnverified =
+    showBadge !== false &&
+    !hasBadge &&
+    userShowsUnverifiedRecruiterPill(user);
   const isBelow = badgePlacement === "below";
   const useResponsiveBadge = responsiveBadge ?? !isBelow;
 
@@ -51,6 +58,13 @@ export default function PersonName({
         <VerifiedBadge
           size={badgeSize}
           user={user}
+          responsiveLabel={useResponsiveBadge}
+        />
+      ) : showUnverified ? (
+        <VerifiedBadge
+          size={badgeSize}
+          user={user}
+          unverified
           responsiveLabel={useResponsiveBadge}
         />
       ) : null}

@@ -12,6 +12,12 @@ import { profileAvatarSrc } from "../../utils/profilePhotoUrl";
 import { pickAuthorProfilePhoto } from "../../utils/profileImageUtils";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
 
+const ADPRO_NAV_ITEM = {
+  icon: "/assets/images/adpro-sidebar.svg",
+  label: "AdPro",
+  iconClassName: "h-7 w-7",
+};
+
 const navItems = [
   { icon: FaHome, label: "News Feed" },
   { icon: "/assets/images/repeate-one.svg", label: "Connections" },
@@ -202,16 +208,20 @@ export default function RecruitmentLeft() {
   }, [networkPool, rotationIndex]);
 
   const isCorporate = isCorporateRecruiter(user);
+  const roleLower = String(user?.role || "").toLowerCase();
+  const canAccessAdPro = roleLower === "recruiter" || roleLower === "employer";
 
-  const displayNavItems = useMemo(
-    () =>
-      navItems.map((item) =>
-        item.label === "Connections" && isCorporate
-          ? { ...item, label: "Followers" }
-          : item,
-      ),
-    [isCorporate],
-  );
+  const displayNavItems = useMemo(() => {
+    let items = navItems.map((item) =>
+      item.label === "Connections" && isCorporate
+        ? { ...item, label: "Followers" }
+        : item,
+    );
+    if (canAccessAdPro) {
+      items = [...items, ADPRO_NAV_ITEM];
+    }
+    return items;
+  }, [isCorporate, canAccessAdPro]);
 
   // Filter nav items based on user role
   const filteredNavItems =
@@ -240,6 +250,9 @@ export default function RecruitmentLeft() {
       case "Milestones":
         navigate("/milestones");
         break;
+      case "AdPro":
+        navigate("/adpro");
+        break;
       default:
         console.log("Navigation not defined for:", label);
     }
@@ -253,7 +266,7 @@ export default function RecruitmentLeft() {
         <h2 className="text-[20px] text-[#ffffff]">Dashboardss</h2>
       </div> */}
         <nav className=" space-y-4  p-2">
-          {filteredNavItems.map(({ icon: Icon, label }, idx) => (
+          {filteredNavItems.map(({ icon: Icon, label, iconClassName }, idx) => (
             <div
               key={idx}
               className="flex items-center space-x-3 cursor-pointer w-full p-2 hover:bg-[#15600b] rounded-lg transition-colors duration-200"
@@ -263,7 +276,7 @@ export default function RecruitmentLeft() {
                 <img
                   src={Icon}
                   alt={label}
-                  className="w-5 h-5 shrink-0 object-contain"
+                  className={`${iconClassName || "w-5 h-5"} shrink-0 object-contain`}
                 />
               ) : (
                 <Icon className="text-[#F5F5F5] w-5 h-5 shrink-0" size={16} />
@@ -299,18 +312,8 @@ export default function RecruitmentLeft() {
           user={user}
         />
 
-        {isCorporate || user?.role === "employer" ? (
-          <div className="bg-[#1A3E32] flex-1 rounded-b-2xl mt-4 flex flex-col items-center pt-8 pb-6 space-y-5">
-            <button
-              className="text-white hover:text-green-300 transition-colors font-semibold text-sm"
-              onClick={() => navigate("/adpro")}
-            >
-              AdPro
-            </button>
-            {/* <div className="w-[180px] h-[80px] bg-white/10 rounded-xl border border-white/10" /> */}
-          </div>
-        ) : (
-          <div className="bg-[#1A3E32] flex-1 rounded-b-2xl mt-4 p-4 flex flex-col items-center justify-between text-center space-y-3">
+        {!isCorporate && (
+        <div className="bg-[#1A3E32] flex-1 rounded-b-2xl mt-4 p-4 flex flex-col items-center justify-between text-center space-y-3">
             <div className="flex flex-col items-center space-y-2.5 pt-1 w-full">
               {loading ? (
                 /* 3 Professional Shimmer Skeleton Avatars */

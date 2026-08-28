@@ -13,6 +13,8 @@ import {
   getPortaledMenuStyle,
   usePortaledMenu,
 } from "../../hooks/usePortaledMenu";
+import { getUser } from "../../utils/tokenManager";
+import { getRecruiterIdUploadPath } from "../../utils/recruiterProfilePaths";
 
 function normalizeNotificationPath(path) {
   if (!path || typeof path !== "string") return path;
@@ -63,6 +65,12 @@ function resolveNotificationLink(notification) {
     const senderId = data?.fromUserId || data?.userId;
     if (senderId) return `/user-profile/${encodeURIComponent(String(senderId))}`;
     return "/milestones";
+  }
+  if (notification?.type === "badge_approved") {
+    return "/badge-holder";
+  }
+  if (notification?.type === "badge_rejected") {
+    return getRecruiterIdUploadPath(getUser());
   }
   return "/notifications";
 }

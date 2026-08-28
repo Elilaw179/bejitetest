@@ -15,7 +15,7 @@ const ConnectionList = ({
   const connectionsArray = Array.isArray(connections) ? connections : [];
   const filteredConnections = connectionsArray.filter(conn =>
     conn.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    conn.role?.toLowerCase().includes(searchQuery.toLowerCase())
+    conn.jobTitle?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const isFollowers = variant === 'followers';

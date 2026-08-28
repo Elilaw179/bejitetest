@@ -1,6 +1,7 @@
 import axiosInstance from '../utils/axiosInstance';
 import { filterAdminUsersFromSearch } from '../utils/filterAdminUsers';
 import { getUploadSizeError, maxBytesForChatFile } from '../utils/uploadLimits';
+import { notifyChatConversationUpdated } from '../utils/headerBadgeEvents';
 
 // Messaging API service
 const messagingService = {
@@ -166,6 +167,7 @@ async startConversation(otherUserId) {
   async markConversationRead(conversationId) {
     try {
       const response = await axiosInstance.post(`/conversations/${conversationId}/read`);
+      notifyChatConversationUpdated({ conversationId });
       return response.data;
     } catch (error) {
       console.error('Error marking conversation as read:', error);

@@ -10,22 +10,40 @@ export function userHasVerifiedBadge(user) {
   );
 }
 
-/**
- * Label for the verified badge pill based on account type.
- * Unknown/missing role must not default to Jobseeker.
- */
-export function getVerifiedBadgeLabel(userOrRole) {
+export function userIsRecruiter(userOrRole) {
   const role =
     typeof userOrRole === 'string'
       ? userOrRole
       : userOrRole?.role ?? userOrRole?.author_role ?? null;
 
   const normalized = String(role ?? '').toLowerCase().trim();
-  if (normalized === 'recruiter' || normalized === 'employer') {
+  return normalized === 'recruiter' || normalized === 'employer';
+}
+
+/**
+ * Label for the verified badge pill based on account type.
+ * Unknown/missing role must not default to Jobseeker.
+ */
+export function getVerifiedBadgeLabel(userOrRole) {
+  if (userIsRecruiter(userOrRole)) {
     return 'Verified Recruiter';
   }
+  const role =
+    typeof userOrRole === 'string'
+      ? userOrRole
+      : userOrRole?.role ?? userOrRole?.author_role ?? null;
+  const normalized = String(role ?? '').toLowerCase().trim();
   if (normalized === 'jobseeker') {
     return 'Verified Jobseeker';
   }
   return 'Verified';
+}
+
+export function getUnverifiedRecruiterLabel() {
+  return 'Unverified';
+}
+
+export function userShowsUnverifiedRecruiterPill(user, { forceRecruiter = false } = {}) {
+  if (userHasVerifiedBadge(user)) return false;
+  return forceRecruiter || userIsRecruiter(user);
 }

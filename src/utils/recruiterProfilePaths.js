@@ -32,6 +32,18 @@ export function isCorporateRecruiter(user) {
 }
 
 /**
+ * ID upload path used after recruiter verification reject / retry.
+ * Unknown mode defaults to individual, matching the backend upload URL.
+ * @param {object | null | undefined} user
+ * @returns {string}
+ */
+export function getRecruiterIdUploadPath(user) {
+  return resolveRecruiterMode(user) === "corporate"
+    ? "/corporate/upload"
+    : "/individual/upload";
+}
+
+/**
  * Entry path for editing an existing recruiter profile.
  * @param {object | null | undefined} user
  * @returns {string}

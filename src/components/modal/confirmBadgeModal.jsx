@@ -17,7 +17,87 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export const ConfirmBadgeModal = ({ plan, onClose, onConfirm, isLoading = false }) => {
+export const ConfirmBadgeModal = ({
+  plan,
+  onClose,
+  onConfirm,
+  isLoading = false,
+  oneTime = false,
+  title,
+  subtitle,
+  description,
+  hideCancel = false,
+}) => {
+  const periodLabel = oneTime ? " one-time" : plan.period;
+  const heading = title || (oneTime ? "Confirm payment" : "Confirm Subscription");
+  const subheading =
+    subtitle ??
+    `${plan.label} — ${plan.currency}${plan.price}${periodLabel}`;
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4"
+      onClick={hideCancel ? undefined : onClose}
+    >
+      <motion.div
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 60, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-2xl p-6 w-full max-w-sm space-y-5"
+      >
+        <div className="text-center">
+          <div className="w-16 h-16 bg-[#1A3E32]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Shield className="w-8 h-8 text-[#1A3E32]" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">
+            {heading}
+          </h3>
+          {subheading ? (
+            <p className="text-gray-500 text-sm mt-1">{subheading}</p>
+          ) : null}
+        </div>
+        <p className="text-sm text-gray-600 text-center leading-relaxed">
+          {description || (
+            <>
+              You'll pay{" "}
+              <strong>
+                {plan.currency}
+                {plan.price}
+              </strong>
+              {oneTime
+                ? " once. This is not a subscription and is not refunded."
+                : `${plan.period}. Cancel anytime from Account Settings.`}
+            </>
+          )}
+        </p>
+        <div className="flex gap-3">
+          {hideCancel ? null : (
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium"
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="flex-1 py-2.5 rounded-xl bg-[#1A3E32] text-white text-sm font-semibold disabled:opacity-60"
+          >
+            {isLoading ? "Processing..." : oneTime ? "Pay now" : "Subscribe"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export function PendingReviewModal({ onClose }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -34,45 +114,31 @@ export const ConfirmBadgeModal = ({ plan, onClose, onConfirm, isLoading = false 
         className="bg-white rounded-2xl p-6 w-full max-w-sm space-y-5"
       >
         <div className="text-center">
-          <div className="w-16 h-16 bg-[#1A3E32]/10 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Shield className="w-8 h-8 text-[#1A3E32]" />
+          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Clock className="w-8 h-8 text-[#1A3E32]" />
           </div>
           <h3 className="text-lg font-bold text-gray-900">
-            Confirm Subscription
+            Document under review
           </h3>
           <p className="text-gray-500 text-sm mt-1">
-            {plan.label} — {plan.currency}
-            {plan.price}
-            {plan.period}
+            Payment successful
           </p>
         </div>
         <p className="text-sm text-gray-600 text-center leading-relaxed">
-          You'll be billed{" "}
-          <strong>
-            {plan.currency}
-            {plan.price}
-          </strong>
-          {plan.period}. Cancel anytime from Account Settings.
+          Your document is being reviewed and is waiting for admin approval.
+          You will get access to your Verified Recruiter badge once it is approved.
         </p>
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={isLoading}
-            className="flex-1 py-2.5 rounded-xl bg-[#1A3E32] text-white text-sm font-semibold disabled:opacity-60"
-          >
-            {isLoading ? "Processing..." : "Subscribe"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full py-2.5 rounded-xl bg-[#1A3E32] text-white text-sm font-semibold"
+        >
+          Got it
+        </button>
       </motion.div>
     </motion.div>
   );
-};
+}
 
 export function EventModal({ event, onClose, onRegister, canRegister = true }) {
   const [registered, setRegistered] = useState(Boolean(event?.isRegistered));
