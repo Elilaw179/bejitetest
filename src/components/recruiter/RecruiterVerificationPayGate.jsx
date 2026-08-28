@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Clock } from "lucide-react";
 import { toast } from "react-toastify";
 import { AnimatePresence } from "framer-motion";
@@ -25,6 +25,7 @@ export default function RecruiterVerificationPayGate({
   const [showPayModal, setShowPayModal] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState(null);
+  const payingRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,13 +74,27 @@ export default function RecruiterVerificationPayGate({
   }, [paymentComplete, onPaymentComplete]);
 
   const handleConfirm = async () => {
+    if (payingRef.current) return;
+    payingRef.current = true;
     setPaying(true);
     setError(null);
     try {
       const init = await initializeBadgeSubscription("NGN");
+      if (init?.alreadyPaid || init?.pendingReview) {
+        const next = await getBadgeStatus();
+        setStatus(next);
+        setShowPayModal(false);
+        toast.success(
+          init?.message ||
+            "Payment received. Your document is awaiting admin review.",
+        );
+        payingRef.current = false;
+        setPaying(false);
+        return;
+      }
       const checkoutUrl = init?.data?.authorization_url;
       if (checkoutUrl) {
-        window.location.href = checkoutUrl;
+        window.location.assign(checkoutUrl);
         return;
       }
       throw new Error("Unable to start checkout");
@@ -89,9 +104,10 @@ export default function RecruiterVerificationPayGate({
         err.response?.data?.message || err.message || "Payment failed";
       setError(message);
       toast.error(message);
-      if (code === "PAYMENT_IN_PROGRESS") {
+      if (code !== "PAYMENT_IN_PROGRESS") {
         setShowPayModal(false);
       }
+      payingRef.current = false;
       setPaying(false);
     }
   };

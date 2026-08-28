@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ShieldCheck, ShieldX } from 'lucide-react';
 import axiosInstance from '../../../utils/axiosInstance';
+import { useAdminInbox } from '../../../context/AdminInboxContext';
 
 const STATUS_COPY = {
   unverified: 'Unverified — waiting for ID upload and payment',
@@ -17,6 +18,7 @@ export default function RecruiterBadgeReviewSection({
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
   const [note, setNote] = useState('');
+  const { refresh: refreshInbox } = useAdminInbox();
 
   const status =
     profileUser?.recruiterVerificationStatus ||
@@ -37,6 +39,11 @@ export default function RecruiterBadgeReviewSection({
       });
       setNote('');
       await onReviewed?.();
+      try {
+        await refreshInbox({ silent: true });
+      } catch {
+        /* inbox refresh should not fail the review action */
+      }
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Review failed');
     } finally {

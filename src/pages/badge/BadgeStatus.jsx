@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
@@ -79,6 +79,7 @@ export default function BadgeStatus() {
   const [plans, setPlans] = useState([]);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState(null);
+  const payingRef = useRef(false);
 
   const isRecruiter =
     sessionUser?.role === "recruiter" || sessionUser?.role === "employer";
@@ -168,19 +169,32 @@ export default function BadgeStatus() {
   };
 
   const handleConfirm = async () => {
+    if (payingRef.current) return;
+    payingRef.current = true;
     setPaying(true);
     setError(null);
     try {
       const init = await initializeBadgeSubscription("NGN");
+      if (init?.alreadyPaid || init?.pendingReview) {
+        setShowModal(false);
+        setPaying(false);
+        payingRef.current = false;
+        if (init?.pendingReview) {
+          setPendingReview(true);
+          setShowPendingReviewModal(true);
+        }
+        return;
+      }
       const checkoutUrl = init?.data?.authorization_url;
       if (checkoutUrl) {
-        window.location.href = checkoutUrl;
+        window.location.assign(checkoutUrl);
         return;
       }
       throw new Error("Unable to start checkout");
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || err.message || "Payment failed");
+      payingRef.current = false;
       setPaying(false);
     }
   };
@@ -207,7 +221,9 @@ export default function BadgeStatus() {
             <div className="min-w-0 flex-1">
               <h1 className="text-white font-bold text-lg sm:text-xl">Verified Badge</h1>
               <p className="text-green-200 text-xs mt-0.5 leading-relaxed break-words">
-                Premium identity for jobseekers · recruiters verify with ID + ₦5,000
+                {isRecruiter
+                  ? "Document uploaded and awaiting admin review"
+                  : "Premium identity for jobseekers"}
               </p>
             </div>
           </div>
@@ -244,7 +260,7 @@ export default function BadgeStatus() {
                 {pendingReview
                   ? "View review status"
                   : isRecruiter
-                    ? "Upload ID & pay ₦5,000"
+                    ? "Upload document & pay ₦5,000"
                     : `Get verified — ₦${uiPlan?.price || "10,000"} one-time`}
               </button>
               {error && <p className="text-red-200 text-sm mt-3 break-words">{error}</p>}

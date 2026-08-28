@@ -3,16 +3,9 @@ import { toast } from "react-toastify";
 import {
   Bell,
   X,
-  Trash2,
-  AlertCircle,
-  AlertTriangle,
-  CheckCircle2,
-  Info,
   UserPlus,
-  Briefcase,
-  FileText,
-  DollarSign,
-  Shield,
+  Megaphone,
+  ArrowRight,
 } from "lucide-react";
 import {
   NOTIFICATION_CATEGORIES,
@@ -23,11 +16,7 @@ import {
 
 const CATEGORY_ICONS = {
   [NOTIFICATION_CATEGORIES.USERS]: UserPlus,
-  [NOTIFICATION_CATEGORIES.JOBS]: Briefcase,
-  [NOTIFICATION_CATEGORIES.APPLICATIONS]: FileText,
-  [NOTIFICATION_CATEGORIES.SYSTEM]: AlertTriangle,
-  [NOTIFICATION_CATEGORIES.REVENUE]: DollarSign,
-  [NOTIFICATION_CATEGORIES.ADMIN]: Shield,
+  [NOTIFICATION_CATEGORIES.ADPRO]: Megaphone,
 };
 
 const PRIORITY_BADGES = {
@@ -49,11 +38,7 @@ const PRIORITY_BADGES = {
   },
 };
 
-const NotificationDetailModal = ({
-  notification,
-  onClose,
-  onDelete,
-}) => {
+const NotificationDetailModal = ({ notification, onClose, onReview }) => {
   if (!notification) return null;
 
   const catMeta = getCategoryMeta(notification.category);
@@ -64,7 +49,7 @@ const NotificationDetailModal = ({
 
   const handleCopyDetails = () => {
     navigator.clipboard.writeText(
-      `[${notification.priority.toUpperCase()}] ${notification.title}\n${notification.message}\nDate: ${formatFullDate(notification.timestamp)}`
+      `[${String(notification.priority || "").toUpperCase()}] ${notification.title}\n${notification.message}\nDate: ${formatFullDate(notification.timestamp)}`,
     );
     toast.info("Copied notification details to clipboard");
   };
@@ -78,7 +63,6 @@ const NotificationDetailModal = ({
           exit={{ opacity: 0, scale: 0.92, y: 15 }}
           className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-gray-100 overflow-hidden"
         >
-          {/* Modal Header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50/50">
             <div className="flex items-center gap-3">
               <div
@@ -103,7 +87,6 @@ const NotificationDetailModal = ({
             </button>
           </div>
 
-          {/* Modal Body */}
           <div className="p-6 space-y-4">
             <div>
               <span
@@ -140,36 +123,34 @@ const NotificationDetailModal = ({
             </div>
           </div>
 
-          {/* Modal Footer */}
-          <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-100">
+          <div className="flex items-center justify-end gap-2 px-6 py-4 bg-gray-50 border-t border-gray-100">
             <button
               type="button"
-              onClick={() => {
-                onDelete && onDelete(notification.id);
-                onClose();
-              }}
-              className="flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 px-3 py-2 rounded-xl hover:bg-red-50 transition-colors cursor-pointer"
+              onClick={handleCopyDetails}
+              className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-xs cursor-pointer"
             >
-              <Trash2 size={14} />
-              Delete
+              Copy Details
             </button>
-
-            <div className="flex items-center gap-2">
+            {onReview && notification.link && (
               <button
                 type="button"
-                onClick={handleCopyDetails}
-                className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-xs cursor-pointer"
+                onClick={() => {
+                  onReview(notification);
+                  onClose();
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-[#16730F] rounded-xl hover:bg-[#125a0c] transition-all shadow-xs cursor-pointer"
               >
-                Copy Details
+                Review
+                <ArrowRight size={14} />
               </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-xs font-bold text-white bg-[#16730F] rounded-xl hover:bg-[#125a0c] transition-all shadow-xs cursor-pointer"
-              >
-                Done
-              </button>
-            </div>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-xs cursor-pointer"
+            >
+              Close
+            </button>
           </div>
         </motion.div>
       </div>

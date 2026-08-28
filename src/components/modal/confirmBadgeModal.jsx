@@ -85,7 +85,10 @@ export const ConfirmBadgeModal = ({
           )}
           <button
             type="button"
-            onClick={onConfirm}
+            onClick={() => {
+              if (isLoading) return;
+              onConfirm?.();
+            }}
             disabled={isLoading}
             className="flex-1 py-2.5 rounded-xl bg-[#1A3E32] text-white text-sm font-semibold disabled:opacity-60"
           >

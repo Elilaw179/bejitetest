@@ -1,10 +1,9 @@
-import { Bell, RefreshCw, Download, CheckCheck } from "lucide-react";
+import { Bell, RefreshCw, Download } from "lucide-react";
 
 const NotificationHeader = ({
   unreadCount,
-  onResetNotifications,
+  onRefresh,
   onExportCsv,
-  onMarkAllAsRead,
 }) => {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -20,27 +19,26 @@ const NotificationHeader = ({
               </h1>
               {unreadCount > 0 && (
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white shadow-sm">
-                  {unreadCount} unread
+                  {unreadCount} pending
                 </span>
               )}
             </div>
             <p className="text-sm text-gray-500 mt-1">
-              Real-time activity logs, operational alerts, and platform insights
+              Recruiter verification requests and AdPro campaigns waiting for review
             </p>
           </div>
         </div>
       </div>
 
-      {/* Global Header Actions */}
       <div className="flex flex-wrap items-center gap-2.5">
         <button
           type="button"
-          onClick={onResetNotifications}
+          onClick={onRefresh}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 shadow-sm transition-all active:scale-95 cursor-pointer"
-          title="Reset to fresh mock feed"
+          title="Refresh pending reviews"
         >
           <RefreshCw size={14} />
-          Refresh Feed
+          Refresh
         </button>
         <button
           type="button"
@@ -49,19 +47,6 @@ const NotificationHeader = ({
         >
           <Download size={14} />
           Export CSV
-        </button>
-        <button
-          type="button"
-          onClick={onMarkAllAsRead}
-          disabled={unreadCount === 0}
-          className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 ${
-            unreadCount > 0
-              ? "bg-[#16730F] text-white hover:bg-[#125a0c] cursor-pointer"
-              : "bg-gray-100 text-gray-400 cursor-not-allowed"
-          }`}
-        >
-          <CheckCheck size={15} />
-          Mark all read
         </button>
       </div>
     </div>

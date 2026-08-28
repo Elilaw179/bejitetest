@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { verifyBadgeSubscription } from '../../services/verifiedBadgeApi';
@@ -6,6 +6,13 @@ import { refreshVerifiedBadgeInSession } from '../../services/verifiedBadgeSync'
 import { getUser } from '../../utils/tokenManager';
 import { getRecruiterIdUploadPath } from '../../utils/recruiterProfilePaths';
 import { userIsRecruiter } from '../../utils/verifiedBadge';
+
+const OPEN_PAYSTACK_STATUSES = new Set([
+  'abandoned',
+  'ongoing',
+  'pending',
+  'processing',
+]);
 
 function getBadgeRetryPath() {
   const sessionUser = getUser();
@@ -19,11 +26,20 @@ export default function BadgePaymentCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const inIframe =
+    typeof window !== 'undefined' && window.self !== window.top;
   const [status, setStatus] = useState('processing');
   const [message, setMessage] = useState('Verifying your subscription...');
   const retryPath = getBadgeRetryPath();
+  const startedRef = useRef(false);
 
   useEffect(() => {
+    // Paystack may prefetch callback_url in a hidden iframe while the card
+    // form is still open. Verifying then freezes checkout on "processing".
+    if (inIframe) return;
+    if (startedRef.current) return;
+    startedRef.current = true;
+
     const verify = async () => {
       const ref = searchParams.get('reference') || searchParams.get('trxref');
       if (!ref) {
@@ -34,6 +50,7 @@ export default function BadgePaymentCallback() {
 
       try {
         const response = await verifyBadgeSubscription(ref);
+        const txnStatus = String(response?.data?.status || '').toLowerCase();
         if (response?.data?.status === 'success') {
           if (response?.applied === false) {
             setStatus('error');
@@ -59,10 +76,19 @@ export default function BadgePaymentCallback() {
               ),
             2000,
           );
-        } else {
-          setStatus('error');
-          setMessage('Payment verification failed. Please try again.');
+          return;
         }
+
+        if (OPEN_PAYSTACK_STATUSES.has(txnStatus)) {
+          setStatus('error');
+          setMessage(
+            'Payment was not completed. Go back and enter your card details again when you are ready.',
+          );
+          return;
+        }
+
+        setStatus('error');
+        setMessage('Payment verification failed. Please try again.');
       } catch (error) {
         console.error('Badge payment verification error:', error);
         setStatus('error');
@@ -74,7 +100,11 @@ export default function BadgePaymentCallback() {
     };
 
     verify();
-  }, [searchParams, navigate, dispatch]);
+  }, [searchParams, navigate, dispatch, inIframe]);
+
+  if (inIframe) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

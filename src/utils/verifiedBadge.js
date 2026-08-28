@@ -47,3 +47,35 @@ export function userShowsUnverifiedRecruiterPill(user, { forceRecruiter = false 
   if (userHasVerifiedBadge(user)) return false;
   return forceRecruiter || userIsRecruiter(user);
 }
+
+const BADGE_PAYMENT_MODAL_KEY = "bejiteBadgePaymentModal";
+
+export function stashBadgePaymentModal(kind) {
+  if (!kind || typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(BADGE_PAYMENT_MODAL_KEY, kind);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function readBadgePaymentModalKind() {
+  if (typeof window === "undefined") return null;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("pendingReview") === "1") return "pendingReview";
+    if (params.get("paid") === "1") return "activated";
+    return sessionStorage.getItem(BADGE_PAYMENT_MODAL_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function clearBadgePaymentModal() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(BADGE_PAYMENT_MODAL_KEY);
+  } catch {
+    /* ignore */
+  }
+}

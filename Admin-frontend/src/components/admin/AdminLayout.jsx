@@ -22,21 +22,17 @@ import {
   getAdminRoleLabel,
 } from "../../constants/adminPermissions";
 import NotificationDropdown from "./NotificationDropdown";
-import { generateMockNotifications } from "../../data/notificationData";
+import { useAdminInbox } from "../../context/AdminInboxContext";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState(() =>
-    generateMockNotifications(),
-  );
   const [bellRing, setBellRing] = useState(false);
+  const { notifications, unreadCount } = useAdminInbox();
 
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleLogout = () => {
     dispatch(logout());
@@ -47,16 +43,6 @@ const AdminLayout = () => {
     setNotifOpen((prev) => !prev);
     setBellRing(true);
     setTimeout(() => setBellRing(false), 800);
-  }, []);
-
-  const handleMarkAsRead = useCallback((id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    );
-  }, []);
-
-  const handleMarkAllAsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, []);
 
   const navItems = [
@@ -238,8 +224,7 @@ const AdminLayout = () => {
                 isOpen={notifOpen}
                 onClose={() => setNotifOpen(false)}
                 notifications={notifications}
-                onMarkAsRead={handleMarkAsRead}
-                onMarkAllAsRead={handleMarkAllAsRead}
+                unreadCount={unreadCount}
               />
             </div>
 

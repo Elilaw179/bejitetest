@@ -74,6 +74,7 @@ function Section({ title, children }) {
 export default function AdCampaignReviewCard({
   campaign,
   updatingId,
+  highlighted = false,
   onUpdateStatus,
 }) {
   const landingHref = getLandingHref(
@@ -83,7 +84,14 @@ export default function AdCampaignReviewCard({
   const audience = campaign.audience || {};
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div
+      id={`adpro-campaign-${campaign.id}`}
+      className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${
+        highlighted
+          ? "border-[#16730F] ring-2 ring-[#16730F]/30"
+          : "border-gray-100"
+      }`}
+    >
       <div className="p-5 sm:p-6 space-y-5">
         <div className="flex flex-col lg:flex-row gap-5">
           {campaign.mediaUrl && (
