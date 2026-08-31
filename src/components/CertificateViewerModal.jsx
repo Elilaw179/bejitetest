@@ -150,12 +150,26 @@ function CertificateViewerModalContent({
               ) : null}
             </div>
           ) : showImagePreview ? (
-            <img
-              src={resolvedUrl}
-              alt={title || 'Document'}
-              className="max-w-full max-h-[80vh] object-contain rounded-lg"
-              onError={() => setLoadError(true)}
-            />
+            <div className="flex flex-col items-center gap-4 p-3">
+              <img
+                src={resolvedUrl}
+                alt={title || 'Photo'}
+                className="max-w-full max-h-[72vh] object-contain rounded-lg"
+                onError={() => setLoadError(true)}
+              />
+              <button
+                type="button"
+                disabled={!resolvedUrl}
+                onClick={() => {
+                  if (resolvedUrl) {
+                    triggerDocumentDownload(resolvedUrl, filename || 'photo.jpg');
+                  }
+                }}
+                className="px-5 py-2.5 rounded-lg bg-[#16A34A] text-white text-sm font-medium hover:bg-[#15803D] disabled:opacity-50"
+              >
+                Download
+              </button>
+            </div>
           ) : showPdfDownload ? (
             <div className="text-white text-center p-8 space-y-4">
               <div className="w-16 h-20 mx-auto bg-white rounded-lg flex items-end justify-center pb-2 shadow-lg">
@@ -235,7 +249,10 @@ export function CertificateViewLink({
       <button
         type="button"
         className={className}
-        onClick={() => setOpen(true)}
+        onClick={(event) => {
+          event.stopPropagation();
+          setOpen(true);
+        }}
       >
         {children || (kind === 'pdf' ? 'Download document' : 'View document')}
       </button>
