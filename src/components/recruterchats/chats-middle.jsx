@@ -6,7 +6,8 @@ import messagingService from '../../services/messagingService';
 import { API_URL } from '../../config';
 import ChatMessageInput from '../chat/ChatMessageInput';
 import ChatMessageBubble from '../chat/ChatMessageBubble';
-import { formatChatMessageTime } from '../../utils/chatTimeUtils';
+import ChatDaySeparator from '../chat/ChatDaySeparator';
+import { formatChatDayLabel, formatChatMessageTime, groupMessagesByDay } from '../../utils/chatTimeUtils';
 import { formatDisplayPersonName } from '../../utils/personDisplayName';
 import { toQuotePreview } from '../../utils/chatQuote';
 import { notifyChatConversationUpdated } from '../../utils/headerBadgeEvents';
@@ -263,6 +264,8 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     [messages],
   );
 
+  const messageDays = useMemo(() => groupMessagesByDay(messages), [messages]);
+
   const isOwnMessage = (msg) => {
     const currentUserId =
       currentUser?.id ||
@@ -396,7 +399,12 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
     ) : (
       /* Messages Display */
       <div className="px-1 md:px-2">
-        {messages.map((msg) => {
+        {messageDays.map((day) => (
+          <section key={day.dayKey} className="relative">
+            <ChatDaySeparator
+              label={formatChatDayLabel(day.messages[0]?.created_at)}
+            />
+            {day.messages.map((msg) => {
           const senderName = formatDisplayPersonName(
             {
               firstName: msg.firstName ?? msg.first_name,
@@ -420,32 +428,34 @@ function ChatsMiddle({ selectedChat, onShowChatList, onShowChatInfo }) {
           );
 
           return (
-            <ChatMessageBubble
-              key={msg.id}
-              message={msg}
-              isOwnMessage={ownMessage}
-              senderName={senderName}
-              senderHasVerifiedBadge={Boolean(msg.hasVerifiedBadge)}
-              senderBadgeUser={
-                ownMessage
-                  ? currentUser
-                  : selectedChat?.other_user
-              }
-              senderAvatar={senderAvatar}
-              senderInitials={senderInitials}
-              messageTime={messageTime}
-              editing={editingMessageId === msg.id}
-              saving={savingEdit && editingMessageId === msg.id}
-              onStartEdit={() => setEditingMessageId(msg.id)}
-              onCancelEdit={() => setEditingMessageId(null)}
-              onSaveEdit={(content) => handleEditMessage(msg.id, content)}
-              onDelete={() => handleDeleteMessage(msg.id)}
-              onReply={() => handleStartReply(msg)}
-              onQuoteClick={handleQuoteClick}
-              canJumpToQuote={messageIds.has(String(msg.reply_to?.id))}
-            />
+              <ChatMessageBubble
+                key={msg.id}
+                message={msg}
+                isOwnMessage={ownMessage}
+                senderName={senderName}
+                senderHasVerifiedBadge={Boolean(msg.hasVerifiedBadge)}
+                senderBadgeUser={
+                  ownMessage
+                    ? currentUser
+                    : selectedChat?.other_user
+                }
+                senderAvatar={senderAvatar}
+                senderInitials={senderInitials}
+                messageTime={messageTime}
+                editing={editingMessageId === msg.id}
+                saving={savingEdit && editingMessageId === msg.id}
+                onStartEdit={() => setEditingMessageId(msg.id)}
+                onCancelEdit={() => setEditingMessageId(null)}
+                onSaveEdit={(content) => handleEditMessage(msg.id, content)}
+                onDelete={() => handleDeleteMessage(msg.id)}
+                onReply={() => handleStartReply(msg)}
+                onQuoteClick={handleQuoteClick}
+                canJumpToQuote={messageIds.has(String(msg.reply_to?.id))}
+              />
           );
-        })}
+            })}
+          </section>
+        ))}
         <div ref={messagesEndRef} aria-hidden="true" />
       </div>
     )}
