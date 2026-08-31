@@ -63,11 +63,23 @@ function MessageAttachment({
   }
 
   return (
-    <img
-      src={url}
-      alt={caption || 'attachment'}
-      className="mb-2 w-full max-w-xs rounded-lg max-h-48 object-cover"
-    />
+    <div className="mb-2" onClick={(event) => event.stopPropagation()}>
+      <CertificateViewLink
+        fileUrl={url}
+        fetchUrl={messageId ? `/messages/${messageId}/attachment` : undefined}
+        title={
+          displayName && displayName !== 'Document' ? displayName : 'Photo'
+        }
+        overlayClassName="z-[10000]"
+        className="block w-full max-w-xs text-left p-0 border-0 bg-transparent cursor-zoom-in rounded-lg"
+      >
+        <img
+          src={url}
+          alt={caption || 'Photo'}
+          className="w-full max-w-xs rounded-lg max-h-48 object-cover pointer-events-none"
+        />
+      </CertificateViewLink>
+    </div>
   );
 }
 
