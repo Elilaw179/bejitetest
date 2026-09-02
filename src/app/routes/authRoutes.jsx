@@ -11,6 +11,7 @@ import {
   AuthFailure,
   CompleteSignup,
   ResetPassword,
+  TwoFactorRecovery,
 } from "../lazyPages.js";
 
 export const authRoutes = (
@@ -26,5 +27,6 @@ export const authRoutes = (
       <Route path="/signup-role" element={<SignUpRole />} />
       <Route path="/confirmpassword" element={<ConfirmPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/auth/2fa-recovery" element={<TwoFactorRecovery />} />
   </>
 );

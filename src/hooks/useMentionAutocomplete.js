@@ -21,12 +21,14 @@ export default function useMentionAutocomplete({
   const listId = useId();
   const listRef = useRef(null);
   const [suggestions, setSuggestions] = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [activeToken, setActiveToken] = useState(null);
   const [highlight, setHighlight] = useState(0);
   const cacheRef = useRef([]);
 
   const dismissSuggestions = useCallback(() => {
     setSuggestions([]);
+    setSuggestionsLoading(false);
     setActiveToken(null);
   }, []);
 
@@ -40,7 +42,10 @@ export default function useMentionAutocomplete({
       }
       return mention;
     });
-    if (!mention) setSuggestions([]);
+    if (!mention) {
+      setSuggestions([]);
+      setSuggestionsLoading(false);
+    }
   }, []);
 
   const mentionQuery =
@@ -52,18 +57,27 @@ export default function useMentionAutocomplete({
     const query = mentionQuery.trim();
     setSuggestions(rankMentionUsers(cacheRef.current, query));
     setHighlight(0);
+    setSuggestionsLoading(true);
 
     const controller = new AbortController();
     let cancelled = false;
     const timer = setTimeout(
       async () => {
-        const users = await searchMentionSuggestions(query, SUGGESTION_LIMIT, {
-          signal: controller.signal,
-        });
-        if (cancelled) return;
-        cacheRef.current = users;
-        setSuggestions(users);
-        setHighlight(0);
+        try {
+          const users = await searchMentionSuggestions(query, SUGGESTION_LIMIT, {
+            signal: controller.signal,
+          });
+          if (cancelled) return;
+          cacheRef.current = users;
+          setSuggestions(users);
+          setHighlight(0);
+        } catch (error) {
+          if (!cancelled && error?.name !== "AbortError") {
+            setSuggestions([]);
+          }
+        } finally {
+          if (!cancelled) setSuggestionsLoading(false);
+        }
       },
       query.length <= 1 ? 0 : 40,
     );
@@ -164,7 +178,7 @@ export default function useMentionAutocomplete({
   const textareaAria = {
     role: "combobox",
     "aria-autocomplete": "list",
-    "aria-expanded": suggestions.length > 0,
+    "aria-expanded": suggestions.length > 0 || suggestionsLoading,
     "aria-controls": listId,
     "aria-activedescendant":
       suggestions.length > 0 ? `${listId}-opt-${highlight}` : undefined,
@@ -172,6 +186,7 @@ export default function useMentionAutocomplete({
 
   return {
     suggestions,
+    suggestionsLoading,
     highlight,
     activeToken,
     applyMention,

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { getUserProfileImage } from "../../utils/profileImageUtils";
 import { formatDisplayPersonName, formatDisplayHandle } from "../../utils/personDisplayName";
 import DisplayNameWithBadge from "../DisplayNameWithBadge";
@@ -8,7 +9,13 @@ import { formatCompactCount as formatNetworkCount } from "../../utils/formatComp
 
 export default function RecruitmentRightMobileMenu({ onNavigate }) {
   const navigate = useNavigate();
-  const { userData, postCount, connectionCount } = useRecruitmentRightStats();
+  const {
+    userData,
+    postCount,
+    connectionCount,
+    postCountLoading,
+    networkCountLoading,
+  } = useRecruitmentRightStats();
 
   const go = (path) => {
     navigate(path);
@@ -46,11 +53,29 @@ export default function RecruitmentRightMobileMenu({ onNavigate }) {
         <div className="grid grid-cols-2 gap-2 mt-4">
           <div className="bg-white/10 rounded-lg py-2 px-2 text-center border border-white/10">
             <p className="text-[10px] text-white/70 uppercase">Posts</p>
-            <p className="text-base font-bold">{postCount}</p>
+            <p className="text-base font-bold min-h-[1.5rem] flex items-center justify-center">
+              {postCountLoading ? (
+                <Loader2
+                  className="w-4 h-4 animate-spin text-white/80"
+                  aria-label="Loading post count"
+                />
+              ) : (
+                postCount
+              )}
+            </p>
           </div>
           <div className="bg-white/10 rounded-lg py-2 px-2 text-center border border-white/10">
             <p className="text-[10px] text-white/70 uppercase">Network</p>
-            <p className="text-base font-bold">{formatNetworkCount(connectionCount)}</p>
+            <p className="text-base font-bold min-h-[1.5rem] flex items-center justify-center">
+              {networkCountLoading ? (
+                <Loader2
+                  className="w-4 h-4 animate-spin text-white/80"
+                  aria-label="Loading network count"
+                />
+              ) : (
+                formatNetworkCount(connectionCount)
+              )}
+            </p>
           </div>
         </div>
 

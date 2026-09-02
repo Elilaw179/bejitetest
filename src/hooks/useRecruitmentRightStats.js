@@ -38,12 +38,20 @@ export default function useRecruitmentRightStats() {
   const [userData, setUserData] = useState(null);
   const [postCount, setPostCount] = useState(0);
   const [connectionCount, setConnectionCount] = useState(0);
+  const [postCountLoading, setPostCountLoading] = useState(true);
+  const [networkCountLoading, setNetworkCountLoading] = useState(true);
 
   useEffect(() => {
     const user = getUser();
-    if (!user) return;
+    if (!user) {
+      setPostCountLoading(false);
+      setNetworkCountLoading(false);
+      return;
+    }
 
     setUserData(user);
+    setPostCountLoading(true);
+    setNetworkCountLoading(true);
 
     resolveUserNickname(user).then((enriched) => {
       setUserData(enriched);
@@ -53,7 +61,8 @@ export default function useRecruitmentRightStats() {
       .then((data) => {
         setPostCount(data.posts?.length || 0);
       })
-      .catch((err) => console.error("Error fetching posts:", err));
+      .catch((err) => console.error("Error fetching posts:", err))
+      .finally(() => setPostCountLoading(false));
 
     const isCorporate =
       String(user.role || "").toLowerCase() === "recruiter" &&
@@ -74,8 +83,15 @@ export default function useRecruitmentRightStats() {
               : data.connections?.length || 0,
         );
       })
-      .catch((err) => console.error("Error fetching network count:", err));
+      .catch((err) => console.error("Error fetching network count:", err))
+      .finally(() => setNetworkCountLoading(false));
   }, []);
 
-  return { userData, postCount, connectionCount };
+  return {
+    userData,
+    postCount,
+    connectionCount,
+    postCountLoading,
+    networkCountLoading,
+  };
 }

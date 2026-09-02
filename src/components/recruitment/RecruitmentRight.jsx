@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { getUserProfileImage } from "../../utils/profileImageUtils";
 import {
   formatDisplayPersonName,
@@ -12,7 +13,13 @@ import { formatCompactCount as formatNetworkCount } from "../../utils/formatComp
 
 function RecruitmentRight() {
   const navigate = useNavigate();
-  const { userData, postCount, connectionCount } = useRecruitmentRightStats();
+  const {
+    userData,
+    postCount,
+    connectionCount,
+    postCountLoading,
+    networkCountLoading,
+  } = useRecruitmentRightStats();
 
   const displayName = userData
     ? formatDisplayPersonName(userData, "User")
@@ -73,7 +80,16 @@ function RecruitmentRight() {
                     Total
                   </p>
                 </div>
-                <p className="text-[15px] font-bold text-white">{postCount}</p>
+                <p className="text-[15px] font-bold text-white min-h-[1.25rem] flex items-center justify-center">
+                  {postCountLoading ? (
+                    <Loader2
+                      className="w-4 h-4 animate-spin text-white/80"
+                      aria-label="Loading post count"
+                    />
+                  ) : (
+                    postCount
+                  )}
+                </p>
                 <p className="text-[10px] font-medium text-white/60 mt-0.5">
                   Posts Created
                 </p>
@@ -98,8 +114,15 @@ function RecruitmentRight() {
                     Network
                   </p>
                 </div>
-                <p className="text-[15px] font-bold text-white">
-                  {formatNetworkCount(connectionCount)}
+                <p className="text-[15px] font-bold text-white min-h-[1.25rem] flex items-center justify-center">
+                  {networkCountLoading ? (
+                    <Loader2
+                      className="w-4 h-4 animate-spin text-white/80"
+                      aria-label="Loading network count"
+                    />
+                  ) : (
+                    formatNetworkCount(connectionCount)
+                  )}
                 </p>
                 <p className="text-[10px] font-medium text-white/60 mt-0.5">
                   {String(userData?.role || "").toLowerCase() === "recruiter" &&

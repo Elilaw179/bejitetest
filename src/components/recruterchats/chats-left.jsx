@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { FaSearch, FaTrash } from 'react-icons/fa';
 import messagingService from '../../services/messagingService';
 import { API_URL } from '../../config';
@@ -9,6 +9,7 @@ import { CHAT_CONVERSATION_UPDATED } from '../../utils/headerBadgeEvents';
 
 const CONVERSATION_UPDATED = CHAT_CONVERSATION_UPDATED;
 const PAGE_SIZE = 20;
+let persistedListScrollTop = 0;
 
 function mergeFirstPage(previous, firstPage) {
   const firstIds = new Set(firstPage.map((c) => String(c.id)));
@@ -26,7 +27,7 @@ function mergeFirstPage(previous, firstPage) {
   return [...firstPage, ...older];
 }
 
-function ChatsLeft({ onSelectChat, selectedChat, onConversationHidden }) {
+function ChatsLeft({ onSelectChat, selectedChat, onConversationHidden, isVisible = true }) {
   const [conversations, setConversations] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,6 +99,18 @@ function ChatsLeft({ onSelectChat, selectedChat, onConversationHidden }) {
     fetchFirstPage();
   }, [fetchFirstPage]);
 
+  useLayoutEffect(() => {
+    if (isVisible === false) {
+      const el = listRef.current;
+      if (el) persistedListScrollTop = el.scrollTop;
+      return undefined;
+    }
+    const el = listRef.current;
+    if (!el || loading) return undefined;
+    el.scrollTop = persistedListScrollTop;
+    return undefined;
+  }, [isVisible, loading, conversations.length]);
+
   useEffect(() => {
     const onUpdate = () => fetchFirstPage(true);
     window.addEventListener(CONVERSATION_UPDATED, onUpdate);
@@ -121,7 +134,7 @@ function ChatsLeft({ onSelectChat, selectedChat, onConversationHidden }) {
   useEffect(() => {
     const root = listRef.current;
     const sentinel = sentinelRef.current;
-    if (!root || !sentinel || loading || isSearching) return;
+    if (!root || !sentinel || loading || isSearching || isVisible === false) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -131,7 +144,7 @@ function ChatsLeft({ onSelectChat, selectedChat, onConversationHidden }) {
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [loading, isSearching, hasMore, conversations.length, loadMore]);
+  }, [loading, isSearching, isVisible, hasMore, conversations.length, loadMore]);
 
   const handleUserSearch = async (query) => {
     if (!query.trim()) return;
@@ -239,9 +252,15 @@ function ChatsLeft({ onSelectChat, selectedChat, onConversationHidden }) {
         </div>
       </div>
 
-      <div ref={listRef} className="flex-1 overflow-y-auto overscroll-y-contain nfl-sidebar-scroll scroll-smooth border-t border-[#556B1F]/60">
+      <div
+        ref={listRef}
+        onScroll={() => {
+          if (listRef.current) persistedListScrollTop = listRef.current.scrollTop;
+        }}
+        className="flex-1 overflow-y-auto overscroll-y-contain nfl-sidebar-scroll border-t border-[#556B1F]/60"
+      >
         <div className="p-2 space-y-1">
-          {loading && !isSearching ? (
+          {loading && conversations.length === 0 && !isSearching ? (
             <div className="text-center text-white/70 py-6 text-sm">
               Loading conversations...
             </div>
