@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { jwtDecode } from 'jwt-decode';
 import { toast } from 'react-toastify';
 import Loader from '../../components/ui/Loader';
 import axiosInstance from '../../utils/axiosInstance';
-import { hydrateAuth } from '../../features/auth/authSlice';
+import { hydrateAuth, verifyTwoFactorLogin } from '../../features/auth/authSlice';
 import { storeUser } from '../../utils/tokenManager';
+import TwoFactorCodeForm from '../../components/auth/TwoFactorCodeForm';
+import { requestTwoFactorRecovery } from '../../services/twoFactorApi';
 
 /**
  * Query/JWT payloads are sometimes sparse; GET /auth/me returns the canonical session user.
@@ -24,12 +26,28 @@ const AuthSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { loading, errors } = useSelector((state) => state.auth);
+  const [twoFactorToken, setTwoFactorToken] = useState('');
+  const [challengeId, setChallengeId] = useState('');
+  const [awaitingTwoFactor, setAwaitingTwoFactor] = useState(false);
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     const run = async () => {
       const params = new URLSearchParams(location.search);
+      const challengeParam = params.get('challenge');
+      const challengeToken = params.get('twoFactorToken');
+      const requiresTwoFactor = params.get('requiresTwoFactor') === 'true';
+
+      if (requiresTwoFactor) {
+        setChallengeId(challengeParam || '');
+        setTwoFactorToken(challengeToken || '');
+        setAwaitingTwoFactor(true);
+        return;
+      }
+
       const token = params.get('token') || params.get('accessToken');
       const refreshTokenParam = params.get('refreshToken');
       const userParam = params.get('user');
@@ -138,6 +156,71 @@ const AuthSuccess = () => {
       cancelled = true;
     };
   }, [location, navigate, dispatch]);
+
+  const completeSession = (data) => {
+    const user = data.confirmedUser || data.user;
+    toast.success('Welcome back!');
+    const isVerified = user?.verified || user?.isEmailVerified;
+    const hasCompletedSignup = user?.role !== null && user?.role !== undefined;
+    if (!isVerified) {
+      navigate('/auth/email-sent');
+    } else if (!hasCompletedSignup) {
+      navigate(
+        `/complete-signup?email=${encodeURIComponent(user?.email || '')}&status=verified`,
+      );
+    } else {
+      navigate('/news-feed');
+    }
+  };
+
+  const handleTwoFactorVerify = (code) => {
+    dispatch(verifyTwoFactorLogin({ twoFactorToken, challengeId, code }))
+      .unwrap()
+      .then(completeSession)
+      .catch((err) => {
+        const errorMessage = err.error || err.message;
+        toast.error(errorMessage || 'Invalid authentication code.');
+        if (err.code === 'TWO_FACTOR_EXPIRED') {
+          navigate('/');
+        }
+      });
+  };
+
+  const handleTwoFactorRecovery = async () => {
+    if (recoveryLoading) return;
+    setRecoveryLoading(true);
+    try {
+      const data = await requestTwoFactorRecovery({ twoFactorToken, challengeId });
+      toast.success(data.message || 'Check your email for a recovery link.');
+    } catch (error) {
+      toast.error(error.message || 'Could not send recovery email.');
+    } finally {
+      setRecoveryLoading(false);
+    }
+  };
+
+  if (awaitingTwoFactor) {
+    return (
+      <div className="w-screen min-h-screen flex justify-center items-center bg-white px-6">
+        <div className="w-full max-w-md space-y-5">
+          <h2 className="text-3xl font-norican font-semibold text-[#16730F] text-center">
+            Two-Factor Authentication
+          </h2>
+          <p className="text-center text-[#16730F] text-md">
+            Enter the code from your authenticator app to finish signing in.
+          </p>
+          <TwoFactorCodeForm
+            onSubmit={handleTwoFactorVerify}
+            loading={loading}
+            error={errors?.error}
+            onRequestRecovery={handleTwoFactorRecovery}
+            recoveryLoading={recoveryLoading}
+            onBack={() => navigate('/')}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-screen h-screen flex justify-center items-center">

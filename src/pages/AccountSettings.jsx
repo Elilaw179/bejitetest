@@ -46,6 +46,8 @@ import {
   unsubscribeFromPushNotifications,
   updateNotificationPreferences,
 } from "../services/pushNotificationService";
+import { getTwoFactorStatus } from "../services/twoFactorApi";
+import { getProfileVisibilitySetting } from "../services/profileVisibilityApi";
 
 export default function AccountSettings() {
   useSyncProfilePhoto();
@@ -78,6 +80,7 @@ export default function AccountSettings() {
   const [profileVisibility, setProfileVisibility] = useState("Public");
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +103,21 @@ export default function AccountSettings() {
     };
 
     loadPrefs();
+    getProfileVisibilitySetting()
+      .then((data) => {
+        if (!cancelled && data?.label) setProfileVisibility(data.label);
+      })
+      .catch((error) => {
+        console.warn(
+          "Failed to load profile visibility:",
+          error?.response?.data?.error || error?.message,
+        );
+      });
+    getTwoFactorStatus()
+      .then((data) => {
+        if (!cancelled) setTwoFactorEnabled(Boolean(data.enabled));
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -196,7 +214,9 @@ export default function AccountSettings() {
           icon: Smartphone,
           iconBg: "bg-purple-50",
           label: "Two-Factor Authentication",
-          sublabel: "Add an extra layer of security",
+          sublabel: twoFactorEnabled
+            ? "Enabled — extra login protection is on"
+            : "Add an extra layer of security",
           onClick: () => setModal("2fa"),
         },
       ],
@@ -246,26 +266,26 @@ export default function AccountSettings() {
             </button>
           ),
         },
-        {
-          icon: Smartphone,
-          iconBg: "bg-amber-50",
-          label: "SMS Notifications",
-          sublabel: "Get alerts on your phone",
-          action: (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleChannelToggle("sms");
-              }}
-              disabled={prefsLoading || channelLoading === "sms"}
-              className={`relative w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${notifications.sms ? "bg-[#1A3E32]" : "bg-gray-200"}`}
-            >
-              <span
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${notifications.sms ? "left-6" : "left-1"}`}
-              />
-            </button>
-          ),
-        },
+        // {
+        //   icon: Smartphone,
+        //   iconBg: "bg-amber-50",
+        //   label: "SMS Notifications",
+        //   sublabel: "Get alerts on your phone",
+        //   action: (
+        //     <button
+        //       onClick={(e) => {
+        //         e.stopPropagation();
+        //         handleChannelToggle("sms");
+        //       }}
+        //       disabled={prefsLoading || channelLoading === "sms"}
+        //       className={`relative w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${notifications.sms ? "bg-[#1A3E32]" : "bg-gray-200"}`}
+        //     >
+        //       <span
+        //         className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${notifications.sms ? "left-6" : "left-1"}`}
+        //       />
+        //     </button>
+        //   ),
+        // },
       ],
     },
     {
@@ -389,7 +409,11 @@ export default function AccountSettings() {
       {/* Modals */}
       <AnimatePresence>
         {modal === "password" && (
-          <ChangePasswordModal key="pw" onClose={() => setModal(null)} />
+          <ChangePasswordModal
+            key="pw"
+            onClose={() => setModal(null)}
+            onUpdated={() => showToast("Password updated")}
+          />
         )}
         {modal === "email" && (
           <ChangeEmailModal
@@ -403,9 +427,14 @@ export default function AccountSettings() {
         {modal === "2fa" && (
           <TwoFactorModal
             key="2fa"
-            onClose={() => {
-              setModal(null);
-              showToast("2FA setup completed");
+            onClose={() => setModal(null)}
+            onEnabled={() => {
+              setTwoFactorEnabled(true);
+              showToast("Two-factor authentication enabled");
+            }}
+            onDisabled={() => {
+              setTwoFactorEnabled(false);
+              showToast("Two-factor authentication disabled");
             }}
           />
         )}

@@ -68,6 +68,7 @@ export const CompleteSignup = lazy(() => import("../pages/CompleteSignup.jsx"));
 export const Profile = lazy(() => import("../pages/Profile.jsx"));
 export const UserProfilePosts = lazy(() => import("../pages/UserProfilePosts.jsx"));
 export const ResetPassword = lazy(() => import("../pages/ResetPassword.jsx"));
+export const TwoFactorRecovery = lazy(() => import("../pages/auth/TwoFactorRecovery.jsx"));
 export const ASEPricingPage = lazy(() => import("../pages/employerDashboard/ASEPricingPage.jsx"));
 export const ASEPaymentCallback = lazy(() => import("../pages/employerDashboard/ASEPaymentCallback.jsx"));
 export const ASESubscriptionDashboard = lazy(() => import("../pages/employerDashboard/ASESubscriptionDashboard.jsx"));

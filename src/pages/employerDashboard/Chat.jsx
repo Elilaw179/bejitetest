@@ -70,36 +70,46 @@ function Chat() {
       <div className="flex-1 min-h-0 w-full overflow-hidden overscroll-none p-2 sm:p-4 flex flex-col">
         <div className="flex-1 min-h-0 w-full max-w-screen-xl mx-auto flex flex-col overflow-hidden">
 
-          {/* Phone: single-panel navigation */}
-          <div className="md:hidden flex-1 min-h-0 flex flex-col overflow-hidden">
-            {currentView === 'chatList' && (
-              <div className="bg-[#1A3E32] rounded-lg overflow-hidden flex-1 min-h-0">
-                <ChatsLeft
-                  onSelectChat={handleSelectChat}
-                  selectedChat={selectedChat}
-                  onConversationHidden={handleConversationHidden}
-                />
-              </div>
-            )}
+          {/* Phone: keep list/thread mounted so back restores scroll */}
+          <div className="md:hidden relative flex-1 min-h-0 overflow-hidden">
+            <div
+              className={`absolute inset-0 bg-[#1A3E32] rounded-lg overflow-hidden ${
+                currentView === 'chatList' ? 'z-10' : 'invisible pointer-events-none'
+              }`}
+              aria-hidden={currentView !== 'chatList'}
+            >
+              <ChatsLeft
+                onSelectChat={handleSelectChat}
+                selectedChat={selectedChat}
+                onConversationHidden={handleConversationHidden}
+                isVisible={currentView === 'chatList'}
+              />
+            </div>
 
-            {currentView === 'chatView' && (
-              <div className="bg-white rounded-lg overflow-hidden flex-1 min-h-0 flex flex-col">
-                <ChatsMiddle
-                  selectedChat={selectedChat}
-                  onShowChatList={showChatList}
-                  onShowChatInfo={showChatInfo}
-                />
-              </div>
-            )}
+            <div
+              className={`absolute inset-0 bg-white rounded-lg overflow-hidden flex flex-col ${
+                currentView === 'chatView' ? 'z-10' : 'invisible pointer-events-none'
+              }`}
+              aria-hidden={currentView !== 'chatView'}
+            >
+              <ChatsMiddle
+                selectedChat={selectedChat}
+                onShowChatList={showChatList}
+                onShowChatInfo={showChatInfo}
+              />
+            </div>
 
-            {currentView === 'chatInfo' && (
-              <div className="bg-[#F5F5F5] rounded-lg overflow-hidden flex-1 min-h-0">
-                <ChatsRight
-                  selectedChat={selectedChat}
-                  onBack={showChatView}
-                />
-              </div>
-            )}
+            <div
+              className={`absolute inset-0 bg-[#F5F5F5] rounded-lg overflow-hidden ${
+                currentView === 'chatInfo' ? 'z-10' : 'invisible pointer-events-none'
+              }`}
+              aria-hidden={currentView !== 'chatInfo'}
+            >
+              <ChatsRight
+                selectedChat={selectedChat}
+                onBack={showChatView}
+              />
+            </div>
           </div>
 
           {/* Tablet: conversation list + messages side by side */}

@@ -29,7 +29,7 @@ import ProfileCvSections, {
 } from "../components/ProfileCvSections";
 import axiosInstance from "../utils/axiosInstance";
 import { fetchCurrentUserProfilePhoto } from "../services/profilePhotoService";
-import { fetchFullUserProfile } from "../services/fetchFullUserProfile";
+import { fetchFullUserProfile, ProfileAccessError } from "../services/fetchFullUserProfile";
 import {
   mergeCvWithCandidateSkills,
   normalizeProfileSkills,
@@ -227,6 +227,7 @@ const Profile = () => {
   const [cvData, setCvData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [profileAccessCode, setProfileAccessCode] = useState(null);
   const [avatarCandidates, setAvatarCandidates] = useState([]);
   const [avatarIndex, setAvatarIndex] = useState(0);
   const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
@@ -264,12 +265,22 @@ const Profile = () => {
       }
 
       if (targetUserId) {
-        const full = await fetchFullUserProfile(targetUserId);
-        if (isCancelled()) return;
-        if (full?.user) {
-          merged = normalizeProfileData({ ...merged, ...full.user });
-          cv = full.cv;
-          profileFound = true;
+        try {
+          const full = await fetchFullUserProfile(targetUserId);
+          if (isCancelled()) return;
+          if (full?.user) {
+            merged = normalizeProfileData({ ...merged, ...full.user });
+            cv = full.cv;
+            profileFound = true;
+          }
+        } catch (profileError) {
+          if (isCancelled()) return;
+          if (profileError instanceof ProfileAccessError) {
+            setError(profileError.message);
+            setProfileAccessCode(profileError.code);
+            return;
+          }
+          throw profileError;
         }
 
         const hasSkillLabels =
@@ -412,8 +423,9 @@ const Profile = () => {
     setIsPhotoViewerOpen(false);
     setShowMutualConnections(false);
     setActiveTab("all");
-    setError(null);
-    setLoading(true);
+      setError(null);
+      setProfileAccessCode(null);
+      setLoading(true);
 
     fetchProfileData({ cancelled: () => !active });
 
@@ -550,14 +562,20 @@ const Profile = () => {
             </div>
             <p className="text-slate-900 font-bold text-lg mb-2">{error}</p>
             <p className="text-xs text-slate-500 mb-6 leading-relaxed">
-              Something went wrong while loading this profile.
+              {profileAccessCode === "PROFILE_PRIVATE" ||
+              profileAccessCode === "PROFILE_CONNECTIONS_ONLY"
+                ? "The owner has restricted who can view this profile."
+                : "Something went wrong while loading this profile."}
             </p>
-            <button
-              onClick={() => fetchProfileData()}
-              className="bg-[#16730F] text-white px-6 py-2.5 rounded-xl hover:bg-[#145a0c] font-semibold text-sm transition-all shadow-md hover:shadow-lg cursor-pointer"
-            >
-              Try Again
-            </button>
+            {profileAccessCode !== "PROFILE_PRIVATE" &&
+            profileAccessCode !== "PROFILE_CONNECTIONS_ONLY" ? (
+              <button
+                onClick={() => fetchProfileData()}
+                className="bg-[#16730F] text-white px-6 py-2.5 rounded-xl hover:bg-[#145a0c] font-semibold text-sm transition-all shadow-md hover:shadow-lg cursor-pointer"
+              >
+                Try Again
+              </button>
+            ) : null}
           </div>
         </div>
       </NewsFeedLayout>

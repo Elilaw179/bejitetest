@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { Loader2 } from "lucide-react";
 import { formatDisplayPersonName } from "../../utils/personDisplayName";
 import { getAuthorProfileImageUrl } from "../../utils/profileImageUtils";
 
@@ -9,6 +10,8 @@ const MENU_MAX_HEIGHT = 224;
 
 export default function MentionSuggestionList({
   suggestions,
+  loading = false,
+  mentionActive = false,
   highlight,
   onSelect,
   anchorRef,
@@ -16,9 +19,12 @@ export default function MentionSuggestionList({
   listId,
 }) {
   const [menuPos, setMenuPos] = useState(null);
+  const hasSuggestions = suggestions?.length > 0;
+  const showEmpty = mentionActive && !loading && !hasSuggestions;
+  const isOpen = loading || hasSuggestions || showEmpty;
 
   useLayoutEffect(() => {
-    if (!suggestions?.length) {
+    if (!isOpen) {
       setMenuPos(null);
       return undefined;
     }
@@ -59,10 +65,52 @@ export default function MentionSuggestionList({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [anchorRef, suggestions]);
+  }, [anchorRef, isOpen, suggestions, loading, showEmpty]);
 
-  if (!suggestions?.length || !menuPos || typeof document === "undefined") {
+  if (!isOpen || !menuPos || typeof document === "undefined") {
     return null;
+  }
+
+  const menuStyle = {
+    position: "fixed",
+    top: menuPos.top,
+    bottom: menuPos.bottom,
+    left: menuPos.left,
+    width: menuPos.width,
+    zIndex: MENU_Z_INDEX,
+  };
+
+  if (loading && !hasSuggestions) {
+    return createPortal(
+      <div
+        ref={listRef}
+        id={listId}
+        role="listbox"
+        aria-busy="true"
+        aria-label="Loading mention suggestions"
+        className="flex items-center justify-center rounded-xl border border-gray-200 bg-white shadow-lg py-6"
+        style={menuStyle}
+      >
+        <Loader2 className="w-5 h-5 animate-spin text-[#16730F]" aria-hidden />
+      </div>,
+      document.body,
+    );
+  }
+
+  if (showEmpty) {
+    return createPortal(
+      <div
+        ref={listRef}
+        id={listId}
+        role="listbox"
+        aria-label="No mention suggestions"
+        className="rounded-xl border border-gray-200 bg-white shadow-lg px-3 py-3 text-sm text-gray-500"
+        style={menuStyle}
+      >
+        No users found
+      </div>,
+      document.body,
+    );
   }
 
   return createPortal(
@@ -72,13 +120,8 @@ export default function MentionSuggestionList({
       role="listbox"
       className="overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg"
       style={{
-        position: "fixed",
-        top: menuPos.top,
-        bottom: menuPos.bottom,
-        left: menuPos.left,
-        width: menuPos.width,
+        ...menuStyle,
         maxHeight: menuPos.maxHeight,
-        zIndex: MENU_Z_INDEX,
       }}
     >
       {suggestions.map((user, index) => {

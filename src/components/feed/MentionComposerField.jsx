@@ -61,7 +61,9 @@ const MentionComposerField = forwardRef(function MentionComposerField(
 
   const {
     suggestions,
+    suggestionsLoading,
     highlight,
+    activeToken,
     applyMention,
     handleKeyDown,
     refreshToken,
@@ -127,6 +129,8 @@ const MentionComposerField = forwardRef(function MentionComposerField(
       />
       <MentionSuggestionList
         suggestions={suggestions}
+        loading={suggestionsLoading}
+        mentionActive={Boolean(activeToken)}
         highlight={highlight}
         onSelect={applyMention}
         anchorRef={wrapRef}
