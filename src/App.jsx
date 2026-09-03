@@ -8,6 +8,7 @@ import PushNotificationBootstrap from "./components/PushNotificationBootstrap.js
 import AuthBootstrap from "./components/AuthBootstrap.jsx";
 import VerifiedBadgeSync from "./components/VerifiedBadgeSync.jsx";
 import ProfileCompletionReminder from "./components/ProfileCompletionReminder.jsx";
+import JobseekerHiringProcessReminder from "./components/JobseekerHiringProcessReminder.jsx";
 import PageLoader from "./components/PageLoader.jsx";
 import AppRoutes from "./app/routes/AppRoutes.jsx";
 
@@ -31,6 +32,7 @@ function App() {
               <AppRoutes />
             </Suspense>
             <ProfileCompletionReminder />
+            <JobseekerHiringProcessReminder />
             <ToastContainer
               position="top-right"
               autoClose={3000}
