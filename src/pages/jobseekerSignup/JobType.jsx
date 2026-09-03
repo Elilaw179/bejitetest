@@ -340,7 +340,7 @@ function JobType() {
                   </div>
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
-                      label="JOB TITLE"
+                      label="JOB TITLE / YOUR ROLE"
                       value={form.jobTitle}
                       onChange={updateField("jobTitle")}
                       options={JOB_TITLE_OPTIONS}
