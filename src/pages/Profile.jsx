@@ -39,6 +39,7 @@ import { getUser, pickProfilePhotoPath } from "../utils/tokenManager";
 import { profileAvatarSrc } from "../utils/profilePhotoUrl";
 import { pickAuthorProfilePhoto } from "../utils/profileImageUtils";
 import { getRecruiterEditProfilePath } from "../utils/recruiterProfilePaths";
+import useAuth from "../hooks/useAuth";
 import {
   normalizeProfileData,
   unwrapAuthProfileBody,
@@ -223,6 +224,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { userId } = useParams();
+  const { user: authUser } = useAuth();
   const [profileData, setProfileData] = useState(null);
   const [cvData, setCvData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -235,7 +237,8 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const user = getUser();
+  // Prefer Redux so photo/name updates re-render immediately after edit.
+  const user = authUser || getUser();
 
   const fetchProfileData = async ({ cancelled } = {}) => {
     const isCancelled = () => Boolean(cancelled?.());
@@ -244,7 +247,7 @@ const Profile = () => {
       setLoading(true);
       setError(null);
 
-      const currentUser = getUser();
+      const currentUser = authUser || getUser();
       const targetUserId = userId || currentUser?.id;
       const viewingOwn =
         !userId || String(userId) === String(currentUser?.id ?? "");

@@ -13,6 +13,7 @@ import {
   FaLinkedin,
   FaTwitter,
   FaInstagram,
+  FaUser,
 } from "react-icons/fa";
 import { MdLocationOn, MdWork } from "react-icons/md";
 import { formatTimeRemaining, formatSalary } from "../../utils/checksFormat";
@@ -47,6 +48,9 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
   const applyLabel = hasExternalApplication
     ? "Apply on Company Website"
     : "Apply Now";
+  const isIndividualPoster =
+    String(job.posterMode || "").toLowerCase() === "individual";
+  const PosterIcon = isIndividualPoster ? FaUser : FaBuilding;
 
   const handleApplyClick = () => {
     if (hasExternalApplication) {
@@ -229,7 +233,7 @@ export const JobDetailsModal = ({ job, onClose, onApply }) => {
                     </div>
                     <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1.5 sm:gap-x-4 sm:gap-y-2 text-xs sm:text-sm text-gray-600">
                       <span className="flex items-center gap-1 min-w-0">
-                        <FaBuilding className="shrink-0 text-[#16730F]" />
+                        <PosterIcon className="shrink-0 text-[#16730F]" />
                         <span className="truncate">{job.company}</span>
                       </span>
                       <span className="flex items-center gap-1 min-w-0">
