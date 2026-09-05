@@ -8,6 +8,7 @@ import {
   FaClock,
   FaMoneyBillWave,
   FaGraduationCap,
+  FaUser,
 } from "react-icons/fa";
 import { MdWorkOutline, MdAccessTime } from "react-icons/md";
 import { formatSalary, formatTimeRemaining } from "../../utils/checksFormat";
@@ -23,6 +24,9 @@ export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
     job.recruiterProfilePhoto || job.companyLogo,
   );
   const excerpt = getJobCardExcerpt(job);
+  const isIndividualPoster =
+    String(job.posterMode || "").toLowerCase() === "individual";
+  const PosterIcon = isIndividualPoster ? FaUser : FaBuilding;
 
   return (
     <div
@@ -86,7 +90,7 @@ export const JobCard = ({ job, isSaved, onSave, onUnsave, onClick }) => {
             {/* Company & Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="flex items-center gap-1 text-sm text-gray-700 font-medium">
-                <FaBuilding className="text-[#16730F] text-xs" />
+                <PosterIcon className="text-[#16730F] text-xs" />
                 <span className="truncate max-w-[150px] sm:max-w-none">
                   {job.company}
                 </span>
