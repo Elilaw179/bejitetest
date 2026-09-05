@@ -17,6 +17,7 @@ import Loader from "../../../components/ui/Loader";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../utils/axiosInstance";
 import { AutocompleteInput } from "../../../components/forms/AutocompleteInput";
+import FormLabel from "../../../components/forms/FormLabel";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
 import {
   categoryOptions,
@@ -425,7 +426,12 @@ function Skills() {
         <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 overflow-visible">
           <div className="bg-[#fff] overflow-visible p-3 rounded-2xl space-y-1">
             <div className="bg-[#fff] rounded-2xl p-4">
-              <p className="font-semibold text-xs mb-1">SKILL (Enter or select a skill name and category and years of experience and use the add more button to add more skills)</p>
+              <FormLabel
+                label="SKILL"
+                required={true}
+                tooltip="Specific technical or professional skills you possess (e.g. React, Project Management)"
+              />
+              <p className="text-[11px] text-gray-500 mb-2">Enter or select a skill name and category, then use add more button</p>
               <AutocompleteSkillInput
                 value={skillsData.skillSector}
                 onChange={(e) =>
@@ -444,7 +450,11 @@ function Skills() {
 
             <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <p className="font-semibold text-xs mb-1">CATEGORY</p>
+                <FormLabel
+                  label="CATEGORY"
+                  required={true}
+                  tooltip="Your proficiency level for this skill (e.g. Entry Level, Junior, Mid-level, Senior, Veteran)"
+                />
                 <AutocompleteInput
                   value={skillsData.category}
                   onChange={(e) =>
@@ -460,7 +470,11 @@ function Skills() {
                 />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-xs mb-1">YEARS OF EXPERIENCE</p>
+                <FormLabel
+                  label="YEARS OF EXPERIENCE"
+                  required={true}
+                  tooltip="Number of years you have actively practiced or worked with this skill"
+                />
                 <AutocompleteInput
                   value={skillsData.experience}
                   onChange={(e) =>

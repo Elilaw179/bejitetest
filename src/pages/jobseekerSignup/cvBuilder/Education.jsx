@@ -209,6 +209,7 @@ function Education() {
                 className="text-[#000]"
                 label="EDUCATIONAL LEVEL"
                 required={false}
+                tooltip="The highest level of education you have attained (e.g. Bachelor's, Master's, High School)"
               />
               <AutocompleteInput
                 value={educationLevel}
@@ -220,7 +221,10 @@ function Education() {
               />
             </div>
             <div className="flex-1">
-              <FormLabel label="INSTITUTION NAME" />
+              <FormLabel
+                label="INSTITUTION NAME"
+                tooltip="The name of the school, college, or university you attended"
+              />
               <AutocompleteInput
                 value={institutionName}
                 onChange={(e) => setInstitutionName(e.target.value)}
@@ -234,7 +238,10 @@ function Education() {
 
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-1">
-              <FormLabel label="LOCATION" />
+              <FormLabel
+                label="LOCATION"
+                tooltip="The city, state, or country where your educational institution is located"
+              />
               <AutocompleteInput
                 value={userLocation}
                 onChange={(e) => setLocation(e.target.value)}
@@ -245,7 +252,10 @@ function Education() {
               />
             </div>
             <div className="flex-1">
-              <FormLabel label="FIELD OF STUDY" />
+              <FormLabel
+                label="FIELD OF STUDY"
+                tooltip="Your major, course, or primary subject area of study"
+              />
               <AutocompleteInput
                 value={fieldOfStudy}
                 onChange={(e) => setFieldOfStudy(e.target.value)}
@@ -259,7 +269,10 @@ function Education() {
 
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-1">
-              <FormLabel label="DEGREE" />
+              <FormLabel
+                label="DEGREE"
+                tooltip="The qualification or degree obtained (e.g. B.Sc, B.A, HND, OND)"
+              />
               <AutocompleteInput
                 value={degree}
                 onChange={(e) => setDegree(e.target.value)}
@@ -270,7 +283,10 @@ function Education() {
               />
             </div>
             <div className="flex-1">
-              <FormLabel label="START DATE" />
+              <FormLabel
+                label="START DATE"
+                tooltip="The month and year you commenced your studies"
+              />
               <input
                 type="date"
                 value={startDate}
@@ -283,7 +299,10 @@ function Education() {
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-1">
               <div className="flex items-center justify-between mb-2">
-                <FormLabel label="END DATE" />
+                <FormLabel
+                  label="END DATE"
+                  tooltip="The month and year you graduated or expected graduation date"
+                />
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"

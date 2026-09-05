@@ -9,6 +9,7 @@ import axiosInstance from "../../../utils/axiosInstance";
 import Loader from "../../../components/ui/Loader";
 import useAuth from "../../../hooks/useAuth";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
+import FormLabel from "../../../components/forms/FormLabel";
 import {
   FaLinkedin,
   FaTwitter,
@@ -138,6 +139,7 @@ function Link() {
       placeholder: "linkedin.com/in/username",
       bgColor: "bg-[#0077B5]/10",
       borderColor: "hover:border-[#0077B5] focus:border-[#0077B5]",
+      tooltip: "Your LinkedIn profile URL to showcase your professional network and recommendations",
     },
     {
       name: "twitter",
@@ -147,6 +149,7 @@ function Link() {
       placeholder: "x.com/username",
       bgColor: "bg-[#1DA1F2]/10",
       borderColor: "hover:border-[#1DA1F2] focus:border-[#1DA1F2]",
+      tooltip: "Your Twitter/X handle or profile link to highlight your industry presence",
     },
     {
       name: "instagram",
@@ -156,6 +159,7 @@ function Link() {
       placeholder: "instagram.com/username",
       bgColor: "bg-[#E4405F]/10",
       borderColor: "hover:border-[#E4405F] focus:border-[#E4405F]",
+      tooltip: "Your professional or creative Instagram profile link",
     },
     {
       name: "portfolio",
@@ -165,6 +169,7 @@ function Link() {
       placeholder: "yourwebsite.com",
       bgColor: "bg-gray-100",
       borderColor: "hover:border-gray-400 focus:border-[#16730F]",
+      tooltip: "Your personal website, GitHub, Behance, or online portfolio link",
     },
   ];
 
@@ -213,12 +218,12 @@ function Link() {
                 const FieldIcon = field.icon;
                 return (
                 <div key={field.name} className="group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {field.label}
-                    <span className="text-gray-400 text-xs font-normal ml-2">
-                      (Optional)
-                    </span>
-                  </label>
+                  <FormLabel
+                    label={field.label}
+                    optional={true}
+                    tooltip={field.tooltip}
+                    className="text-gray-700 text-sm mb-2"
+                  />
                   <div className="relative">
                     <div className={`absolute left-3 top-1/2 -translate-y-1/2 ${field.iconColor} transition-all duration-200 group-focus-within:scale-110`}>
                       <FieldIcon className="text-xl" />

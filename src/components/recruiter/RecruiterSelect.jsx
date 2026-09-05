@@ -21,6 +21,7 @@ export function RecruiterSelect({
   required = false,
   optional = false,
   disabled = false,
+  tooltip,
   hint,
   className = "",
   id,
@@ -178,7 +179,12 @@ export function RecruiterSelect({
     >
       {label &&
         (typeof label === "string" ? (
-          <FormLabel label={label} required={required} optional={optional} />
+          <FormLabel
+            label={label}
+            required={required}
+            optional={optional}
+            tooltip={tooltip}
+          />
         ) : (
           label
         ))}

@@ -16,6 +16,7 @@ import useAuth from "../../../hooks/useAuth";
 import useLocalStorage from "../../../hooks/useLocalStorage";
 import { useCreateCertificate } from "../../../services/certificateService";
 import OnboardingLayout from "../../../components/layout/onboardingLayout";
+import FormLabel from "../../../components/forms/FormLabel";
 import {
   CERTIFICATE_MAX_BYTES,
   getUploadSizeError,
@@ -220,7 +221,10 @@ function Certificate() {
           <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-4">
             <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <p className="font-semibold text-xs mb-1">CERTIFICATE NAME</p>
+                <FormLabel
+                  label="CERTIFICATE NAME"
+                  tooltip="The title of the award, license, or certificate you earned"
+                />
                 <InputWithIcon
                   value={certName}
                   onChange={(e) => setCertName(e.target.value)}
@@ -228,9 +232,10 @@ function Certificate() {
                 />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-xs mb-1">
-                  ISSUING ORGANIZATION
-                </p>
+                <FormLabel
+                  label="ISSUING ORGANIZATION"
+                  tooltip="The organization, institution, or authority that issued the certificate"
+                />
                 <InputWithIcon
                   value={issuer}
                   onChange={(e) => setIssuer(e.target.value)}
@@ -241,9 +246,10 @@ function Certificate() {
 
             <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <p className="font-semibold text-xs mb-1">
-                  UPLOAD CERTIFICATE IMAGE (JPG OR PNG, MAX 5MB)
-                </p>
+                <FormLabel
+                  label="UPLOAD CERTIFICATE IMAGE (JPG OR PNG, MAX 5MB)"
+                  tooltip="A clear image (JPG or PNG) of your certificate or credential"
+                />
                 <label className="flex justify-between items-center bg-black text-white h-12 rounded-[10px] px-3 cursor-pointer overflow-hidden">
                   <span className="truncate">
                     {file ? file.name : "Upload JPG or PNG"}
@@ -262,7 +268,10 @@ function Certificate() {
                 </label>
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-xs mb-1">ISSUING DATE</p>
+                <FormLabel
+                  label="ISSUING DATE"
+                  tooltip="The date on which the certificate or award was issued"
+                />
                 <InputWithIcon
                   type="date"
                   value={issueDate}

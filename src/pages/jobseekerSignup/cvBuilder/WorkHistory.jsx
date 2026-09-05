@@ -318,7 +318,11 @@ function WorkHistory() {
           <div className="bg-[#F5F5F5] p-3 rounded-2xl space-y-4 overflow-visible">
             <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4 overflow-visible">
               <div className="flex-1 overflow-visible">
-                <FormLabel required label="JOB TITLE" />
+                <FormLabel
+                  required
+                  label="JOB TITLE"
+                  tooltip="Your official role or job designation at the company (e.g. Software Engineer, Marketing Lead)"
+                />
                 <AutocompleteJobInput
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
@@ -327,7 +331,11 @@ function WorkHistory() {
                 />
               </div>
               <div className="flex-1">
-                <FormLabel required label="COMPANY NAME" />
+                <FormLabel
+                  required
+                  label="COMPANY NAME"
+                  tooltip="The name of the organization or company where you worked"
+                />
                 <InputWithIcon
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
@@ -338,7 +346,11 @@ function WorkHistory() {
 
             <div className="bg-[#fff] rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <FormLabel required label="KEY RESPONSIBILITIES" />
+                <FormLabel
+                  required
+                  label="KEY RESPONSIBILITIES"
+                  tooltip="A summary or bullet points of your key duties, achievements, and impact"
+                />
                 <textarea
                   value={responsibilities}
                   onChange={(e) => setResponsibilities(e.target.value)}
@@ -348,7 +360,11 @@ function WorkHistory() {
               </div>
 
               <div className="w-full sm:w-66 p-2 rounded-lg">
-                <FormLabel required label="START DATE" />
+                <FormLabel
+                  required
+                  label="START DATE"
+                  tooltip="The date you started working in this position"
+                />
                 <InputWithIcon
                   type="date"
                   value={startDate}
@@ -357,7 +373,11 @@ function WorkHistory() {
                 <br />
                 
                 <div className="flex items-center justify-between mb-2 mt-2">
-                  <FormLabel required={!isCurrentJob} label="END DATE" />
+                  <FormLabel
+                    required={!isCurrentJob}
+                    label="END DATE"
+                    tooltip="The date your employment concluded (leave blank if currently working here)"
+                  />
                   <label className="flex items-center gap-2 cursor-pointer group">
                     <input
                       type="checkbox"
