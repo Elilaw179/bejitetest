@@ -50,7 +50,9 @@ export default function TwoFactorAnnouncementModal({
           setIsOpen(false);
           return;
         }
-      } catch (_) {}
+      } catch {
+        /* ignore localStorage access errors */
+      }
     }
 
     let cancelled = false;
@@ -148,7 +150,9 @@ export default function TwoFactorAnnouncementModal({
     if (userId) {
       try {
         localStorage.setItem(`bejite_2fa_dismissed_${userId}`, "true");
-      } catch (_) {}
+      } catch {
+        /* ignore localStorage access errors */
+      }
     }
     setIsOpen(false);
     onClose?.();
@@ -161,7 +165,9 @@ export default function TwoFactorAnnouncementModal({
     if (userId) {
       try {
         localStorage.setItem(`bejite_2fa_dismissed_${userId}`, "true");
-      } catch (_) {}
+      } catch {
+        /* ignore localStorage access errors */
+      }
     }
     setIsOpen(false);
     setSetupModalOpen(true);
