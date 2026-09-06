@@ -349,12 +349,12 @@ function WorkHistory() {
                 <FormLabel
                   required
                   label="KEY RESPONSIBILITIES"
-                  tooltip="A summary or bullet points of your key duties, achievements, and impact"
+                  tooltip="A summary of your key duties, achievements, and impact"
                 />
                 <textarea
                   value={responsibilities}
                   onChange={(e) => setResponsibilities(e.target.value)}
-                  placeholder="Tip: Use bullet points to highlight what you did and how it helped the company."
+                  placeholder="Tip: Do NOT use bullet points or numbered lists. Use plain text and hit enter to add a new line."
                   className="w-full bg-[#F5F5F5] rounded-[6px] p-3 h-40 text-[10px] focus:outline-1 focus:outline-[#16730F]"
                 />
               </div>
