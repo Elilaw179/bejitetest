@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { FaTimes } from 'react-icons/fa';
 import { getAccessToken, getUser, isAuthenticated } from '../utils/tokenManager';
 import useProfileCompletionStatus from '../hooks/useProfileCompletionStatus';
 
-const REMINDER_DISMISS_PREFIX = 'bejite_profile_update_dismissed_';
+const HIRING_REMINDER_DISMISS_PREFIX = 'bejite_jobseeker_hiring_reminder_dismissed_';
 
 const SKIP_EXACT = new Set([
   '/',
@@ -16,7 +16,6 @@ const SKIP_EXACT = new Set([
   '/confirmpassword',
 ]);
 
-/** Onboarding / auth flows — hide popup here, but still show on main app (e.g. news-feed). */
 const SKIP_PREFIXES = [
   '/auth/',
   '/admin',
@@ -49,43 +48,15 @@ function normalizeRole(role) {
   return String(role || '').trim().toLowerCase();
 }
 
-function resolveRecruiterMode(user) {
-  const mode = String(user?.mode || '').toLowerCase();
-  if (mode === 'individual' || mode === 'corporate') return mode;
-  return null;
-}
-
-function getProfileSetupPath(role, mode) {
-  if (role === 'recruiter' || role === 'employer') {
-    if (mode === 'individual') {
-      return '/edit-profile/individual/basic-details';
-    }
-    return '/edit-profile/recruiter/basic-details';
-  }
-  if (role === 'jobseeker') {
-    return '/edit-profile/bio';
-  }
-  return '/complete-signup';
-}
-
-function readDismissedForUser(userId) {
-  if (!userId) return false;
-  try {
-    return localStorage.getItem(`${REMINDER_DISMISS_PREFIX}${userId}`) === 'true';
-  } catch {
-    return false;
-  }
-}
-
 /**
- * Fixed corner popup reminding authenticated users to update/complete their profile.
+ * Fixed corner popup for job seekers who have already completed their profile,
+ * reminding them to update and match Bejite's hiring process for recruiters.
  *
- * - Incomplete profile: shows on app routes if profileCompleted !== true.
- * - When user clicks cancel / "Later": permanently dismisses for this user via localStorage.
- * - If user logs in as another user: checks that user's status and shows if incomplete.
- * - Complete profile: hides automatically when profileCompleted === true.
+ * - Checks if the user has completed their profile first (profileCompleted === true).
+ * - Only applies to job seekers.
+ * - Clicking the close (cancel) icon permanently dismisses it for this user via localStorage.
  */
-export default function ProfileCompletionReminder() {
+export default function JobseekerHiringProcessReminder() {
   const location = useLocation();
   const navigate = useNavigate();
   const reduxToken = useSelector((state) => state.auth?.token);
@@ -96,6 +67,7 @@ export default function ProfileCompletionReminder() {
   const authenticated = Boolean(token) || isAuthenticated();
   const onAppRoute = !shouldSkipPath(location.pathname);
 
+  // Check if user has completed profile first, same as ProfileCompletionReminder does
   const { profileCompleted, loading } = useProfileCompletionStatus({
     enabled: authenticated && onAppRoute,
     authKey: token || null,
@@ -103,70 +75,68 @@ export default function ProfileCompletionReminder() {
 
   const user = reduxUser || getUser();
   const role = normalizeRole(user?.role);
+  const isJobseeker = role === 'jobseeker';
   const userId = user?._id || user?.id || user?.email;
-  const recruiterMode =
-    role === 'recruiter' || role === 'employer'
-      ? resolveRecruiterMode(user)
-      : null;
 
-  // Check persistent localStorage dismissal for this user
-  const dismissedForUser = useMemo(() => {
-    return readDismissedForUser(userId) || dismissed;
+  // Check persistent localStorage dismissal for this specific user
+  const isDismissedInStorage = useMemo(() => {
+    if (!userId) return false;
+    try {
+      return localStorage.getItem(`${HIRING_REMINDER_DISMISS_PREFIX}${userId}`) === 'true';
+    } catch {
+      return false;
+    }
   }, [userId, dismissed]);
 
+  // Support ?showhiring=true for quick testing
+  const urlParams = new URLSearchParams(window.location.search);
+  const forceShow = urlParams.get('showhiring') === 'true';
+
   const visible = useMemo(() => {
+    if (forceShow) return true;
     if (!authenticated || !onAppRoute || loading) return false;
-    if (!role) return false;
-    if (profileCompleted === true) return false;
-    if (dismissedForUser) return false;
+    if (!isJobseeker) return false;
+    // Check if the user has completed their profile first
+    if (profileCompleted !== true) return false;
+    if (isDismissedInStorage) return false;
     return true;
   }, [
+    forceShow,
     authenticated,
     onAppRoute,
     loading,
-    role,
+    isJobseeker,
     profileCompleted,
-    dismissedForUser,
+    isDismissedInStorage,
   ]);
 
   const handleDismiss = () => {
-    if (userId) {
-      try {
-        localStorage.setItem(`${REMINDER_DISMISS_PREFIX}${userId}`, 'true');
-      } catch {
-        /* ignore */
-      }
+    const idToSave = userId || 'anonymous';
+    try {
+      localStorage.setItem(`${HIRING_REMINDER_DISMISS_PREFIX}${idToSave}`, 'true');
+    } catch {
+      /* ignore */
     }
     setDismissed(true);
   };
 
   if (!visible) return null;
 
-  const setupPath = getProfileSetupPath(role, recruiterMode);
-  const isIndividualRecruiter = recruiterMode === 'individual';
-  const isRecruiter = role === 'recruiter' || role === 'employer';
-  const title = isRecruiter
-    ? 'Update your recruiter profile'
-    : 'Update your jobseeker profile';
-  const description = isIndividualRecruiter
-    ? 'Finish every profile step and upload your ID to match Bejite\'s hiring process. Skip does not count as complete.'
-    : isRecruiter
-      ? 'Finish every company step and upload your registration document to match Bejite\'s hiring process. Skip does not count as complete.'
-      : 'Update your profile to match Bejite\'s hiring process for recruiters. Finish every CV step, including photo and certificate uploads. Skip does not count as complete.';
-
   return (
     <div
       role="dialog"
       aria-live="polite"
-      aria-label="Profile update reminder"
-      data-testid="profile-completion-reminder"
+      aria-label="Jobseeker hiring process reminder"
+      data-testid="jobseeker-hiring-process-reminder"
       className="fixed bottom-4 right-4 z-[100] w-[min(100vw-2rem,22rem)] rounded-xl border border-[#16730F]/30 bg-white p-4 shadow-lg animate-in fade-in slide-in-from-bottom-3 duration-300"
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-semibold text-[#1A3E32]">{title}</p>
+          <p className="text-sm font-semibold text-[#1A3E32]">
+            Update your profile for recruiters
+          </p>
           <p className="mt-1 text-xs text-gray-600 leading-relaxed">
-            {description}
+            Update your profile and role preferences to match Bejite&apos;s hiring process so top recruiters can discover and shortlist you faster.
           </p>
         </div>
         <button
@@ -181,7 +151,9 @@ export default function ProfileCompletionReminder() {
       <div className="mt-3 flex gap-2">
         <button
           type="button"
-          onClick={() => navigate(setupPath)}
+          onClick={() => {
+            navigate('/edit-profile/job-type');
+          }}
           className="flex-1 rounded-lg bg-[#16730F] px-3 py-2 text-sm font-medium text-white hover:bg-[#125c0c] transition-colors cursor-pointer text-center"
         >
           Update profile

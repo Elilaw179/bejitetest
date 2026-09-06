@@ -20,6 +20,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         label: "NICKNAME",
         optional: false,
         placeholder: "e.g code healer",
+        tooltip: "What you want people to know you as (e.g. professional handle or preferred name)",
         width: "w-full sm:w-[calc(50%-0.5rem)]",
       },
       {
@@ -27,6 +28,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         label: "PHONE NUMBER",
         optional: false,
         type: "phone",
+        tooltip: "Your active contact number with country code for recruiter outreach",
         width: "w-full sm:w-[calc(50%-0.5rem)]",
       },
     ],
@@ -37,6 +39,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         optional: false,
         type: "select",
         options: ["Male", "Female"],
+        tooltip: "Your gender for demographic and identity records",
         width: "w-full sm:w-[calc(50%-0.5rem)]",
       },
       {
@@ -45,6 +48,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         optional: false,
         type: "select",
         options: ["Single", "Married", "Divorced", "Widowed"],
+        tooltip: "Your marital status for personal records",
         width: "w-full sm:w-[calc(50%-0.5rem)]",
       },
     ],
@@ -54,6 +58,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         label: "DATE OF BIRTH",
         optional: true,
         type: "dob",
+        tooltip: "Your date of birth to calculate age and verify eligibility",
         width: "w-full sm:w-[calc(65%-0.5rem)]",
       },
       {
@@ -62,6 +67,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         optional: true,
         type: "select",
         options: bioAges,
+        tooltip: "Your age in years",
         width: "w-full sm:w-[calc(35%-0.5rem)]",
       },
     ],
@@ -72,12 +78,14 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         optional: false,
         type: "select",
         options: countries,
+        tooltip: "Your country of origin or residence for job location matching",
         width: "w-full sm:w-[calc(40%-0.5rem)]",
       },
       {
         name: "street",
         label: "STREET ADDRESS",
         placeholder: "e.g 11, Bawo Street.",
+        tooltip: "Your street or residential address",
         width: "w-full sm:w-[calc(60%-0.5rem)]",
         optional: false,
       },
@@ -88,6 +96,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         label: "CITY/TOWN",
         optional: false,
         placeholder: "e.g Calabar",
+        tooltip: "Your current city or town of residence",
         width: "w-full sm:w-[calc(33.33%-0.67rem)]",
       },
       {
@@ -96,6 +105,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         type: "datalist",
         options: ["Yoruba", "Hausa", "Igbo", "Ibibio"],
         placeholder: "Enter or select your tribe",
+        tooltip: "Your ethnic group or tribe (optional)",
         width: "w-full sm:w-[calc(33.33%-0.67rem)]",
         optional: true,
       },
@@ -104,6 +114,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
         label: "ZIP CODE",
         optional: true,
         placeholder: "e.g 60094",
+        tooltip: "Your postal or zip code (optional)",
         width: "w-full sm:w-[calc(33.33%-0.67rem)]",
       },
     ],
@@ -119,6 +130,7 @@ const FieldGroup = ({ formData, handleChange, countries }) => {
                 label={f.label}
                 optional={f.optional}
                 required={!f.optional}
+                tooltip={f.tooltip}
               />
               {f.type === "select" ? (
                 <RecruiterSelect

@@ -330,6 +330,7 @@ function JobType() {
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
                       label={statusLabel}
+                      tooltip="Your current career status (e.g. Actively Looking, Open to Offers, Employed)"
                       value={form.jobseekerStatus || defaultStatus}
                       onChange={updateField("jobseekerStatus")}
                       options={statusOptions}
@@ -340,7 +341,8 @@ function JobType() {
                   </div>
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
-                      label="JOB TITLE"
+                      label="JOB TITLE / YOUR ROLE"
+                      tooltip="Your target job role or desired position"
                       value={form.jobTitle}
                       onChange={updateField("jobTitle")}
                       options={JOB_TITLE_OPTIONS}
@@ -350,6 +352,7 @@ function JobType() {
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
                       label="INDUSTRY / SECTOR"
+                      tooltip="The industry or sector you want to work in (e.g. Technology, Finance, Healthcare)"
                       value={form.industry}
                       onChange={updateField("industry")}
                       options={INDUSTRY_OPTIONS}
@@ -368,6 +371,7 @@ function JobType() {
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
                       label="PREFERRED COUNTRY"
+                      tooltip="The country where you prefer to work or be hired"
                       value={form.country}
                       onChange={updateField("country")}
                       options={COUNTRY_OPTIONS}
@@ -377,6 +381,7 @@ function JobType() {
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
                       label="PREFERRED STATE"
+                      tooltip="The specific state or region within your preferred country"
                       value={form.statePref}
                       onChange={updateField("statePref")}
                       options={states}
@@ -393,6 +398,7 @@ function JobType() {
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
                       label="WORK TYPE"
+                      tooltip="Your preferred employment arrangement (e.g. Full-Time, Part-Time, Contract, Internship)"
                       value={form.workType}
                       onChange={updateField("workType")}
                       options={WORK_TYPE_OPTIONS}
@@ -409,7 +415,10 @@ function JobType() {
                 </h3>
                 <div className="flex flex-wrap gap-4 relative z-20">
                   <div className="flex-1 min-w-[220px]">
-                    <FormLabel label="EXPECTED SALARY" />
+                    <FormLabel
+                      label="EXPECTED SALARY"
+                      tooltip="Your desired compensation or salary expectations"
+                    />
                     <input
                       type="text"
                       inputMode="decimal"
@@ -422,6 +431,7 @@ function JobType() {
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
                       label="CURRENCY"
+                      tooltip="The currency for your expected salary or rate"
                       value={form.currency}
                       onChange={updateField("currency")}
                       options={CURRENCY_OPTIONS}
@@ -431,6 +441,7 @@ function JobType() {
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
                       label="REMOTE PREFERENCE"
+                      tooltip="Whether you prefer on-site, remote, or hybrid work arrangements"
                       value={form.remotePref}
                       onChange={updateField("remotePref")}
                       options={REMOTE_PREFERENCE_OPTIONS}
@@ -440,6 +451,7 @@ function JobType() {
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
                       label="AVAILABILITY"
+                      tooltip="How soon you can start working (e.g. Immediately, 2 Weeks, 1 Month)"
                       value={form.availability}
                       onChange={updateField("availability")}
                       options={AVAILABILITY_OPTIONS}
@@ -449,6 +461,7 @@ function JobType() {
                   <div className="flex-1 min-w-[220px]">
                     <RecruiterSelect
                       label="RATE"
+                      tooltip="Your billing rate if applying for freelance or contract roles"
                       value={form.rate}
                       onChange={updateField("rate")}
                       options={RATE_OPTIONS}

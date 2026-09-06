@@ -1,5 +1,6 @@
 import React from "react";
 import { formatBytesAsMb, PROFILE_PHOTO_MAX_BYTES } from "../utils/uploadLimits";
+import FormLabel from "./forms/FormLabel";
 
 const ImageUpload = ({
   imagePreview,
@@ -10,6 +11,13 @@ const ImageUpload = ({
   maxLength,
 }) => (
   <div className="w-full lg:w-64 flex flex-col items-center">
+    <div className="mb-1 w-full flex justify-center">
+      <FormLabel
+        label="PROFILE PHOTO"
+        required={true}
+        tooltip="A clear, professional picture so employers and connections can identify you"
+      />
+    </div>
     <div className="relative group cursor-pointer">
       <label className="w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center bg-white border-2 border-dashed border-gray-300 hover:border-[#1A3E32] transition-all duration-300 cursor-pointer overflow-hidden shadow-sm">
         {imagePreview ? (
@@ -37,9 +45,11 @@ const ImageUpload = ({
 
     {bio !== undefined && onBioChange && (
       <div className="w-full mt-6">
-        <label className="block text-[11px] font-bold text-gray-600 tracking-wide mb-1.5 pl-1">
-          {textareaLabel}
-        </label>
+        <FormLabel
+          label={textareaLabel}
+          required={true}
+          tooltip="A brief summary of yourself, your background, and your career goals"
+        />
         <textarea
           name="bio"
           value={bio}

@@ -984,7 +984,7 @@ const NewsFeedHeader = ({ user: propUser }) => {
           >
             <div className="flex items-center gap-2.5 md:gap-3 w-full lg:w-auto min-w-0 justify-between lg:justify-normal">
               <img
-                className="w-10 h-10 lg:w-14 lg:h-14 shrink-0 rounded-full object-cover object-center bg-gray-200 ring-1 ring-black/5"
+                className="w-10 h-10 lg:w-14 lg:h-14  lg:hidden  xl:block shrink-0 rounded-full object-cover object-center bg-gray-200 ring-1 ring-black/5"
                 src={avatarSrc(user.image)}
                 alt={getDisplayName()}
                 decoding="async"
