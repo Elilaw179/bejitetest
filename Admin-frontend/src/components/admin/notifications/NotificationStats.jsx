@@ -1,10 +1,11 @@
-import { Bell, AlertCircle, UserPlus, Megaphone } from "lucide-react";
+import { Bell, AlertCircle, UserPlus, Megaphone, Mail } from "lucide-react";
 
 const NotificationStats = ({
   totalCount,
   unreadCount,
   verificationCount = 0,
   adproCount = 0,
+  contactCount = 0,
   onFilterClick,
 }) => {
   const stats = [
@@ -40,10 +41,18 @@ const NotificationStats = ({
       color: "text-purple-600",
       filter: "adpro",
     },
+    {
+      label: "Support",
+      value: contactCount,
+      icon: Mail,
+      bg: "bg-emerald-50",
+      color: "text-emerald-700",
+      filter: "support",
+    },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
       {stats.map((stat) => (
         <div
           key={stat.label}

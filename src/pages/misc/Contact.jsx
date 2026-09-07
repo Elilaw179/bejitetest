@@ -11,13 +11,16 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
+import { toast } from "react-toastify";
 import NewsFeedLayout from "../../components/layout/NewsFeedLayout";
+import axiosInstance from "../../utils/axiosInstance";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     message: "",
+    website: "",
   });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -26,15 +29,51 @@ export default function Contact() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (sending) return;
+
+    const name = formData.name.trim();
+    const email = formData.email.trim();
+    const message = formData.message.trim();
+
+    if (!name || !email || !message) {
+      toast.error("Name, email, and message are required.");
+      return;
+    }
+    if (message.length < 10) {
+      toast.error("Message must be at least 10 characters.");
+      return;
+    }
+
     setSending(true);
-    setTimeout(() => {
-      setSending(false);
+    try {
+      const { data } = await axiosInstance.post("/api/contact", {
+        name,
+        email,
+        message,
+        website: formData.website || "",
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Failed to send message");
+      }
+
       setSent(true);
-      setFormData({ name: "", email: "", message: "" });
+      setFormData({ name: "", email: "", message: "", website: "" });
+      toast.success(
+        data.message || "Message sent. Our team will get back to you soon.",
+      );
       setTimeout(() => setSent(false), 4000);
-    }, 1500);
+    } catch (err) {
+      const messageText =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to send message. Please try again.";
+      toast.error(messageText);
+    } finally {
+      setSending(false);
+    }
   };
 
   const socials = [
@@ -101,7 +140,24 @@ export default function Contact() {
                   </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-5 sm:p-8 space-y-5 sm:space-y-6">
+                <form onSubmit={handleSubmit} className="relative p-5 sm:p-8 space-y-5 sm:space-y-6">
+                  {/* Honeypot — leave empty; hidden from real users */}
+                  <div
+                    className="absolute -left-[9999px] h-0 w-0 overflow-hidden opacity-0"
+                    aria-hidden="true"
+                  >
+                    <label htmlFor="contact-website">Website</label>
+                    <input
+                      id="contact-website"
+                      type="text"
+                      name="website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={formData.website}
+                      onChange={handleChange}
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                       <User className="w-4 h-4 text-gray-400" />
@@ -113,6 +169,7 @@ export default function Contact() {
                       value={formData.name}
                       onChange={handleChange}
                       required
+                      maxLength={200}
                       placeholder="Enter your full name"
                       className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32]/20 focus:border-[#1A3E32] focus:bg-white transition-all"
                     />
@@ -129,6 +186,7 @@ export default function Contact() {
                       value={formData.email}
                       onChange={handleChange}
                       required
+                      maxLength={255}
                       placeholder="you@example.com"
                       className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3E32]/20 focus:border-[#1A3E32] focus:bg-white transition-all"
                     />
@@ -144,6 +202,8 @@ export default function Contact() {
                       value={formData.message}
                       onChange={handleChange}
                       required
+                      minLength={10}
+                      maxLength={5000}
                       rows={5}
                       placeholder="Tell us how we can help..."
                       className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1A3E32]/20 focus:border-[#1A3E32] focus:bg-white transition-all"

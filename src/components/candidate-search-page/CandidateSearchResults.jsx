@@ -132,10 +132,26 @@ const CandidateSearchResults = ({
             if (append) {
               setLoadMoreError(
                 errorMessage ||
-                  "You've used your free ASE search. Subscribe to keep finding candidates.",
+                  "You've used your free ASE quota for this month. Wait until next month or subscribe to continue.",
               );
             } else {
-              setAccessBlock("free_trial");
+              setAccessBlock("free_quota");
+              setError(errorMessage);
+            }
+            return;
+          }
+
+          if (
+            response.status === 403 &&
+            errorCode === "MONTHLY_FREE_QUOTA_EXHAUSTED"
+          ) {
+            if (append) {
+              setLoadMoreError(
+                errorMessage ||
+                  "You've used your free ASE quota for this month. Wait until next month or subscribe to continue.",
+              );
+            } else {
+              setAccessBlock("free_quota");
               setError(errorMessage);
             }
             return;
@@ -353,13 +369,29 @@ const SearchResultsMessage = ({
     }`}
   >
     <div className="text-center w-full max-w-md mx-auto">
+      {accessBlock === "free_quota" && (
+        <>
+          <MessageIcon type="info" />
+          <p className="text-white text-lg font-semibold mt-4">
+            Monthly free quota used
+          </p>
+          <p className="text-white/85 mt-2 text-sm leading-relaxed">
+            {message ||
+              "You've used your free ASE quota for this month. Wait until next month or subscribe to continue enjoying ASE searches."}
+          </p>
+          <ActionButton label="View plans" onClick={onUpgrade} primary />
+        </>
+      )}
+
       {accessBlock === "free_trial" && (
         <>
           <MessageIcon type="info" />
-          <p className="text-white text-lg font-semibold mt-4">Free trial used</p>
+          <p className="text-white text-lg font-semibold mt-4">
+            Monthly free quota used
+          </p>
           <p className="text-white/85 mt-2 text-sm leading-relaxed">
             {message ||
-              "You've used your free ASE search. Subscribe to keep finding candidates."}
+              "You've used your free ASE quota for this month. Wait until next month or subscribe to continue enjoying ASE searches."}
           </p>
           <ActionButton label="View plans" onClick={onUpgrade} primary />
         </>

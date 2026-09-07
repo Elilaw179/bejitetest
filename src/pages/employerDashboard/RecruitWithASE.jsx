@@ -16,7 +16,6 @@ import BatchInterviewInviteModal from "../../components/jobs/BatchInterviewInvit
 import { getJobApplications } from "../../services/employerApi";
 import {
   checkASEEligibility,
-  activateFreeTrial,
   initializeOneTimePayment,
   recordASESearch,
   completeASESearch,
@@ -112,12 +111,6 @@ const RecruitWithASE = () => {
     setSearching(true);
     try {
       let currentEligibility = eligibility;
-
-      if (currentEligibility?.accessType === "free_trial_upgrade") {
-        await activateFreeTrial();
-        currentEligibility = await checkASEEligibility();
-        setEligibility(currentEligibility);
-      }
 
       const candidateLimit =
         currentEligibility?.candidateLimit || TOP_CANDIDATE_LIMIT;
@@ -290,9 +283,6 @@ const RecruitWithASE = () => {
   const getStartButtonLabel = () => {
     if (!eligibility?.eligible) return "Pay & Start Recruitment";
     if (eligibility.accessType === "subscription") return "Start Recruitment";
-    if (eligibility.accessType === "free_trial_upgrade") {
-      return "Claim Free Searches & Start";
-    }
     if (
       eligibility.remainingSearches != null &&
       eligibility.remainingSearches > 0

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
@@ -18,6 +18,7 @@ import {
 
 const AdminNotifications = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useSelector((state) => state.auth);
   const { notifications, counts, unreadCount, loading, error, refresh } =
     useAdminInbox();
@@ -34,6 +35,30 @@ const AdminNotifications = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [activeCategory, activePriority, statusFilter, searchQuery, sortOrder]);
+
+  // Deep-link from bell / Support item: /admin/notifications?contactId=<uuid>
+  useEffect(() => {
+    const contactId = searchParams.get("contactId");
+    if (!contactId || loading) return;
+
+    const match = notifications.find(
+      (n) =>
+        n.type === "contact_message" &&
+        (String(n.entityId) === String(contactId) ||
+          n.id === `contact-${contactId}` ||
+          n.id === contactId),
+    );
+
+    if (!match) return;
+
+    setActiveCategory(NOTIFICATION_CATEGORIES.SUPPORT);
+    setStatusFilter("all");
+    setSelectedNotification(match);
+
+    const next = new URLSearchParams(searchParams);
+    next.delete("contactId");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, notifications, loading, setSearchParams]);
 
   const filteredNotifications = useMemo(() => {
     return notifications
@@ -57,15 +82,33 @@ const AdminNotifications = () => {
         ) {
           return false;
         }
+        if (
+          statusFilter === "support" &&
+          n.category !== NOTIFICATION_CATEGORIES.SUPPORT
+        ) {
+          return false;
+        }
 
         if (searchQuery.trim()) {
           const query = searchQuery.toLowerCase();
           const matchTitle = String(n.title || "").toLowerCase().includes(query);
           const matchMsg = String(n.message || "").toLowerCase().includes(query);
+          const matchEmail = String(n.contactEmail || "")
+            .toLowerCase()
+            .includes(query);
+          const matchName = String(n.contactName || "")
+            .toLowerCase()
+            .includes(query);
           const matchCategory = String(n.category || "")
             .toLowerCase()
             .includes(query);
-          return matchTitle || matchMsg || matchCategory;
+          return (
+            matchTitle ||
+            matchMsg ||
+            matchEmail ||
+            matchName ||
+            matchCategory
+          );
         }
 
         return true;
@@ -98,6 +141,10 @@ const AdminNotifications = () => {
   }, [filteredNotifications, currentPage, pageSize]);
 
   const openNotification = (notification) => {
+    if (notification?.type === "contact_message") {
+      setSelectedNotification(notification);
+      return;
+    }
     if (
       notification?.link &&
       canAccessPath(user?.admin_role, notification.link)
@@ -178,6 +225,9 @@ const AdminNotifications = () => {
     } else if (filterType === "adpro") {
       setActiveCategory(NOTIFICATION_CATEGORIES.ADPRO);
       setStatusFilter("all");
+    } else if (filterType === "support") {
+      setActiveCategory(NOTIFICATION_CATEGORIES.SUPPORT);
+      setStatusFilter("all");
     }
     setCurrentPage(1);
   };
@@ -201,6 +251,7 @@ const AdminNotifications = () => {
         unreadCount={unreadCount}
         verificationCount={counts.verification}
         adproCount={counts.adpro}
+        contactCount={counts.contact}
         onFilterClick={handleStatFilterClick}
       />
 
@@ -284,6 +335,9 @@ const AdminNotifications = () => {
         notification={selectedNotification}
         onClose={() => setSelectedNotification(null)}
         onReview={openNotification}
+        onResolved={async () => {
+          await refresh();
+        }}
       />
     </div>
   );
