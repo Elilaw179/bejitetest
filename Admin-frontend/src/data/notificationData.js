@@ -6,6 +6,7 @@
 export const NOTIFICATION_CATEGORIES = {
   USERS: "users",
   ADPRO: "adpro",
+  SUPPORT: "support",
 };
 
 export const NOTIFICATION_PRIORITIES = {
@@ -29,6 +30,13 @@ const CATEGORY_META = {
     bg: "bg-purple-50",
     text: "text-purple-600",
     border: "border-purple-400",
+  },
+  [NOTIFICATION_CATEGORIES.SUPPORT]: {
+    label: "Support",
+    color: "#16730F",
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+    border: "border-emerald-400",
   },
 };
 

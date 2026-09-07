@@ -7,7 +7,6 @@ import {
   checkASEEligibility,
   initializeSubscriptionPayment,
   initializeTopUpPayment,
-  activateFreeTrial,
 } from "../../services/paymentApi";
 import { getUser, isAuthenticated } from "../../utils/tokenManager";
 
@@ -335,23 +334,28 @@ const ASEPricingPage = () => {
                     Your Current Status
                   </p>
                   <h4 className="font-extrabold text-gray-900 text-base sm:text-lg leading-snug">
-                    {eligibility.accessType === "free_trial" &&
-                      "Free Trial Available"}
-                    {eligibility.accessType === "free_trial_upgrade" &&
-                      "Free Trial Upgrade Available"}
+                    {eligibility.accessType === "free_monthly" &&
+                      (eligibility.eligible
+                        ? `Free Monthly Quota — ${eligibility.remainingSearches ?? 0}/${eligibility.monthlySearchLimit ?? 5} searches left`
+                        : "Free Monthly Search Quota Used")}
                     {eligibility.accessType === "one_time" &&
                       `${eligibility.remainingSearches} Search Credits`}
+                    {eligibility.accessType === "topup_search" &&
+                      `${eligibility.remainingSearches} Top-Up Searches`}
                     {eligibility.accessType === "subscription" &&
                       `Active ${eligibility.planType?.toUpperCase()} — ${eligibility.remainingSearches ?? 0}/${eligibility.monthlySearchLimit ?? "∞"} searches left`}
                     {eligibility.accessType === "none" && "No Active Plan"}
                   </h4>
                   <p className="text-sm text-gray-500 mt-0.5">
-                    {eligibility.accessType === "free_trial" &&
-                      "Activate below for 7 free searches, 5 free job posts, and 2 recruitment exercises"}
-                    {eligibility.accessType === "free_trial_upgrade" &&
-                      eligibility.message}
+                    {eligibility.accessType === "free_monthly" &&
+                      (eligibility.eligible
+                        ? `Includes ${eligibility.monthlySearchLimit ?? 5} ASE searches, ${eligibility.monthlyJobPostLimit ?? 5} job posts, 2 recruitment exercises, and ₦${Number(eligibility.adCreditNgn ?? 5000).toLocaleString("en-NG")} AdPro credit this month`
+                        : eligibility.message ||
+                          "You've used your free ASE searches for this month. Wait until next month or subscribe to continue.")}
                     {eligibility.accessType === "one_time" &&
-                      "Purchase more searches or upgrade to unlimited"}
+                      "Purchase more searches or upgrade to a monthly plan"}
+                    {eligibility.accessType === "topup_search" &&
+                      "Top-up search credits available"}
                     {eligibility.accessType === "subscription" &&
                       "Plan limits apply to searches, job posts, AdPro credits, and recruitment management this billing period"}
                     {eligibility.accessType === "none" &&
@@ -360,14 +364,23 @@ const ASEPricingPage = () => {
                 </div>
               </div>
 
-              {((eligibility.accessType !== "none" &&
-                eligibility.accessType !== "subscription") ||
-                eligibility.accessType === "free_trial_upgrade") && (
+              {eligibility.accessType !== "none" &&
+                eligibility.accessType !== "subscription" &&
+                eligibility.eligible !== false && (
                 <button
                   onClick={() => navigate("/candidate-search-page")}
                   className="w-full sm:w-auto px-6 py-2.5 bg-[#16730F] text-white rounded-xl hover:bg-[#2d5a47] transition-all font-bold text-sm shadow-sm hover:shadow active:scale-95 whitespace-nowrap"
                 >
                   Go to Search
+                </button>
+              )}
+              {eligibility.accessType === "free_monthly" &&
+                eligibility.eligible === false && (
+                <button
+                  onClick={() => navigate("/subscription-pricing")}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-[#16730F] text-white rounded-xl hover:bg-[#2d5a47] transition-all font-bold text-sm shadow-sm hover:shadow active:scale-95 whitespace-nowrap"
+                >
+                  View Plans
                 </button>
               )}
             </div>
@@ -448,41 +461,31 @@ const ASEPricingPage = () => {
             }
           />
 
-          {/* Free Trial Banner */}
-          {eligibility &&
-            (eligibility.accessType === "free_trial" ||
-              eligibility.accessType === "free_trial_upgrade") && (
+          {/* Free Monthly Quota Banner */}
+          {eligibility && eligibility.accessType === "free_monthly" && (
               <div className="border-2 border-dashed border-[#16730F] bg-green-50/50 rounded-3xl p-6 sm:p-8 text-center space-y-4">
                 <h3 className="text-xl font-black text-gray-900 tracking-tight">
-                  {eligibility.accessType === "free_trial_upgrade"
-                    ? "Activate Your Free Trial Upgrade"
-                    : "Try Bejite Recruiting Free"}
+                  {eligibility.eligible
+                    ? "Your Free Monthly ASE Quota"
+                    : "Free Monthly Quota Used"}
                 </h3>
                 <p className="text-gray-500 text-sm max-w-2xl mx-auto leading-relaxed">
-                  {eligibility.accessType === "free_trial_upgrade"
-                    ? eligibility.message ||
-                      "Receive additional trial candidate searches to evaluate match compatibility."
-                    : "Get 7 free ASE searches (20 results each), 5 free job posts, and 2 recruitment exercises to try Bejite recruiting."}
+                  {eligibility.eligible
+                    ? `Each month you get ${eligibility.monthlySearchLimit ?? 5} ASE searches (20 results each), ${eligibility.monthlyJobPostLimit ?? 5} job posts, 2 recruitment exercises, and ₦${Number(eligibility.adCreditNgn ?? 5000).toLocaleString("en-NG")} AdPro credit — no card required.`
+                    : eligibility.message ||
+                      "You've used your free ASE quota for this month. Wait until next month or subscribe to continue enjoying Bejite recruiting."}
                 </p>
                 <button
-                  onClick={async () => {
-                    try {
-                      await activateFreeTrial();
-                      toast.success("Free trial activated");
-                      navigate("/candidate-search-page");
-                    } catch (error) {
-                      console.error("Free trial error:", error);
-                      toast.error(
-                        error.response?.data?.message ||
-                          "Failed to activate free trial",
-                      );
-                    }
-                  }}
+                  onClick={() =>
+                    navigate(
+                      eligibility.eligible
+                        ? "/candidate-search-page"
+                        : "/subscription-pricing",
+                    )
+                  }
                   className="px-8 py-3 bg-[#16730F] text-white font-bold rounded-xl hover:bg-[#2d5a47] transition-all hover:shadow shadow-sm active:scale-95"
                 >
-                  {eligibility.accessType === "free_trial_upgrade"
-                    ? "Activate Upgrade"
-                    : "Activate Free Trial"}
+                  {eligibility.eligible ? "Start Searching" : "View Plans"}
                 </button>
               </div>
             )}

@@ -191,7 +191,7 @@ export default function CreateCampaign() {
       audienceEstimate.adCreditBalance < audienceEstimate.cost
     ) {
       setSubmitError(
-        `Insufficient AdPro credit. Available: ${formatAdProCurrency(audienceEstimate.adCreditBalance)}, required: ${formatAdProCurrency(audienceEstimate.cost)}. Subscribe or upgrade your ASE plan for more ad credit.`,
+        `Insufficient AdPro credit. Available: ${formatAdProCurrency(audienceEstimate.adCreditBalance)}, required: ${formatAdProCurrency(audienceEstimate.cost)}. Wait until next month or subscribe / upgrade your ASE plan for more ad credit.`,
       );
       setCurrentStep(3);
       return false;
@@ -494,14 +494,16 @@ export default function CreateCampaign() {
             </div>
             {audienceEstimate.adCreditBalance < audienceEstimate.cost && (
               <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                You need more AdPro credit to launch this campaign.{" "}
+                You need more AdPro credit to launch this campaign. Wait until
+                next month or{" "}
                 <button
                   type="button"
                   onClick={() => navigate("/subscription-pricing")}
                   className="underline font-medium hover:text-red-900"
                 >
-                  View ASE plans
+                  view ASE plans
                 </button>
+                .
               </p>
             )}
           </div>

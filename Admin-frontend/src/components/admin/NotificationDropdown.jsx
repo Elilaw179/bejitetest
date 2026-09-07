@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, UserPlus, Megaphone, ArrowRight, X } from "lucide-react";
+import { Bell, UserPlus, Megaphone, Mail, ArrowRight, X } from "lucide-react";
 import { toast } from "react-toastify";
 import { canAccessPath } from "../../constants/adminPermissions";
 import {
@@ -16,6 +16,7 @@ import {
 const CATEGORY_ICONS = {
   [NOTIFICATION_CATEGORIES.USERS]: UserPlus,
   [NOTIFICATION_CATEGORIES.ADPRO]: Megaphone,
+  [NOTIFICATION_CATEGORIES.SUPPORT]: Mail,
 };
 
 const NotificationDropdown = ({
@@ -63,8 +64,17 @@ const NotificationDropdown = ({
 
   const handleNotificationClick = (notification) => {
     onClose();
-    if (notification?.link && canAccessPath(user?.admin_role, notification.link)) {
+    if (
+      notification?.link &&
+      canAccessPath(user?.admin_role, notification.link)
+    ) {
       navigate(notification.link);
+      return;
+    }
+    if (notification?.type === "contact_message" && notification?.entityId) {
+      navigate(
+        `/admin/notifications?contactId=${encodeURIComponent(notification.entityId)}`,
+      );
       return;
     }
     navigate("/admin/notifications");

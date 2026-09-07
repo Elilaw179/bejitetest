@@ -3,7 +3,7 @@ import axiosInstance from "../utils/axiosInstance";
 function emptyInbox() {
   return {
     notifications: [],
-    counts: { total: 0, verification: 0, adpro: 0 },
+    counts: { total: 0, verification: 0, adpro: 0, contact: 0 },
   };
 }
 
@@ -34,13 +34,16 @@ function withCounts(notifications, counts) {
   const adpro =
     counts?.adpro ??
     notifications.filter((item) => item.type === "adpro_review").length;
+  const contact =
+    counts?.contact ??
+    notifications.filter((item) => item.type === "contact_message").length;
   const total = counts?.total ?? notifications.length;
 
   return {
     notifications: [...notifications].sort(
       (a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0),
     ),
-    counts: { total, verification, adpro },
+    counts: { total, verification, adpro, contact },
   };
 }
 
@@ -53,7 +56,9 @@ async function fetchInboxFallback() {
     const total = campaignsRes.data?.data?.pagination?.total;
     return withCounts(
       campaigns.map(mapCampaignToNotification),
-      Number.isFinite(total) ? { total, verification: 0, adpro: total } : undefined,
+      Number.isFinite(total)
+        ? { total, verification: 0, adpro: total, contact: 0 }
+        : undefined,
     );
   } catch (error) {
     if (error.response?.status === 403) {
@@ -81,4 +86,15 @@ export async function fetchAdminInbox() {
   }
 
   return fetchInboxFallback();
+}
+
+export async function resolveContactMessage(contactId) {
+  const id = String(contactId || "").replace(/^contact-/, "");
+  const response = await axiosInstance.patch(
+    `/api/admin/data/contact/${encodeURIComponent(id)}/resolve`,
+  );
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || "Failed to resolve contact message");
+  }
+  return response.data;
 }

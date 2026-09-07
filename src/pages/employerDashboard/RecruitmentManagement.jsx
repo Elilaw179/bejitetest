@@ -1209,16 +1209,17 @@ export default function RecruitmentManagement() {
   const openCount = exercises.filter((ex) => ex.status === "Open").length;
   const showPaywall = !accessLoading && recruitmentAccess?.allowed === false;
   const isFreeTrialAccess =
-    recruitmentAccess?.accessType === "free_trial" &&
+    (recruitmentAccess?.accessType === "free_monthly" ||
+      recruitmentAccess?.accessType === "free_trial") &&
     recruitmentAccess?.remaining != null &&
     recruitmentAccess.remaining >= 0;
   const freeTrialLabel =
     isFreeTrialAccess && recruitmentAccess.canCreate
       ? `${recruitmentAccess.remaining} of ${recruitmentAccess.limit || 2} free exercise${
           recruitmentAccess.remaining === 1 ? "" : "s"
-        } left`
+        } left this month`
       : isFreeTrialAccess && !recruitmentAccess.canCreate
-        ? "Free trial exercises used — subscribe to create more"
+        ? "Free monthly recruitment quota used — wait until next month or subscribe"
         : null;
 
   return (
@@ -1330,11 +1331,13 @@ export default function RecruitmentManagement() {
             )}
 
             {!recruitmentAccess?.canCreate &&
-              recruitmentAccess?.accessType === "free_trial" && (
+              (recruitmentAccess?.accessType === "free_monthly" ||
+                recruitmentAccess?.accessType === "free_trial") && (
                 <div className="bg-[#F3F8F2] border border-[#C8E0C4] text-[#1A3E32] text-sm font-medium rounded-2xl px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <span>
-                    You’ve used your 2 free recruitment exercises. Subscribe to
-                    create more while keeping access to your existing pipelines.
+                    You’ve used your free recruitment exercises for this month.
+                    Wait until next month or subscribe to create more while
+                    keeping access to your existing pipelines.
                   </span>
                   <button
                     type="button"
