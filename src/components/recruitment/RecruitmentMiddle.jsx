@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
@@ -8,6 +8,7 @@ import {
   FaVideo,
   FaPoll,
   FaEllipsisH,
+  FaSpinner,
 } from "react-icons/fa";
 import {
   getFeed,
@@ -62,7 +63,6 @@ import { OriginalPostNest, RepostIntro } from "../feed/RepostChrome";
 import PostCommentsSection from "../PostCommentsSection";
 import FormattedPostBody from "../feed/FormattedPostBody";
 import { normalizeHashtag } from "../../utils/postBodyFormat";
-import FeedLoadMoreButton from "../FeedLoadMoreButton";
 import AdCard from "../Ads/AdCard";
 import { getAdProFeedAds, trackAdCampaignEvent, likeAdCampaign, unlikeAdCampaign, saveAdCampaign, unsaveAdCampaign } from "../../services/adProApi";
 
@@ -205,6 +205,8 @@ export default function RecruitmentMiddle() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState("post");
+  const loadMoreRef = useRef(null);
+  const loadingMoreRef = useRef(false);
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -287,8 +289,9 @@ export default function RecruitmentMiddle() {
     }
   };
 
-  const loadMorePosts = async () => {
-    if (!nextCursor || loadingMore) return;
+  const loadMorePosts = useCallback(async () => {
+    if (!nextCursor || loadingMore || loadingMoreRef.current) return;
+    loadingMoreRef.current = true;
     try {
       setLoadingMore(true);
       const data =
@@ -303,10 +306,40 @@ export default function RecruitmentMiddle() {
       setNextCursor(data.nextCursor ?? null);
     } catch (err) {
       console.error("Error loading more posts:", err);
+      toast.error("Failed to load more posts. Try again.");
     } finally {
+      loadingMoreRef.current = false;
       setLoadingMore(false);
     }
-  };
+  }, [nextCursor, loadingMore, feedMode, feedHashtag]);
+
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node || !nextCursor) return undefined;
+
+    let scrollRoot = node.parentElement;
+    while (scrollRoot) {
+      const { overflowY } = window.getComputedStyle(scrollRoot);
+      if (overflowY === "auto" || overflowY === "scroll") break;
+      scrollRoot = scrollRoot.parentElement;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          loadMorePosts();
+        }
+      },
+      {
+        root: scrollRoot || null,
+        rootMargin: "240px 0px",
+        threshold: 0,
+      },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [loadMorePosts, nextCursor, posts.length]);
 
   const patchPost = (postId, patch) => {
     setPosts((prev) =>
@@ -530,16 +563,20 @@ export default function RecruitmentMiddle() {
               )}
             </React.Fragment>
           ))}
-          <FeedLoadMoreButton
-            hasMore={Boolean(nextCursor)}
-            loading={loadingMore}
-            onLoadMore={loadMorePosts}
-            label={
-              feedMode === "saved"
-                ? "Load more saved posts"
-                : "Load older posts"
-            }
-          />
+          {nextCursor && (
+            <div ref={loadMoreRef} className="h-10 w-full" aria-hidden />
+          )}
+          {loadingMore && (
+            <div className="flex justify-center items-center gap-2 py-6 text-[#16730F]">
+              <FaSpinner className="animate-spin" />
+              <span className="text-sm font-medium">Loading more posts...</span>
+            </div>
+          )}
+          {!nextCursor && posts.length > 0 && !loadingMore && (
+            <p className="text-center text-sm text-gray-500 py-6">
+              You’ve reached the end of the feed
+            </p>
+          )}
         </>
       )}
       <PostCreationModal
