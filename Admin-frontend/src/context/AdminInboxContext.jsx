@@ -18,6 +18,7 @@ export function AdminInboxProvider({ children }) {
     total: 0,
     verification: 0,
     adpro: 0,
+    contact: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,7 +38,7 @@ export function AdminInboxProvider({ children }) {
       setError(err);
       if (!silent) {
         setNotifications([]);
-        setCounts({ total: 0, verification: 0, adpro: 0 });
+        setCounts({ total: 0, verification: 0, adpro: 0, contact: 0 });
       }
       if (!silent) {
         throw err;

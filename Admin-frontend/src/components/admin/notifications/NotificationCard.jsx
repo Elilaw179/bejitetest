@@ -8,6 +8,7 @@ import {
   Info,
   UserPlus,
   Megaphone,
+  Mail,
   ArrowRight,
 } from "lucide-react";
 import {
@@ -21,6 +22,7 @@ import {
 const CATEGORY_ICONS = {
   [NOTIFICATION_CATEGORIES.USERS]: UserPlus,
   [NOTIFICATION_CATEGORIES.ADPRO]: Megaphone,
+  [NOTIFICATION_CATEGORIES.SUPPORT]: Mail,
 };
 
 const PRIORITY_BADGES = {
@@ -148,7 +150,7 @@ const NotificationCard = ({
               }}
               className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-bold text-white bg-[#16730F] rounded-lg hover:bg-[#125a0c] transition-colors cursor-pointer"
             >
-              Review
+              {notification.type === "contact_message" ? "View" : "Review"}
               <ArrowRight size={12} />
             </button>
           </div>

@@ -313,8 +313,40 @@ const ASESubscriptionDashboard = () => {
     );
   }
 
-  const { subscription, usage, savedCards, recentTransactions, transactionCount } =
-    status || {};
+  const {
+    subscription,
+    freeQuota,
+    paidSearchCredits = 0,
+    usage,
+    savedCards,
+    recentTransactions,
+    transactionCount,
+  } = status || {};
+
+  const topupSearchCredits = Number(usage?.topup_searches_remaining) || 0;
+  const oneTimeRemaining = Number(usage?.remaining_searches) || 0;
+  const totalPaidSearches = Number(usage?.total_paid_searches) || 0;
+  const validOneTimeCredits =
+    totalPaidSearches > 0 &&
+    oneTimeRemaining > 0 &&
+    oneTimeRemaining <= 50
+      ? oneTimeRemaining
+      : 0;
+  // Prefer API-computed total; fall back to the same eligibility rules locally.
+  const effectivePaidSearchCredits =
+    Number(paidSearchCredits) > 0
+      ? Number(paidSearchCredits)
+      : topupSearchCredits + validOneTimeCredits;
+
+  const freeQuotaExhausted = Boolean(
+    freeQuota?.exhausted ||
+      (freeQuota &&
+        (freeQuota.searchesRemaining || 0) <= 0 &&
+        (freeQuota.jobsRemaining || 0) <= 0 &&
+        (freeQuota.recruitmentRemaining || 0) <= 0 &&
+        Number(freeQuota.adCreditBalance || 0) <= 0),
+  );
+
   const totalTransactions = transactionCount ?? recentTransactions?.length ?? 0;
   const totalTransactionPages = transactionsPagination?.totalPages || 0;
   const transactionStartIdx =
@@ -444,26 +476,111 @@ const ASESubscriptionDashboard = () => {
                     </p>
                   )}
                 </div>
-              ) : usage && (usage.remaining_searches > 0 || usage.topup_searches_remaining > 0) ? (
+              ) : effectivePaidSearchCredits > 0 ? (
                 <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-lg sm:text-xl font-semibold text-gray-800">
                         Pay-Per-Search
+                      </span>
+                      <span className="px-3 py-1 text-xs font-bold bg-gray-700 text-white rounded-full">
+                        ACTIVE
                       </span>
                     </div>
                     <div className="text-left sm:text-right">
                       <span className="text-sm text-gray-600">Remaining: </span>
                       <span className="text-xl sm:text-2xl font-bold text-[#16730F]">
-                        {(usage.remaining_searches || 0) +
-                          (usage.topup_searches_remaining || 0)}
+                        {effectivePaidSearchCredits}
                       </span>
                     </div>
                   </div>
                   <p className="mt-3 text-sm text-gray-600">
                     Total searches used:{" "}
                     <span className="font-semibold">
-                      {usage.total_paid_searches || 0}
+                      {usage?.total_paid_searches || 0}
+                    </span>
+                  </p>
+                  {freeQuota && !freeQuotaExhausted && (
+                    <p className="mt-2 text-xs text-gray-500">
+                      Free monthly ASE also available after paid credits are used
+                      ({freeQuota.searchesRemaining} searches left this month).
+                    </p>
+                  )}
+                </div>
+              ) : freeQuota ? (
+                <div
+                  className={`rounded-lg p-4 border-2 ${
+                    freeQuotaExhausted
+                      ? "bg-amber-50 border-amber-200"
+                      : "bg-green-50 border-[#16730F]"
+                  }`}
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+                      <span className="text-lg sm:text-xl font-semibold text-[#1A3E32]">
+                        Free Monthly ASE
+                      </span>
+                      <span
+                        className={`px-3 py-1 text-xs font-bold text-white rounded-full ${
+                          freeQuotaExhausted ? "bg-amber-600" : "bg-[#16730F]"
+                        }`}
+                      >
+                        {freeQuotaExhausted ? "EXHAUSTED" : "ACTIVE"}
+                      </span>
+                    </div>
+                    <div className="text-left sm:text-right shrink-0">
+                      <span className="text-sm text-gray-600">Resets: </span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {formatDashboardDate(freeQuota.nextResetDate)}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm text-gray-600">
+                    Candidate limit:{" "}
+                    <span className="font-semibold text-[#1A3E32]">
+                      {freeQuota.candidateLimit}
+                    </span>{" "}
+                    per search
+                  </p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Searches this month:{" "}
+                    <span className="font-semibold text-[#1A3E32]">
+                      {freeQuota.searchesUsed || 0} /{" "}
+                      {freeQuota.monthlySearchLimit}
+                    </span>
+                    <span className="text-gray-500">
+                      {" "}
+                      ({freeQuota.searchesRemaining} left)
+                    </span>
+                  </p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Job posts this month:{" "}
+                    <span className="font-semibold text-[#1A3E32]">
+                      {freeQuota.jobsUsed || 0} / {freeQuota.monthlyJobPostLimit}
+                    </span>
+                    <span className="text-gray-500">
+                      {" "}
+                      ({freeQuota.jobsRemaining} left)
+                    </span>
+                  </p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Recruitment exercises:{" "}
+                    <span className="font-semibold text-[#1A3E32]">
+                      {freeQuota.recruitmentUsed || 0} /{" "}
+                      {freeQuota.recruitmentExerciseLimit}
+                    </span>
+                    <span className="text-gray-500">
+                      {" "}
+                      ({freeQuota.recruitmentRemaining} left)
+                    </span>
+                  </p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    AdPro credit balance:{" "}
+                    <span className="font-semibold text-[#1A3E32]">
+                      ₦
+                      {Number(freeQuota.adCreditBalance || 0).toLocaleString(
+                        "en-NG",
+                      )}
                     </span>
                   </p>
                 </div>

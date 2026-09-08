@@ -1,4 +1,4 @@
-import { Search, X, UserPlus, Megaphone } from "lucide-react";
+import { Search, X, UserPlus, Megaphone, Mail } from "lucide-react";
 import RecruiterSelect from "../RecruiterSelect";
 import {
   NOTIFICATION_CATEGORIES,
@@ -9,6 +9,7 @@ const CATEGORY_TABS = [
   { key: "all", label: "All" },
   { key: NOTIFICATION_CATEGORIES.USERS, label: "Verification", icon: UserPlus },
   { key: NOTIFICATION_CATEGORIES.ADPRO, label: "AdPro", icon: Megaphone },
+  { key: NOTIFICATION_CATEGORIES.SUPPORT, label: "Support", icon: Mail },
 ];
 
 const PRIORITY_OPTIONS = [
@@ -53,7 +54,7 @@ const NotificationFilters = ({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search verification or AdPro alerts..."
+            placeholder="Search verification, AdPro, or support alerts..."
             className="w-full pl-10 pr-10 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#16730F]/20 focus:border-[#16730F] transition-all placeholder:text-gray-400"
           />
           {searchQuery && (
@@ -105,7 +106,12 @@ const NotificationFilters = ({
                   : tab.key === NOTIFICATION_CATEGORIES.ADPRO
                     ? counts?.adpro ??
                       notifications.filter((n) => n.category === tab.key).length
-                    : notifications.filter((n) => n.category === tab.key).length;
+                    : tab.key === NOTIFICATION_CATEGORIES.SUPPORT
+                      ? counts?.contact ??
+                        notifications.filter((n) => n.category === tab.key)
+                          .length
+                      : notifications.filter((n) => n.category === tab.key)
+                          .length;
 
             return (
               <button

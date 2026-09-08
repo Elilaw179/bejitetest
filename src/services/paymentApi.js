@@ -31,7 +31,7 @@ export const activateFreeTrial = async () => {
     const response = await axiosInstance.post(`${PAYSTACK_API_URL}/ase/free-trial`);
     return response.data;
   } catch (error) {
-    console.error('Error using free trial:', error);
+    console.error('Error initializing free monthly ASE quota:', error);
     throw error;
   }
 };
